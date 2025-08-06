@@ -15,3 +15,5 @@ export { default as StatusCard } from "./statusCard";
 export { default as Tabs } from "./tabs";
 export { default as SearchBar } from "./searchBar";
 export { default as UploadDocument } from "./uploadDocuments";
+export { default as NoDocuments } from "./noDocuments";
+export { default as DataTable } from "./dataTable";
