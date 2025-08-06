@@ -1,0 +1,99 @@
+"use client";
+
+import { DarkThemeToggle } from "flowbite-react";
+import Image from "next/image";
+import { APP_STRINGS, UI_CONSTANTS } from "@/constants";
+import { useSidebar } from "./useSidebar";
+import { NavigationMenu } from "./NavigationMenu";
+import { UserMenu } from "./UserMenu";
+import { MenuIcon } from "./constants";
+import type { SlideBarProps } from "./types";
+
+/**
+ * Sidebar layout component with navigation and user menu
+ */
+
+export default function SlideBar({ children, onNavigate, handleLogout }: SlideBarProps) {
+    const {
+        navigationItems,
+        isUserMenuOpen,
+        handleMenuItemClick,
+        toggleUserMenu
+    } = useSidebar();
+
+    return (
+        <>
+            {/* Navigation Bar */}
+            <nav className="fixed top-0 z-50 w-full border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
+                <div className="px-3 py-3 lg:px-5 lg:pl-3">
+                    <div className="flex items-center justify-between">
+                        {/* Logo and Mobile Menu Button */}
+                        <div className="flex items-center justify-start rtl:justify-end">
+                            <button
+                                data-drawer-target="logo-sidebar"
+                                data-drawer-toggle="logo-sidebar"
+                                aria-controls="logo-sidebar"
+                                type="button"
+                                className="inline-flex items-center rounded-lg p-2 text-sm text-gray-500 hover:bg-gray-100 focus:ring-2 focus:ring-gray-200 focus:outline-none sm:hidden md:hidden lg:hidden dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+                            >
+                                <span className="sr-only">Open sidebar</span>
+                                <MenuIcon />
+                            </button>
+
+                            <a href="https://flowbite.com" className="ms-2 flex md:me-24">
+                                <Image
+                                    src="/assets/logo-ka.svg"
+                                    width={UI_CONSTANTS.AVATAR_SIZE}
+                                    height={UI_CONSTANTS.AVATAR_SIZE}
+                                    className="me-3 h-8 w-auto"
+                                    alt="Knowledge Advisor Logo"
+                                />
+                                <span className="self-center text-xl font-semibold whitespace-nowrap sm:text-2xl dark:text-white">
+                                    {APP_STRINGS.APP_NAME}
+                                </span>
+                            </a>
+                        </div>
+
+                        {/* User Actions */}
+                        <div className="flex items-center">
+                            <div className="ms-3 flex items-center gap-3">
+                                <div>
+                                    <DarkThemeToggle />
+                                </div>
+                                <UserMenu
+                                    isOpen={isUserMenuOpen}
+                                    onToggle={toggleUserMenu}
+                                    handleLogout={handleLogout}
+                                />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            {/* Sidebar */}
+            <aside
+                id="logo-sidebar"
+                className="fixed top-0 left-0 z-40 h-screen w-64 -translate-x-full border-r border-gray-200 bg-white pt-20 transition-transform sm:translate-x-0 dark:border-gray-700 dark:bg-gray-900"
+                aria-label="Sidebar"
+            >
+                <div className="h-full overflow-y-auto bg-white px-3 pb-4 dark:bg-gray-900">
+                    <NavigationMenu
+                        items={navigationItems}
+                        onItemClick={(index) => {
+                            if (onNavigate) onNavigate();
+                            handleMenuItemClick(index);
+                        }}
+                    />
+                </div>
+            </aside>
+
+            {/* Main Content */}
+            <div className="p-4 sm:ml-64 dark:bg-gray-800 bg-gray-200 h-full">
+                <div className="p-4 mt-14">
+                    {children}
+                </div>
+            </div>
+        </>
+    );
+}
