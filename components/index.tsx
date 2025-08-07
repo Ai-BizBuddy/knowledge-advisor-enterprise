@@ -16,4 +16,7 @@ export { default as Tabs } from "./tabs";
 export { default as SearchBar } from "./searchBar";
 export { default as UploadDocument } from "./uploadDocuments";
 export { default as NoDocuments } from "./noDocuments";
-export { default as DataTable } from "./dataTable";
+export { default as DocumentDetail } from "./documentDetail";
+export { default as DocumentFilters } from "./documentFilters";
+export { default as DocumentTable } from "./documentTable";
+export { default as DocumentsTabs } from "./documentTabs";
