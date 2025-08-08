@@ -38,7 +38,7 @@ export default function NoDocuments({
         className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700"
         onClick={() => setOpenModal(true)}
       >
-        <span className="text-sm font-medium">Add Your Frirst Document</span>
+        <span className="text-sm font-medium">Add Your First Document</span>
       </button>
     </div>
   );
