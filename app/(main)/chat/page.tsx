@@ -98,7 +98,7 @@ export default function ChatPage() {
                       className="flex-1 sm:flex-initial"
                     >
                       <svg
-                        className="mr-2 h-4 w-4"
+                        className="mr-2 h-4 w-4 text-gray-900 dark:text-gray-100"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={2}
@@ -110,7 +110,9 @@ export default function ChatPage() {
                           d="M12 4v16m8-8H4"
                         />
                       </svg>
-                      <span className="font-medium">New Chat</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        New Chat
+                      </span>
                     </Button>
 
                     <Button
@@ -120,7 +122,7 @@ export default function ChatPage() {
                       className="flex-1 sm:flex-initial"
                     >
                       <svg
-                        className="mr-2 h-4 w-4"
+                        className="mr-2 h-4 w-4 text-gray-900 dark:text-gray-100"
                         fill="none"
                         stroke="currentColor"
                         strokeWidth={2}
@@ -132,7 +134,9 @@ export default function ChatPage() {
                           d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
-                      <span className="font-medium">History</span>
+                      <span className="font-medium text-gray-900 dark:text-gray-100">
+                        History
+                      </span>
                     </Button>
                   </div>
                 </div>
