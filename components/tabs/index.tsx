@@ -11,7 +11,7 @@ interface TabsProps {
  */
 export default function Tabs({ currentTab, tabList, onTabChange }: TabsProps) {
   return (
-    <div className="text-center text-sm font-medium text-gray-500 dark:text-gray-400">
+    <div className="flex justify-start text-sm font-medium text-gray-500 dark:text-gray-400">
       {tabList.map((tab, index) => (
         <button
           key={index}

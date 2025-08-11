@@ -20,3 +20,6 @@ export { default as DocumentDetail } from "./documentDetail";
 
 // Documents Page Components
 export * from "./documentsPage";
+
+// Layout Components
+export * from "./layouts";
