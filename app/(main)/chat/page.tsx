@@ -126,7 +126,7 @@ export default function ChatPage() {
               <div className="h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6">
                 <div>
                   <ChatCard
-                    avatar="https://images.ctfassets.net/h6goo9gw1hh6/2sNZtFAWOdP1lmQ33VwRN3/24e953b920a9cd0ff2e1d587742a2472/1-intro-photo-final.jpg"
+                    avatar="/assets/logo-ka.svg"
                     name="Bonnie Green"
                     time="11:46"
                     message="That's awesome. I think our users will really appreciate the improvements."
