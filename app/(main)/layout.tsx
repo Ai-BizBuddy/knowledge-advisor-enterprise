@@ -7,48 +7,53 @@ import { useEffect } from "react";
 import { useLoading } from "@/contexts/LoadingContext";
 
 export default function MainLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const { logout } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
+  const { hasFeatureAccess } = usePermissions();
+  const { setLoading } = useLoading();
 
-    const pathname = usePathname();
-    const { logout } = useAuth();
-    const { user, loading: authLoading } = useAuthContext();
-    const { hasFeatureAccess } = usePermissions();
-    const { setLoading } = useLoading();
+  // Filter navigation items based on permissions
 
+  const handleLogout = async () => {
+    await logout();
+    // Use setTimeout to avoid hydration mismatch
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 0);
+  };
 
-    // Filter navigation items based on permissions
-
-    const handleLogout = async () => {
-        await logout();
-        window.location.href = "/login";
+  useEffect(() => {
+    // Auth context will handle redirects automatically
+    // This is just for backward compatibility
+    const checkAuth = async () => {
+      if (!authLoading && !user && pathname !== "/login") {
+        // Use setTimeout to avoid hydration mismatch
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 0);
+      }
     };
+    checkAuth();
+  }, [user, authLoading, pathname]);
 
+  // Close mobile menu when route changes
 
-    useEffect(() => {
-        // Auth context will handle redirects automatically
-        // This is just for backward compatibility
-        const checkAuth = async () => {
-            if (!authLoading && !user && pathname !== "/login") {
-                window.location.href = "/login";
-            }
-        };
-        checkAuth();
-    }, [user, authLoading, pathname]);
-
-    // Close mobile menu when route changes
-
-
-    return (
-        <>
-            <LoadingPage />
-            <SlideBar onNavigate={() => {
-                setLoading(true);
-            }} handleLogout={handleLogout}>
-                {children}
-            </SlideBar>
-        </>
-    );
+  return (
+    <>
+      <LoadingPage />
+      <SlideBar
+        onNavigate={() => {
+          setLoading(true);
+        }}
+        handleLogout={handleLogout}
+      >
+        {children}
+      </SlideBar>
+    </>
+  );
 }

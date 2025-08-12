@@ -1,11 +1,17 @@
 import { IRecentActivityCardProps } from "@/interfaces/RecentActivityCard";
 import { Card } from "flowbite-react";
+import { useEffect, useState } from "react";
 
 export default function RecentActivityCard({
   activities,
 }: IRecentActivityCardProps) {
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+
   return (
-    <Card className="h-full w-full border-gray-200 dark:border-gray-700 dark:bg-gray-800">
+    <Card className="h-full border-gray-200 xl:w-full dark:border-gray-700 dark:bg-gray-900">
       <div className="p-2 sm:p-4">
         <h5 className="mb-4 text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
           Recent Activity
@@ -39,9 +45,12 @@ export default function RecentActivityCard({
                     {activity.description}
                   </p>
                 )}
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {activity.timestamp}
-                </span>
+                {/* Only render timestamp after hydration to avoid SSR mismatch */}
+                {hydrated && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {activity.timestamp}
+                  </span>
+                )}
               </div>
             </li>
           ))}

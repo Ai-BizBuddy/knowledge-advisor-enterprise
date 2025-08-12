@@ -15,14 +15,14 @@ export default function KnowledgeBase() {
 
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
   const hadleTabChange = (vale: string) => {
     setActiveTab(vale);
   };
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
-      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

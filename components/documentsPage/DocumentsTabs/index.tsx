@@ -99,7 +99,7 @@ export const DocumentsTabs: React.FC<DocumentsTabsProps> = ({
   };
 
   return (
-    <div className="mb-4 border-b border-gray-200 dark:border-gray-700">
+    <div className="mb-4 border-b border-gray-300 dark:border-gray-700">
       <div className="flex items-center justify-between">
         <nav className="-mb-px flex space-x-8">
           {tabs.map((tab) => (

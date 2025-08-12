@@ -55,12 +55,12 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
-      <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+      <div className="p-4 sm:p-6 lg:p-8">
         {/* Header Section - Responsive layout */}
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

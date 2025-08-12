@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Badge } from "flowbite-react";
+import { Button } from "flowbite-react";
 import {
   ChatCard,
   ChatHistoryList,
@@ -24,7 +24,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
 
   const handleCloseHistory = () => {
     setOpenHistory(false);
@@ -34,133 +34,94 @@ export default function ChatPage() {
     <>
       {openHistory && <ChatHistoryList onClose={handleCloseHistory} />}
 
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+      <div className="min-h-screen">
         {/* Main Container with consistent responsive padding */}
-        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8">
           <div className="space-y-6 sm:space-y-8">
-            {/* Header Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
-              <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-start lg:justify-between">
-                <div className="flex-1">
-                  <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
-                    AI Chat
-                  </h1>
-                  <p className="text-sm font-medium text-gray-600 sm:text-base dark:text-gray-300">
-                    {selectedKB && selectedKB.length !== 0
-                      ? `กำลังค้นหาข้อมูลจาก ${selectedKB.length} Knowledge Base`
-                      : "กรุณาเลือก Knowledge Base"}
-                  </p>
-                </div>
+            {/* Page Header - Outside the card */}
+            <div className="space-y-2">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                  AI Chat Assistant
+                </h1>
+              </div>
+              <p className="text-sm font-medium text-gray-600 sm:text-base dark:text-gray-400">
+                {selectedKB && selectedKB.length !== 0
+                  ? `กำลังค้นหาข้อมูลจาก ${selectedKB.length} Knowledge Base`
+                  : "กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา"}
+              </p>
+            </div>
 
-                {/* Action Buttons - Responsive layout */}
-                <div className="flex flex-col items-stretch gap-3 sm:flex-row sm:items-center">
-                  {/* Status Badge */}
-                  <Badge
-                    color={isOnline ? "success" : "failure"}
-                    className="justify-center sm:justify-start"
+            {/* Control Section */}
+            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-900">
+              <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+                {/* Knowledge Base Selection */}
+                <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
+                  <label
+                    htmlFor="knowledge"
+                    className="text-sm font-semibold whitespace-nowrap text-gray-700 dark:text-gray-200"
                   >
-                    <span className="flex items-center gap-2">
-                      {isOnline ? (
-                        <svg
-                          className="h-4 w-4 text-green-600"
-                          fill="currentColor"
-                          viewBox="0 0 20 20"
-                        >
-                          <circle cx="10" cy="10" r="8" />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="h-4 w-4 text-red-600"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            d="M18 6L6 18M6 6l12 12"
-                          />
-                        </svg>
-                      )}
-                      <span className="font-medium">
-                        {isOnline ? "Online" : "Offline"}
-                      </span>
-                    </span>
-                  </Badge>
-
-                  {/* Action Buttons */}
-                  <div className="flex gap-2">
-                    <Button
-                      type="button"
-                      color="primary"
-                      onClick={() => alert("Start new chat!")}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <svg
-                        className="mr-2 h-4 w-4 text-gray-900 dark:text-gray-100"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        New Chat
-                      </span>
-                    </Button>
-
-                    <Button
-                      type="button"
-                      color="primary"
-                      onClick={() => setOpenHistory(!openHistory)}
-                      className="flex-1 sm:flex-initial"
-                    >
-                      <svg
-                        className="mr-2 h-4 w-4 text-gray-900 dark:text-gray-100"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth={2}
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      <span className="font-medium text-gray-900 dark:text-gray-100">
-                        History
-                      </span>
-                    </Button>
+                    Knowledge Base:
+                  </label>
+                  <div className="w-full flex-1">
+                    <KnowledgeSelect
+                      options={knowledgeBases}
+                      onChange={handleSelectKB}
+                    />
                   </div>
                 </div>
-              </div>
 
-              {/* Knowledge Base Selection */}
-              <div className="mt-6 flex flex-col gap-3 border-t border-gray-200 pt-6 sm:flex-row sm:items-center dark:border-gray-600">
-                <label
-                  htmlFor="knowledge"
-                  className="font-medium whitespace-nowrap text-gray-700 dark:text-gray-200"
-                >
-                  Knowledge Base:
-                </label>
-                <div className="flex-1">
-                  <KnowledgeSelect
-                    options={knowledgeBases}
-                    onChange={handleSelectKB}
-                  />
+                {/* Action Buttons */}
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <Button
+                    type="button"
+                    color="light"
+                    onClick={() => alert("Start new chat!")}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 4v16m8-8H4"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">New Chat</span>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    color="light"
+                    onClick={() => setOpenHistory(!openHistory)}
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <svg
+                      className="h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <span className="text-sm font-medium">History</span>
+                  </Button>
                 </div>
               </div>
             </div>
 
             {/* Chat Container */}
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
               {/* Chat Messages Area */}
               <div className="h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6">
                 <div>
@@ -196,8 +157,16 @@ export default function ChatPage() {
                     alert(`ส่งข้อความ: ${message}`);
                     setMessage("");
                   }}
-                  className="flex gap-3"
+                  className="flex items-center gap-3"
                 >
+                  <div className="flex items-center gap-2">
+                    <div
+                      className={`h-2 w-2 rounded-full ${isOnline ? "bg-green-500" : "bg-red-500"}`}
+                    ></div>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {isOnline ? "Online" : "Offline"}
+                    </span>
+                  </div>
                   <input
                     type="text"
                     placeholder="Type your message..."
