@@ -148,12 +148,10 @@ class LangflowChatService {
    */
   private setupInterceptors(): void {
     this.client.addRequestInterceptor((config) => {
-      console.log(`[${this.serviceName}] Chat request:`, config.url);
       return config;
     });
 
     this.client.addResponseInterceptor((response) => {
-      console.log(`[${this.serviceName}] Chat response received:`, response.status);
       return response;
     });
 
@@ -220,7 +218,6 @@ class LangflowChatService {
    * Send a chat message and get AI response
    */
   async sendMessage(input: ChatInput): Promise<ChatResult> {
-    console.log(`[${this.serviceName}] Sending message:`, input.question);
     const startTime = Date.now();
 
     if (this.useMockData) {
@@ -251,7 +248,6 @@ class LangflowChatService {
         responseTime
       };
 
-      console.log(`[${this.serviceName}] Chat completed in ${responseTime}ms`);
       return result;
 
     } catch (error) {
@@ -321,7 +317,6 @@ class LangflowChatService {
    * Batch send multiple questions (useful for testing or bulk operations)
    */
   async sendMultipleMessages(inputs: ChatInput[]): Promise<ChatResult[]> {
-    console.log(`[${this.serviceName}] Sending ${inputs.length} messages`);
 
     const results = await Promise.allSettled(
       inputs.map(input => this.sendMessage(input))

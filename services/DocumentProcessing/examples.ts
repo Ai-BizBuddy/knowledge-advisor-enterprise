@@ -14,7 +14,6 @@ import { syncDocumentToRAG, bulkSyncDocumentsToRAG } from '@/services/Project/su
 export async function checkApiHealth() {
   try {
     const isHealthy = await documentProcessingApi.healthCheck();
-    console.log('Document processing API status:', isHealthy ? 'Available' : 'Unavailable');
     return isHealthy;
   } catch (error) {
     console.error('Health check failed:', error);
@@ -27,12 +26,10 @@ export async function checkApiHealth() {
  */
 export async function syncSingleDocument(projectId: string, documentId: string) {
   try {
-    console.log(`Syncing document ${documentId} for project ${projectId}`);
     
     // This function now uses the new API internally
     await syncDocumentToRAG(projectId, documentId);
     
-    console.log('Document sync completed successfully');
   } catch (error) {
     console.error('Document sync failed:', error);
     throw error;
@@ -44,12 +41,10 @@ export async function syncSingleDocument(projectId: string, documentId: string) 
  */
 export async function bulkSyncDocuments(projectId: string, documentIds: string[]) {
   try {
-    console.log(`Bulk syncing ${documentIds.length} documents for project ${projectId}`);
     
     // This function now uses the new API internally
     const result = await bulkSyncDocumentsToRAG(projectId, documentIds);
     
-    console.log('Bulk sync completed:', result);
     return result;
   } catch (error) {
     console.error('Bulk sync failed:', error);
@@ -62,7 +57,6 @@ export async function bulkSyncDocuments(projectId: string, documentIds: string[]
  */
 export async function monitorDocumentProcessing(documentId: string) {
   try {
-    console.log(`Monitoring processing status for document ${documentId}`);
     
     // Poll document status until completion
     const finalStatus = await documentProcessingApi.pollDocumentStatus(
@@ -71,12 +65,10 @@ export async function monitorDocumentProcessing(documentId: string) {
         timeout: 300000, // 5 minutes
         interval: 2000,  // Check every 2 seconds
         onProgress: (status) => {
-          console.log(`Document ${documentId} progress: ${status.progress}% - ${status.status}`);
         }
       }
     );
     
-    console.log('Final status:', finalStatus);
     return finalStatus;
   } catch (error) {
     console.error('Status monitoring failed:', error);
@@ -89,10 +81,8 @@ export async function monitorDocumentProcessing(documentId: string) {
  */
 export async function viewPendingDocuments() {
   try {
-    console.log('Fetching pending documents...');
     
     const pendingDocs = await documentProcessingApi.getPendingDocuments();
-    console.log('Pending documents:', pendingDocs);
     
     return pendingDocs;
   } catch (error) {
@@ -106,18 +96,14 @@ export async function viewPendingDocuments() {
  */
 export async function handleFailedJobs() {
   try {
-    console.log('Fetching failed jobs...');
     
     const failedJobs = await documentProcessingApi.getFailedJobs();
-    console.log('Failed jobs:', failedJobs);
     
     // Retry failed jobs
     if (Array.isArray(failedJobs) && failedJobs.length > 0) {
       for (const job of failedJobs) {
         try {
-          console.log(`Retrying job ${job.id}...`);
           await documentProcessingApi.retryJob(job.id);
-          console.log(`Job ${job.id} retry initiated`);
         } catch (retryError) {
           console.error(`Failed to retry job ${job.id}:`, retryError);
         }
@@ -143,7 +129,6 @@ export async function completeDocumentWorkflow(projectId: string, documentIds: s
     }
     
     // Step 2: Start bulk sync
-    console.log('Starting document processing workflow...');
     const syncResult = await bulkSyncDocuments(projectId, documentIds);
     
     // Step 3: Monitor job progress if jobId is available
@@ -154,12 +139,10 @@ export async function completeDocumentWorkflow(projectId: string, documentIds: s
           timeout: 600000, // 10 minutes
           interval: 3000,  // Check every 3 seconds
           onProgress: (status) => {
-            console.log(`Job progress: ${status.status} - ${status.progress || 0}%`);
           }
         }
       );
       
-      console.log('Job completed with status:', jobStatus.status);
       
       if (jobStatus.status === 'failed') {
         throw new Error(`Job failed: ${jobStatus.errorMessage}`);
@@ -167,12 +150,10 @@ export async function completeDocumentWorkflow(projectId: string, documentIds: s
     }
     
     // Step 4: Verify document statuses
-    console.log('Verifying document processing statuses...');
     const documentStatuses = await Promise.all(
       documentIds.map(id => documentProcessingApi.getDocumentStatus(id))
     );
     
-    console.log('Document statuses:', documentStatuses);
     
     return {
       syncResult,

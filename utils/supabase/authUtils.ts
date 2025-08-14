@@ -1,12 +1,12 @@
 /**
  * Auth-Aware Supabase Client Utilities
- * 
+ *
  * Helper functions to make it easier to integrate the auth-aware Supabase client
  * across all services in the application.
  */
 
-import { supabaseAuthClient } from '@/utils/supabase/authInterceptor';
-import type { SupabaseClient } from '@supabase/supabase-js';
+import { supabaseAuthClient } from "@/utils/supabase/authInterceptor";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Create an auth-aware Supabase client with automatic token refresh
@@ -23,10 +23,17 @@ export const createAuthAwareTable = () => {
 };
 
 /**
+ * Create an auth-aware auth schema client with automatic token refresh
+ */
+export const createAuthAwareAuth = () => {
+  return supabaseAuthClient.createTable("auth");
+};
+
+/**
  * Execute a database operation with automatic token refresh
  */
 export const executeWithAuth = async <T>(
-  operation: (client: SupabaseClient) => Promise<T>
+  operation: (client: SupabaseClient) => Promise<T>,
 ): Promise<T> => {
   return supabaseAuthClient.executeQuery(operation);
 };

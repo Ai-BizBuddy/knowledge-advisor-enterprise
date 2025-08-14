@@ -1,5 +1,5 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
-import type { Axios } from 'axios';
+import axios, { AxiosResponse, InternalAxiosRequestConfig } from "axios";
+import type { Axios } from "axios";
 import type {
   DocumentSyncRequest,
   DocumentSyncResponse,
@@ -7,12 +7,12 @@ import type {
   JobStatusResponse,
   DocumentProcessingConfig,
   PendingDocumentsResponse,
-  FailedJobsResponse
-} from '@/interfaces/Project';
+  FailedJobsResponse,
+} from "@/interfaces/Project";
 
 /**
  * Document Processing API Client
- * 
+ *
  * This service handles communication with the KbIngestion.Api service
  * running on localhost:5001 for document processing and synchronization.
  */
@@ -22,19 +22,20 @@ class DocumentProcessingApiClient {
 
   constructor(config?: Partial<DocumentProcessingConfig>) {
     this.config = {
-      baseUrl: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001',
+      baseUrl:
+        process.env.NEXT_PUBLIC_INGRESS_SERVICE || "https://localhost:5001",
       timeout: 30000, // 30 seconds
       retryAttempts: 1,
-      ...config
+      ...config,
     };
 
     this.client = axios.create({
       baseURL: this.config.baseUrl,
       timeout: this.config.timeout,
       headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     });
 
     // Add request/response interceptors for logging and error handling
@@ -48,48 +49,55 @@ class DocumentProcessingApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        console.log(`[DocumentProcessingAPI] ${config.method?.toUpperCase()} ${config.url}`, {
+        console.log("[DocumentProcessingAPI] Request:", {
+          url: config.url,
+          method: config.method,
           data: config.data,
-          params: config.params
+          params: config.params,
         });
         return config;
       },
       (error: Error) => {
-        console.error('[DocumentProcessingAPI] Request error:', error);
+        console.error("[DocumentProcessingAPI] Request error:", error);
         return Promise.reject(error);
-      }
+      },
     );
 
     // Response interceptor
     this.client.interceptors.response.use(
       (response: AxiosResponse) => {
-        console.log(`[DocumentProcessingAPI] Response ${response.status}:`, response.data);
         return response;
       },
       (error: Error & { response?: AxiosResponse; code?: string }) => {
-        console.error('[DocumentProcessingAPI] Response error:', {
+        console.error("[DocumentProcessingAPI] Response error:", {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
-          message: error.message
+          message: error.message,
         });
         return Promise.reject(this.handleApiError(error));
-      }
+      },
     );
   }
 
   /**
    * Handle API errors and convert them to user-friendly messages
    */
-  private handleApiError(error: Error & { response?: AxiosResponse; code?: string }): Error {
-    if (error.code === 'ECONNREFUSED') {
-      return new Error('Document processing service is not available. Please check if the service is running on localhost:5001');
+  private handleApiError(
+    error: Error & { response?: AxiosResponse; code?: string },
+  ): Error {
+    if (error.code === "ECONNREFUSED") {
+      return new Error(
+        "Document processing service is not available. Please check if the service is running on localhost:5001",
+      );
     }
 
     if (error.response) {
       const status = error.response.status;
-      const message = (error.response.data as { message?: string })?.message || error.response.statusText;
-      
+      const message =
+        (error.response.data as { message?: string })?.message ||
+        error.response.statusText;
+
       switch (status) {
         case 400:
           return new Error(`Bad request: ${message}`);
@@ -102,22 +110,27 @@ class DocumentProcessingApiClient {
       }
     }
 
-    return new Error(error.message || 'Unknown API error');
+    return new Error(error.message || "Unknown API error");
   }
 
   /**
    * Retry mechanism for failed requests
    */
-  private async withRetry<T>(operation: () => Promise<T>, attempts: number = this.config.retryAttempts!): Promise<T> {
+  private async withRetry<T>(
+    operation: () => Promise<T>,
+    attempts: number = this.config.retryAttempts!,
+  ): Promise<T> {
     try {
       return await operation();
     } catch (error) {
       if (attempts <= 1) {
         throw error;
       }
-      
-      console.warn(`[DocumentProcessingAPI] Operation failed, retrying... (${attempts - 1} attempts left)`);
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+
+      console.warn(
+        `[DocumentProcessingAPI] Operation failed, retrying... (${attempts - 1} attempts left)`,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retry
       return this.withRetry(operation, attempts - 1);
     }
   }
@@ -125,12 +138,12 @@ class DocumentProcessingApiClient {
   /**
    * Sync documents to the processing pipeline
    */
-  async syncDocuments(request: DocumentSyncRequest): Promise<DocumentSyncResponse> {
+  async syncDocuments(
+    request: DocumentSyncRequest,
+  ): Promise<DocumentSyncResponse> {
     return this.withRetry(async () => {
-      const response: AxiosResponse<DocumentSyncResponse> = await this.client.post(
-        '/api/Documents/sync',
-        request
-      );
+      const response: AxiosResponse<DocumentSyncResponse> =
+        await this.client.post("/api/Documents/sync", request);
       return response.data;
     });
   }
@@ -140,9 +153,8 @@ class DocumentProcessingApiClient {
    */
   async getDocumentStatus(documentId: string): Promise<DocumentStatusResponse> {
     return this.withRetry(async () => {
-      const response: AxiosResponse<DocumentStatusResponse> = await this.client.get(
-        `/api/Documents/${documentId}/status`
-      );
+      const response: AxiosResponse<DocumentStatusResponse> =
+        await this.client.get(`/api/Documents/${documentId}/status`);
       return response.data;
     });
   }
@@ -161,7 +173,9 @@ class DocumentProcessingApiClient {
    */
   async getPendingDocuments(): Promise<PendingDocumentsResponse> {
     return this.withRetry(async () => {
-      const response = await this.client.get<PendingDocumentsResponse>('/api/Documents/pending');
+      const response = await this.client.get<PendingDocumentsResponse>(
+        "/api/Documents/pending",
+      );
       return response.data;
     });
   }
@@ -172,7 +186,7 @@ class DocumentProcessingApiClient {
   async getJobStatus(jobId: string): Promise<JobStatusResponse> {
     return this.withRetry(async () => {
       const response: AxiosResponse<JobStatusResponse> = await this.client.get(
-        `/api/Jobs/${jobId}/status`
+        `/api/Jobs/${jobId}/status`,
       );
       return response.data;
     });
@@ -183,7 +197,8 @@ class DocumentProcessingApiClient {
    */
   async getFailedJobs(): Promise<FailedJobsResponse> {
     return this.withRetry(async () => {
-      const response = await this.client.get<FailedJobsResponse>('/api/Jobs/failed');
+      const response =
+        await this.client.get<FailedJobsResponse>("/api/Jobs/failed");
       return response.data;
     });
   }
@@ -203,10 +218,10 @@ class DocumentProcessingApiClient {
   async healthCheck(): Promise<boolean> {
     try {
       // Try to get pending documents as a health check
-      await this.client.get('/api/Documents/pending', { timeout: 5000 });
+      await this.client.get("/api/Documents/pending", { timeout: 5000 });
       return true;
     } catch (error) {
-      console.warn('[DocumentProcessingAPI] Health check failed:', error);
+      console.warn("[DocumentProcessingAPI] Health check failed:", error);
       return false;
     }
   }
@@ -214,10 +229,12 @@ class DocumentProcessingApiClient {
   /**
    * Batch sync multiple documents
    */
-  async batchSyncDocuments(documentIds: string[]): Promise<DocumentSyncResponse> {
+  async batchSyncDocuments(
+    documentIds: string[],
+  ): Promise<DocumentSyncResponse> {
     return this.syncDocuments({
       documentIds,
-      syncAll: false
+      syncAll: false,
     });
   }
 
@@ -226,7 +243,7 @@ class DocumentProcessingApiClient {
    */
   async syncAllDocuments(): Promise<DocumentSyncResponse> {
     return this.syncDocuments({
-      syncAll: true
+      syncAll: true,
     });
   }
 
@@ -239,7 +256,7 @@ class DocumentProcessingApiClient {
       timeout?: number; // milliseconds
       interval?: number; // milliseconds
       onProgress?: (status: DocumentStatusResponse) => void;
-    } = {}
+    } = {},
   ): Promise<DocumentStatusResponse> {
     const { timeout = 300000, interval = 2000, onProgress } = options; // 5 minutes default timeout
     const startTime = Date.now();
@@ -247,26 +264,35 @@ class DocumentProcessingApiClient {
     while (Date.now() - startTime < timeout) {
       try {
         const status = await this.getDocumentStatus(documentId);
-        
+
         if (onProgress) {
           onProgress(status);
         }
 
         // Check if processing is complete
-        if (status.status === 'completed' || status.status === 'failed' || status.progress >= 100) {
+        if (
+          status.status === "completed" ||
+          status.status === "failed" ||
+          status.progress >= 100
+        ) {
           return status;
         }
 
         // Wait before next poll
-        await new Promise(resolve => setTimeout(resolve, interval));
+        await new Promise((resolve) => setTimeout(resolve, interval));
       } catch (error) {
-        console.warn(`[DocumentProcessingAPI] Polling error for document ${documentId}:`, error);
+        console.warn(
+          `[DocumentProcessingAPI] Polling error for document ${documentId}:`,
+          error,
+        );
         // Continue polling even if a single request fails
-        await new Promise(resolve => setTimeout(resolve, interval));
+        await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
 
-    throw new Error(`Polling timeout for document ${documentId} after ${timeout}ms`);
+    throw new Error(
+      `Polling timeout for document ${documentId} after ${timeout}ms`,
+    );
   }
 
   /**
@@ -278,7 +304,7 @@ class DocumentProcessingApiClient {
       timeout?: number;
       interval?: number;
       onProgress?: (status: JobStatusResponse) => void;
-    } = {}
+    } = {},
   ): Promise<JobStatusResponse> {
     const { timeout = 300000, interval = 2000, onProgress } = options;
     const startTime = Date.now();
@@ -286,20 +312,23 @@ class DocumentProcessingApiClient {
     while (Date.now() - startTime < timeout) {
       try {
         const status = await this.getJobStatus(jobId);
-        
+
         if (onProgress) {
           onProgress(status);
         }
 
         // Check if job is complete
-        if (status.status === 'completed' || status.status === 'failed') {
+        if (status.status === "completed" || status.status === "failed") {
           return status;
         }
 
-        await new Promise(resolve => setTimeout(resolve, interval));
+        await new Promise((resolve) => setTimeout(resolve, interval));
       } catch (error) {
-        console.warn(`[DocumentProcessingAPI] Job monitoring error for ${jobId}:`, error);
-        await new Promise(resolve => setTimeout(resolve, interval));
+        console.warn(
+          `[DocumentProcessingAPI] Job monitoring error for ${jobId}:`,
+          error,
+        );
+        await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
 
@@ -316,7 +345,9 @@ export default documentProcessingApi;
 export { DocumentProcessingApiClient };
 
 // Export utility functions
-export const createDocumentProcessingClient = (config?: Partial<DocumentProcessingConfig>) => {
+export const createDocumentProcessingClient = (
+  config?: Partial<DocumentProcessingConfig>,
+) => {
   return new DocumentProcessingApiClient(config);
 };
 
@@ -326,5 +357,5 @@ export type {
   DocumentSyncResponse,
   DocumentStatusResponse,
   JobStatusResponse,
-  DocumentProcessingConfig
+  DocumentProcessingConfig,
 };

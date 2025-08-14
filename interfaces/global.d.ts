@@ -1,3 +1,6 @@
 interface Window {
-  showToast: (message: string, type: 'success' | 'error' | 'info') => void;
+  showToast: (
+    message: string,
+    type: "success" | "error" | "info" | "warning",
+  ) => void;
 }

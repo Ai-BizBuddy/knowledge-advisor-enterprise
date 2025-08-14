@@ -5,6 +5,7 @@ import { ThemeInit } from "../.flowbite-react/init";
 import "./globals.css";
 import { LoadingProvider } from "@/contexts/LoadingContext";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { ToastProvider } from "@/components/toast";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,9 @@ export default function RootLayout({
       >
         <ThemeInit />
         <AuthProvider>
-          <LoadingProvider>{children}</LoadingProvider>
+          <LoadingProvider>
+            <ToastProvider>{children}</ToastProvider>
+          </LoadingProvider>
         </AuthProvider>
         {/* {children} */}
       </body>

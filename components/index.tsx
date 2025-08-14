@@ -20,3 +20,16 @@ export { default as DocumentDetail } from "./documentDetail";
 
 // Documents Page Components
 export * from "./documentsPage";
+
+// User Management Components
+export * from "./userManagement";
+
+// Role Modal Components
+export * from "./roleModal";
+
+// Toast Components
+export * from "./toast";
+
+// Permissions Table Components
+export { PermissionsTable } from "./PermissionsTable";
+export * from "./rolePermissionsManager";

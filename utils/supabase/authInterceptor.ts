@@ -1,15 +1,15 @@
 /**
  * Supabase Auth-Aware Client
- * 
+ *
  * Enhanced Supabase client that automatically handles token refresh
  * and provides utility methods for authenticated requests.
- * 
+ *
  * NOTE: This file is maintained for backward compatibility.
  * New code should use authUtils.ts for cleaner auth-aware operations.
  */
 
-import { createClient } from '@/utils/supabase/client';
-import { Session, SupabaseClient } from '@supabase/supabase-js';
+import { createClient } from "@/utils/supabase/client";
+import { Session, SupabaseClient } from "@supabase/supabase-js";
 
 /**
  * Enhanced Supabase client with automatic token refresh
@@ -42,10 +42,13 @@ export class SupabaseAuthClient {
    */
   private async ensureValidToken(): Promise<void> {
     try {
-      const { data: { session }, error } = await this.supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
+        console.error("Error getting session:", error);
         return;
       }
 
@@ -59,11 +62,12 @@ export class SupabaseAuthClient {
       const now = Date.now();
       const timeUntilExpiry = expiresAt - now;
 
-      if (timeUntilExpiry <= 5 * 60 * 1000) { // 5 minutes
+      if (timeUntilExpiry <= 5 * 60 * 1000) {
+        // 5 minutes
         await this.refreshToken();
       }
     } catch (error) {
-      console.error('Error ensuring valid token:', error);
+      console.error("Error ensuring valid token:", error);
     }
   }
 
@@ -81,11 +85,13 @@ export class SupabaseAuthClient {
         const { data, error } = await this.supabase.auth.refreshSession();
 
         if (error) {
-          console.error('Token refresh failed:', error);
+          console.error("Token refresh failed:", error);
 
           // If refresh fails with specific errors, handle auth failure
-          if (error.message.includes('refresh_token_not_found') ||
-            error.message.includes('invalid_refresh_token')) {
+          if (
+            error.message.includes("refresh_token_not_found") ||
+            error.message.includes("invalid_refresh_token")
+          ) {
             this.handleAuthFailure();
           }
           return null;
@@ -97,7 +103,7 @@ export class SupabaseAuthClient {
 
         return null;
       } catch (error) {
-        console.error('Token refresh error:', error);
+        console.error("Token refresh error:", error);
         return null;
       } finally {
         this.refreshPromise = null;
@@ -115,8 +121,11 @@ export class SupabaseAuthClient {
     this.supabase.auth.signOut();
 
     // Redirect to login page
-    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
-      window.location.href = '/login';
+    if (
+      typeof window !== "undefined" &&
+      window.location.pathname !== "/login"
+    ) {
+      window.location.href = "/login";
     }
   }
 
@@ -125,16 +134,19 @@ export class SupabaseAuthClient {
    */
   public async getSession(): Promise<Session | null> {
     try {
-      const { data: { session }, error } = await this.supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
+        console.error("Error getting session:", error);
         return null;
       }
 
       return session;
     } catch (error) {
-      console.error('Error getting session:', error);
+      console.error("Error getting session:", error);
       return null;
     }
   }
@@ -168,7 +180,7 @@ export class SupabaseAuthClient {
    * Execute a database operation with automatic token refresh
    */
   public async executeQuery<T>(
-    operation: (client: SupabaseClient) => Promise<T>
+    operation: (client: SupabaseClient) => Promise<T>,
   ): Promise<T> {
     try {
       // Ensure we have a valid token
@@ -180,8 +192,9 @@ export class SupabaseAuthClient {
       return result;
     } catch (error: unknown) {
       // If we get an auth error, try to refresh and retry once
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes('JWT') || errorMessage.includes('expired')) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage.includes("JWT") || errorMessage.includes("expired")) {
         const newSession = await this.refreshToken();
 
         if (newSession) {
@@ -190,7 +203,7 @@ export class SupabaseAuthClient {
         } else {
           // If refresh fails, handle auth failure
           this.handleAuthFailure();
-          throw new Error('Authentication failed');
+          throw new Error("Authentication failed");
         }
       }
 
@@ -200,11 +213,12 @@ export class SupabaseAuthClient {
 
   /**
    * Create a table client with automatic token refresh
-   * Simplified version that returns the raw supabase client
-   * For complex query building, use authUtils.ts executeWithAuth instead
+   * Enhanced version that supports both auth and custom schemas
    */
-  public createTable() {
-    return this.supabase;
+  public createTable(targetSchema?: string) {
+    const schema =
+      targetSchema || process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || "knowledge";
+    return this.supabase.schema(schema);
   }
 }
 

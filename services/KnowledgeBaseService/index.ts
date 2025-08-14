@@ -46,7 +46,6 @@ class KnowledgeBaseService {
         throw new Error('User not authenticated');
       }
       
-      console.log(`[${this.serviceName}] Current user ID:`, session.user.id);
       return session.user;
     } catch (error) {
       console.error(`[${this.serviceName}] Error getting current user:`, error);
@@ -118,10 +117,8 @@ class KnowledgeBaseService {
    * Fetch all knowledge bases for the current user
    */
   async getProjects(): Promise<Project[]> {
-    console.log(`[${this.serviceName}] Fetching knowledge bases...`);
     
     if (this.useMockData) {
-      console.log(`[${this.serviceName}] Using mock data`);
       return this.getMockProjects();
     }
 
@@ -129,7 +126,6 @@ class KnowledgeBaseService {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
       
-      console.log(`[${this.serviceName}] Querying Supabase for user:`, user.id);
       
       const { data: projects, error } = await supabaseTable
         .from('knowledge_base')
@@ -143,11 +139,9 @@ class KnowledgeBaseService {
       }
 
       if (!projects || projects.length === 0) {
-        console.log(`[${this.serviceName}] No knowledge bases found for user`);
         return [];
       }
 
-      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases`);
         // Transform Supabase rows to Project objects
       return projects.map((row: SupabaseProjectRow) => ({
         id: row.id,
@@ -173,7 +167,6 @@ class KnowledgeBaseService {
    * Get a specific knowledge base by ID
    */
   async getProject(id: string): Promise<Project | null> {
-    console.log(`[${this.serviceName}] Fetching knowledge base:`, id);
 
     if (this.useMockData) {
       const mockProjects = this.getMockProjects();
@@ -193,7 +186,6 @@ class KnowledgeBaseService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-          console.log(`[${this.serviceName}] Knowledge base not found:`, id);
           return null;
         }
         console.error(`[${this.serviceName}] Error fetching knowledge base:`, error);
@@ -224,7 +216,6 @@ class KnowledgeBaseService {
    * Create a new knowledge base
    */
   async createProject(input: CreateProjectInput): Promise<Project> {
-    console.log(`[${this.serviceName}] Creating knowledge base:`, input.name);
 
     if (this.useMockData) {
       const newProject: Project = {
@@ -269,7 +260,6 @@ class KnowledgeBaseService {
         throw new Error(`Failed to create knowledge base: ${error.message}`);
       }
 
-      console.log(`[${this.serviceName}] Knowledge base created successfully:`, project.id);
 
       return {
         id: project.id,
@@ -295,7 +285,6 @@ class KnowledgeBaseService {
    * Update an existing knowledge base
    */
   async updateProject(id: string, input: UpdateProjectInput): Promise<Project> {
-    console.log(`[${this.serviceName}] Updating knowledge base:`, id);
 
     if (this.useMockData) {
       const mockProjects = this.getMockProjects();
@@ -333,7 +322,6 @@ class KnowledgeBaseService {
         throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
 
-      console.log(`[${this.serviceName}] Knowledge base updated successfully:`, id);
       
       return {
         id: project.id,
@@ -359,10 +347,8 @@ class KnowledgeBaseService {
    * Delete a knowledge base
    */
   async deleteProject(id: string): Promise<void> {
-    console.log(`[${this.serviceName}] Deleting knowledge base:`, id);
 
     if (this.useMockData) {
-      console.log(`[${this.serviceName}] Mock deletion of knowledge base:`, id);
       return;
     }
 
@@ -381,7 +367,6 @@ class KnowledgeBaseService {
         throw new Error(`Failed to delete knowledge base: ${error.message}`);
       }
 
-      console.log(`[${this.serviceName}] Knowledge base deleted successfully:`, id);
 
     } catch (error) {
       console.error(`[${this.serviceName}] Error deleting knowledge base:`, error);

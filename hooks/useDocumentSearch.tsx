@@ -193,7 +193,6 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
    * Search documents within a specific project
    */
   const searchInProject = useCallback(async (query: string, projectId: string): Promise<DocumentSearchResult> => {
-    console.log('Searching in project:', projectId);
     return search(query, projectId);
   }, [search]);
 

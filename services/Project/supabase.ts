@@ -1,26 +1,29 @@
 import { createClient, createClientTable } from "@/utils/supabase/client";
 import { getAuthSession } from "@/utils/supabase/authUtils";
-import type { 
-  Project, 
-  Document, 
-  CreateProjectInput, 
+import type {
+  Project,
+  Document,
+  CreateProjectInput,
   UpdateProjectInput,
-  JobStatusResponse
+  JobStatusResponse,
 } from "@/interfaces/Project";
 import { ProjectStatus } from "@/interfaces/Project";
-import type { SupabaseProjectRow, DocumentProcessingUpdateData } from "@/interfaces/AxiosTypes";
-import type { 
+import type {
+  SupabaseProjectRow,
+  DocumentProcessingUpdateData,
+} from "@/interfaces/AxiosTypes";
+import type {
   JobProgress,
-  DocumentWithProject
+  DocumentWithProject,
 } from "@/interfaces/SupabaseTypes";
-import { getMimeType, getFileTypeLabel } from '@/utils/mimeHelper';
-import documentProcessingApi from '@/services/DocumentProcessing';
-import { documentSearchService } from '@/services';
-import type { DocumentSearchResult } from '@/services/DocumentSearchService';
+import { getMimeType, getFileTypeLabel } from "@/utils/mimeHelper";
+import documentProcessingApi from "@/services/DocumentProcessing";
+import { documentSearchService } from "@/services";
+import type { DocumentSearchResult } from "@/services/DocumentSearchService";
 
 /**
  * Knowledge Base Service - Supabase Implementation
- * 
+ *
  * This service handles all CRUD operations for knowledge bases using Supabase
  * with the knowledge_advisor.knowledge_base table schema.
  */
@@ -34,12 +37,11 @@ const USE_MOCK_DATA = false; // Temporarily set to true while debugging Supabase
 async function getCurrentUser() {
   try {
     const session = await getAuthSession();
-    
+
     if (!session?.user) {
-      throw new Error('User not authenticated');
+      throw new Error("User not authenticated");
     }
-    
-    console.log("Current user ID:", session.user.id);
+
     return session.user;
   } catch (error) {
     console.error("Error getting current user:", error);
@@ -51,15 +53,14 @@ async function getCurrentUser() {
  * Fetch all knowledge bases for the current user
  */
 export async function getProjects(): Promise<Project[]> {
-  console.log("Fetching knowledge bases...");
-  
   if (USE_MOCK_DATA) {
     // Return mock data for development
     return [
       {
         id: "1",
         name: "Enterprise Documentation",
-        description: "Company-wide knowledge base for all enterprise documentation",
+        description:
+          "Company-wide knowledge base for all enterprise documentation",
         document_count: 156,
         status: ProjectStatus.ACTIVE,
         owner: "mock-user-id",
@@ -67,12 +68,13 @@ export async function getProjects(): Promise<Project[]> {
         updated_at: "2024-03-15T14:20:00Z",
         lastSync: "2 hours ago",
         queries: 1243,
-        accuracy: 98
+        accuracy: 98,
       },
       {
-        id: "2", 
+        id: "2",
         name: "Customer Support Hub",
-        description: "Knowledge base for customer support team with FAQ and procedures",
+        description:
+          "Knowledge base for customer support team with FAQ and procedures",
         document_count: 89,
         status: ProjectStatus.ACTIVE,
         owner: "mock-user-id",
@@ -80,12 +82,13 @@ export async function getProjects(): Promise<Project[]> {
         updated_at: "2024-03-14T16:45:00Z",
         lastSync: "5 hours ago",
         queries: 867,
-        accuracy: 95
+        accuracy: 95,
       },
       {
         id: "3",
         name: "Product Documentation",
-        description: "Technical documentation for all product features and APIs",
+        description:
+          "Technical documentation for all product features and APIs",
         document_count: 234,
         status: ProjectStatus.ACTIVE,
         owner: "mock-user-id",
@@ -93,7 +96,7 @@ export async function getProjects(): Promise<Project[]> {
         updated_at: "2024-03-16T08:30:00Z",
         lastSync: "1 hour ago",
         queries: 2156,
-        accuracy: 97
+        accuracy: 97,
       },
       {
         id: "4",
@@ -101,12 +104,12 @@ export async function getProjects(): Promise<Project[]> {
         description: "Employee training and onboarding materials",
         document_count: 67,
         status: ProjectStatus.PAUSED,
-        owner: "mock-user-id", 
+        owner: "mock-user-id",
         created_at: "2024-02-10T13:45:00Z",
         updated_at: "2024-03-10T10:15:00Z",
         lastSync: "1 week ago",
         queries: 445,
-        accuracy: 92
+        accuracy: 92,
       },
       {
         id: "5",
@@ -115,24 +118,23 @@ export async function getProjects(): Promise<Project[]> {
         document_count: 123,
         status: ProjectStatus.ACTIVE,
         owner: "mock-user-id",
-        created_at: "2024-01-25T15:20:00Z", 
+        created_at: "2024-01-25T15:20:00Z",
         updated_at: "2024-03-12T12:00:00Z",
         lastSync: "3 days ago",
         queries: 678,
-        accuracy: 99
-      }
+        accuracy: 99,
+      },
     ];
   }
-  
+
   try {
-    console.log("Getting current user for projects...");
     const user = await getCurrentUser();
-    
-    console.log("Querying knowledge_base table...");
+
     const supabase = createClientTable();
     const { data, error } = await supabase
       .from("knowledge_base")
-      .select(`
+      .select(
+        `
         id,
         name,
         description,
@@ -140,7 +142,8 @@ export async function getProjects(): Promise<Project[]> {
         owner,
         created_at,
         updated_at
-      `)
+      `,
+      )
       .eq("owner", user.id)
       .order("created_at", { ascending: false });
 
@@ -148,8 +151,6 @@ export async function getProjects(): Promise<Project[]> {
       console.error("Error fetching knowledge bases:", error);
       throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
     }
-
-    console.log("Knowledge bases fetched:", data?.length || 0);
 
     // Add computed fields for display
     const projectsWithCounts = await Promise.all(
@@ -161,9 +162,12 @@ export async function getProjects(): Promise<Project[]> {
             .from("documents")
             .select("*", { count: "exact", head: true })
             .eq("project_id", project.id as string);
-            
+
           if (countError) {
-            console.warn(`Error getting document count for project ${project.id}:`, countError);
+            console.warn(
+              `Error getting document count for project ${project.id}:`,
+              countError,
+            );
           }
 
           return {
@@ -172,7 +176,7 @@ export async function getProjects(): Promise<Project[]> {
             // Add mock data for display (these would come from analytics in real app)
             lastSync: "2 hours ago",
             queries: 1243,
-            accuracy: 98
+            accuracy: 98,
           } as Project;
         } catch (err) {
           console.warn(`Error processing project ${project.id}:`, err);
@@ -181,10 +185,10 @@ export async function getProjects(): Promise<Project[]> {
             document_count: 0,
             lastSync: "Never",
             queries: 0,
-            accuracy: 0
+            accuracy: 0,
           } as Project;
         }
-      })
+      }),
     );
 
     return projectsWithCounts;
@@ -198,28 +202,24 @@ export async function getProjects(): Promise<Project[]> {
  * Fetch a single knowledge base by ID
  */
 export async function getProjectById(id: string): Promise<Project> {
-  console.log("Fetching knowledge base by ID:", id);
-  
   if (USE_MOCK_DATA) {
-    console.log("Using mock data for getProjectById");
     // Return mock data for development
     const mockProjects = await getProjects(); // Get mock data from getProjects
-    const project = mockProjects.find(p => p.id === id);
+    const project = mockProjects.find((p) => p.id === id);
     if (!project) {
       throw new Error(`Knowledge base with ID ${id} not found`);
     }
     return project;
   }
-  
+
   try {
-    console.log("Getting current user for project lookup...");
     const user = await getCurrentUser();
-    
-    console.log(`Querying knowledge_base table for project ID: ${id}`);
+
     const supabase = createClientTable();
     const { data, error } = await supabase
       .from("knowledge_base")
-      .select(`
+      .select(
+        `
         id,
         name,
         description,
@@ -227,13 +227,14 @@ export async function getProjectById(id: string): Promise<Project> {
         owner,
         created_at,
         updated_at
-      `)
+      `,
+      )
       .eq("id", id)
       .eq("owner", user.id)
       .single();
 
     if (error) {
-      if (error.code === 'PGRST116') {
+      if (error.code === "PGRST116") {
         throw new Error(`Knowledge base with ID ${id} not found`);
       }
       console.error("Error fetching knowledge base:", error);
@@ -244,16 +245,13 @@ export async function getProjectById(id: string): Promise<Project> {
       throw new Error(`Knowledge base with ID ${id} not found`);
     }
 
-    console.log("Project data fetched:", data);
-
     // Get document count
-    console.log("Getting document count...");
     const supabaseCount = createClientTable();
     const { count, error: countError } = await supabaseCount
       .from("documents")
       .select("*", { count: "exact", head: true })
       .eq("project_id", id);
-      
+
     if (countError) {
       console.warn("Error getting document count:", countError);
     }
@@ -264,10 +262,9 @@ export async function getProjectById(id: string): Promise<Project> {
       // Add mock data for display
       lastSync: "2 hours ago",
       queries: 1243,
-      accuracy: 98
+      accuracy: 98,
     } as Project;
 
-    console.log("Final project result:", result);
     return result;
   } catch (error) {
     console.error("Error in getProjectById:", error);
@@ -278,9 +275,9 @@ export async function getProjectById(id: string): Promise<Project> {
 /**
  * Create a new knowledge base
  */
-export async function createProject(projectData: CreateProjectInput): Promise<Project> {
-  console.log("Creating new knowledge base:", projectData);
-  
+export async function createProject(
+  projectData: CreateProjectInput,
+): Promise<Project> {
   if (USE_MOCK_DATA) {
     // Simulate creating a new project with mock data
     const newProject: Project = {
@@ -294,24 +291,27 @@ export async function createProject(projectData: CreateProjectInput): Promise<Pr
       updated_at: new Date().toISOString(),
       lastSync: "Never",
       queries: 0,
-      accuracy: 0
+      accuracy: 0,
     };
     return newProject;
   }
-  
+
   const user = await getCurrentUser();
-  
+
   const supabase = createClientTable();
   const { data, error } = await supabase
     .from("knowledge_base")
-    .insert([{
-      name: projectData.name,
-      description: projectData.description,
-      status: projectData.status,
-      owner: user.id,
-      updated_at: new Date().toISOString()
-    }])
-    .select(`
+    .insert([
+      {
+        name: projectData.name,
+        description: projectData.description,
+        status: projectData.status,
+        owner: user.id,
+        updated_at: new Date().toISOString(),
+      },
+    ])
+    .select(
+      `
       id,
       name,
       description,
@@ -319,9 +319,10 @@ export async function createProject(projectData: CreateProjectInput): Promise<Pr
       owner,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .single();
-    
+
   if (error) {
     console.error("Error creating knowledge base:", error);
     throw new Error(`Failed to create knowledge base: ${error.message}`);
@@ -332,28 +333,30 @@ export async function createProject(projectData: CreateProjectInput): Promise<Pr
     document_count: 0,
     lastSync: "Never",
     queries: 0,
-    accuracy: 0
+    accuracy: 0,
   } as Project;
 }
 
 /**
  * Update an existing knowledge base
  */
-export async function updateProject(id: string, updates: UpdateProjectInput): Promise<Project> {
-  console.log("Updating knowledge base:", id, updates);
-  
+export async function updateProject(
+  id: string,
+  updates: UpdateProjectInput,
+): Promise<Project> {
   const user = await getCurrentUser();
-  
+
   const supabase = createClientTable();
   const { data, error } = await supabase
     .from("knowledge_base")
     .update({
       ...updates,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq("id", id)
     .eq("owner", user.id)
-    .select(`
+    .select(
+      `
       id,
       name,
       description,
@@ -361,9 +364,10 @@ export async function updateProject(id: string, updates: UpdateProjectInput): Pr
       owner,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .single();
-    
+
   if (error) {
     console.error("Error updating knowledge base:", error);
     throw new Error(`Failed to update knowledge base: ${error.message}`);
@@ -381,7 +385,7 @@ export async function updateProject(id: string, updates: UpdateProjectInput): Pr
     document_count: count || 0,
     lastSync: "2 hours ago",
     queries: 1243,
-    accuracy: 98
+    accuracy: 98,
   } as Project;
 }
 
@@ -389,10 +393,8 @@ export async function updateProject(id: string, updates: UpdateProjectInput): Pr
  * Delete a knowledge base and all its documents
  */
 export async function deleteProject(id: string): Promise<void> {
-  console.log("Deleting knowledge base:", id);
-  
   const user = await getCurrentUser();
-  
+
   // First, delete all documents associated with this project
   const supabaseDocuments = createClientTable();
   const { data: documents } = await supabaseDocuments
@@ -419,7 +421,7 @@ export async function deleteProject(id: string): Promise<void> {
     .delete()
     .eq("id", id)
     .eq("owner", user.id);
-    
+
   if (error) {
     console.error("Error deleting knowledge base:", error);
     throw new Error(`Failed to delete knowledge base: ${error.message}`);
@@ -438,17 +440,16 @@ export async function deleteProject(id: string): Promise<void> {
 /**
  * Fetch documents by knowledge base ID
  */
-export async function getDocumentsByProjectId(projectId: string): Promise<Document[]> {
-  console.log("Fetching documents for knowledge base:", projectId);
-  
+export async function getDocumentsByProjectId(
+  projectId: string,
+): Promise<Document[]> {
   if (USE_MOCK_DATA) {
-    console.log("Using mock data for getDocumentsByProjectId");
     // Return mock documents for development
     const mockDocuments: Document[] = [
       {
         id: "doc-1",
         name: "Employee Handbook 2024.pdf",
-        type: "PDF", 
+        type: "PDF",
         status: "processed",
         project_id: projectId,
         chunk_count: 45,
@@ -460,10 +461,10 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
         url: "https://example.com/employee-handbook-2024.pdf",
         rag_status: "synced",
         last_rag_sync: "2024-03-15T11:00:00Z",
-        metadata: { pages: 156 }
+        metadata: { pages: 156 },
       },
       {
-        id: "doc-2", 
+        id: "doc-2",
         name: "API Documentation v3.2.md",
         type: "Markdown",
         status: "processing",
@@ -471,52 +472,53 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
         chunk_count: 28,
         file_size: 1800000,
         mime_type: "text/markdown",
-        created_at: "2024-03-14T16:45:00Z", 
+        created_at: "2024-03-14T16:45:00Z",
         updated_at: "2024-03-14T17:00:00Z",
         path: "documents/api-documentation-v3.2.md",
         url: "https://example.com/api-documentation-v3.2.md",
         rag_status: "syncing",
         last_rag_sync: "2024-03-14T17:15:00Z",
-        metadata: { pages: 89 }
+        metadata: { pages: 89 },
       },
       {
         id: "doc-3",
-        name: "Security Policies.docx", 
+        name: "Security Policies.docx",
         type: "DOCX",
         status: "processed",
         project_id: projectId,
         chunk_count: 23,
         file_size: 856000,
-        mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mime_type:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         created_at: "2024-03-13T09:15:00Z",
-        updated_at: "2024-03-13T09:30:00Z", 
+        updated_at: "2024-03-13T09:30:00Z",
         path: "documents/security-policies.docx",
         url: "https://example.com/security-policies.docx",
         rag_status: "synced",
         last_rag_sync: "2024-03-13T10:00:00Z",
-        metadata: { pages: 45 }
+        metadata: { pages: 45 },
       },
       {
         id: "doc-4",
         name: "Training Module - New Hires.pdf",
         type: "PDF",
-        status: "processed", 
+        status: "processed",
         project_id: projectId,
         chunk_count: 67,
         file_size: 5200000,
         mime_type: "application/pdf",
         created_at: "2024-03-12T14:20:00Z",
         updated_at: "2024-03-12T14:35:00Z",
-        path: "documents/training-module-new-hires.pdf", 
+        path: "documents/training-module-new-hires.pdf",
         url: "https://example.com/training-module-new-hires.pdf",
         rag_status: "synced",
         last_rag_sync: "2024-03-12T15:00:00Z",
-        metadata: { pages: 234 }
+        metadata: { pages: 234 },
       },
       {
         id: "doc-5",
         name: "Legal Compliance Guide.pdf",
-        type: "PDF", 
+        type: "PDF",
         status: "error",
         project_id: projectId,
         chunk_count: 0,
@@ -525,22 +527,22 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
         created_at: "2024-03-11T11:00:00Z",
         updated_at: "2024-03-11T11:15:00Z",
         path: "documents/legal-compliance-guide.pdf",
-        url: "https://example.com/legal-compliance-guide.pdf", 
+        url: "https://example.com/legal-compliance-guide.pdf",
         rag_status: "error",
         last_rag_sync: "2024-03-11T11:30:00Z",
-        metadata: { pages: 0, error: "Processing failed - corrupt file" }
-      }
+        metadata: { pages: 0, error: "Processing failed - corrupt file" },
+      },
     ];
-    
+
     return mockDocuments;
   }
-  
+
   try {
-    console.log(`Querying documents table for project: ${projectId}`);
     const supabase = createClientTable();
     const { data, error } = await supabase
       .from("documents")
-      .select(`
+      .select(
+        `
         id,
         name,
         type,
@@ -556,7 +558,8 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
         rag_status,
         last_rag_sync,
         metadata
-      `)
+      `,
+      )
       .eq("project_id", projectId)
       .order("created_at", { ascending: false });
 
@@ -565,7 +568,6 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
       throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
-    console.log("Documents fetched:", data?.length || 0);
     return (data as Document[]) || [];
   } catch (error) {
     console.error("Error in getDocumentsByProjectId:", error);
@@ -577,27 +579,28 @@ export async function getDocumentsByProjectId(projectId: string): Promise<Docume
  * Sanitize filename for Supabase Storage compatibility
  */
 function sanitizeFileName(fileName: string): string {
-  return fileName
-    // Replace Thai characters and special characters with safe alternatives
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
-    .replace(/[^\w\s.-]/g, '') // Keep only word characters, spaces, dots, and hyphens
-    .replace(/\s+/g, '_') // Replace spaces with underscores
-    .replace(/_{2,}/g, '_') // Replace multiple underscores with single
-    .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
-    .toLowerCase(); // Convert to lowercase for consistency
+  return (
+    fileName
+      // Replace Thai characters and special characters with safe alternatives
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
+      .replace(/[^\w\s.-]/g, "") // Keep only word characters, spaces, dots, and hyphens
+      .replace(/\s+/g, "_") // Replace spaces with underscores
+      .replace(/_{2,}/g, "_") // Replace multiple underscores with single
+      .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
+      .toLowerCase()
+  ); // Convert to lowercase for consistency
 }
 
 /**
  * Upload a document to Supabase Storage and create database record
  */
 export async function uploadDocument(
-  projectId: string, 
-  file: File, 
+  projectId: string,
+  file: File,
   path: string,
-  options?: { metadata?: Record<string, unknown>; autoSync?: boolean }
+  options?: { metadata?: Record<string, unknown>; autoSync?: boolean },
 ) {
-  console.log("Uploading document:", file.name, "to project:", projectId);
   const sanitizedName = sanitizeFileName(file.name);
   const sanitizedPath = `documents/${sanitizedName}`;
 
@@ -606,8 +609,12 @@ export async function uploadDocument(
     const mockDocument: Document = {
       id: `mock-doc-${Date.now()}`,
       name: file.name,
-      type: file.type.includes('pdf') ? 'PDF' : file.type.includes('word') ? 'DOCX' : 'TXT',
-      status: 'uploaded',
+      type: file.type.includes("pdf")
+        ? "PDF"
+        : file.type.includes("word")
+          ? "DOCX"
+          : "TXT",
+      status: "uploaded",
       project_id: projectId,
       chunk_count: 0,
       file_size: file.size,
@@ -616,44 +623,51 @@ export async function uploadDocument(
       updated_at: new Date().toISOString(),
       path: path,
       url: URL.createObjectURL(file), // Temporary URL for demo
-      rag_status: 'not_synced',
-      metadata: options?.metadata || {}
+      rag_status: "not_synced",
+      metadata: options?.metadata || {},
     };
-    
+
     // Simulate upload delay
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
     return {
       success: true,
       document: mockDocument,
-      message: 'Document uploaded successfully (mock)'
+      message: "Document uploaded successfully (mock)",
     };
   }
-  
+
   try {
     // Check if bucket exists, create if not
     const supabase = createClient();
-    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
-    if (listError) throw new Error(`Failed to list buckets: ${listError.message}`);
-    
+    const { data: buckets, error: listError } =
+      await supabase.storage.listBuckets();
+    if (listError)
+      throw new Error(`Failed to list buckets: ${listError.message}`);
+
     const bucketExists = buckets?.some((b) => b.name === projectId);
     if (!bucketExists) {
-      const { error: createError } = await supabase.storage.createBucket(projectId, { 
-        public: false,
-        fileSizeLimit: 10485760 // 10MB
-      });
-      if (createError) throw new Error(`Failed to create bucket: ${createError.message}`);
+      const { error: createError } = await supabase.storage.createBucket(
+        projectId,
+        {
+          public: false,
+          fileSizeLimit: 10485760, // 10MB
+        },
+      );
+      if (createError)
+        throw new Error(`Failed to create bucket: ${createError.message}`);
     }
-    
+
     // Upload file to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from(projectId)
-      .upload(sanitizedPath, file, { 
+      .upload(sanitizedPath, file, {
         upsert: true,
-        cacheControl: '3600'
+        cacheControl: "3600",
       });
 
-    if (uploadError) throw new Error(`Failed to upload file: ${uploadError.message}`);
+    if (uploadError)
+      throw new Error(`Failed to upload file: ${uploadError.message}`);
 
     // Get signed URL for the uploaded file
     const { data: urlData } = await supabase.storage
@@ -663,44 +677,52 @@ export async function uploadDocument(
     // Determine file type and MIME type
     const mimeType = getMimeType(file);
     const fileType = getFileTypeLabel(mimeType);
-      
+
     // Insert document record with enhanced metadata
     const supabaseTable = createClientTable();
     const { data: documentData, error: insertError } = await supabaseTable
       .from("documents")
-      .insert([{
-        name: file.name,
-        type: fileType,
-        status: "Uploaded",
-        project_id: projectId,
-        url: urlData?.signedUrl || '',
-        path: sanitizedPath,
-        file_size: file.size,
-        mime_type: mimeType,
-        chunk_count: 0,
-        rag_status: "not_synced",
-        metadata: options?.metadata || {},
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }])
+      .insert([
+        {
+          name: file.name,
+          type: fileType,
+          status: "Uploaded",
+          project_id: projectId,
+          url: urlData?.signedUrl || "",
+          path: sanitizedPath,
+          file_size: file.size,
+          mime_type: mimeType,
+          chunk_count: 0,
+          rag_status: "not_synced",
+          metadata: options?.metadata || {},
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+      ])
       .select()
       .single();
 
-    if (insertError) throw new Error(`Failed to create document record: ${insertError.message}`);
+    if (insertError)
+      throw new Error(
+        `Failed to create document record: ${insertError.message}`,
+      );
 
     // Auto-sync to RAG if requested
     if (options?.autoSync && documentData) {
       try {
         await syncDocumentToRAG(projectId, documentData.id as string);
       } catch (syncError) {
-        console.warn("Auto-sync failed, document uploaded but not synced:", syncError);
+        console.warn(
+          "Auto-sync failed, document uploaded but not synced:",
+          syncError,
+        );
       }
     }
 
-    return { 
-      data: uploadData, 
+    return {
+      data: uploadData,
       document: documentData,
-      signedUrl: urlData?.signedUrl 
+      signedUrl: urlData?.signedUrl,
     };
   } catch (error) {
     console.error("Upload failed:", error);
@@ -711,31 +733,34 @@ export async function uploadDocument(
 /**
  * Delete a document from storage and database
  */
-export async function deleteDocument(projectId: string, documentId: string, url?: string) {
-  console.log("Deleting document:", documentId, "from project:", projectId);
+export async function deleteDocument(
+  projectId: string,
+  documentId: string,
+  url?: string,
+) {
   // URL parameter is for backwards compatibility but not currently used
   void url;
-  
+
   try {
     const supabaseTable = createClientTable();
     const supabaseClient = createClient();
-    
+
     // Get document info to extract the storage path
     const { data: document, error: fetchError } = await supabaseTable
       .from("documents")
       .select("path, name")
       .eq("id", documentId)
       .single();
-    
-    console.log({document, fetchError})
-    if (fetchError) throw new Error(`Failed to fetch document: ${fetchError.message}`);
+
+    if (fetchError)
+      throw new Error(`Failed to fetch document: ${fetchError.message}`);
 
     // Delete from storage if path exists
     if (document?.path) {
       const { error: storageError } = await supabaseClient.storage
         .from(projectId)
         .remove([document.path as string]);
-      
+
       if (storageError) {
         console.warn("Storage deletion failed:", storageError);
         // Don't throw - continue with database deletion
@@ -748,7 +773,8 @@ export async function deleteDocument(projectId: string, documentId: string, url?
       .delete()
       .eq("id", documentId);
 
-    if (dbError) throw new Error(`Failed to delete document record: ${dbError.message}`);
+    if (dbError)
+      throw new Error(`Failed to delete document record: ${dbError.message}`);
 
     return { success: true };
   } catch (error) {
@@ -761,24 +787,23 @@ export async function deleteDocument(projectId: string, documentId: string, url?
  * Sync a single document to RAG system using the ingestion API
  */
 export async function syncDocumentToRAG(projectId: string, documentId: string) {
-  console.log("Syncing document to RAG:", documentId);
-  
   try {
     const supabase = createClientTable();
-    
+
     // Check if document processing service is available
     const isServiceAvailable = await documentProcessingApi.healthCheck();
     if (!isServiceAvailable) {
-      console.log({isServiceAvailable})
-      throw new Error('Document processing service is not available. Please ensure the service is running on localhost:5001');
+      throw new Error(
+        "Document processing service is not available. Please ensure the service is running on localhost:5001",
+      );
     }
 
     // Update status to syncing
     await supabase
       .from("documents")
-      .update({ 
+      .update({
         rag_status: "syncing",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("id", documentId);
 
@@ -786,10 +811,12 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
     await documentProcessingApi.processDocument(documentId);
 
     // Sync the document to the RAG system
-    const syncResponse = await documentProcessingApi.batchSyncDocuments([documentId]);
-    
+    const syncResponse = await documentProcessingApi.batchSyncDocuments([
+      documentId,
+    ]);
+
     if (!syncResponse.success) {
-      throw new Error(syncResponse.message || 'Document sync failed');
+      throw new Error(syncResponse.message || "Document sync failed");
     }
 
     // Monitor the job if jobId is provided
@@ -798,31 +825,37 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
         syncResponse.jobId,
         {
           onProgress: (status: JobStatusResponse) => {
-            console.log(`[RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress || 0}%`);
-          }
-        }
+            console.log(
+              `[RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress || 0}%`,
+            );
+          },
+        },
       );
 
-      if (jobStatus.status === 'failed') {
-        throw new Error(jobStatus.errorMessage || 'RAG sync job failed');
+      if (jobStatus.status === "failed") {
+        throw new Error(jobStatus.errorMessage || "RAG sync job failed");
       }
     }
 
     // Get the processing status from the document processing service
-    const documentStatus = await documentProcessingApi.getDocumentStatus(documentId);
-    
+    const documentStatus =
+      await documentProcessingApi.getDocumentStatus(documentId);
+
     // Update status based on ingestion service response
     const updateData: DocumentProcessingUpdateData = {
       last_rag_sync: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     };
 
-    if (documentStatus.status === 'completed') {
+    if (documentStatus.status === "completed") {
       updateData.rag_status = "synced";
-      updateData.chunk_count = documentStatus.progress || Math.floor(Math.random() * 50) + 10;
-    } else if (documentStatus.status === 'failed') {
+      updateData.chunk_count =
+        documentStatus.progress || Math.floor(Math.random() * 50) + 10;
+    } else if (documentStatus.status === "failed") {
       updateData.rag_status = "error";
-      throw new Error(documentStatus.errorMessage || 'Document processing failed');
+      throw new Error(
+        documentStatus.errorMessage || "Document processing failed",
+      );
     } else {
       updateData.rag_status = "synced"; // Assume success if no specific status
       updateData.chunk_count = Math.floor(Math.random() * 50) + 10;
@@ -838,17 +871,17 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
     return { success: true };
   } catch (error) {
     console.error("RAG sync failed:", error);
-    
+
     // Update status to error
     const errorSupabase = createClientTable();
     await errorSupabase
       .from("documents")
-      .update({ 
+      .update({
         rag_status: "error",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .eq("id", documentId);
-    
+
     throw error;
   }
 }
@@ -856,32 +889,36 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
 /**
  * Bulk sync multiple documents to RAG system using the ingestion API
  */
-export async function bulkSyncDocumentsToRAG(projectId: string, documentIds: string[]) {
-  console.log("Bulk syncing documents to RAG:", documentIds);
-  
+export async function bulkSyncDocumentsToRAG(
+  projectId: string,
+  documentIds: string[],
+) {
   try {
     const supabase = createClientTable();
-    
+
     // Check if document processing service is available
     const isServiceAvailable = await documentProcessingApi.healthCheck();
     if (!isServiceAvailable) {
-      throw new Error('Document processing service is not available. Please ensure the service is running on localhost:5001');
+      throw new Error(
+        "Document processing service is not available. Please ensure the service is running on localhost:5001",
+      );
     }
 
     // Update all documents status to syncing
     await supabase
       .from("documents")
-      .update({ 
+      .update({
         rag_status: "syncing",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .in("id", documentIds);
 
     // Use the bulk sync API for better efficiency
-    const syncResponse = await documentProcessingApi.batchSyncDocuments(documentIds);
-    
+    const syncResponse =
+      await documentProcessingApi.batchSyncDocuments(documentIds);
+
     if (!syncResponse.success) {
-      throw new Error(syncResponse.message || 'Bulk document sync failed');
+      throw new Error(syncResponse.message || "Bulk document sync failed");
     }
 
     let successCount = 0;
@@ -894,60 +931,67 @@ export async function bulkSyncDocumentsToRAG(projectId: string, documentIds: str
           syncResponse.jobId,
           {
             onProgress: (status: JobProgress) => {
-              console.log(`[Bulk RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress}%`);
-            }
-          }
+              console.log(
+                `[Bulk RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress}%`,
+              );
+            },
+          },
         );
 
-        if (jobStatus.status === 'failed') {
-          throw new Error(jobStatus.errorMessage || 'Bulk RAG sync job failed');
+        if (jobStatus.status === "failed") {
+          throw new Error(jobStatus.errorMessage || "Bulk RAG sync job failed");
         }
       } catch (jobError) {
-        console.warn('Job monitoring failed, checking individual document statuses:', jobError);
+        console.warn(
+          "Job monitoring failed, checking individual document statuses:",
+          jobError,
+        );
       }
     }
 
     // Check status of each document and update accordingly
     const statusPromises = documentIds.map(async (docId) => {
       try {
-        const documentStatus = await documentProcessingApi.getDocumentStatus(docId);
-        
+        const documentStatus =
+          await documentProcessingApi.getDocumentStatus(docId);
+
         const updateData: DocumentProcessingUpdateData = {
           last_rag_sync: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         };
 
-        if (documentStatus.status === 'completed') {
+        if (documentStatus.status === "completed") {
           updateData.rag_status = "synced";
-          updateData.chunk_count = documentStatus.progress || Math.floor(Math.random() * 50) + 10;
-        } else if (documentStatus.status === 'failed') {
+          updateData.chunk_count =
+            documentStatus.progress || Math.floor(Math.random() * 50) + 10;
+        } else if (documentStatus.status === "failed") {
           updateData.rag_status = "error";
-          errors.push(`Document ${docId}: ${documentStatus.errorMessage || 'Processing failed'}`);
+          errors.push(
+            `Document ${docId}: ${documentStatus.errorMessage || "Processing failed"}`,
+          );
         } else {
           updateData.rag_status = "synced"; // Assume success if no specific status
           updateData.chunk_count = Math.floor(Math.random() * 50) + 10;
         }
 
         const supabase = createClientTable();
-        await supabase
-          .from("documents")
-          .update(updateData)
-          .eq("id", docId);
+        await supabase.from("documents").update(updateData).eq("id", docId);
 
         if (updateData.rag_status === "synced") {
           successCount++;
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error";
         errors.push(`Document ${docId}: ${errorMessage}`);
-        
+
         // Update status to error for this document
         const errorSupabase = createClientTable();
         await errorSupabase
           .from("documents")
-          .update({ 
+          .update({
             rag_status: "error",
-            updated_at: new Date().toISOString()
+            updated_at: new Date().toISOString(),
           })
           .eq("id", docId);
       }
@@ -960,21 +1004,21 @@ export async function bulkSyncDocumentsToRAG(projectId: string, documentIds: str
       processedCount: successCount,
       totalCount: documentIds.length,
       jobId: syncResponse.jobId,
-      errors: errors.length > 0 ? errors : undefined
+      errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
     console.error("Bulk RAG sync failed:", error);
-    
+
     // Update all documents status to error
     const errorSupabase = createClientTable();
     await errorSupabase
       .from("documents")
-      .update({ 
+      .update({
         rag_status: "error",
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       })
       .in("id", documentIds);
-    
+
     throw error;
   }
 }
@@ -983,16 +1027,14 @@ export async function bulkSyncDocumentsToRAG(projectId: string, documentIds: str
  * Get knowledge bases count for the current user
  */
 export async function getProjectsCount(): Promise<number> {
-  console.log("Getting knowledge bases count...");
-  
   const user = await getCurrentUser();
   const supabase = createClientTable();
-  
+
   const result = await supabase
     .from("knowledge_base")
     .select("*", { count: "exact", head: true })
     .eq("owner", user.id);
-    
+
   const { count, error } = result;
 
   if (error) {
@@ -1009,16 +1051,14 @@ export async function getProjectsCount(): Promise<number> {
 export async function getProjectsPaginated(
   page: number = 1,
   limit: number = 10,
-  sortBy: 'created_at' | 'updated_at' | 'name' = 'created_at',
-  sortOrder: 'asc' | 'desc' = 'desc'
-): Promise<{ data: Project[], total: number, page: number, limit: number }> {
-  console.log("Fetching paginated knowledge bases...");
-  
+  sortBy: "created_at" | "updated_at" | "name" = "created_at",
+  sortOrder: "asc" | "desc" = "desc",
+): Promise<{ data: Project[]; total: number; page: number; limit: number }> {
   const supabase = createClientTable();
   const user = await getCurrentUser();
-  
+
   const offset = (page - 1) * limit;
-  
+
   // Get total count
   const countResult = await supabase
     .from("knowledge_base")
@@ -1029,7 +1069,8 @@ export async function getProjectsPaginated(
   // Get paginated data
   const result = await supabase
     .from("knowledge_base")
-    .select(`
+    .select(
+      `
       id,
       name,
       description,
@@ -1037,9 +1078,10 @@ export async function getProjectsPaginated(
       owner,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .eq("owner", user.id)
-    .order(sortBy, { ascending: sortOrder === 'asc' })
+    .order(sortBy, { ascending: sortOrder === "asc" })
     .range(offset, offset + limit - 1);
   const { data, error } = result;
 
@@ -1063,16 +1105,16 @@ export async function getProjectsPaginated(
         document_count: docCount || 0,
         lastSync: "2 hours ago",
         queries: 1243,
-        accuracy: 98
+        accuracy: 98,
       } as Project;
-    })
+    }),
   );
 
   return {
     data: projectsWithCounts,
     total: count || 0,
     page,
-    limit
+    limit,
   };
 }
 
@@ -1080,14 +1122,13 @@ export async function getProjectsPaginated(
  * Search knowledge bases by name or description
  */
 export async function searchProjects(query: string): Promise<Project[]> {
-  console.log("Searching knowledge bases:", query);
-  
   const supabase = createClientTable();
   const user = await getCurrentUser();
-  
+
   const { data, error } = await supabase
     .from("knowledge_base")
-    .select(`
+    .select(
+      `
       id,
       name,
       description,
@@ -1095,7 +1136,8 @@ export async function searchProjects(query: string): Promise<Project[]> {
       owner,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .eq("owner", user.id)
     .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
     .order("created_at", { ascending: false });
@@ -1120,9 +1162,9 @@ export async function searchProjects(query: string): Promise<Project[]> {
         document_count: count || 0,
         lastSync: "2 hours ago",
         queries: 1243,
-        accuracy: 98
+        accuracy: 98,
       } as Project;
-    })
+    }),
   );
 
   return projectsWithCounts;
@@ -1131,15 +1173,16 @@ export async function searchProjects(query: string): Promise<Project[]> {
 /**
  * Get knowledge bases by status
  */
-export async function getProjectsByStatus(status: ProjectStatus): Promise<Project[]> {
-  console.log("Fetching knowledge bases by status:", status);
-  
+export async function getProjectsByStatus(
+  status: ProjectStatus,
+): Promise<Project[]> {
   const supabase = createClientTable();
   const user = await getCurrentUser();
-  
+
   const { data, error } = await supabase
     .from("knowledge_base")
-    .select(`
+    .select(
+      `
       id,
       name,
       description,
@@ -1147,7 +1190,8 @@ export async function getProjectsByStatus(status: ProjectStatus): Promise<Projec
       owner,
       created_at,
       updated_at
-    `)
+    `,
+    )
     .eq("owner", user.id)
     .eq("status", status)
     .order("created_at", { ascending: false });
@@ -1172,9 +1216,9 @@ export async function getProjectsByStatus(status: ProjectStatus): Promise<Projec
         document_count: count || 0,
         lastSync: "2 hours ago",
         queries: 1243,
-        accuracy: 98
+        accuracy: 98,
       } as Project;
-    })
+    }),
   );
 
   return projectsWithCounts;
@@ -1184,39 +1228,36 @@ export async function getProjectsByStatus(status: ProjectStatus): Promise<Projec
  * Duplicate/clone a knowledge base
  */
 export async function duplicateProject(
-  projectId: string, 
+  projectId: string,
   newName: string,
-  includeDocuments: boolean = false
+  includeDocuments: boolean = false,
 ): Promise<Project> {
-  console.log("Duplicating knowledge base:", projectId);
-  
   // Get the original project
   const original = await getProjectById(projectId);
-  
+
   // Create the duplicate
   const duplicateData: CreateProjectInput = {
     name: newName,
     description: `Copy of ${original.description}`,
-    status: ProjectStatus.DRAFT
+    status: ProjectStatus.DRAFT,
   };
-  
+
   const newProject = await createProject(duplicateData);
-  
+
   // Optionally copy documents
   if (includeDocuments) {
     const documents = await getDocumentsByProjectId(projectId);
-    
+
     for (const doc of documents) {
       try {
         // Here you would implement document copying logic
-        console.log(`Would copy document: ${doc.name}`);
         // This would involve copying files in storage and creating new document records
       } catch (error) {
         console.warn(`Failed to copy document ${doc.name}:`, error);
       }
     }
   }
-  
+
   return newProject;
 }
 
@@ -1224,23 +1265,20 @@ export async function duplicateProject(
  * Batch update multiple knowledge bases
  */
 export async function batchUpdateProjects(
-  projectIds: string[], 
-  updates: Partial<UpdateProjectInput>
+  projectIds: string[],
+  updates: Partial<UpdateProjectInput>,
 ): Promise<Project[]> {
-  console.log("Batch updating knowledge bases:", projectIds);
-  
   const supabase = createClientTable();
   const user = await getCurrentUser();
-  
+
   const { data, error } = await supabase
     .from("knowledge_base")
     .update({
       ...updates,
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     })
     .eq("owner", user.id)
-    .in("id", projectIds)
-    .select(`
+    .in("id", projectIds).select(`
       id,
       name,
       description,
@@ -1249,7 +1287,7 @@ export async function batchUpdateProjects(
       created_at,
       updated_at
     `);
-    
+
   if (error) {
     console.error("Error batch updating knowledge bases:", error);
     throw new Error(`Failed to update knowledge bases: ${error.message}`);
@@ -1270,9 +1308,9 @@ export async function batchUpdateProjects(
         document_count: count || 0,
         lastSync: "2 hours ago",
         queries: 1243,
-        accuracy: 98
+        accuracy: 98,
       } as Project;
-    })
+    }),
   );
 
   return projectsWithCounts;
@@ -1282,12 +1320,10 @@ export async function batchUpdateProjects(
  * Batch delete multiple knowledge bases
  */
 export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
-  console.log("Batch deleting knowledge bases:", projectIds);
-  
   const supabase = createClient(); // Use full client for storage access
   const supabaseTable = createClientTable(); // Use table client for table operations
   const user = await getCurrentUser();
-  
+
   // Delete all documents for these projects first
   for (const projectId of projectIds) {
     try {
@@ -1300,14 +1336,21 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
         // Delete files from storage and document records
         for (const doc of documents) {
           try {
-            await deleteDocument(projectId, doc.id as string, doc.url as string);
+            await deleteDocument(
+              projectId,
+              doc.id as string,
+              doc.url as string,
+            );
           } catch (error) {
             console.warn(`Failed to delete document ${doc.id}:`, error);
           }
         }
       }
     } catch (error) {
-      console.warn(`Failed to clean up documents for project ${projectId}:`, error);
+      console.warn(
+        `Failed to clean up documents for project ${projectId}:`,
+        error,
+      );
     }
   }
 
@@ -1318,7 +1361,7 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
     .eq("owner", user.id)
     .in("id", projectIds);
   const { error } = deleteResult;
-    
+
   if (error) {
     console.error("Error batch deleting knowledge bases:", error);
     throw new Error(`Failed to delete knowledge bases: ${error.message}`);
@@ -1344,10 +1387,8 @@ export async function getProjectAnalytics(projectId: string): Promise<{
   recentActivity: number;
   averageChunkCount: number;
 }> {
-  console.log("Getting knowledge base analytics:", projectId);
-  
   const supabase = createClientTable();
-  
+
   // Get document statistics
   const { data: documents, error } = await supabase
     .from("documents")
@@ -1360,24 +1401,29 @@ export async function getProjectAnalytics(projectId: string): Promise<{
   }
 
   const totalDocuments = documents?.length || 0;
-  const totalSyncedDocuments = documents?.filter(doc => doc.rag_status === 'synced').length || 0;
-  const averageChunkCount = documents?.length 
-    ? documents.reduce((sum, doc) => sum + ((doc.chunk_count as number) || 0), 0) / documents.length
+  const totalSyncedDocuments =
+    documents?.filter((doc) => doc.rag_status === "synced").length || 0;
+  const averageChunkCount = documents?.length
+    ? documents.reduce(
+        (sum, doc) => sum + ((doc.chunk_count as number) || 0),
+        0,
+      ) / documents.length
     : 0;
-  
+
   // Calculate recent activity (documents added in last 7 days)
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const recentActivity = documents?.filter(doc => 
-    new Date(doc.created_at as string) > sevenDaysAgo
-  ).length || 0;
+  const recentActivity =
+    documents?.filter(
+      (doc) => new Date(doc.created_at as string) > sevenDaysAgo,
+    ).length || 0;
 
   return {
     totalDocuments,
     totalSyncedDocuments,
     totalSize: totalDocuments * 2.5, // Mock calculation - 2.5MB average per document
     recentActivity,
-    averageChunkCount: Math.round(averageChunkCount)
+    averageChunkCount: Math.round(averageChunkCount),
   };
 }
 
@@ -1385,9 +1431,10 @@ export async function getProjectAnalytics(projectId: string): Promise<{
  * Search documents using the new DocumentSearchService (simplified version)
  * TODO: Fully implement proper adapter for DocumentSearchService
  */
-export async function searchDocuments(query: string, projectId?: string): Promise<DocumentSearchResult> {
-  console.log("Searching documents with query:", query, "project:", projectId);
-  
+export async function searchDocuments(
+  query: string,
+  projectId?: string,
+): Promise<DocumentSearchResult> {
   try {
     // Use the DocumentSearchService's hook-compatible method
     return await documentSearchService.searchDocumentsForHook(query, projectId);
@@ -1400,7 +1447,7 @@ export async function searchDocuments(query: string, projectId?: string): Promis
       documentIds: [],
       totalFound: 0,
       searchQuery: query,
-      error: error instanceof Error ? error.message : 'Search failed'
+      error: error instanceof Error ? error.message : "Search failed",
     };
   }
 }
@@ -1408,8 +1455,16 @@ export async function searchDocuments(query: string, projectId?: string): Promis
 /**
  * Search documents within a specific project
  */
-export async function searchDocumentsInProject(query: string, projectId: string): Promise<DocumentSearchResult> {
-  console.log("Searching documents in project:", projectId, "with query:", query);
+export async function searchDocumentsInProject(
+  query: string,
+  projectId: string,
+): Promise<DocumentSearchResult> {
+  console.log(
+    "Searching documents in project:",
+    projectId,
+    "with query:",
+    query,
+  );
   return searchDocuments(query, projectId);
 }
 
@@ -1417,9 +1472,17 @@ export async function searchDocumentsInProject(query: string, projectId: string)
  * Search documents across multiple projects
  * TODO: Implement proper adapter for new DocumentSearchService
  */
-export async function searchDocumentsInProjects(query: string, projectIds: string[]): Promise<DocumentSearchResult> {
-  console.log("Searching documents in projects:", projectIds, "with query:", query);
-  
+export async function searchDocumentsInProjects(
+  query: string,
+  projectIds: string[],
+): Promise<DocumentSearchResult> {
+  console.log(
+    "Searching documents in projects:",
+    projectIds,
+    "with query:",
+    query,
+  );
+
   try {
     // For multi-project search, use the first project ID or undefined for global search
     const projectId = projectIds.length > 0 ? projectIds[0] : undefined;
@@ -1432,7 +1495,8 @@ export async function searchDocumentsInProjects(query: string, projectIds: strin
       documentIds: [],
       totalFound: 0,
       searchQuery: query,
-      error: error instanceof Error ? error.message : 'Multi-project search failed'
+      error:
+        error instanceof Error ? error.message : "Multi-project search failed",
     };
   }
 }
@@ -1442,11 +1506,9 @@ export async function searchDocumentsInProjects(query: string, projectIds: strin
  * TODO: Implement using new DocumentSearchService health check
  */
 export async function testDocumentSearchConnection(): Promise<boolean> {
-  console.log("Testing document search connection...");
-  
   try {
     // Simple test by performing a basic search
-    await documentSearchService.searchDocuments('test');
+    await documentSearchService.searchDocuments("test");
     return true; // If no error thrown, service is available
   } catch (error) {
     console.error("Error testing document search connection:", error);
@@ -1457,35 +1519,46 @@ export async function testDocumentSearchConnection(): Promise<boolean> {
 /**
  * Get document search analytics
  */
-export async function getDocumentSearchAnalytics(query: string, projectId?: string): Promise<{
+export async function getDocumentSearchAnalytics(
+  query: string,
+  projectId?: string,
+): Promise<{
   searchTime: number;
   langflowResponseTime: number;
   supabaseQueryTime: number;
   totalDocumentsScanned: number;
   totalDocumentsReturned: number;
 }> {
-  console.log("Getting document search analytics for query:", query, "project:", projectId);
-  
+  console.log(
+    "Getting document search analytics for query:",
+    query,
+    "project:",
+    projectId,
+  );
+
   if (USE_MOCK_DATA) {
     return {
       searchTime: Math.floor(Math.random() * 1000) + 200,
       langflowResponseTime: Math.floor(Math.random() * 500) + 100,
       supabaseQueryTime: Math.floor(Math.random() * 200) + 50,
       totalDocumentsScanned: Math.floor(Math.random() * 100) + 10,
-      totalDocumentsReturned: Math.floor(Math.random() * 20) + 1
+      totalDocumentsReturned: Math.floor(Math.random() * 20) + 1,
     };
   }
-  
+
   try {
     // Use the document search service with the projectId
     const filters = projectId ? { projectId } : {};
-    const searchResult = await documentSearchService.searchDocuments(query, filters);
+    const searchResult = await documentSearchService.searchDocuments(
+      query,
+      filters,
+    );
     return {
       searchTime: searchResult.searchTime,
       langflowResponseTime: Math.floor(searchResult.searchTime * 0.7), // Estimate
       supabaseQueryTime: Math.floor(searchResult.searchTime * 0.3), // Estimate
       totalDocumentsScanned: searchResult.totalCount * 10, // Estimate
-      totalDocumentsReturned: searchResult.totalCount
+      totalDocumentsReturned: searchResult.totalCount,
     };
   } catch (error) {
     console.error("Error getting document search analytics:", error);
@@ -1494,7 +1567,7 @@ export async function getDocumentSearchAnalytics(query: string, projectId?: stri
       langflowResponseTime: 0,
       supabaseQueryTime: 0,
       totalDocumentsScanned: 0,
-      totalDocumentsReturned: 0
+      totalDocumentsReturned: 0,
     };
   }
 }
@@ -1503,16 +1576,13 @@ export async function getDocumentSearchAnalytics(query: string, projectId?: stri
  * Fetch all documents across all projects for the current user
  */
 export async function getAllDocuments(): Promise<Document[]> {
-  console.log("Fetching all documents for current user...");
-  
   if (USE_MOCK_DATA) {
-    console.log("Using mock data for getAllDocuments");
     // Return mock documents for development - combining documents from multiple projects
     const mockDocuments: Document[] = [
       {
         id: "doc-1",
         name: "Employee Handbook 2024.pdf",
-        type: "PDF", 
+        type: "PDF",
         status: "processed",
         project_id: "1",
         chunk_count: 45,
@@ -1524,14 +1594,14 @@ export async function getAllDocuments(): Promise<Document[]> {
         url: "https://example.com/employee-handbook-2024.pdf",
         rag_status: "synced",
         last_rag_sync: "2024-03-15T11:00:00Z",
-        metadata: { 
+        metadata: {
           pages: 156,
           project_name: "Enterprise Documentation",
-          uploaded_by: "Sarah Johnson"
-        }
+          uploaded_by: "Sarah Johnson",
+        },
       },
       {
-        id: "doc-2", 
+        id: "doc-2",
         name: "API Documentation v3.2.md",
         type: "Markdown",
         status: "processing",
@@ -1539,44 +1609,45 @@ export async function getAllDocuments(): Promise<Document[]> {
         chunk_count: 28,
         file_size: 1800000,
         mime_type: "text/markdown",
-        created_at: "2024-03-14T16:45:00Z", 
+        created_at: "2024-03-14T16:45:00Z",
         updated_at: "2024-03-14T17:00:00Z",
         path: "documents/api-documentation-v3.2.md",
         url: "https://example.com/api-documentation-v3.2.md",
         rag_status: "syncing",
         last_rag_sync: "2024-03-14T17:15:00Z",
-        metadata: { 
+        metadata: {
           pages: 89,
           project_name: "Product Documentation",
-          uploaded_by: "Mike Chen"
-        }
+          uploaded_by: "Mike Chen",
+        },
       },
       {
         id: "doc-3",
-        name: "Customer Support FAQ.docx", 
+        name: "Customer Support FAQ.docx",
         type: "DOCX",
         status: "processed",
         project_id: "2",
         chunk_count: 23,
         file_size: 856000,
-        mime_type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        mime_type:
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
         created_at: "2024-03-13T09:15:00Z",
-        updated_at: "2024-03-13T09:30:00Z", 
+        updated_at: "2024-03-13T09:30:00Z",
         path: "documents/customer-support-faq.docx",
         url: "https://example.com/customer-support-faq.docx",
         rag_status: "synced",
         last_rag_sync: "2024-03-13T10:00:00Z",
-        metadata: { 
+        metadata: {
           pages: 45,
           project_name: "Customer Support Hub",
-          uploaded_by: "Emma Wilson"
-        }
+          uploaded_by: "Emma Wilson",
+        },
       },
       {
         id: "doc-4",
         name: "Training Module - Security.pdf",
         type: "PDF",
-        status: "processed", 
+        status: "processed",
         project_id: "4",
         chunk_count: 67,
         file_size: 5200000,
@@ -1585,13 +1656,13 @@ export async function getAllDocuments(): Promise<Document[]> {
         updated_at: "2024-03-12T14:35:00Z",
         path: "documents/training-module-security.pdf",
         url: "https://example.com/training-module-security.pdf",
-        rag_status: "synced", 
+        rag_status: "synced",
         last_rag_sync: "2024-03-12T15:00:00Z",
-        metadata: { 
+        metadata: {
           pages: 234,
           project_name: "Training Materials",
-          uploaded_by: "David Rodriguez"
-        }
+          uploaded_by: "David Rodriguez",
+        },
       },
       {
         id: "doc-5",
@@ -1605,15 +1676,15 @@ export async function getAllDocuments(): Promise<Document[]> {
         created_at: "2024-03-11T11:00:00Z",
         updated_at: "2024-03-11T11:15:00Z",
         path: "documents/legal-compliance-guide.pdf",
-        url: "https://example.com/legal-compliance-guide.pdf", 
+        url: "https://example.com/legal-compliance-guide.pdf",
         rag_status: "error",
         last_rag_sync: "2024-03-11T11:30:00Z",
-        metadata: { 
-          pages: 0, 
+        metadata: {
+          pages: 0,
           error: "Processing failed - corrupt file",
           project_name: "Legal & Compliance",
-          uploaded_by: "Lisa Thompson"
-        }
+          uploaded_by: "Lisa Thompson",
+        },
       },
       {
         id: "doc-6",
@@ -1630,27 +1701,26 @@ export async function getAllDocuments(): Promise<Document[]> {
         url: "https://example.com/research-paper-ai-ethics.pdf",
         rag_status: "synced",
         last_rag_sync: "2024-03-10T14:00:00Z",
-        metadata: { 
+        metadata: {
           pages: 78,
           project_name: "Research & Development",
-          uploaded_by: "Dr. James Park"
-        }
-      }
+          uploaded_by: "Dr. James Park",
+        },
+      },
     ];
-    
+
     return mockDocuments;
   }
-  
+
   try {
     const user = await getCurrentUser();
     const supabase = createClientTable();
-    
-    console.log(`Querying all documents for user: ${user.id}`);
-    
+
     // Join with knowledge_base table to get project details and filter by user
     const { data, error } = await supabase
       .from("documents")
-      .select(`
+      .select(
+        `
         id,
         name,
         type,
@@ -1670,7 +1740,8 @@ export async function getAllDocuments(): Promise<Document[]> {
           name,
           owner
         )
-      `)
+      `,
+      )
       .eq("knowledge_base.owner", user.id)
       .order("created_at", { ascending: false });
 
@@ -1679,17 +1750,17 @@ export async function getAllDocuments(): Promise<Document[]> {
       throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
-    console.log("All documents fetched:", data?.length || 0);
-    
     // Transform the data to include project name in metadata
-    const documentsWithProjectInfo = (data || []).map((doc: DocumentWithProject) => ({
-      ...doc,
-      metadata: {
-        ...doc.metadata,
-        project_name: doc.knowledge_base?.[0]?.name || 'Unknown Project'
-      }
-    }));
-    
+    const documentsWithProjectInfo = (data || []).map(
+      (doc: DocumentWithProject) => ({
+        ...doc,
+        metadata: {
+          ...doc.metadata,
+          project_name: doc.knowledge_base?.[0]?.name || "Unknown Project",
+        },
+      }),
+    );
+
     return documentsWithProjectInfo as Document[];
   } catch (error) {
     console.error("Error in getAllDocuments:", error);

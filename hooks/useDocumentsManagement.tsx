@@ -61,12 +61,10 @@ export const useDocumentsManagement = () => {
     setTimeout(() => {
       switch (action) {
         case "retry_failed":
-          console.log("Retrying failed documents...");
           break;
         case "refresh":
           setSelectedDocuments([]);
           setCurrentPage(1);
-          console.log("Refreshing documents...");
           break;
         default:
           break;

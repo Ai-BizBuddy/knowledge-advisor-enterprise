@@ -146,7 +146,6 @@ class AuthenticatedFetchClient extends BaseFetchClient {
           const timeUntilExpiry = expiresAt - now;
           
           if (timeUntilExpiry < 5 * 60 * 1000) { // 5 minutes
-            console.log('Token close to expiry, refreshing...');
             await this.supabase.auth.refreshSession();
           }
         }
@@ -158,7 +157,6 @@ class AuthenticatedFetchClient extends BaseFetchClient {
         const typedError = error as { status?: number };
         
         if (typedError.status === 401 && retryCount < maxRetries) {
-          console.log('401 error, attempting refresh and retry...');
           retryCount++;
           
           try {

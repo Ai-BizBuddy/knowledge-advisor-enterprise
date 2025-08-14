@@ -1,13 +1,13 @@
 /**
  * useStatistics Hook - Dashboard Statistics Management
- * 
+ *
  * Custom React hook for fetching and managing dashboard statistics
  * Following the project's strict TypeScript standards and modern React patterns
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { statisticsService } from '@/services/StatisticsService';
-import type { DashboardStatistics } from '@/interfaces/Statistics';
+import { useState, useEffect, useCallback, useRef } from "react";
+import { statisticsService } from "@/services/StatisticsService";
+import type { DashboardStatistics } from "@/interfaces/Statistics";
 
 /**
  * Statistics hook state interface
@@ -28,7 +28,12 @@ interface UseStatisticsReturn {
   error: string | null;
   lastUpdated: Date | null;
   refreshStatistics: () => Promise<void>;
-  recordQuery: (projectId: string, queryText: string, responseTimeMs: number, status: 'completed' | 'failed' | 'timeout') => Promise<void>;
+  recordQuery: (
+    projectId: string,
+    queryText: string,
+    responseTimeMs: number,
+    status: "completed" | "failed" | "timeout",
+  ) => Promise<void>;
 }
 
 /**
@@ -43,16 +48,18 @@ interface UseStatisticsOptions {
 
 /**
  * Custom hook for managing dashboard statistics
- * 
+ *
  * @param options - Configuration options for the hook
  * @returns Statistics data, loading state, error state, and utility functions
  */
-export const useStatistics = (options: UseStatisticsOptions = {}): UseStatisticsReturn => {
+export const useStatistics = (
+  options: UseStatisticsOptions = {},
+): UseStatisticsReturn => {
   const {
     refreshInterval = 60000, // 1 minute default
     autoRefresh = true,
     onError,
-    onSuccess
+    onSuccess,
   } = options;
 
   // Use refs to store the latest callback functions to avoid dependency issues
@@ -72,7 +79,7 @@ export const useStatistics = (options: UseStatisticsOptions = {}): UseStatistics
     statistics: null,
     isLoading: true,
     error: null,
-    lastUpdated: null
+    lastUpdated: null,
   });
 
   /**
@@ -80,7 +87,7 @@ export const useStatistics = (options: UseStatisticsOptions = {}): UseStatistics
    */
   const fetchStatistics = useCallback(async (): Promise<void> => {
     try {
-      setState(prev => ({ ...prev, isLoading: true, error: null }));
+      setState((prev) => ({ ...prev, isLoading: true, error: null }));
 
       const data = await statisticsService.getDashboardStatistics();
 
@@ -88,21 +95,22 @@ export const useStatistics = (options: UseStatisticsOptions = {}): UseStatistics
         statistics: data,
         isLoading: false,
         error: null,
-        lastUpdated: new Date()
+        lastUpdated: new Date(),
       });
 
       onSuccessRef.current?.(data);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to fetch statistics';
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to fetch statistics";
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         isLoading: false,
-        error: errorMessage
+        error: errorMessage,
       }));
 
       onErrorRef.current?.(errorMessage);
-      console.error('[useStatistics] Failed to fetch statistics:', error);
+      console.error("[useStatistics] Failed to fetch statistics:", error);
     }
   }, []); // No dependencies since we use refs
 
@@ -116,32 +124,38 @@ export const useStatistics = (options: UseStatisticsOptions = {}): UseStatistics
   /**
    * Record query activity for real-time statistics updates
    */
-  const recordQuery = useCallback(async (
-    projectId: string,
-    queryText: string,
-    responseTimeMs: number,
-    status: 'completed' | 'failed' | 'timeout'
-  ): Promise<void> => {
-    try {
-      await statisticsService.recordQueryActivity({
-        projectId,
-        queryText,
-        responseTimeMs,
-        status
-      });
+  const recordQuery = useCallback(
+    async (
+      projectId: string,
+      queryText: string,
+      responseTimeMs: number,
+      status: "completed" | "failed" | "timeout",
+    ): Promise<void> => {
+      try {
+        await statisticsService.recordQueryActivity({
+          projectId,
+          queryText,
+          responseTimeMs,
+          status,
+        });
 
-      // Optionally refresh statistics after recording activity
-      // You can make this configurable if needed
-      if (status === 'completed') {
-        setTimeout(() => {
-          fetchStatistics();
-        }, 1000); // Delay to allow backend processing
+        // Optionally refresh statistics after recording activity
+        // You can make this configurable if needed
+        if (status === "completed") {
+          setTimeout(() => {
+            fetchStatistics();
+          }, 500); // Delay to allow backend processing
+        }
+      } catch (error) {
+        console.error(
+          "[useStatistics] Failed to record query activity:",
+          error,
+        );
+        // Don't update the error state for this operation as it's background
       }
-    } catch (error) {
-      console.error('[useStatistics] Failed to record query activity:', error);
-      // Don't update the error state for this operation as it's background
-    }
-  }, [fetchStatistics]);
+    },
+    [fetchStatistics],
+  );
 
   // Initial fetch on mount
   useEffect(() => {
@@ -167,7 +181,7 @@ export const useStatistics = (options: UseStatisticsOptions = {}): UseStatistics
     error: state.error,
     lastUpdated: state.lastUpdated,
     refreshStatistics,
-    recordQuery
+    recordQuery,
   };
 };
 

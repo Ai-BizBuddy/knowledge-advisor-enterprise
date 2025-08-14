@@ -1,9 +1,31 @@
 /**
  * User, Role, and Permission Management Interfaces
- * 
+ *
  * Comprehensive type definitions for user management system
  * with Supabase Auth integration and permission-based access control.
  */
+
+/**
+ * Custom error interface for user management operations
+ */
+export interface UserManagementError extends Error {
+  code?: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * Department interface for organizational structure
+ */
+export interface Department {
+  id: string;
+  name: string;
+  description?: string;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+  is_active: boolean;
+  settings?: Record<string, unknown>;
+}
 
 /**
  * User interface extending Supabase Auth user with additional fields
@@ -13,61 +35,86 @@ export interface User {
   email: string;
   display_name?: string;
   avatar_url?: string;
-  role_id: string;
-  role?: Role;
+  user_roles: UserRoleRow[];
+  department_id?: string;
+  department?: Department;
   status: UserStatus;
+  profile: Profile;
   created_at: string;
   updated_at: string;
-  last_login_at?: string;
-  metadata?: Record<string, unknown>;
 }
+
+export interface UserDepartment {
+  name: string;
+}
+
+export interface Profile {
+  full_name: string;
+  avatar_url: string;
+}
+
+export interface UserRolePermission {
+  id: number;
+  name: string;
+  description?: string;
+  permissions: Permission[];
+}
+
+export type UserDisplayPermission = User & {
+  user_roles: UserRolePermission[];
+};
 
 /**
  * User status enum
  */
 export enum UserStatus {
-  ACTIVE = 'active',
-  INACTIVE = 'inactive',
-  SUSPENDED = 'suspended',
-  PENDING = 'pending'
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  SUSPENDED = "suspended",
+  PENDING = "pending",
 }
 
 /**
  * Role interface with hierarchical permissions
  */
 export interface Role {
-  id: string;
+  id: number;
   name: string;
-  description: string;
-  level: number; // Higher level = more permissions
+  description?: string;
+  level?: number;
   permissions: Permission[];
-  is_system_role: boolean;
+  is_system_role?: boolean;
   created_at: string;
   updated_at: string;
+}
+
+export interface UserRoleRow {
+  role: Pick<Role, "id" | "name" | "description">;
 }
 
 /**
  * Permission interface for granular access control
  */
 export interface Permission {
-  id: string;
+  id: number;
   name: string;
-  resource: string; // e.g., 'project', 'document', 'user'
-  action: PermissionAction;
-  description: string;
+  resource?: string; // e.g., 'project', 'document', 'user'
+  action?: PermissionAction;
+  description?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 /**
  * Permission actions enum
  */
 export enum PermissionAction {
-  CREATE = 'create',
-  READ = 'read',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  MANAGE = 'manage', // Full access
-  EXECUTE = 'execute' // For special actions like RAG sync
+  CREATE = "create",
+  READ = "read",
+  UPDATE = "update",
+  DELETE = "delete",
+  MANAGE = "manage", // Full access
+  EXECUTE = "execute", // For special actions like RAG sync
 }
 
 /**
@@ -83,10 +130,10 @@ export interface FeatureAccess {
  * Access level enum
  */
 export enum AccessLevel {
-  NONE = 'none',
-  READ = 'read',
-  WRITE = 'write',
-  ADMIN = 'admin'
+  NONE = "none",
+  READ = "read",
+  WRITE = "write",
+  ADMIN = "admin",
 }
 
 /**
@@ -96,7 +143,8 @@ export interface CreateUserInput {
   email: string;
   password: string;
   display_name?: string;
-  role_id: string;
+  role_ids: number[]; // Array of role IDs
+  department_id?: string;
   metadata?: Record<string, unknown>;
 }
 
@@ -106,7 +154,8 @@ export interface CreateUserInput {
 export interface UpdateUserInput {
   email?: string;
   display_name?: string;
-  role_id?: string;
+  role_ids?: number[]; // Array of role IDs
+  department_id?: string;
   status?: UserStatus;
   metadata?: Record<string, unknown>;
 }
@@ -116,9 +165,9 @@ export interface UpdateUserInput {
  */
 export interface CreateRoleInput {
   name: string;
-  description: string;
-  level: number;
-  permission_ids: string[];
+  description?: string;
+  level?: number;
+  permission_ids: number[];
 }
 
 /**
@@ -128,7 +177,47 @@ export interface UpdateRoleInput {
   name?: string;
   description?: string;
   level?: number;
-  permission_ids?: string[];
+  permission_ids?: number[];
+}
+
+/**
+ * Permission creation input
+ */
+export interface CreatePermissionInput {
+  name: string;
+  resource?: string;
+  action?: PermissionAction;
+  description?: string;
+}
+
+/**
+ * Permission update input
+ */
+export interface UpdatePermissionInput {
+  name?: string;
+  resource?: string;
+  action?: PermissionAction;
+  description?: string;
+}
+
+/**
+ * Department creation input
+ */
+export interface CreateDepartmentInput {
+  name: string;
+  description?: string;
+  is_active?: boolean;
+  settings?: Record<string, unknown>;
+}
+
+/**
+ * Department update input
+ */
+export interface UpdateDepartmentInput {
+  name?: string;
+  description?: string;
+  is_active?: boolean;
+  settings?: Record<string, unknown>;
 }
 
 /**
@@ -136,10 +225,12 @@ export interface UpdateRoleInput {
  */
 export interface UserFilter {
   status?: UserStatus[];
-  role_ids?: string[];
+  role_ids?: number[]; // Array of role IDs for filtering
+  department_ids?: string[];
   search?: string;
-  sort_by?: 'email' | 'display_name' | 'created_at' | 'last_login_at';
-  sort_order?: 'asc' | 'desc';
+  sort_by?: "email" | "display_name" | "created_at" | "last_login_at";
+  sort_order?: "asc" | "desc";
+  include_deleted?: boolean;
 }
 
 /**
@@ -181,24 +272,24 @@ export interface UserSession {
  * Default system roles
  */
 export const SYSTEM_ROLES = {
-  SUPER_ADMIN: 'super_admin',
-  ADMIN: 'admin',
-  MANAGER: 'manager',
-  USER: 'user',
-  VIEWER: 'viewer'
+  SUPER_ADMIN: "super_admin",
+  ADMIN: "admin",
+  MANAGER: "manager",
+  USER: "user",
+  VIEWER: "viewer",
 } as const;
 
 /**
  * Default features for navigation control
  */
 export const FEATURES = {
-  DASHBOARD: 'dashboard',
-  PROJECTS: 'projects',
-  DOCUMENTS: 'documents',
-  CHAT: 'chat',
-  USER_MANAGEMENT: 'user_management',
-  SETTINGS: 'settings',
-  TEAM: 'team'
+  DASHBOARD: "dashboard",
+  PROJECTS: "projects",
+  DOCUMENTS: "documents",
+  CHAT: "chat",
+  USER_MANAGEMENT: "user_management",
+  SETTINGS: "settings",
+  TEAM: "team",
 } as const;
 
 /**

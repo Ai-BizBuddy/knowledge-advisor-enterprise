@@ -1,7 +1,7 @@
 // Enhanced type definitions for Supabase operations to replace 'any' types
 
-import { createClient } from '@/utils/supabase/client';
-import type { SupabaseProjectRow } from '@/interfaces/AxiosTypes';
+import { createClient } from "@/utils/supabase/client";
+import type { SupabaseProjectRow } from "@/interfaces/AxiosTypes";
 
 /**
  * Type for Supabase client with proper table access
@@ -127,14 +127,24 @@ export interface DocumentWithProject {
  */
 export interface TypedSupabaseTable {
   from(table: string): {
-    select: (columns?: string, options?: { count?: 'exact'; head?: boolean }) => Promise<SupabaseQueryResult<unknown>>;
-    insert: (data: Record<string, unknown>) => Promise<SupabaseQueryResult<unknown>>;
-    update: (data: Record<string, unknown>) => Promise<SupabaseQueryResult<unknown>>;
+    select: (
+      columns?: string,
+      options?: { count?: "exact"; head?: boolean },
+    ) => Promise<SupabaseQueryResult<unknown>>;
+    insert: (
+      data: Record<string, unknown>,
+    ) => Promise<SupabaseQueryResult<unknown>>;
+    update: (
+      data: Record<string, unknown>,
+    ) => Promise<SupabaseQueryResult<unknown>>;
     delete: () => Promise<SupabaseQueryResult<unknown>>;
     eq: (column: string, value: unknown) => TypedSupabaseTable;
     in: (column: string, values: unknown[]) => TypedSupabaseTable;
     or: (query: string) => TypedSupabaseTable;
-    order: (column: string, options?: { ascending?: boolean }) => TypedSupabaseTable;
+    order: (
+      column: string,
+      options?: { ascending?: boolean },
+    ) => TypedSupabaseTable;
     range: (from: number, to: number) => TypedSupabaseTable;
   };
 }
@@ -152,3 +162,32 @@ export interface JobProgress {
  * Type for progress callback function
  */
 export type ProgressCallback = (status: JobProgress) => void;
+
+/**
+ * Auth profiles row from Supabase auth.profiles table
+ */
+export interface AuthProfileRow {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  deleted_at: string | null;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+/**
+ * User with auth profile joined data
+ */
+export interface UserWithProfile {
+  id: string;
+  email: string;
+  display_name?: string;
+  avatar_url?: string;
+  role_id?: string;
+  status?: string;
+  created_at: string;
+  updated_at: string;
+  last_login_at?: string;
+  metadata?: Record<string, unknown>;
+  auth_profiles?: AuthProfileRow[];
+}

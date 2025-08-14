@@ -57,13 +57,11 @@ class DocumentIngestionService {
   private setupInterceptors(): void {
     // Request logging interceptor
     this.client.addRequestInterceptor((config) => {
-      console.log(`[${this.serviceName}] ${config.method?.toUpperCase()} ${config.url}`);
       return config;
     });
 
     // Response logging interceptor
     this.client.addResponseInterceptor((response) => {
-      console.log(`[${this.serviceName}] Response:`, response.status, response.data);
       return response;
     });
 

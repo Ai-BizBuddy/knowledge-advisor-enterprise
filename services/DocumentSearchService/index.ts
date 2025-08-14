@@ -195,12 +195,10 @@ class DocumentSearchService {
    */
   private setupInterceptors(): void {
     this.client.addRequestInterceptor((config) => {
-      console.log(`[${this.serviceName}] Search request:`, config.url);
       return config;
     });
 
     this.client.addResponseInterceptor((response) => {
-      console.log(`[${this.serviceName}] Search response:`, response.status);
       return response;
     });
 
@@ -369,7 +367,6 @@ class DocumentSearchService {
     query: string,
     filters?: DocumentSearchFilters
   ): Promise<DocumentSearchResponse> {
-    console.log(`[${this.serviceName}] Searching for:`, query);
     const startTime = Date.now();
 
     if (this.useMockData) {
@@ -393,7 +390,6 @@ class DocumentSearchService {
       const documents = await this.getDocumentsFromSupabase(projectIds);
 
       if (documents.length === 0) {
-        console.log(`[${this.serviceName}] No documents found in database`);
         return {
           results: [],
           totalCount: 0,
@@ -433,7 +429,6 @@ class DocumentSearchService {
    * Get search suggestions based on partial query
    */
   async getSearchSuggestions(partialQuery: string): Promise<string[]> {
-    console.log(`[${this.serviceName}] Getting suggestions for:`, partialQuery);
 
     if (this.useMockData) {
       return [

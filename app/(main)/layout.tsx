@@ -1,54 +1,50 @@
 "use client";
 import { LoadingPage, SlideBar } from "@/components";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useAuth, usePermissions } from "@/hooks";
+import { useAuth } from "@/hooks";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useLoading } from "@/contexts/LoadingContext";
 
 export default function MainLayout({
-    children,
+  children,
 }: {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+  const { logout } = useAuth();
+  const { user, loading: authLoading } = useAuthContext();
+  const { setLoading } = useLoading();
 
-    const pathname = usePathname();
-    const { logout } = useAuth();
-    const { user, loading: authLoading } = useAuthContext();
-    const { hasFeatureAccess } = usePermissions();
-    const { setLoading } = useLoading();
+  const handleLogout = async () => {
+    await logout();
+    window.location.href = "/login";
+  };
 
-
-    // Filter navigation items based on permissions
-
-    const handleLogout = async () => {
-        await logout();
+  useEffect(() => {
+    // Auth context will handle redirects automatically
+    // This is just for backward compatibility
+    const checkAuth = async () => {
+      if (!authLoading && !user && pathname !== "/login") {
         window.location.href = "/login";
+      }
     };
+    checkAuth();
+  }, [user, authLoading, pathname]);
 
+  // Close mobile menu when route changes
 
-    useEffect(() => {
-        // Auth context will handle redirects automatically
-        // This is just for backward compatibility
-        const checkAuth = async () => {
-            if (!authLoading && !user && pathname !== "/login") {
-                window.location.href = "/login";
-            }
-        };
-        checkAuth();
-    }, [user, authLoading, pathname]);
-
-    // Close mobile menu when route changes
-
-
-    return (
-        <>
-            <LoadingPage />
-            <SlideBar onNavigate={() => {
-                setLoading(true);
-            }} handleLogout={handleLogout}>
-                {children}
-            </SlideBar>
-        </>
-    );
+  return (
+    <>
+      <LoadingPage />
+      <SlideBar
+        onNavigate={() => {
+          setLoading(true);
+        }}
+        handleLogout={handleLogout}
+      >
+        {children}
+      </SlideBar>
+    </>
+  );
 }

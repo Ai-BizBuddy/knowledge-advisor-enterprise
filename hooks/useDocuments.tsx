@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
-import { getAllDocuments, getDocumentsByProjectId } from '@/services/Project/supabase';
-import { createClientTable } from '@/utils/supabase/client';
-import type { Document } from '@/interfaces/Project';
+import { useState, useEffect, useCallback } from "react";
+import {
+  getAllDocuments,
+  getDocumentsByProjectId,
+} from "@/services/Project/supabase";
+import { createClientTable } from "@/utils/supabase/client";
+import type { Document } from "@/interfaces/Project";
 
 export interface UseDocumentsOptions {
   projectId?: string;
@@ -18,7 +21,7 @@ export interface UseDocumentsReturn {
     type?: string,
     status?: string,
     searchQuery?: string,
-    sortBy?: 'name' | 'date' | 'size'
+    sortBy?: "name" | "date" | "size",
   ) => Document[];
 }
 
@@ -26,7 +29,9 @@ export interface UseDocumentsReturn {
  * Custom hook for managing documents
  * Can fetch all documents or documents for a specific project
  */
-export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsReturn {
+export function useDocuments(
+  options: UseDocumentsOptions = {},
+): UseDocumentsReturn {
   const { projectId, autoLoad = true } = options;
   const [documents, setDocuments] = useState<Document[]>([]);
   const [loading, setLoading] = useState(false);
@@ -42,17 +47,16 @@ export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsRet
       let data: Document[];
 
       if (projectId) {
-        console.log('Fetching documents for project:', projectId);
         data = await getDocumentsByProjectId(projectId);
       } else {
-        console.log('Fetching all documents');
         data = await getAllDocuments();
       }
 
       setDocuments(data);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch documents';
-      console.error('Error fetching documents:', err);
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch documents";
+      console.error("Error fetching documents:", err);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -63,21 +67,23 @@ export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsRet
     await fetchDocuments();
   }, [fetchDocuments]);
 
-  const filterDocuments = (
-    searchQuery?: string,
-  ): Document[] => {
+  const filterDocuments = (searchQuery?: string): Document[] => {
     let filtered = documents;
 
     // Filter by search query
     if (searchQuery && searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(doc => {
+      filtered = filtered.filter((doc) => {
         const projectName = doc.metadata?.project_name;
         const uploadedBy = doc.metadata?.uploaded_by;
 
-        return doc.name.toLowerCase().includes(query) ||
-          (typeof projectName === 'string' && projectName.toLowerCase().includes(query)) ||
-          (typeof uploadedBy === 'string' && uploadedBy.toLowerCase().includes(query));
+        return (
+          doc.name.toLowerCase().includes(query) ||
+          (typeof projectName === "string" &&
+            projectName.toLowerCase().includes(query)) ||
+          (typeof uploadedBy === "string" &&
+            uploadedBy.toLowerCase().includes(query))
+        );
       });
     }
 
@@ -88,21 +94,20 @@ export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsRet
     fetchDocuments();
   }, [fetchDocuments]);
 
-  const getDocumentById = useCallback(async (documentId: string): Promise<Document | null> => {
-    try {
-      // First check if we have it in the loaded documents
-      const foundDocument = documents.find(doc => doc.id === documentId);
-      if (foundDocument) {
-        return foundDocument;
-      }
+  const getDocumentById = useCallback(
+    async (documentId: string): Promise<Document | null> => {
+      try {
+        // First check if we have it in the loaded documents
+        const foundDocument = documents.find((doc) => doc.id === documentId);
+        if (foundDocument) {
+          return foundDocument;
+        }
 
-      // If not found in current documents, fetch from Supabase
-      console.log(`Fetching document ${documentId} from Supabase...`);
-
-      const supabase = createClientTable();
-      const { data: document, error } = await supabase
-        .from('documents')
-        .select(`
+        const supabase = createClientTable();
+        const { data: document, error } = await supabase
+          .from("documents")
+          .select(
+            `
           id,
           name,
           type,
@@ -122,35 +127,38 @@ export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsRet
             name,
             owner
           )
-        `)
-        .eq('id', documentId)
-        .single();
+        `,
+          )
+          .eq("id", documentId)
+          .single();
 
-      if (error) {
+        if (error) {
+          console.error(`Error fetching document ${documentId}:`, error);
+          return null;
+        }
+
+        if (!document) {
+          return null;
+        }
+
+        // Transform the document to include project name in metadata
+        const documentWithProjectInfo = {
+          ...document,
+          metadata: {
+            ...document.metadata,
+            project_name:
+              document.knowledge_base?.[0]?.name || "Unknown Project",
+          },
+        } as Document;
+
+        return documentWithProjectInfo;
+      } catch (error) {
         console.error(`Error fetching document ${documentId}:`, error);
         return null;
       }
-
-      if (!document) {
-        console.log(`Document ${documentId} not found in Supabase`);
-        return null;
-      }
-
-      // Transform the document to include project name in metadata
-      const documentWithProjectInfo = {
-        ...document,
-        metadata: {
-          ...document.metadata,
-          project_name: document.knowledge_base?.[0]?.name || 'Unknown Project'
-        }
-      } as Document;
-
-      return documentWithProjectInfo;
-    } catch (error) {
-      console.error(`Error fetching document ${documentId}:`, error);
-      return null;
-    }
-  }, [documents]);
+    },
+    [documents],
+  );
 
   return {
     documents,
@@ -158,7 +166,7 @@ export function useDocuments(options: UseDocumentsOptions = {}): UseDocumentsRet
     error,
     refetch,
     getDocumentById,
-    filterDocuments
+    filterDocuments,
   };
 }
 

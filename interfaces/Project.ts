@@ -4,7 +4,7 @@ export interface Project {
   name: string;
   description: string;
   document_count?: number; // Computed field
-  status: 1 | 2 | 3; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
+  status: ProjectStatus; // Use enum instead of raw numbers
   owner: string; // UUID foreign key to auth.users
   created_at: string;
   updated_at?: string;
@@ -18,7 +18,7 @@ export interface Project {
 export enum ProjectStatus {
   ACTIVE = 1,
   PAUSED = 2,
-  DRAFT = 3
+  DRAFT = 3,
 }
 
 // Helper type for status display
@@ -104,8 +104,8 @@ export interface ProjectAnalytics {
 export interface PaginationOptions {
   page: number;
   limit: number;
-  sortBy?: 'created_at' | 'updated_at' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "created_at" | "updated_at" | "name";
+  sortOrder?: "asc" | "desc";
 }
 
 // Paginated response interface
@@ -137,7 +137,7 @@ export interface BatchOperationResult {
 // RAG sync options interface
 export interface RAGSyncOptions {
   force?: boolean; // Force sync even if already synced
-  priority?: 'low' | 'normal' | 'high';
+  priority?: "low" | "normal" | "high";
   retryCount?: number;
 }
 
