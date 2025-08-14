@@ -58,11 +58,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshToken = useCallback(async (): Promise<Session | null> => {
     // If there's already a refresh in progress, return that promise
     if (refreshPromise) {
+      console.log("Token refresh already in progress, waiting...");
       return refreshPromise;
     }
 
     const promise = (async () => {
       try {
+        console.log("Refreshing session token...");
         const { data, error } = await supabase.auth.refreshSession();
 
         if (error) {
@@ -71,6 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
 
         if (data.session) {
+          console.log("Token refreshed successfully");
           setSession(data.session);
           setUser(data.session.user);
           return data.session;
@@ -108,6 +111,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Check if current token is expiring soon
       if (isTokenExpiring()) {
+        console.log("Token is expiring soon, refreshing...");
         const newSession = await refreshToken();
         return newSession?.access_token || null;
       }
@@ -123,25 +127,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
+      console.log("Auth state changed:", event, session);
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
       switch (event) {
         case "SIGNED_IN":
+          console.log("User signed in");
           break;
         case "SIGNED_OUT":
-          // Redirect to login page
-          if (
-            typeof window !== "undefined" &&
-            window.location.pathname !== "/login"
-          ) {
-            window.location.href = "/login";
-          }
+          console.log("User signed out");
+          // Redirect to login page after hydration
+          setTimeout(() => {
+            if (window.location.pathname !== "/login") {
+              window.location.href = "/login";
+            }
+          }, 0);
           break;
         case "TOKEN_REFRESHED":
+          console.log("Token refreshed automatically by Supabase");
           break;
         case "USER_UPDATED":
+          console.log("User updated");
           break;
         default:
           break;

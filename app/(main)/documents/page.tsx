@@ -55,46 +55,54 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
 
   return (
-    <div className="min-h-screen rounded-lg bg-gray-100 dark:bg-gray-900">
-      <div className="p-4">
-        <div className="mb-6 flex items-center justify-between">
-          <DocumentsHeader />
+    <div className="min-h-screen">
+      {/* Main Container with consistent responsive padding */}
+      <div className="p-4 sm:p-6 lg:p-8">
+        {/* Header Section - Responsive layout */}
+        <div className="mb-6 sm:mb-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <DocumentsHeader />
 
-          {/* Upload Button */}
-          <button
-            onClick={() => setIsUploadModalOpen(true)}
-            className="flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-          >
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+            {/* Upload Button - Responsive sizing */}
+            <button
+              onClick={() => setIsUploadModalOpen(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
-            <span className="text-sm font-medium">Upload Documents</span>
-          </button>
+              <svg
+                className="h-4 w-4 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+              <span className="text-sm font-medium">Upload Documents</span>
+            </button>
+          </div>
         </div>
 
-        <DocumentsControls
-          sortBy={sortBy}
-          sortOrder={sortOrder}
-          onSortChange={handleSort}
-          onSortOrderToggle={handleSortOrderToggle}
-        />
+        {/* Controls Section */}
+        <div className="mb-6">
+          <DocumentsControls
+            sortBy={sortBy}
+            sortOrder={sortOrder}
+            onSortChange={handleSort}
+            onSortOrderToggle={handleSortOrderToggle}
+          />
+        </div>
 
-        <div className="flex gap-6">
-          {/* Main Content */}
-          <div className="flex-1">
+        {/* Main Content Layout - Responsive grid */}
+        <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
+          {/* Main Content Area */}
+          <div className="space-y-6 xl:col-span-3">
             <DocumentsTabs
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -115,7 +123,7 @@ export default function DocumentsPage() {
               onClear={handleClearSelection}
             />
 
-            {/* Show NoDocuments when no documents exist or filtered documents is empty */}
+            {/* Documents List or Empty State */}
             {filteredDocuments.length === 0 ? (
               <div className="mt-8 flex justify-center">
                 <NoDocuments
@@ -124,7 +132,7 @@ export default function DocumentsPage() {
                 />
               </div>
             ) : (
-              <>
+              <div className="space-y-6">
                 <DocumentsTable
                   documents={paginatedDocuments}
                   selectedDocuments={selectedDocuments}
@@ -148,17 +156,19 @@ export default function DocumentsPage() {
                   totalDocuments={filteredDocuments.length}
                   onPageChange={handlePageChange}
                 />
-              </>
+              </div>
             )}
           </div>
 
-          {/* Document Detail Panel */}
+          {/* Document Detail Panel - Responsive sidebar */}
           {selectedDocument !== null && filteredDocuments.length > 0 && (
-            <div className="w-80 flex-shrink-0">
-              <div className="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                {filteredDocuments[selectedDocument] && (
-                  <DocumentDetail {...filteredDocuments[selectedDocument]} />
-                )}
+            <div className="xl:col-span-1">
+              <div className="sticky top-4">
+                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+                  {filteredDocuments[selectedDocument] && (
+                    <DocumentDetail {...filteredDocuments[selectedDocument]} />
+                  )}
+                </div>
               </div>
             </div>
           )}

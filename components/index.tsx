@@ -5,6 +5,8 @@ export { default as ChatHistoryCard } from "./chatHistoryCard";
 export { default as ChatHistoryList } from "./chatHistoryList";
 export { default as CreateKnowledgeBaseModal } from "./createKnowledgeBaseModal";
 export { default as KnowledgeBaseCard } from "./knowledgeBaseCard";
+export { default as KnowledgeBasePagination } from "./knowledgeBasePagination";
+export { default as KnowledgeBaseSearch } from "./knowledgeBaseSearch";
 export { default as KnowledgeSelect } from "./knowledgeSelect";
 export { default as LoadingPage } from "./loadingPage";
 export { default as RecentActivityCard } from "./recentActivityCard";
@@ -17,6 +19,7 @@ export { default as SearchBar } from "./searchBar";
 export { default as UploadDocument } from "./uploadDocuments";
 export { default as NoDocuments } from "./noDocuments";
 export { default as DocumentDetail } from "./documentDetail";
+export { default as SafeDarkThemeToggle } from "./SafeDarkThemeToggle";
 
 // Documents Page Components
 export * from "./documentsPage";
@@ -33,3 +36,5 @@ export * from "./toast";
 // Permissions Table Components
 export { PermissionsTable } from "./PermissionsTable";
 export * from "./rolePermissionsManager";
+// Layout Components
+export * from "./layouts";

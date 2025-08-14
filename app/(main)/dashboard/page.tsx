@@ -45,35 +45,49 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="container">
-      {/* Status Cards Grid */}
-      <div className="mb-4 flex flex-col flex-wrap items-center justify-center justify-items-center gap-4 md:flex-row md:gap-4">
-        {statusCards.map((card, index) => (
-          <StatusCard
-            key={index}
-            name={card.name}
-            value={card.value}
-            icon={card.icon}
-            color={card.color}
-          />
-        ))}
-      </div>
+    <div className="min-h-screen">
+      {/* Main Container with consistent responsive padding */}
+      <div className="p-4 sm:p-6 lg:p-8">
+        {/* Page Header */}
+        <div className="mb-6 sm:mb-8">
+          <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
+            Dashboard
+          </h1>
+          <p className="text-sm text-gray-500 sm:text-base dark:text-gray-400">
+            Monitor your knowledge base performance and activity
+          </p>
+        </div>
 
-      {/* Main Content Grid */}
-      <div className="mb-4 flex justify-center gap-4 px-8">
-        <div className="w-full md:w-3/4">
+        {/* Status Cards Grid - Responsive layout */}
+        <div className="mb-6 grid grid-cols-1 gap-4 sm:mb-8 sm:grid-cols-2 sm:gap-6 lg:grid-cols-2 xl:grid-cols-4">
+          {statusCards.map((card, index) => (
+            <StatusCard
+              key={index}
+              name={card.name}
+              value={card.value}
+              icon={card.icon}
+              color={card.color}
+            />
+          ))}
+        </div>
+
+        {/* Main Content Grid - Responsive layout */}
+        {/* set support ipad pro size */}
+        <div className="space-y-6 pb-4">
           <RecentKnowledgeBasesCard items={recentKnowledgeBasesData.items} />
         </div>
-        <div className="w-full md:w-1/4">
-          <RecentActivityCard activities={recentActivities} />
-        </div>
-      </div>
 
-      {/* Recommended Knowledge Bases */}
-      <div className="mb-4 flex flex-wrap justify-center gap-4 px-8">
-        <RecommendedKnowledgeBases
-          items={recommendedKnowledgeBasesData.items}
-        />
+        {/* Recommended Knowledge Bases */}
+        <div className="flex flex-col gap-6 sm:flex-col sm:flex-wrap md:flex-row md:flex-nowrap lg:flex-row lg:flex-nowrap">
+          <div className="w-full sm:w-1/2">
+            <RecommendedKnowledgeBases
+              items={recommendedKnowledgeBasesData.items}
+            />
+          </div>
+          <div className="w-full sm:w-1/2">
+            <RecentActivityCard activities={recentActivities} />
+          </div>
+        </div>
       </div>
     </div>
   );

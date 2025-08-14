@@ -19,6 +19,50 @@ interface DocumentsTableProps {
   isIndeterminate: boolean;
 }
 
+const getStatusBadge = (status: string) => {
+  const statusConfig = {
+    Completed:
+      "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    Failed: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
+    OcrinProgress:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    Processing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+  };
+
+  return (
+    statusConfig[status as keyof typeof statusConfig] ||
+    "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+  );
+};
+
+const getSyncButton = (syncStatus: string = "Synced") => {
+  const issynced = syncStatus === "Synced";
+  return (
+    <button
+      className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium transition-colors ${
+        issynced
+          ? "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300"
+          : "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300"
+      }`}
+    >
+      <svg
+        className="mr-1 h-4 w-4"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M12 4v16m8-8H4"
+        />
+      </svg>
+      {syncStatus}
+    </button>
+  );
+};
+
 export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   documents,
   selectedDocuments,
@@ -71,42 +115,19 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
 
   return (
     <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
-      <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-        <thead className="bg-gray-50 dark:bg-gray-700">
-          <tr>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              <input
-                type="checkbox"
-                className="rounded border-gray-300"
-                checked={isAllSelected}
-                ref={(el) => {
-                  if (el) el.indeterminate = isIndeterminate;
-                }}
-                onChange={onSelectAll}
-              />
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              <SortableHeader column="Name">Name</SortableHeader>
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              <SortableHeader column="Date">Date</SortableHeader>
-            </th>
-            <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-              <SortableHeader column="Uploaded By">Uploaded By</SortableHeader>
-            </th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+      {/* Mobile Card Layout */}
+      <div className="block lg:hidden">
+        <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {documents.map((doc, pageIndex) => {
             const actualIndex = startIndex + pageIndex;
             const isSelected = selectedDocuments.includes(actualIndex);
             const isCurrentDocument = selectedDocument === actualIndex;
 
             return (
-              <tr
+              <div
                 key={actualIndex}
                 onClick={() => onDocumentClick(actualIndex)}
-                className={`cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                className={`cursor-pointer p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   isCurrentDocument ? "bg-blue-50 dark:bg-blue-900/20" : ""
                 } ${
                   isSelected
@@ -114,49 +135,185 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                     : ""
                 }`}
               >
-                <td className="px-6 py-4 whitespace-nowrap">
+                <div className="flex items-start space-x-3">
                   <input
                     type="checkbox"
-                    className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    className="mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                     checked={isSelected}
                     onChange={(e) => onSelectDocument(pageIndex, e)}
                     onClick={(e) => e.stopPropagation()}
                   />
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="mr-3 text-2xl">{getFileIcon(doc.type)}</div>
-                    <div>
-                      <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        {doc.name}
+                  <div className="text-2xl">{getFileIcon(doc.type)}</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                      {doc.name}
+                    </div>
+                    <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      {doc.size} • {doc.type}
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {doc.lastUpdated || doc.date}
                       </div>
-                      <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {doc.size} • {doc.type}
+                      <div className="flex items-center space-x-2">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.status)}`}
+                        >
+                          {doc.status}
+                        </span>
+                        {getSyncButton(doc.syncStatus)}
                       </div>
                     </div>
                   </div>
-                </td>
-                <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                  {doc.date}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-300 text-sm font-medium text-gray-700">
-                      {doc.uploadedBy
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")}
-                    </div>
-                    <div className="ml-3 text-sm text-gray-900 dark:text-white">
-                      {doc.uploadedBy}
-                    </div>
-                  </div>
-                </td>
-              </tr>
+                </div>
+              </div>
             );
           })}
-        </tbody>
-      </table>
+        </div>
+      </div>
+
+      {/* Desktop Table Layout */}
+      <div className="hidden lg:block">
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead className="bg-gray-50 dark:bg-gray-700">
+              <tr>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300"
+                    checked={isAllSelected}
+                    ref={(el) => {
+                      if (el) el.indeterminate = isIndeterminate;
+                    }}
+                    onChange={onSelectAll}
+                  />
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <SortableHeader column="name">Name</SortableHeader>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <SortableHeader column="type">Type</SortableHeader>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <SortableHeader column="status">Status</SortableHeader>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <SortableHeader column="chunk">Chunk</SortableHeader>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  <SortableHeader column="lastUpdated">
+                    Last Updated
+                  </SortableHeader>
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  Sync
+                </th>
+                <th className="px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400">
+                  {/* Actions column */}
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+              {documents.length > 0 &&
+                documents.map((doc, pageIndex) => {
+                  const actualIndex = startIndex + pageIndex;
+                  const isSelected = selectedDocuments.includes(actualIndex);
+                  const isCurrentDocument = selectedDocument === actualIndex;
+
+                  return (
+                    <tr
+                      key={actualIndex}
+                      onClick={() => onDocumentClick(actualIndex)}
+                      className={`cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
+                        isCurrentDocument
+                          ? "bg-blue-50 dark:bg-blue-900/20"
+                          : ""
+                      } ${
+                        isSelected
+                          ? "bg-blue-25 border-l-4 border-blue-500 dark:border-blue-400 dark:bg-blue-900/10"
+                          : ""
+                      }`}
+                    >
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                        <input
+                          type="checkbox"
+                          className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                          checked={isSelected}
+                          onChange={(e) => onSelectDocument(pageIndex, e)}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                        <div className="flex items-center">
+                          <div className="mr-3 text-xl sm:text-2xl">
+                            {getFileIcon(doc.type)}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                              {doc.name}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400">
+                        <span className="font-medium uppercase">
+                          {doc.type} DOCUMENT
+                        </span>
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status)}`}
+                        >
+                          {doc.status}
+                        </span>
+                      </td>
+                      <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-900 sm:px-6 dark:text-white">
+                        {doc.chunk || 0}
+                      </td>
+                      <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400">
+                        {doc.lastUpdated || doc.date}
+                      </td>
+                      <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                        {getSyncButton(doc.syncStatus)}
+                      </td>
+                      <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6">
+                        <button
+                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <svg
+                            className="h-5 w-5"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                            />
+                          </svg>
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              {documents.length === 0 && (
+                <tr>
+                  <td
+                    colSpan={8}
+                    className="px-3 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
+                  >
+                    No documents found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
     </div>
   );
 };

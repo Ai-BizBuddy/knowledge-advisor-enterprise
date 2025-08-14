@@ -1,26 +1,33 @@
-
 import { Card } from "flowbite-react";
 import { IStatusCardProps } from "../../interfaces/StatusCard";
 
 /**
  * StatusCard component displays a statistic with an icon
+ * Fully responsive design for all screen sizes
  */
-export default function StatusCard({ name, value, icon, color }: IStatusCardProps) {
-    return (
-        <Card className="w-80 h-24 dark:bg-gray-900">
-            <div className="flex flex-row justify-between items-center dark:bg-gray-900">
-                <div className="flex flex-col">
-                    <p className="text-xl font-bold tracking-tight sm:text-2xl card-title text-gray-900 dark:text-white">
-                        {name}
-                    </p>
-                    <p className="text-xl font-bold tracking-tight sm:text-2xl card-title text-gray-900 dark:text-white">
-                        {value}
-                    </p>
-                </div>
-                <div className={`${color} rounded-xl w-12 h-12 flex justify-center items-center`}>
-                    {icon}
-                </div>
-            </div>
-        </Card>
-    );
+export default function StatusCard({
+  name,
+  value,
+  icon,
+  color,
+}: IStatusCardProps) {
+  return (
+    <Card className="min-h-[100px] w-full border-gray-200 transition-shadow duration-200 hover:shadow-lg sm:min-h-[120px] dark:border-gray-700 dark:bg-gray-900">
+      <div className="flex h-full flex-row items-center justify-between p-2 sm:p-4">
+        <div className="flex min-w-0 flex-1 flex-col justify-center">
+          <p className="mb-1 truncate text-xs font-medium text-gray-500 sm:text-sm dark:text-gray-400">
+            {name}
+          </p>
+          <p className="truncate text-lg font-bold text-gray-900 sm:text-xl lg:text-2xl dark:text-white">
+            {value}
+          </p>
+        </div>
+        <div
+          className={`${color} ml-3 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg sm:h-12 sm:w-12`}
+        >
+          <div className="h-5 w-5 sm:h-6 sm:w-6">{icon}</div>
+        </div>
+      </div>
+    </Card>
+  );
 }

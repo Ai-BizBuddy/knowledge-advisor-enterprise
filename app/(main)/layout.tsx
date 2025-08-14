@@ -1,7 +1,7 @@
 "use client";
 import { LoadingPage, SlideBar } from "@/components";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useAuth } from "@/hooks";
+import { useAuth, usePermissions } from "@/hooks";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -14,11 +14,17 @@ export default function MainLayout({
   const pathname = usePathname();
   const { logout } = useAuth();
   const { user, loading: authLoading } = useAuthContext();
+  // const { hasFeatureAccess } = usePermissions();
   const { setLoading } = useLoading();
+
+  // Filter navigation items based on permissions
 
   const handleLogout = async () => {
     await logout();
-    window.location.href = "/login";
+    // Use setTimeout to avoid hydration mismatch
+    setTimeout(() => {
+      window.location.href = "/login";
+    }, 0);
   };
 
   useEffect(() => {
@@ -26,7 +32,10 @@ export default function MainLayout({
     // This is just for backward compatibility
     const checkAuth = async () => {
       if (!authLoading && !user && pathname !== "/login") {
-        window.location.href = "/login";
+        // Use setTimeout to avoid hydration mismatch
+        setTimeout(() => {
+          window.location.href = "/login";
+        }, 0);
       }
     };
     checkAuth();
