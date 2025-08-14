@@ -34,10 +34,10 @@ export default function ChatPage() {
     <>
       {openHistory && <ChatHistoryList onClose={handleCloseHistory} />}
 
-      <div className="min-h-screen">
+      <div className="min-h-full">
         {/* Main Container with consistent responsive padding */}
-        <div className="p-4 sm:p-6 lg:p-8">
-          <div className="space-y-6 sm:space-y-8">
+        <div className="p-4 sm:p-6 lg:p-7">
+          <div className="space-y-3 sm:space-y-3">
             {/* Page Header - Outside the card */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
@@ -53,8 +53,8 @@ export default function ChatPage() {
             </div>
 
             {/* Control Section */}
-            <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-900">
-              <div className="flex flex-col gap-4 sm:gap-6 lg:flex-row lg:items-center lg:justify-between">
+            <div className="rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900">
+              <div className="flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700">
                 {/* Knowledge Base Selection */}
                 <div className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-center">
                   <label
@@ -118,10 +118,6 @@ export default function ChatPage() {
                   </Button>
                 </div>
               </div>
-            </div>
-
-            {/* Chat Container */}
-            <div className="rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
               {/* Chat Messages Area */}
               <div className="h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6">
                 <div>
