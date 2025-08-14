@@ -4,21 +4,62 @@ import {
   KnowledgeBaseCard,
   Tabs,
 } from "@/components";
+import KnowledgeBasePagination from "@/components/knowledgeBasePagination";
+import KnowledgeBaseSearch from "@/components/knowledgeBaseSearch";
 import { useLoading } from "@/contexts/LoadingContext";
+import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
 import { useEffect, useState } from "react";
 
 export default function KnowledgeBase() {
-  const [activeTab, setActiveTab] = useState("All");
   const [openModal, setOpenModal] = useState(false);
   const { setLoading } = useLoading();
-  const tabList = ["All", "Active", "Paused", "Draft"];
+
+  const {
+    // State
+    searchTerm,
+    selectedTab,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+
+    // Data
+    paginatedKnowledgeBases,
+    tabCounts,
+
+    // Handlers
+    setSearchTerm,
+    handleTabChange,
+    handlePageChange,
+    handleKnowledgeBaseClick,
+    handleKnowledgeBaseDelete,
+  } = useKnowledgeBaseManagement();
+
+  const tabList = [
+    { label: "All", count: tabCounts.all },
+    { label: "Active", count: tabCounts.active },
+    { label: "Paused", count: tabCounts.paused },
+    { label: "Draft", count: tabCounts.draft },
+  ];
 
   useEffect(() => {
     setLoading(false);
-  }, []);
-  const hadleTabChange = (vale: string) => {
-    setActiveTab(vale);
+  }, [setLoading]);
+
+  const handleTabSelect = (tab: string) => {
+    handleTabChange(tab);
   };
+
+  const formatUpdatedTime = (updatedAt: string) => {
+    const date = new Date(updatedAt);
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  };
+
   return (
     <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
@@ -59,27 +100,114 @@ export default function KnowledgeBase() {
           </div>
         </div>
 
-        {/* Tabs Section */}
-        <div className="mb-6 sm:mb-8">
-          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+        {/* Search and Filter Section */}
+        <div className="mb-6 space-y-4 sm:mb-8">
+          {/* Search Bar */}
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex-1 sm:max-w-md">
+              <KnowledgeBaseSearch
+                searchTerm={searchTerm}
+                onSearchChange={setSearchTerm}
+                placeholder="Search knowledge bases by name, description, or category..."
+              />
+            </div>
+
+            {/* Results Count */}
+            <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+              <span>
+                {totalItems} knowledge base{totalItems !== 1 ? "s" : ""} found
+              </span>
+            </div>
+          </div>
+
+          {/* Tabs Section */}
+          <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             <Tabs
-              currentTab={activeTab}
-              tabList={tabList}
-              onTabChange={(value) => hadleTabChange(value)}
+              currentTab={selectedTab}
+              tabList={tabList.map((tab) => `${tab.label}`)}
+              onTabChange={(value) => {
+                // Extract the tab name without the count
+                const tabName = value.split(" (")[0];
+                handleTabSelect(tabName);
+              }}
             />
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="space-y-8 sm:w-full sm:space-y-6 xl:w-[300px]">
-          <KnowledgeBaseCard
-            title="KB Not Found"
-            detail="KB Not Found"
-            updated="KB Not Found"
-            onDelete={() => {}}
-            onDetail={() => {}}
-          />
-        </div>
+        {paginatedKnowledgeBases.length > 0 ? (
+          <div className="space-y-6">
+            {/* Knowledge Base Cards Grid */}
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {paginatedKnowledgeBases.map((kb) => (
+                <KnowledgeBaseCard
+                  key={kb.id}
+                  title={kb.name}
+                  detail={kb.description}
+                  updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
+                  onDelete={() => handleKnowledgeBaseDelete(kb.id)}
+                  onDetail={() => handleKnowledgeBaseClick(kb.id)}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            <KnowledgeBasePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              startIndex={startIndex}
+              endIndex={endIndex}
+              totalItems={totalItems}
+              onPageChange={handlePageChange}
+            />
+          </div>
+        ) : (
+          /* Empty State */
+          <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800">
+            <svg
+              className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={1}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+              No knowledge bases found
+            </h3>
+            <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+              {searchTerm
+                ? `No knowledge bases match your search "${searchTerm}"`
+                : "Get started by creating your first knowledge base."}
+            </p>
+            {!searchTerm && (
+              <button
+                onClick={() => setOpenModal(true)}
+                className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <svg
+                  className="h-4 w-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                Create Knowledge Base
+              </button>
+            )}
+          </div>
+        )}
 
         {/* Create Knowledge Base Modal */}
         <CreateKnowledgeBaseModal

@@ -5,6 +5,8 @@ export { default as ChatHistoryCard } from "./chatHistoryCard";
 export { default as ChatHistoryList } from "./chatHistoryList";
 export { default as CreateKnowledgeBaseModal } from "./createKnowledgeBaseModal";
 export { default as KnowledgeBaseCard } from "./knowledgeBaseCard";
+export { default as KnowledgeBasePagination } from "./knowledgeBasePagination";
+export { default as KnowledgeBaseSearch } from "./knowledgeBaseSearch";
 export { default as KnowledgeSelect } from "./knowledgeSelect";
 export { default as LoadingPage } from "./loadingPage";
 export { default as RecentActivityCard } from "./recentActivityCard";

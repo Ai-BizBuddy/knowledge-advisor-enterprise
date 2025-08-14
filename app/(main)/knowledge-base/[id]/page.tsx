@@ -8,21 +8,37 @@ import {
   ChatCard,
   ChatHistoryList,
 } from "@/components";
-import { Breadcrumb, BreadcrumbItem, Button, Radio } from "flowbite-react";
-import { useState } from "react";
+import { Breadcrumb, BreadcrumbItem, Button } from "flowbite-react";
+import { useState, useEffect } from "react";
 import { useDocumentsManagement } from "@/hooks";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
+import { getKnowledgeBaseById, formatStatus } from "@/data/knowledgeBaseData";
+import { KnowledgeBaseData } from "@/data/knowledgeBaseData";
+
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
+  const params = useParams();
   const { setLoading } = useLoading();
 
   const [currentTab, setCurrentTabs] = useState("Documents");
   const [openHistory, setOpenHistory] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [message, setMessage] = useState("");
+  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseData | null>(
+    null,
+  );
 
   const tabsList = ["Documents", "Chat Assistant"];
+
+  // Get knowledge base data on component mount
+  useEffect(() => {
+    if (params.id) {
+      const kb = getKnowledgeBaseById(params.id as string);
+      setKnowledgeBase(kb || null);
+    }
+    setLoading(false);
+  }, [params.id, setLoading]);
 
   const {
     // State
@@ -59,6 +75,41 @@ export default function KnowledgeBaseDetail() {
     router.push("/knowledge-base");
   };
 
+  if (!knowledgeBase) {
+    return (
+      <div className="min-h-screen p-3 sm:p-6 lg:p-8">
+        <div className="flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800">
+          <svg
+            className="mx-auto h-12 w-12 text-gray-400 dark:text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={1}
+              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+            />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-white">
+            Knowledge Base Not Found
+          </h3>
+          <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+            The knowledge base you&apos;re looking for doesn&apos;t exist or has
+            been removed.
+          </p>
+          <button
+            onClick={handleBackButtonClick}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+          >
+            Back to Knowledge Bases
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen p-3 sm:p-6 lg:p-8">
       {/* Header Section */}
@@ -68,18 +119,29 @@ export default function KnowledgeBaseDetail() {
           className="flex items-center gap-3 sm:gap-4"
         >
           <BreadcrumbItem href="/knowledge-base">Knowledge Base</BreadcrumbItem>
-          <BreadcrumbItem>Knowledge Base Detail</BreadcrumbItem>
+          <BreadcrumbItem>{knowledgeBase.name}</BreadcrumbItem>
         </Breadcrumb>
         <div className="flex items-center gap-3 pt-5 sm:gap-4">
-          {/* Enhanced Back Button */}
-
           {/* Title Section */}
           <div className="min-w-0 flex-1">
-            <h1 className="text-l font-bold text-gray-900 sm:text-2xl dark:text-white">
-              Knowledge Base Detail
-            </h1>
+            <div className="mb-2 flex items-center gap-3">
+              <h1 className="text-xl font-bold text-gray-900 sm:text-2xl dark:text-white">
+                {knowledgeBase.name}
+              </h1>
+              <span
+                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                  knowledgeBase.status === 1
+                    ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                    : knowledgeBase.status === 2
+                      ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                      : "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                }`}
+              >
+                {formatStatus(knowledgeBase.status)}
+              </span>
+            </div>
             <p className="mt-1 text-sm text-gray-600 sm:text-base dark:text-gray-400">
-              Knowledge Base Description
+              {knowledgeBase.description}
             </p>
           </div>
         </div>
