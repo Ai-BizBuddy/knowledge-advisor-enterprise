@@ -36,7 +36,7 @@ export default function ChatPage() {
 
       <div className="min-h-full">
         {/* Main Container with consistent responsive padding */}
-        <div className="p-4 sm:p-6 lg:p-7">
+        <div className="p-4 sm:p-6 lg:p-8">
           <div className="space-y-3 sm:space-y-3">
             {/* Page Header - Outside the card */}
             <div className="space-y-2">
