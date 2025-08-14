@@ -50,7 +50,7 @@ export default function Dashboard() {
       <div className="p-4 sm:p-6 lg:p-8">
         {/* Page Header */}
         <div className="mb-6 sm:mb-8">
-          <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+          <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
             Dashboard
           </h1>
           <p className="text-sm text-gray-500 sm:text-base dark:text-gray-400">

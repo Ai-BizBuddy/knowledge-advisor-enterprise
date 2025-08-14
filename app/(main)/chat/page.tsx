@@ -41,7 +41,7 @@ export default function ChatPage() {
             {/* Page Header - Outside the card */}
             <div className="space-y-2">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                   AI Chat Assistant
                 </h1>
               </div>

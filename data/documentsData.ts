@@ -9,11 +9,14 @@ export interface Document {
     project: string[];
     source: string;
     uploadDate: string;
+    chunk?: number;
+    syncStatus?: string;
+    lastUpdated?: string;
 }
 
 export const documentsData: Document[] = [
     {
-        name: "Project Roadmap 2024",
+        name: "products (2)-31 (1).pdf",
         size: "2.5 MB",
         type: "PDF",
         date: "September 25, 2024",
@@ -23,11 +26,14 @@ export const documentsData: Document[] = [
         project: ["Apollo Core"],
         source: "Processed",
         uploadDate: "Thursday, 21st August",
+        chunk: 0,
+        syncStatus: "Synced",
+        lastUpdated: "8/14/2025"
     },
     {
-        name: "Marketing Campaign Budget",
+        name: "products (2)-31 (1).pdf",
         size: "1.4 MB",
-        type: "XLSX",
+        type: "PDF",
         date: "September 18, 2024",
         status: "Completed",
         uploadedBy: "Ebubechukwu Agnes",
@@ -35,23 +41,29 @@ export const documentsData: Document[] = [
         project: ["Marketing"],
         source: "Processing",
         uploadDate: "Wednesday, 18th September",
+        chunk: 0,
+        syncStatus: "Synced",
+        lastUpdated: "8/13/2025"
     },
     {
-        name: "Quarterly Sales Presentation",
+        name: "products (2)-31 (1).pdf",
         size: "7 MB",
-        type: "PPTX",
+        type: "PDF",
         date: "September 12, 2024",
-        status: "Completed",
+        status: "Failed",
         uploadedBy: "Laura Rodriguez",
         avatar: "/avatars/laura.png",
         project: ["Sales"],
         source: "Failed",
         uploadDate: "Thursday, 12th September",
+        chunk: 34,
+        syncStatus: "Synced",
+        lastUpdated: "8/13/2025"
     },
     {
-        name: "Website Redesign Mockup",
+        name: "products_page_4.pdf",
         size: "9 MB",
-        type: "PNG",
+        type: "PDF",
         date: "August 29, 2024",
         status: "Completed",
         uploadedBy: "Tom Baker",
@@ -59,18 +71,24 @@ export const documentsData: Document[] = [
         project: ["Design"],
         source: "Failed",
         uploadDate: "Thursday, 29th August",
+        chunk: 0,
+        syncStatus: "Synced",
+        lastUpdated: "8/13/2025"
     },
     {
-        name: "Team Meeting Notes",
+        name: "20250107-192625_สำนักงาน.pdf",
         size: "3.5 MB",
-        type: "DOCX",
+        type: "PDF",
         date: "July 22, 2024",
-        status: "Completed",
+        status: "OcrinProgress",
         uploadedBy: "Emily Zhang",
         avatar: "/avatars/emily.png",
         project: ["Operations"],
         source: "Failed",
         uploadDate: "Monday, 22nd July",
+        chunk: 0,
+        syncStatus: "Synced",
+        lastUpdated: "8/14/2025"
     },
     {
         name: "User Research Report",

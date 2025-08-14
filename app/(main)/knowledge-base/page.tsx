@@ -27,7 +27,7 @@ export default function KnowledgeBase() {
         <div className="mb-6 sm:mb-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex-1">
-              <h1 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl dark:text-white">
+              <h1 className="mb-2 text-2xl font-bold text-gray-900 dark:text-white">
                 Knowledge Base
               </h1>
               <p className="text-sm text-gray-500 sm:text-base dark:text-gray-400">
@@ -71,7 +71,7 @@ export default function KnowledgeBase() {
         </div>
 
         {/* Content Area */}
-        <div className="w-full space-y-8 sm:w-[300px] sm:space-y-6">
+        <div className="space-y-8 sm:w-full sm:space-y-6 xl:w-[300px]">
           <KnowledgeBaseCard
             title="KB Not Found"
             detail="KB Not Found"

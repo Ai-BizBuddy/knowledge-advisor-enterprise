@@ -8,7 +8,7 @@ export const DocumentsSearch: React.FC<DocumentsSearchProps> = ({
   onSearchChange,
 }) => {
   return (
-    <div className="relative mb-6">
+    <div className="relative">
       <div className="absolute inset-y-0 left-0 flex items-center pl-3">
         <svg
           className="h-5 w-5 text-gray-400"
