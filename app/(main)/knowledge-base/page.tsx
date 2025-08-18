@@ -7,6 +7,7 @@ import {
 import KnowledgeBasePagination from "@/components/knowledgeBasePagination";
 import KnowledgeBaseSearch from "@/components/knowledgeBaseSearch";
 import { useLoading } from "@/contexts/LoadingContext";
+import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
 import { useEffect, useState } from "react";
 
@@ -35,6 +36,8 @@ export default function KnowledgeBase() {
     handleKnowledgeBaseClick,
     handleKnowledgeBaseDelete,
   } = useKnowledgeBaseManagement();
+
+  const { projects } = useKnowledgeBase();
 
   const tabList = [
     { label: "All", count: tabCounts.all },
@@ -135,11 +138,11 @@ export default function KnowledgeBase() {
         </div>
 
         {/* Content Area */}
-        {paginatedKnowledgeBases.length > 0 ? (
+        {projects.length > 0 ? (
           <div className="space-y-6">
             {/* Knowledge Base Cards Grid */}
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedKnowledgeBases.map((kb) => (
+              {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
                   title={kb.name}

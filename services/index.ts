@@ -39,9 +39,7 @@ export const documentIngestionService = new DocumentIngestionService({
  * 
  * Manages knowledge base CRUD operations using Supabase
  */
-export const knowledgeBaseService = new KnowledgeBaseService({
-  useMockData: serviceConfig.useMockData
-});
+export const knowledgeBaseService = new KnowledgeBaseService();
 
 /**
  * Document Search Service Instance
