@@ -48,6 +48,50 @@ class KnowledgeBaseService {
       throw error;
     }
   }
+  async searchProject(query: string): Promise<Project[]> {
+    console.log(`[${this.serviceName}] Searching knowledge bases with query:`, query);
+
+    try {
+      const user = await this.getCurrentUser();
+      const supabaseTable = createClientTable();
+
+      const { data: projects, error } = await supabaseTable
+        .from('knowledge_base')
+        .select('*')
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(`[${this.serviceName}] Supabase query error:`, error);
+        throw new Error(`Failed to search knowledge bases: ${error.message}`);
+      }
+
+      if (!projects || projects.length === 0) {
+        console.log(`[${this.serviceName}] No knowledge bases found for query:`, query);
+        return [];
+      }
+
+      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases for query:`, query);
+      // Transform Supabase rows to Project objects
+      return projects.map((row: SupabaseProjectRow) => ({
+        id: row.id,
+        name: row.name,
+        description: row.description || '',
+        document_count: row.document_count || 0,
+        status: (row.status as ProjectStatus) || ProjectStatus.ACTIVE,
+        owner: row.owner,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        lastSync: this.formatLastSync(row.updated_at),
+        queries: 0, // Default value - not available in current schema
+        accuracy: 0 // Default value - not available in current schema
+      }));
+
+    } catch (error) {
+      console.error(`[${this.serviceName}] Error searching knowledge bases:`, error);
+      throw error;
+    }
+  }
 
   /**
    * Fetch all knowledge bases for the current user

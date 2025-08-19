@@ -9,10 +9,12 @@ import KnowledgeBaseSearch from "@/components/knowledgeBaseSearch";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
+import { Project } from "@/interfaces/Project";
 import { useEffect, useState } from "react";
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
+  const [knowledgeBase, setKnowledgeBase] = useState<Project[]>([]);
   const { setLoading } = useLoading();
 
   const {
@@ -37,7 +39,7 @@ export default function KnowledgeBase() {
     handleKnowledgeBaseDelete,
   } = useKnowledgeBaseManagement();
 
-  const { projects } = useKnowledgeBase();
+  const { projects, searchKnowledgeBases } = useKnowledgeBase();
 
   const tabList = [
     { label: "All", count: tabCounts.all },
@@ -47,8 +49,10 @@ export default function KnowledgeBase() {
   ];
 
   useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
+    if (projects.length > 0) {
+      setKnowledgeBase(projects);
+    }
+  }, [projects]);
 
   const handleTabSelect = (tab: string) => {
     handleTabChange(tab);
@@ -61,6 +65,12 @@ export default function KnowledgeBase() {
       month: "short",
       day: "numeric",
     });
+  };
+
+  const handleKnowledgeBaseSearch = async (query: string) => {
+    setSearchTerm(query);
+    const results = await searchKnowledgeBases(query);
+    setKnowledgeBase(results);
   };
 
   return (
@@ -110,7 +120,7 @@ export default function KnowledgeBase() {
             <div className="flex-1 sm:max-w-md">
               <KnowledgeBaseSearch
                 searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={handleKnowledgeBaseSearch}
                 placeholder="Search knowledge bases by name, description, or category..."
               />
             </div>
