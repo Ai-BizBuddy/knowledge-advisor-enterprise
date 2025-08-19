@@ -19,6 +19,7 @@ import { KnowledgeBaseData } from "@/data/knowledgeBaseData";
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
   const params = useParams();
+  const id = params.id as string;
   const { setLoading } = useLoading();
 
   const [currentTab, setCurrentTabs] = useState("Documents");
@@ -33,12 +34,12 @@ export default function KnowledgeBaseDetail() {
 
   // Get knowledge base data on component mount
   useEffect(() => {
-    if (params.id) {
-      const kb = getKnowledgeBaseById(params.id as string);
+    if (id) {
+      const kb = getKnowledgeBaseById(id);
       setKnowledgeBase(kb || null);
     }
     setLoading(false);
-  }, [params.id, setLoading]);
+  }, [id, setLoading]);
 
   const {
     // State

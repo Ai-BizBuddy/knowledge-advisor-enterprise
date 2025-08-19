@@ -10,9 +10,11 @@ import { useLoading } from "@/contexts/LoadingContext";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
 import { Project } from "@/interfaces/Project";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function KnowledgeBase() {
+  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
   const [knowledgeBase, setKnowledgeBase] = useState<Project[]>([]);
   const { setLoading } = useLoading();
@@ -39,7 +41,8 @@ export default function KnowledgeBase() {
     handleKnowledgeBaseDelete,
   } = useKnowledgeBaseManagement();
 
-  const { projects, searchKnowledgeBases } = useKnowledgeBase();
+  const { projects, searchKnowledgeBases, createKnowledgeBase } =
+    useKnowledgeBase();
 
   const tabList = [
     { label: "All", count: tabCounts.all },
@@ -128,7 +131,8 @@ export default function KnowledgeBase() {
             {/* Results Count */}
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
               <span>
-                {totalItems} knowledge base{totalItems !== 1 ? "s" : ""} found
+                {knowledgeBase.length} knowledge base
+                {knowledgeBase.length !== 1 ? "s" : ""} found
               </span>
             </div>
           </div>
@@ -159,7 +163,10 @@ export default function KnowledgeBase() {
                   detail={kb.description}
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
                   onDelete={() => handleKnowledgeBaseDelete(kb.id)}
-                  onDetail={() => handleKnowledgeBaseClick(kb.id)}
+                  onDetail={() => {
+                    router.push(`/knowledge-base/${kb.id}`);
+                    setLoading(true);
+                  }}
                 />
               ))}
             </div>
@@ -226,7 +233,10 @@ export default function KnowledgeBase() {
         <CreateKnowledgeBaseModal
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
-          onSubmit={(data) => console.log("Created:", data)}
+          onSubmit={(data) => {
+            createKnowledgeBase(data);
+            setOpenModal(false);
+          }}
         />
       </div>
     </div>

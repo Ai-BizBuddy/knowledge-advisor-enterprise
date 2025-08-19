@@ -201,9 +201,9 @@ class KnowledgeBaseService {
       const projectData = {
         name: input.name,
         description: input.description || '',
-        owner: user.id,
-        status: ProjectStatus.ACTIVE,
-        document_count: 0,
+        created_by: user.id,
+        is_active: input.status === ProjectStatus.ACTIVE,
+        // document_count: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
