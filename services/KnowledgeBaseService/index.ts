@@ -11,12 +11,23 @@ import type {
   Project,
   CreateProjectInput,
   UpdateProjectInput,
-  PaginationOptions,
-  PaginatedResponse,
-  ProjectFilters
+  PaginationOptions
 } from "@/interfaces/Project";
 import { ProjectStatus } from "@/interfaces/Project";
-import type { SupabaseProjectRow } from "@/interfaces/AxiosTypes";
+
+// Supabase database row interface matching the knowledge_base table schema
+interface SupabaseKnowledgeBaseRow {
+  id: string;
+  name: string;
+  description?: string;
+  department_id?: string;
+  created_by: string;
+  created_at: string;
+  updated_at?: string;
+  visibility?: string;
+  is_active?: boolean;
+  settings?: Record<string, unknown>;
+}
 
 /**
  * Knowledge Base Service Class
@@ -48,18 +59,33 @@ class KnowledgeBaseService {
       throw error;
     }
   }
-  async searchProject(query: string): Promise<Project[]> {
+
+  async searchProject(query: string, paginationOptions: PaginationOptions): Promise<{ data: Project[], count: number }> {
     console.log(`[${this.serviceName}] Searching knowledge bases with query:`, query);
 
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
+      // Get total count for search results
+      const { count, error: countError } = await supabaseTable
+        .from('knowledge_base')
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by', user.id)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+
+      if (countError) {
+        console.error(`[${this.serviceName}] Error getting search count:`, countError);
+      }
+
+      // Get paginated search results
       const { data: projects, error } = await supabaseTable
         .from('knowledge_base')
         .select('*')
+        .eq('created_by', user.id)
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -68,24 +94,13 @@ class KnowledgeBaseService {
 
       if (!projects || projects.length === 0) {
         console.log(`[${this.serviceName}] No knowledge bases found for query:`, query);
-        return [];
+        return { data: [], count: 0 };
       }
 
-      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases for query:`, query);
+      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases for query: ${query} (Total: ${count})`);
+
       // Transform Supabase rows to Project objects
-      return projects.map((row: SupabaseProjectRow) => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        document_count: row.document_count || 0,
-        status: (row.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: row.owner,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        lastSync: this.formatLastSync(row.updated_at),
-        queries: 0, // Default value - not available in current schema
-        accuracy: 0 // Default value - not available in current schema
-      }));
+      return { data: projects, count: count || 0 }
 
     } catch (error) {
       console.error(`[${this.serviceName}] Error searching knowledge bases:`, error);
@@ -94,10 +109,10 @@ class KnowledgeBaseService {
   }
 
   /**
-   * Fetch all knowledge bases for the current user
+   * Fetch all knowledge bases for the current user with proper pagination
    */
-  async getProjects(): Promise<Project[]> {
-    console.log(`[${this.serviceName}] Fetching knowledge bases...`);
+  async getProjects(paginationOptions: PaginationOptions): Promise<{ data: Project[], count: number }> {
+    console.log(`[${this.serviceName}] Fetching knowledge bases with pagination:`, paginationOptions);
 
     try {
       const user = await this.getCurrentUser();
@@ -105,10 +120,23 @@ class KnowledgeBaseService {
 
       console.log(`[${this.serviceName}] Querying Supabase for user:`, user.id);
 
+      // Get total count first
+      const { count, error: countError } = await supabaseTable
+        .from('knowledge_base')
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by', user.id);
+
+      if (countError) {
+        console.error(`[${this.serviceName}] Error getting count:`, countError);
+      }
+
+      // Get paginated data
       const { data: projects, error } = await supabaseTable
         .from('knowledge_base')
         .select('*')
-        .order('created_at', { ascending: false });
+        .eq('created_by', user.id)
+        .order('created_at', { ascending: false })
+        .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -117,24 +145,13 @@ class KnowledgeBaseService {
 
       if (!projects || projects.length === 0) {
         console.log(`[${this.serviceName}] No knowledge bases found for user`);
-        return [];
+        return { data: [], count: 0 };
       }
 
-      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases`);
+      console.log(`[${this.serviceName}] Found ${projects.length} knowledge bases (Total: ${count})`);
+
       // Transform Supabase rows to Project objects
-      return projects.map((row: SupabaseProjectRow) => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        document_count: row.document_count || 0,
-        status: (row.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: row.owner,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        lastSync: this.formatLastSync(row.updated_at),
-        queries: 0, // Default value - not available in current schema
-        accuracy: 0 // Default value - not available in current schema
-      }));
+      return { data: projects, count: count || 0 };
 
     } catch (error) {
       console.error(`[${this.serviceName}] Error fetching knowledge bases:`, error);
@@ -156,6 +173,7 @@ class KnowledgeBaseService {
         .from('knowledge_base')
         .select('*')
         .eq('id', id)
+        .eq('created_by', user.id)
         .single();
 
       if (error) {
@@ -171,14 +189,14 @@ class KnowledgeBaseService {
         id: project.id,
         name: project.name,
         description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
+        document_count: 0, // Not available in current schema
+        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        owner: project.created_by,
         created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: project.queries || 0,
-        accuracy: project.accuracy || 0
+        updated_at: project.updated_at || project.created_at,
+        lastSync: this.formatLastSync(project.updated_at || project.created_at),
+        queries: 0,
+        accuracy: 0
       };
 
     } catch (error) {
@@ -197,13 +215,14 @@ class KnowledgeBaseService {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      // status is stored as smallint in the DB, so we use ProjectStatus.ACTIVE (number)
+      // Create project data according to the database schema
       const projectData = {
         name: input.name,
         description: input.description || '',
         created_by: user.id,
         is_active: input.status === ProjectStatus.ACTIVE,
-        // document_count: 0,
+        visibility: input.visibility === 2 ? 'private' : 'public', // Default visibility
+        settings: {}, // Default empty settings object
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
@@ -221,19 +240,7 @@ class KnowledgeBaseService {
 
       console.log(`[${this.serviceName}] Knowledge base created successfully:`, project.id);
 
-      return {
-        id: project.id,
-        name: project.name,
-        description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: 0, // Not in schema
-        accuracy: 0 // Not in schema
-      };
+      return project as Project;
 
     } catch (error) {
       console.error(`[${this.serviceName}] Error creating knowledge base:`, error);
@@ -260,6 +267,7 @@ class KnowledgeBaseService {
         .from('knowledge_base')
         .update(updateData)
         .eq('id', id)
+        .eq('created_by', user.id)
         .select()
         .single();
 
@@ -274,14 +282,14 @@ class KnowledgeBaseService {
         id: project.id,
         name: project.name,
         description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
+        document_count: 0, // Not available in current schema
+        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        owner: project.created_by,
         created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: project.queries || 0,
-        accuracy: project.accuracy || 0
+        updated_at: project.updated_at || project.created_at,
+        lastSync: this.formatLastSync(project.updated_at || project.created_at),
+        queries: 0,
+        accuracy: 0
       };
 
     } catch (error) {
@@ -304,6 +312,7 @@ class KnowledgeBaseService {
         .from('knowledge_base')
         .delete()
         .eq('id', id)
+        .eq('created_by', user.id)
 
       if (error) {
         console.error(`[${this.serviceName}] Error deleting knowledge base:`, error);

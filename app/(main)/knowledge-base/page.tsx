@@ -8,54 +8,41 @@ import KnowledgeBasePagination from "@/components/knowledgeBasePagination";
 import KnowledgeBaseSearch from "@/components/knowledgeBaseSearch";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
-import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
-import { Project } from "@/interfaces/Project";
-import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function KnowledgeBase() {
-  const router = useRouter();
   const [openModal, setOpenModal] = useState(false);
-  const [knowledgeBase, setKnowledgeBase] = useState<Project[]>([]);
   const { setLoading } = useLoading();
 
   const {
     // State
+    projects,
+    loading,
     searchTerm,
     selectedTab,
+    tabCounts,
+
+    // Pagination
     currentPage,
     totalPages,
     startIndex,
     endIndex,
     totalItems,
 
-    // Data
-    paginatedKnowledgeBases,
-    tabCounts,
-
     // Handlers
-    setSearchTerm,
     handleTabChange,
     handlePageChange,
     handleKnowledgeBaseClick,
     handleKnowledgeBaseDelete,
-  } = useKnowledgeBaseManagement();
-
-  const { projects, searchKnowledgeBases, createKnowledgeBase } =
-    useKnowledgeBase();
+    searchKnowledgeBases,
+    createKnowledgeBase,
+  } = useKnowledgeBase();
 
   const tabList = [
     { label: "All", count: tabCounts.all },
     { label: "Active", count: tabCounts.active },
-    { label: "Paused", count: tabCounts.paused },
-    { label: "Draft", count: tabCounts.draft },
+    { label: "Inactive", count: tabCounts.inactive },
   ];
-
-  useEffect(() => {
-    if (projects.length > 0) {
-      setKnowledgeBase(projects);
-    }
-  }, [projects]);
 
   const handleTabSelect = (tab: string) => {
     handleTabChange(tab);
@@ -71,10 +58,12 @@ export default function KnowledgeBase() {
   };
 
   const handleKnowledgeBaseSearch = async (query: string) => {
-    setSearchTerm(query);
-    const results = await searchKnowledgeBases(query);
-    setKnowledgeBase(results);
+    await searchKnowledgeBases(query);
   };
+
+  useEffect(() => {
+    setLoading(loading);
+  }, [loading, setLoading]);
 
   return (
     <div className="min-h-screen">
@@ -131,8 +120,8 @@ export default function KnowledgeBase() {
             {/* Results Count */}
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
               <span>
-                {knowledgeBase.length} knowledge base
-                {knowledgeBase.length !== 1 ? "s" : ""} found
+                {totalItems} knowledge base
+                {totalItems !== 1 ? "s" : ""} found
               </span>
             </div>
           </div>
@@ -155,7 +144,7 @@ export default function KnowledgeBase() {
         {projects.length > 0 ? (
           <div className="space-y-6">
             {/* Knowledge Base Cards Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
               {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
@@ -164,7 +153,7 @@ export default function KnowledgeBase() {
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
                   onDelete={() => handleKnowledgeBaseDelete(kb.id)}
                   onDetail={() => {
-                    router.push(`/knowledge-base/${kb.id}`);
+                    handleKnowledgeBaseClick(kb.id);
                     setLoading(true);
                   }}
                 />
@@ -233,8 +222,8 @@ export default function KnowledgeBase() {
         <CreateKnowledgeBaseModal
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
-          onSubmit={(data) => {
-            createKnowledgeBase(data);
+          onSubmit={async (data) => {
+            await createKnowledgeBase(data);
             setOpenModal(false);
           }}
         />

@@ -29,6 +29,7 @@ export interface CreateProjectInput {
   name: string;
   description: string;
   status: ProjectStatus;
+  visibility: number; // 1=Public, 2=Private (optional, defaults to 2)
 }
 
 // Update project input interface
@@ -102,10 +103,11 @@ export interface ProjectAnalytics {
 
 // Pagination interface
 export interface PaginationOptions {
-  page: number;
-  limit: number;
-  sortBy?: 'created_at' | 'updated_at' | 'name';
-  sortOrder?: 'asc' | 'desc';
+  currentPage: number;
+  totalPages: number;
+  startIndex: number; // Optional for manual pagination
+  endIndex: number; // Optional for manual pagination
+  totalItems: number; // Optional for manual pagination
 }
 
 // Paginated response interface

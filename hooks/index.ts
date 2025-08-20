@@ -3,7 +3,6 @@ export { useAuth } from './useAuth';
 export { useChat } from './useChat';
 export { useAdkChat } from './useAdkChat';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
-export { useKnowledgeBaseManagement } from './useKnowledgeBaseManagement';
 export { useChatHistory } from './useChatHistory';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useDocumentIngestion } from './useDocumentIngestion';

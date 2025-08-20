@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { knowledgeBaseService } from "@/services";
 import type {
   Project,
@@ -8,15 +9,30 @@ import type {
   UpdateProjectInput,
   ProjectStatus,
   PaginationOptions,
-  PaginatedResponse,
   ProjectAnalytics,
 } from "@/interfaces/Project";
 
 export interface UseKnowledgeBaseReturn {
   // State
   projects: Project[];
+  filteredProjects: Project[];
   loading: boolean;
   error: string | null;
+  currentPage: number;
+  totalPages: number;
+  startIndex: number;
+  endIndex: number;
+  totalItems: number;
+  itemsPerPage: number;
+  searchTerm: string;
+  selectedTab: string;
+
+  // Tab counts
+  tabCounts: {
+    all: number;
+    active: number;
+    inactive: number;
+  };
 
   // CRUD Operations
   createKnowledgeBase: (data: CreateProjectInput) => Promise<Project>;
@@ -35,11 +51,16 @@ export interface UseKnowledgeBaseReturn {
   batchDelete: (ids: string[]) => Promise<void>;
 
   // Search and Filter
-  searchKnowledgeBases: (query: string) => Promise<Project[]>;
+  searchKnowledgeBases: (query: string) => Promise<void>;
   filterByStatus: (status: ProjectStatus) => Promise<Project[]>;
 
-  // Pagination
-  loadPage: (options: PaginationOptions) => Promise<PaginatedResponse<Project>>;
+  // Tab and Pagination Handlers
+  handleTabChange: (tab: string) => void;
+  handlePageChange: (page: number) => void;
+  handleKnowledgeBaseClick: (id: string) => void;
+  handleKnowledgeBaseDelete: (id: string) => void;
+  setSearchTerm: (term: string) => void;
+  setItemsPerPage: (items: number) => void;
 
   // Analytics
   getAnalytics: (id: string) => Promise<ProjectAnalytics>;
@@ -50,26 +71,131 @@ export interface UseKnowledgeBaseReturn {
 }
 
 export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
+  const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load all knowledge bases
-  const loadKnowledgeBases = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const data = await knowledgeBaseService.getProjects();
-      setProjects(data);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load knowledge bases";
-      setError(errorMessage);
-      console.error("Error loading knowledge bases:", err);
-    } finally {
-      setLoading(false);
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10); // 3x3 grid for cards
+
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedTab, setSelectedTab] = useState("All");
+
+  // Calculate pagination indices
+  const startIndex = (currentPage - 1) * itemsPerPage + 1;
+  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+
+  // Calculate tab counts
+  const tabCounts = {
+    all: projects.length,
+    active: projects.filter((p) => p.status === 1).length, // Active = 1
+    inactive: projects.filter((p) => p.status !== 1).length, // Not active
+  };
+
+  // Build pagination options for API calls
+  const buildPaginationOptions = useCallback((): PaginationOptions => {
+    return {
+      currentPage,
+      totalPages,
+      startIndex: (currentPage - 1) * itemsPerPage,
+      endIndex: currentPage * itemsPerPage - 1,
+      totalItems,
+    };
+  }, [currentPage, totalPages, itemsPerPage, totalItems]);
+
+  // Filter projects by tab
+  const filterProjectsByTab = useCallback(
+    (projectsToFilter: Project[]) => {
+      switch (selectedTab.toLowerCase()) {
+        case "active":
+          return projectsToFilter.filter((p) => p.status === 1);
+        case "inactive":
+          return projectsToFilter.filter((p) => p.status !== 1);
+        default:
+          return projectsToFilter;
+      }
+    },
+    [selectedTab],
+  );
+
+  // Apply search filter
+  const applySearchFilter = useCallback(
+    (projectsToFilter: Project[]) => {
+      if (!searchTerm.trim()) return projectsToFilter;
+
+      const lowercaseSearch = searchTerm.toLowerCase();
+      return projectsToFilter.filter(
+        (project) =>
+          project.name.toLowerCase().includes(lowercaseSearch) ||
+          project.description.toLowerCase().includes(lowercaseSearch),
+      );
+    },
+    [searchTerm],
+  );
+
+  // Update filtered projects when filters change
+  useEffect(() => {
+    let filtered = filterProjectsByTab(projects);
+    filtered = applySearchFilter(filtered);
+    setFilteredProjects(filtered);
+    // setTotalItems(filtered.length);
+    // setTotalPages(Math.ceil(filtered.length / itemsPerPage));
+
+    // Reset to first page if current page is out of range
+    if (
+      currentPage > Math.ceil(filtered.length / itemsPerPage) &&
+      filtered.length > 0
+    ) {
+      setCurrentPage(1);
     }
-  }, []);
+  }, [
+    projects,
+    selectedTab,
+    searchTerm,
+    itemsPerPage,
+    currentPage,
+    filterProjectsByTab,
+    applySearchFilter,
+  ]);
+
+  // Load all knowledge bases
+  const loadKnowledgeBases = useCallback(
+    async (forceRefresh = false) => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const paginationOptions = buildPaginationOptions();
+        const results =
+          await knowledgeBaseService.getProjects(paginationOptions);
+
+        setProjects(results.data);
+        setTotalItems(results.count);
+        setTotalPages(Math.ceil(results.count / itemsPerPage));
+
+        if (forceRefresh) {
+          // When force refreshing, reset filters
+          setSearchTerm("");
+          setSelectedTab("All");
+          setCurrentPage(1);
+        }
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to load knowledge bases";
+        setError(errorMessage);
+        console.error("Error loading knowledge bases:", err);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildPaginationOptions],
+  );
 
   // Initial load
   useEffect(() => {
@@ -151,7 +277,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     [],
   );
 
-  // Batch update - TODO: Implement in KnowledgeBaseService
+  // Batch update
   const batchUpdate = useCallback(
     async (
       ids: string[],
@@ -159,7 +285,6 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     ): Promise<Project[]> => {
       try {
         setError(null);
-        // For now, update individually since batch update is not implemented
         const updatePromises = ids.map((id) =>
           knowledgeBaseService.updateProject(id, updates),
         );
@@ -183,11 +308,10 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     [],
   );
 
-  // Batch delete - TODO: Implement in KnowledgeBaseService
+  // Batch delete
   const batchDelete = useCallback(async (ids: string[]): Promise<void> => {
     try {
       setError(null);
-      // For now, delete individually since batch delete is not implemented
       await Promise.all(
         ids.map((id) => knowledgeBaseService.deleteProject(id)),
       );
@@ -200,16 +324,29 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     }
   }, []);
 
-  // Search knowledge bases - TODO: Implement in KnowledgeBaseService
+  // Search knowledge bases
   const searchKnowledgeBases = useCallback(
-    async (query: string): Promise<Project[]> => {
+    async (query: string): Promise<void> => {
       try {
         setLoading(true);
         setError(null);
-        const results = await knowledgeBaseService.searchProject(query);
-        console.log("Search results:", results);
-        setProjects(results);
-        return results;
+        setSearchTerm(query);
+
+        if (!query.trim()) {
+          // If empty search, reload all projects
+          await loadKnowledgeBases();
+          return;
+        }
+
+        const paginationOptions = buildPaginationOptions();
+        const results = await knowledgeBaseService.searchProject(
+          query,
+          paginationOptions,
+        );
+        setProjects(results.data);
+        // setTotalItems(results.count);
+        // setTotalPages(Math.ceil(results.count / itemsPerPage));
+        setCurrentPage(1); // Reset to first page for search results
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -221,17 +358,20 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setLoading(false);
       }
     },
-    [],
+    [buildPaginationOptions, loadKnowledgeBases],
   );
 
-  // Filter by status - TODO: Implement in KnowledgeBaseService
+  // Filter by status
   const filterByStatus = useCallback(
     async (status: ProjectStatus): Promise<Project[]> => {
       try {
         setError(null);
-        // For now, filter locally since status filtering is not implemented
-        const allProjects = await knowledgeBaseService.getProjects();
-        return allProjects.filter((p) => p.status === status);
+        const allProjects = await knowledgeBaseService.getProjects(
+          buildPaginationOptions(),
+        );
+        setTotalItems(allProjects.count);
+        setTotalPages(Math.ceil(allProjects.count / itemsPerPage));
+        return allProjects.data.filter((p) => p.status === status);
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -241,43 +381,48 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         throw err;
       }
     },
-    [],
+    [buildPaginationOptions],
   );
 
-  // Load page with pagination - TODO: Implement in KnowledgeBaseService
-  const loadPage = useCallback(
-    async (options: PaginationOptions): Promise<PaginatedResponse<Project>> => {
-      try {
-        setError(null);
-        // For now, return a mock paginated response
-        const allProjects = await knowledgeBaseService.getProjects();
-        const startIndex = (options.page - 1) * options.limit;
-        const endIndex = startIndex + options.limit;
-        const paginatedProjects = allProjects.slice(startIndex, endIndex);
+  // Tab change handler
+  const handleTabChange = useCallback((tab: string) => {
+    setSelectedTab(tab);
+    setCurrentPage(1); // Reset to first page when tab changes
+  }, []);
 
-        return {
-          data: paginatedProjects,
-          total: allProjects.length,
-          page: options.page,
-          limit: options.limit,
-          totalPages: Math.ceil(allProjects.length / options.limit),
-        };
+  // Page change handler
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+    },
+    [totalPages],
+  );
+
+  // Knowledge base click handler
+  const handleKnowledgeBaseClick = useCallback(
+    (id: string) => {
+      router.push(`/knowledge-base/${id}`);
+    },
+    [router],
+  );
+
+  // Knowledge base delete handler
+  const handleKnowledgeBaseDelete = useCallback(
+    async (id: string) => {
+      try {
+        await deleteKnowledgeBase(id);
       } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : "Failed to load page";
-        setError(errorMessage);
-        throw err;
+        console.error("Error deleting knowledge base:", err);
       }
     },
-    [],
+    [deleteKnowledgeBase],
   );
 
-  // Get analytics - TODO: Implement in KnowledgeBaseService
+  // Get analytics
   const getAnalytics = useCallback(
     async (id: string): Promise<ProjectAnalytics> => {
       try {
         setError(null);
-        // For now, return mock analytics data
         const project = await knowledgeBaseService.getProject(id);
         if (!project) {
           throw new Error("Project not found");
@@ -286,9 +431,9 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const mockAnalytics: ProjectAnalytics = {
           totalDocuments: project.document_count || 0,
           totalSyncedDocuments: project.document_count || 0,
-          totalSize: 0, // Would come from actual analytics
-          recentActivity: 0, // Would come from actual analytics
-          averageChunkCount: 0, // Would come from actual analytics
+          totalSize: 0,
+          recentActivity: 0,
+          averageChunkCount: 0,
           syncSuccessRate: 100,
           mostRecentSync: "Recently",
         };
@@ -306,7 +451,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Refresh data
   const refresh = useCallback(async (): Promise<void> => {
-    await loadKnowledgeBases();
+    await loadKnowledgeBases(true);
   }, [loadKnowledgeBases]);
 
   // Clear error
@@ -316,9 +461,24 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   return {
     // State
-    projects,
+    projects: filteredProjects.slice(
+      (currentPage - 1) * itemsPerPage,
+      currentPage * itemsPerPage,
+    ),
+    filteredProjects,
     loading,
     error,
+    currentPage,
+    totalPages,
+    startIndex,
+    endIndex,
+    totalItems,
+    itemsPerPage,
+    searchTerm,
+    selectedTab,
+
+    // Tab counts
+    tabCounts,
 
     // CRUD Operations
     createKnowledgeBase,
@@ -334,8 +494,13 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     searchKnowledgeBases,
     filterByStatus,
 
-    // Pagination
-    loadPage,
+    // Tab and Pagination Handlers
+    handleTabChange,
+    handlePageChange,
+    handleKnowledgeBaseClick,
+    handleKnowledgeBaseDelete,
+    setSearchTerm,
+    setItemsPerPage,
 
     // Analytics
     getAnalytics,

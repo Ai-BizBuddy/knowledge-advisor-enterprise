@@ -16,7 +16,8 @@ export default function CreateKnowledgeBaseModal({
 }: Props) {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [status, setStatus] = useState<number>(0);
+  const [status, setStatus] = useState<number>(1);
+  const [visibility, setVisibility] = useState<number>(2);
 
   if (!isOpen) return null;
 
@@ -43,8 +44,12 @@ export default function CreateKnowledgeBaseModal({
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            onSubmit({ name, description, status });
+            onSubmit({ name, description, status, visibility });
             onClose();
+            setName("");
+            setDescription("");
+            setStatus(1);
+            setVisibility(2);
           }}
           className="space-y-4"
         >
@@ -90,8 +95,25 @@ export default function CreateKnowledgeBaseModal({
             >
               <option disabled>Draft (Not yet active)</option>
               <option value={1}>Active</option>
-              <option value={2}>Paused</option>
-              <option value={3}>Draft</option>
+              <option value={2}>Inactive</option>
+            </select>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              You can change this status later from the knowledge base settings.
+            </p>
+          </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium">
+              Visibility *
+            </label>
+            <select
+              required
+              className="w-full rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+              value={visibility}
+              onChange={(e) => setVisibility(Number(e.target.value))}
+            >
+              <option disabled>Draft (Not yet active)</option>
+              <option value={1}>Public</option>
+              <option value={2}>Private</option>
             </select>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               You can change this status later from the knowledge base settings.
@@ -102,7 +124,13 @@ export default function CreateKnowledgeBaseModal({
           <div className="flex justify-end gap-2 pt-4">
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => {
+                onClose();
+                setName("");
+                setDescription("");
+                setStatus(1);
+                setVisibility(2);
+              }}
               className="rounded-md bg-gray-200 px-4 py-2 text-gray-900 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
             >
               Cancel
