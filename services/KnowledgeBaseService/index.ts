@@ -111,8 +111,11 @@ class KnowledgeBaseService {
   /**
    * Fetch all knowledge bases for the current user with proper pagination
    */
-  async getProjects(paginationOptions: PaginationOptions): Promise<{ data: Project[], count: number }> {
-    console.log(`[${this.serviceName}] Fetching knowledge bases with pagination:`, paginationOptions);
+  async getProjects(
+    paginationOptions: PaginationOptions,
+    filters?: { status?: string; searchTerm?: string }
+  ): Promise<{ data: Project[], count: number }> {
+    console.log(`[${this.serviceName}] Fetching knowledge bases with pagination:`, paginationOptions, 'filters:', filters);
 
     try {
       const user = await this.getCurrentUser();
@@ -120,21 +123,39 @@ class KnowledgeBaseService {
 
       console.log(`[${this.serviceName}] Querying Supabase for user:`, user.id);
 
-      // Get total count first
-      const { count, error: countError } = await supabaseTable
+      // Build base query
+      let countQuery = supabaseTable
         .from('knowledge_base')
         .select('*', { count: 'exact', head: true })
         .eq('created_by', user.id);
+
+      let dataQuery = supabaseTable
+        .from('knowledge_base')
+        .select('*')
+        .eq('created_by', user.id);
+
+      // Apply filters
+      if (filters?.status && filters.status !== 'all') {
+        const statusValue = filters.status === 'active' ? true : false;
+        countQuery = countQuery.eq('is_active', statusValue);
+        dataQuery = dataQuery.eq('is_active', statusValue);
+      }
+
+      if (filters?.searchTerm && filters.searchTerm.trim()) {
+        const searchTerm = filters.searchTerm.trim();
+        countQuery = countQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+        dataQuery = dataQuery.or(`name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`);
+      }
+
+      // Get total count first
+      const { count, error: countError } = await countQuery;
 
       if (countError) {
         console.error(`[${this.serviceName}] Error getting count:`, countError);
       }
 
       // Get paginated data
-      const { data: projects, error } = await supabaseTable
-        .from('knowledge_base')
-        .select('*')
-        .eq('created_by', user.id)
+      const { data: projects, error } = await dataQuery
         .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
@@ -185,11 +206,17 @@ class KnowledgeBaseService {
         throw new Error(`Failed to fetch knowledge base: ${error.message}`);
       }
 
+      // Get document count for this knowledge base
+      const { count: documentCount } = await supabaseTable
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', id);
+
       return {
         id: project.id,
         name: project.name,
         description: project.description || '',
-        document_count: 0, // Not available in current schema
+        document_count: documentCount || 0,
         status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
         owner: project.created_by,
         created_at: project.created_at,

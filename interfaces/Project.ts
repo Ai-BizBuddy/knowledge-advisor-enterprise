@@ -6,6 +6,7 @@ export interface Project {
   document_count?: number; // Computed field
   status: 1 | 2 | 3; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
   owner: string; // UUID foreign key to auth.users
+  is_active: boolean; // Boolean for active status
   created_at: string;
   updated_at?: string;
   // Display properties for UI

@@ -5,6 +5,7 @@ interface KnowledgeBaseCardProps {
   title: string;
   detail: string;
   updated: string;
+  isActive: boolean;
   onDelete?: () => void;
   onDetail: () => void;
 }
@@ -17,6 +18,7 @@ export default function KnowledgeBaseCard({
   title,
   detail,
   updated,
+  isActive,
   onDelete,
   onDetail,
 }: KnowledgeBaseCardProps) {
@@ -35,7 +37,11 @@ export default function KnowledgeBaseCard({
       {/* Header Section */}
       <div className="mb-4 flex items-start justify-between gap-3">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <div className="h-3 w-3 flex-shrink-0 rounded-full bg-green-400"></div>
+          {isActive ? (
+            <div className="h-3 w-3 flex-shrink-0 rounded-full bg-green-400"></div>
+          ) : (
+            <div className="h-3 w-3 flex-shrink-0 rounded-full bg-red-400"></div>
+          )}
           <h2 className="truncate text-lg font-bold text-gray-900 sm:text-xl dark:text-white">
             {title}
           </h2>

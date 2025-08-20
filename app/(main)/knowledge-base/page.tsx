@@ -29,6 +29,8 @@ export default function KnowledgeBase() {
     endIndex,
     totalItems,
 
+    loadKnowledgeBases,
+
     // Handlers
     handleTabChange,
     handlePageChange,
@@ -45,6 +47,7 @@ export default function KnowledgeBase() {
   ];
 
   const handleTabSelect = (tab: string) => {
+    console.log("Selected tab:", tab);
     handleTabChange(tab);
   };
 
@@ -64,6 +67,10 @@ export default function KnowledgeBase() {
   useEffect(() => {
     setLoading(loading);
   }, [loading, setLoading]);
+
+  useEffect(() => {
+    loadKnowledgeBases(1);
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -148,6 +155,7 @@ export default function KnowledgeBase() {
               {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
+                  isActive={kb.is_active}
                   title={kb.name}
                   detail={kb.description}
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}

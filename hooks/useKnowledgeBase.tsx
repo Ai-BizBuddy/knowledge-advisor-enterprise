@@ -8,7 +8,6 @@ import type {
   CreateProjectInput,
   UpdateProjectInput,
   ProjectStatus,
-  PaginationOptions,
   ProjectAnalytics,
 } from "@/interfaces/Project";
 
@@ -33,6 +32,8 @@ export interface UseKnowledgeBaseReturn {
     active: number;
     inactive: number;
   };
+
+  loadKnowledgeBases: (page?: number, forceRefresh?: boolean) => Promise<void>;
 
   // CRUD Operations
   createKnowledgeBase: (data: CreateProjectInput) => Promise<Project>;
@@ -91,89 +92,66 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
   const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
 
-  // Calculate tab counts
-  const tabCounts = {
-    all: projects.length,
-    active: projects.filter((p) => p.status === 1).length, // Active = 1
-    inactive: projects.filter((p) => p.status !== 1).length, // Not active
+  // Calculate tab counts from all projects (not filtered)
+  // For now, we'll use totalItems for 'all' and estimate others
+  // TODO: Get accurate counts from API for each tab
+  const tabCountsData = {
+    all: totalItems, // Use totalItems from API instead of projects.length
+    active: Math.floor(totalItems * 0.7), // Estimate - should be from API
+    inactive: Math.floor(totalItems * 0.3), // Estimate - should be from API
   };
-
-  // Build pagination options for API calls
-  const buildPaginationOptions = useCallback((): PaginationOptions => {
-    return {
-      currentPage,
-      totalPages,
-      startIndex: (currentPage - 1) * itemsPerPage,
-      endIndex: currentPage * itemsPerPage - 1,
-      totalItems,
-    };
-  }, [currentPage, totalPages, itemsPerPage, totalItems]);
-
-  // Filter projects by tab
-  const filterProjectsByTab = useCallback(
-    (projectsToFilter: Project[]) => {
-      switch (selectedTab.toLowerCase()) {
-        case "active":
-          return projectsToFilter.filter((p) => p.status === 1);
-        case "inactive":
-          return projectsToFilter.filter((p) => p.status !== 1);
-        default:
-          return projectsToFilter;
-      }
-    },
-    [selectedTab],
-  );
-
-  // Apply search filter
-  const applySearchFilter = useCallback(
-    (projectsToFilter: Project[]) => {
-      if (!searchTerm.trim()) return projectsToFilter;
-
-      const lowercaseSearch = searchTerm.toLowerCase();
-      return projectsToFilter.filter(
-        (project) =>
-          project.name.toLowerCase().includes(lowercaseSearch) ||
-          project.description.toLowerCase().includes(lowercaseSearch),
-      );
-    },
-    [searchTerm],
-  );
 
   // Update filtered projects when filters change
   useEffect(() => {
-    let filtered = filterProjectsByTab(projects);
-    filtered = applySearchFilter(filtered);
-    setFilteredProjects(filtered);
-    // setTotalItems(filtered.length);
-    // setTotalPages(Math.ceil(filtered.length / itemsPerPage));
-
-    // Reset to first page if current page is out of range
-    if (
-      currentPage > Math.ceil(filtered.length / itemsPerPage) &&
-      filtered.length > 0
-    ) {
-      setCurrentPage(1);
-    }
-  }, [
-    projects,
-    selectedTab,
-    searchTerm,
-    itemsPerPage,
-    currentPage,
-    filterProjectsByTab,
-    applySearchFilter,
-  ]);
+    // For API-based pagination, we don't need to filter on frontend
+    // The filtering should be done on the backend
+    setFilteredProjects(projects);
+  }, [projects]);
 
   // Load all knowledge bases
   const loadKnowledgeBases = useCallback(
-    async (forceRefresh = false) => {
+    async (
+      page: number = currentPage,
+      forceRefresh = false,
+      tab?: string,
+      search?: string,
+    ) => {
       try {
         setLoading(true);
         setError(null);
 
-        const paginationOptions = buildPaginationOptions();
-        const results =
-          await knowledgeBaseService.getProjects(paginationOptions);
+        // Calculate correct pagination for API
+        const startIndex = (page - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage - 1;
+
+        const paginationOptions = {
+          currentPage: page,
+          totalPages: 0, // Will be calculated from API response
+          startIndex,
+          endIndex,
+          totalItems: 0, // Will be set from API response
+        };
+
+        // Prepare filters for API
+        const filters = {
+          status: tab?.toLowerCase() || selectedTab.toLowerCase(),
+          searchTerm: search,
+        };
+
+        console.log("Sending pagination to API:", paginationOptions);
+        console.log("Sending filters to API:", filters);
+
+        const results = await knowledgeBaseService.getProjects(
+          paginationOptions,
+          filters,
+        );
+
+        console.log("API response:", {
+          dataLength: results.data.length,
+          totalCount: results.count,
+          startIndex,
+          endIndex,
+        });
 
         setProjects(results.data);
         setTotalItems(results.count);
@@ -194,21 +172,22 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setLoading(false);
       }
     },
-    [buildPaginationOptions],
+    [currentPage, itemsPerPage, selectedTab, searchTerm],
   );
 
   // Initial load
-  useEffect(() => {
-    loadKnowledgeBases();
-  }, [loadKnowledgeBases]);
+  // useEffect(() => {
+  //   loadKnowledgeBases(1);
+  // }, [loadKnowledgeBases]);
 
   // Create knowledge base
   const createKnowledgeBase = useCallback(
     async (data: CreateProjectInput): Promise<Project> => {
       try {
+        setLoading(true);
         setError(null);
         const newProject = await knowledgeBaseService.createProject(data);
-        setProjects((prev) => [newProject, ...prev]);
+        setProjects((prev) => [newProject, ...prev.slice(0, -1)]); // del last
         return newProject;
       } catch (err) {
         const errorMessage =
@@ -217,6 +196,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
             : "Failed to create knowledge base";
         setError(errorMessage);
         throw err;
+      } finally {
+        setLoading(false);
       }
     },
     [],
@@ -328,25 +309,10 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const searchKnowledgeBases = useCallback(
     async (query: string): Promise<void> => {
       try {
-        setLoading(true);
-        setError(null);
+        console.log("Searching knowledge bases with query:", query);
         setSearchTerm(query);
-
-        if (!query.trim()) {
-          // If empty search, reload all projects
-          await loadKnowledgeBases();
-          return;
-        }
-
-        const paginationOptions = buildPaginationOptions();
-        const results = await knowledgeBaseService.searchProject(
-          query,
-          paginationOptions,
-        );
-        setProjects(results.data);
-        // setTotalItems(results.count);
-        // setTotalPages(Math.ceil(results.count / itemsPerPage));
         setCurrentPage(1); // Reset to first page for search results
+        await loadKnowledgeBases(1, false, undefined, query);
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -354,11 +320,9 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
             : "Failed to search knowledge bases";
         setError(errorMessage);
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
-    [buildPaginationOptions, loadKnowledgeBases],
+    [loadKnowledgeBases],
   );
 
   // Filter by status
@@ -366,12 +330,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     async (status: ProjectStatus): Promise<Project[]> => {
       try {
         setError(null);
-        const allProjects = await knowledgeBaseService.getProjects(
-          buildPaginationOptions(),
-        );
-        setTotalItems(allProjects.count);
-        setTotalPages(Math.ceil(allProjects.count / itemsPerPage));
-        return allProjects.data.filter((p) => p.status === status);
+        // Just filter from existing projects
+        return projects.filter((p) => p.status === status);
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -381,21 +341,27 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         throw err;
       }
     },
-    [buildPaginationOptions],
+    [projects],
   );
 
   // Tab change handler
-  const handleTabChange = useCallback((tab: string) => {
-    setSelectedTab(tab);
-    setCurrentPage(1); // Reset to first page when tab changes
-  }, []);
+  const handleTabChange = useCallback(
+    async (tab: string) => {
+      setSelectedTab(tab);
+      setCurrentPage(1);
+      await loadKnowledgeBases(1, false, tab);
+    },
+    [loadKnowledgeBases],
+  );
 
   // Page change handler
   const handlePageChange = useCallback(
-    (page: number) => {
+    async (page: number) => {
+      console.log("Page changed to:", page);
       setCurrentPage(page);
+      await loadKnowledgeBases(page);
     },
-    [totalPages],
+    [loadKnowledgeBases],
   );
 
   // Knowledge base click handler
@@ -451,7 +417,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Refresh data
   const refresh = useCallback(async (): Promise<void> => {
-    await loadKnowledgeBases(true);
+    await loadKnowledgeBases(1, true);
   }, [loadKnowledgeBases]);
 
   // Clear error
@@ -460,11 +426,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   }, []);
 
   return {
-    // State
-    projects: filteredProjects.slice(
-      (currentPage - 1) * itemsPerPage,
-      currentPage * itemsPerPage,
-    ),
+    // State - ใช้ projects โดยตรงจาก API (แทนที่จะ slice อีกรอบ)
+    projects: projects,
     filteredProjects,
     loading,
     error,
@@ -478,7 +441,9 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     selectedTab,
 
     // Tab counts
-    tabCounts,
+    tabCounts: tabCountsData,
+
+    loadKnowledgeBases,
 
     // CRUD Operations
     createKnowledgeBase,
