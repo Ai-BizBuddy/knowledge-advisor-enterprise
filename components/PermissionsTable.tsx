@@ -1,34 +1,58 @@
 /**
  * Role Permissions Table Component
  *
- * Interactive table for managing role permissions with real-time updates
- * and form integration using React Hook Form.
+ * Interactive table for managing role permissions with user-table-like interface
+ * featuring View, Edit, Delete actions for each permission entry.
  */
 
-import React, { useMemo, useCallback, useEffect } from "react";
+import React, { useMemo, useCallback, useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { useReactHookForm } from "@/hooks/useReactHookForm";
+import {
+  Button,
+  Badge,
+  Modal,
+  Label,
+  TextInput,
+  Textarea,
+  Card,
+  Table,
+} from "flowbite-react";
 import { useToast } from "@/components/toast";
 import UserManagementService from "@/services/UserManagementService";
 import type { Permission } from "@/interfaces/UserManagement";
-import type {
-  PermissionsTableProps,
-  PermissionsFormValues,
-  PermissionSelection,
-  GroupedPermissions,
-  PermissionRowData,
-} from "@/interfaces/Permissions";
 
-const STANDARD_ACTIONS = ["CREATE", "READ", "UPDATE", "DELETE", "ADMIN"];
+interface PermissionTableRow {
+  id: number;
+  resource: string;
+  action: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  displayName: string;
+  icon: string;
+}
+
+interface PermissionModalData {
+  id?: number;
+  resource: string;
+  action: string;
+  description: string;
+}
+
+interface PermissionsTableProps {
+  selectedPermissions?: number[];
+  onPermissionChange?: (permissionIds: number[]) => void;
+  readonly?: boolean;
+  showSummary?: boolean;
+  className?: string;
+}
 
 /**
  * PermissionsTable Component
  */
 export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   selectedPermissions = [],
-  onPermissionChange,
   readonly = false,
-  showSummary = true,
   className = "",
 }) => {
   const { showToast } = useToast();
@@ -36,59 +60,38 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   // Use memoized service to prevent re-creation on every render
   const userManagementService = useMemo(() => new UserManagementService(), []);
 
-  // Form state management
-  const form = useReactHookForm<PermissionsFormValues>({
-    defaultValues: {
-      selectedPermissions: {},
-    },
+  // State management
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Modal states
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedPermission, setSelectedPermission] =
+    useState<PermissionTableRow | null>(null);
+
+  // Modal form data
+  const [modalData, setModalData] = useState<PermissionModalData>({
+    resource: "",
+    action: "",
+    description: "",
   });
 
-  // Local state for permissions data and metadata
-  const [permissions, setPermissions] = React.useState<Permission[]>([]);
-  const [resourceMetadata, setResourceMetadata] = React.useState<{
-    [resource: string]: { icon: string; displayName: string };
-  }>({});
-  const [actionDisplayMap, setActionDisplayMap] = React.useState<{
-    [action: string]: string;
-  }>({});
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState<string | null>(null);
-
   /**
-   * Load all permissions and metadata from Supabase
+   * Load all permissions from Supabase
    */
   const loadPermissions = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      console.log("Loading permissions and metadata from database...");
-
-      // Load permissions, resource metadata, and action display mappings in parallel
-      const [permissionsData, resourceMeta, actionMappings] = await Promise.all(
-        [
-          userManagementService.getPermissions(),
-          userManagementService.getResourceMetadata(),
-          userManagementService.getActionDisplayMappings(),
-        ],
-      );
+      console.log("Loading permissions from database...");
+      const permissionsData = await userManagementService.getPermissions();
 
       console.log("Loaded permissions:", permissionsData);
-      console.log("Loaded resource metadata:", resourceMeta);
-      console.log("Loaded action mappings:", actionMappings);
-
       setPermissions(permissionsData);
-      setResourceMetadata(resourceMeta);
-      setActionDisplayMap(actionMappings);
-
-      // Initialize form with current selections
-      const initialSelection: PermissionSelection = {};
-      selectedPermissions.forEach((id) => {
-        initialSelection[id] = true;
-      });
-
-      form.setValue("selectedPermissions", initialSelection);
-      console.log("Initialized form with selections:", initialSelection);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to load permissions";
@@ -98,7 +101,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     } finally {
       setLoading(false);
     }
-  }, [selectedPermissions, form, showToast, userManagementService]);
+  }, [showToast, userManagementService]);
 
   // Load permissions on component mount
   useEffect(() => {
@@ -106,214 +109,96 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   }, [loadPermissions]);
 
   /**
-   * Group permissions by resource and normalize actions
+   * Transform permissions into table row data
    */
-  const groupedPermissions = useMemo((): GroupedPermissions => {
-    const grouped: GroupedPermissions = {};
-
-    permissions.forEach((permission) => {
-      if (!permission.resource) return;
-
-      const resource = permission.resource;
-      if (!grouped[resource]) {
-        grouped[resource] = {
-          permissions: [],
-          hasAllActions: false,
-          availableActions: [],
-        };
-      }
-
-      grouped[resource].permissions.push(permission);
-
-      // Track available actions for this resource
-      if (permission.action) {
-        const normalizedAction =
-          actionDisplayMap[permission.action] ||
-          permission.action.toUpperCase();
-        if (!grouped[resource].availableActions.includes(normalizedAction)) {
-          grouped[resource].availableActions.push(normalizedAction);
-        }
-      }
-    });
-
-    // Check if each resource has all standard actions
-    Object.keys(grouped).forEach((resource) => {
-      const availableActions = grouped[resource].availableActions;
-      grouped[resource].hasAllActions = STANDARD_ACTIONS.every((action) =>
-        availableActions.includes(action),
-      );
-    });
-
-    return grouped;
-  }, [permissions, actionDisplayMap]);
-
-  /**
-   * Transform grouped permissions into table row data
-   */
-  const tableData = useMemo((): PermissionRowData[] => {
-    return Object.entries(groupedPermissions)
-      .map(([resource, data]) => {
-        const permissions: { [action: string]: Permission | null } = {};
-
-        // Initialize all standard actions
-        STANDARD_ACTIONS.forEach((action) => {
-          permissions[action] = null;
-        });
-
-        // Map permissions to their actions
-        data.permissions.forEach((permission) => {
-          if (permission.action) {
-            const normalizedAction =
-              actionDisplayMap[permission.action] ||
-              permission.action.toUpperCase();
-            if (STANDARD_ACTIONS.includes(normalizedAction)) {
-              permissions[normalizedAction] = permission;
-            }
-          }
-        });
-
-        // Get resource metadata or create fallback
-        const metadata = resourceMetadata[resource] || {
-          icon: "📋",
-          displayName:
-            resource.charAt(0).toUpperCase() +
-            resource.slice(1).replace(/-/g, " "),
-        };
-
-        return {
-          resource,
-          displayName: metadata.displayName,
-          icon: metadata.icon,
-          permissions,
-          hasAllActions: data.hasAllActions,
-        };
-      })
+  const tableData = useMemo((): PermissionTableRow[] => {
+    return permissions
+      .map((permission) => ({
+        id: permission.id,
+        resource: permission.resource || "Unknown",
+        action: permission.action || "Unknown",
+        description: permission.description || "",
+        isActive: selectedPermissions.includes(permission.id),
+        createdAt: permission.created_at,
+        displayName: `${permission.resource} - ${permission.action}`,
+        icon: getResourceIcon(permission.resource || ""),
+      }))
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
-  }, [groupedPermissions, resourceMetadata, actionDisplayMap]);
+  }, [permissions, selectedPermissions]);
 
   /**
-   * Get current permission selection from form
+   * Get icon for resource type
    */
-  const currentSelection = form.watch("selectedPermissions");
+  const getResourceIcon = (resource: string): string => {
+    const iconMap: Record<string, string> = {
+      users: "👥",
+      roles: "🔒",
+      documents: "📄",
+      projects: "📁",
+      "knowledge-base": "🧠",
+      settings: "⚙️",
+      dashboard: "📊",
+      reports: "📈",
+    };
+    return iconMap[resource] || "📋";
+  };
 
   /**
-   * Calculate selection summary
+   * Get badge color for permission status
    */
-  const selectionSummary = useMemo(() => {
-    const selectedCount =
-      Object.values(currentSelection).filter(Boolean).length;
-    const resourcesWithSelections = new Set();
+  const getStatusBadgeColor = (isActive: boolean): string => {
+    return isActive ? "success" : "gray";
+  };
 
-    Object.entries(currentSelection).forEach(
-      ([permissionIdStr, isSelected]) => {
-        if (isSelected) {
-          const permissionId = parseInt(permissionIdStr);
-          const permission = permissions.find((p) => p.id === permissionId);
-          if (permission?.resource) {
-            resourcesWithSelections.add(permission.resource);
-          }
-        }
-      },
-    );
+  /**
+   * Modal handlers
+   */
+  const openViewModal = (permission: PermissionTableRow) => {
+    setSelectedPermission(permission);
+    setModalData({
+      id: permission.id,
+      resource: permission.resource,
+      action: permission.action,
+      description: permission.description || "",
+    });
+    setShowViewModal(true);
+  };
+
+  const openEditModal = (permission: PermissionTableRow) => {
+    setSelectedPermission(permission);
+    setModalData({
+      id: permission.id,
+      resource: permission.resource,
+      action: permission.action,
+      description: permission.description || "",
+    });
+    setShowEditModal(true);
+  };
+
+  const openDeleteModal = (permission: PermissionTableRow) => {
+    setSelectedPermission(permission);
+    setShowDeleteModal(true);
+  };
+
+  /**
+   * Calculate summary
+   */
+  const summary = useMemo(() => {
+    const activeCount = tableData.filter((row) => row.isActive).length;
+    const totalCount = tableData.length;
+    const resourceCount = new Set(
+      tableData.filter((row) => row.isActive).map((row) => row.resource),
+    ).size;
 
     return {
-      permissionCount: selectedCount,
-      resourceCount: resourcesWithSelections.size,
+      activeCount,
+      totalCount,
+      resourceCount,
     };
-  }, [currentSelection, permissions]);
+  }, [tableData]);
 
-  /**
-   * Handle checkbox change for individual permissions
-   */
-  const handlePermissionToggle = useCallback(
-    (permissionId: number, checked: boolean) => {
-      if (readonly) return;
-
-      console.log(`Permission toggle: ID ${permissionId}, checked: ${checked}`);
-
-      const current = form.getValues("selectedPermissions");
-      const updated = {
-        ...current,
-        [permissionId]: checked,
-      };
-
-      form.setValue("selectedPermissions", updated);
-
-      // Call parent callback with updated permission IDs
-      if (onPermissionChange) {
-        const selectedIds = Object.entries(updated)
-          .filter(([, isSelected]) => isSelected)
-          .map(([id]) => parseInt(id));
-
-        console.log("Calling onPermissionChange with IDs:", selectedIds);
-        onPermissionChange(selectedIds);
-      }
-    },
-    [form, onPermissionChange, readonly],
-  );
-
-  /**
-   * Handle "All" toggle for a resource
-   */
-  const handleResourceToggleAll = useCallback(
-    (resource: string) => {
-      if (readonly) return;
-
-      const resourcePermissions =
-        groupedPermissions[resource]?.permissions || [];
-      const current = form.getValues("selectedPermissions");
-
-      // Check if all permissions for this resource are currently selected
-      const allSelected = resourcePermissions.every((p) => current[p.id]);
-
-      // Toggle all permissions for this resource
-      const updated = { ...current };
-      resourcePermissions.forEach((permission) => {
-        updated[permission.id] = !allSelected;
-      });
-
-      form.setValue("selectedPermissions", updated);
-
-      // Call parent callback
-      if (onPermissionChange) {
-        const selectedIds = Object.entries(updated)
-          .filter(([, isSelected]) => isSelected)
-          .map(([id]) => parseInt(id));
-        onPermissionChange(selectedIds);
-      }
-    },
-    [form, groupedPermissions, onPermissionChange, readonly],
-  );
-
-  /**
-   * Check if all permissions for a resource are selected
-   */
-  const isResourceFullySelected = useCallback(
-    (resource: string): boolean => {
-      const resourcePermissions =
-        groupedPermissions[resource]?.permissions || [];
-      return (
-        resourcePermissions.length > 0 &&
-        resourcePermissions.every((p) => currentSelection[p.id])
-      );
-    },
-    [groupedPermissions, currentSelection],
-  );
-
-  /**
-   * Check if some (but not all) permissions for a resource are selected
-   */
-  const isResourcePartiallySelected = useCallback(
-    (resource: string): boolean => {
-      const resourcePermissions =
-        groupedPermissions[resource]?.permissions || [];
-      const selectedCount = resourcePermissions.filter(
-        (p) => currentSelection[p.id],
-      ).length;
-      return selectedCount > 0 && selectedCount < resourcePermissions.length;
-    },
-    [groupedPermissions, currentSelection],
-  );
+  // Log summary for debugging
+  console.log("Permissions summary:", summary);
 
   if (loading) {
     return (
@@ -342,131 +227,179 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className={`overflow-hidden rounded-lg border border-slate-700/50 bg-slate-900/80 backdrop-blur-xl ${className}`}
-    >
-      {/* Header with summary */}
-      <div className="border-b border-slate-700/50 px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-semibold text-slate-100">
-              Configure access permissions for this role
-            </h3>
-          </div>
-          {showSummary && (
-            <div className="text-sm text-slate-400">
-              {selectionSummary.permissionCount} permissions selected across{" "}
-              {selectionSummary.resourceCount} resources
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Table */}
+    <Card className={className}>
       <div className="overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-slate-700/50">
-              <th className="min-w-[200px] px-6 py-3 text-left text-sm font-medium text-slate-300">
-                RESOURCE ({tableData.length} TOTAL)
-              </th>
-              {STANDARD_ACTIONS.map((action) => (
-                <th
-                  key={action}
-                  className="w-20 px-4 py-3 text-center text-sm font-medium text-slate-300"
-                >
-                  {action}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {tableData.map((row, index) => (
-              <motion.tr
-                key={row.resource}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="border-b border-slate-800/50 transition-colors hover:bg-slate-800/30"
-              >
-                {/* Resource column */}
-                <td className="px-6 py-4">
-                  <div className="flex items-center space-x-3">
-                    <span
-                      className="text-lg"
-                      role="img"
-                      aria-label={row.resource}
-                    >
-                      {row.icon}
-                    </span>
-                    <div>
-                      <div className="font-medium text-slate-200">
-                        {row.displayName}
-                      </div>
-                      <div className="mt-1 flex items-center space-x-2">
-                        <button
-                          onClick={() => handleResourceToggleAll(row.resource)}
-                          disabled={readonly}
-                          className={`rounded px-2 py-1 text-xs transition-colors ${
-                            isResourceFullySelected(row.resource)
-                              ? "bg-indigo-500/20 text-indigo-300"
-                              : isResourcePartiallySelected(row.resource)
-                                ? "bg-yellow-500/20 text-yellow-300"
-                                : "bg-slate-700/50 text-slate-400 hover:bg-slate-600/50"
-                          } ${readonly ? "cursor-not-allowed opacity-50" : "cursor-pointer"}`}
-                        >
-                          {isResourceFullySelected(row.resource)
-                            ? "All"
-                            : "None"}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </td>
-
-                {/* Action columns */}
-                {STANDARD_ACTIONS.map((action) => {
-                  const permission = row.permissions[action];
-                  const isSelected = permission
-                    ? currentSelection[permission.id]
-                    : false;
-
-                  return (
-                    <td key={action} className="px-4 py-4 text-center">
-                      {permission ? (
-                        <label className="inline-flex cursor-pointer items-center">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={(e) =>
-                              handlePermissionToggle(
-                                permission.id,
-                                e.target.checked,
-                              )
-                            }
-                            disabled={readonly}
-                            className={`form-checkbox h-4 w-4 rounded border-slate-600 ${
-                              isSelected
-                                ? "border-indigo-500 bg-indigo-500/20 text-indigo-500"
-                                : "border-slate-600 bg-slate-800 text-slate-600"
-                            } focus:ring-2 focus:ring-indigo-500 focus:ring-offset-0 ${readonly ? "cursor-not-allowed opacity-50" : "cursor-pointer"} transition-colors`}
-                          />
-                          <span className="sr-only">
-                            {action} permission for {row.displayName}
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+          </div>
+        ) : (
+          <>
+            <Table hoverable>
+              <thead>
+                <tr>
+                  <th scope="col" className="px-6 py-3">
+                    Permission
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Resource
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Action
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    Status
+                  </th>
+                  <th scope="col" className="hidden px-6 py-3 lg:table-cell">
+                    Created
+                  </th>
+                  <th scope="col" className="px-6 py-3">
+                    <span className="sr-only">Actions</span>
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {tableData.map((permission, index) => (
+                  <motion.tr
+                    key={permission.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                  >
+                    {/* Permission column */}
+                    <td className="px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white">
+                      <div className="flex items-center">
+                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50">
+                          <span
+                            className="text-sm"
+                            role="img"
+                            aria-label={permission.resource}
+                          >
+                            {permission.icon}
                           </span>
-                        </label>
-                      ) : (
-                        <span className="text-slate-600">—</span>
-                      )}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                            {permission.displayName}
+                          </div>
+                          {permission.description && (
+                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                              {permission.description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
                     </td>
-                  );
-                })}
-              </motion.tr>
-            ))}
-          </tbody>
-        </table>
+
+                    {/* Resource column */}
+                    <td className="px-6 py-4">
+                      <Badge color="purple" className="justify-center">
+                        {permission.resource}
+                      </Badge>
+                    </td>
+
+                    {/* Action column */}
+                    <td className="px-6 py-4">
+                      <span className="text-sm text-gray-900 dark:text-white">
+                        {permission.action}
+                      </span>
+                    </td>
+
+                    {/* Status column */}
+                    <td className="px-6 py-4">
+                      <Badge
+                        className="justify-center"
+                        color={getStatusBadgeColor(permission.isActive)}
+                      >
+                        {permission.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+
+                    {/* Created column */}
+                    <td className="hidden px-6 py-4 lg:table-cell">
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(permission.createdAt).toLocaleDateString()}
+                      </span>
+                    </td>
+
+                    {/* Actions column */}
+                    <td className="px-6 py-4">
+                      <div className="flex items-center space-x-1">
+                        <Button
+                          size="xs"
+                          color="blue"
+                          onClick={() => openViewModal(permission)}
+                          className="flex items-center gap-1"
+                        >
+                          <svg
+                            className="h-3 w-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          <span className="hidden sm:inline">View</span>
+                        </Button>
+                        {!readonly && (
+                          <>
+                            <Button
+                              size="xs"
+                              color="gray"
+                              onClick={() => openEditModal(permission)}
+                              className="flex items-center gap-1"
+                            >
+                              <svg
+                                className="h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                              <span className="hidden sm:inline">Edit</span>
+                            </Button>
+                            <Button
+                              size="xs"
+                              color="alternative"
+                              onClick={() => openDeleteModal(permission)}
+                              className="flex items-center gap-1"
+                            >
+                              <svg
+                                className="h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                              <span className="hidden sm:inline">Delete</span>
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </Table>
+          </>
+        )}
       </div>
 
       {/* Empty state */}
@@ -479,14 +412,176 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
         </div>
       )}
 
-      {/* Form errors */}
-      {form.formState.errors.selectedPermissions && (
-        <div className="border-t border-slate-700/50 px-6 py-3">
-          <div className="text-sm text-red-400">
-            {form.formState.errors.selectedPermissions.message}
+      {/* View Permission Modal */}
+      <Modal
+        show={showViewModal}
+        onClose={() => setShowViewModal(false)}
+        size="lg"
+      >
+        <div className="p-6">
+          <h3 className="mb-6 text-lg font-bold text-gray-900 dark:text-white">
+            Permission Details
+          </h3>
+          {selectedPermission && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <Label>Resource</Label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {selectedPermission.resource}
+                  </p>
+                </div>
+                <div>
+                  <Label>Action</Label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {selectedPermission.action}
+                  </p>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <div className="mt-1">
+                    <Badge
+                      color={getStatusBadgeColor(selectedPermission.isActive)}
+                    >
+                      {selectedPermission.isActive ? "Active" : "Inactive"}
+                    </Badge>
+                  </div>
+                </div>
+                <div>
+                  <Label>Created</Label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {new Date(
+                      selectedPermission.createdAt,
+                    ).toLocaleDateString()}
+                  </p>
+                </div>
+              </div>
+              {selectedPermission.description && (
+                <div>
+                  <Label>Description</Label>
+                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                    {selectedPermission.description}
+                  </p>
+                </div>
+              )}
+              <div className="flex justify-end space-x-2">
+                <Button color="gray" onClick={() => setShowViewModal(false)}>
+                  Close
+                </Button>
+                {!readonly && (
+                  <Button
+                    onClick={() => {
+                      setShowViewModal(false);
+                      openEditModal(selectedPermission);
+                    }}
+                  >
+                    Edit Permission
+                  </Button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* Edit Permission Modal */}
+      <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
+        <div className="p-6">
+          <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+            Edit Permission
+          </h3>
+          <form className="space-y-4">
+            <div>
+              <Label htmlFor="edit_resource">Resource *</Label>
+              <TextInput
+                id="edit_resource"
+                value={modalData.resource}
+                onChange={(e) =>
+                  setModalData((prev) => ({
+                    ...prev,
+                    resource: e.target.value,
+                  }))
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_action">Action *</Label>
+              <TextInput
+                id="edit_action"
+                value={modalData.action}
+                onChange={(e) =>
+                  setModalData((prev) => ({ ...prev, action: e.target.value }))
+                }
+                required
+              />
+            </div>
+            <div>
+              <Label htmlFor="edit_description">Description</Label>
+              <Textarea
+                id="edit_description"
+                value={modalData.description}
+                onChange={(e) =>
+                  setModalData((prev) => ({
+                    ...prev,
+                    description: e.target.value,
+                  }))
+                }
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end space-x-2">
+              <Button color="gray" onClick={() => setShowEditModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit">Update Permission</Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        size="md"
+      >
+        <div className="p-6">
+          <div className="text-center">
+            <svg
+              className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+              Are you sure you want to delete this permission?
+            </h3>
+            {selectedPermission && (
+              <p className="mb-5 text-sm text-gray-400 dark:text-gray-500">
+                <span className="font-semibold">
+                  {selectedPermission.displayName}
+                </span>
+                <br />
+                This action cannot be undone.
+              </p>
+            )}
+            <div className="flex justify-center gap-4">
+              <Button color="failure">Yes, delete</Button>
+              <Button color="gray" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </Button>
+            </div>
           </div>
         </div>
-      )}
-    </motion.div>
+      </Modal>
+    </Card>
   );
 };

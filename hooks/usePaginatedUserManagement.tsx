@@ -9,6 +9,8 @@ import type {
   UpdateUserInput,
   CreateRoleInput,
   UpdateRoleInput,
+  CreateDepartmentInput,
+  UpdateDepartmentInput,
   UserFilter,
 } from "@/interfaces/UserManagement";
 import type {
@@ -69,6 +71,16 @@ interface UsePaginatedUserManagementActions {
   createRole: (roleData: CreateRoleInput) => Promise<Role | null>;
   updateRole: (id: number, updates: UpdateRoleInput) => Promise<Role | null>;
   deleteRole: (id: number) => Promise<boolean>;
+
+  // Department operations
+  createDepartment: (
+    departmentData: CreateDepartmentInput,
+  ) => Promise<Department | null>;
+  updateDepartment: (
+    id: string,
+    updates: UpdateDepartmentInput,
+  ) => Promise<Department | null>;
+  deleteDepartment: (id: string) => Promise<boolean>;
 
   // Profile operations
   uploadProfilePicture: (userId: string, file: File) => Promise<string | null>;
@@ -632,6 +644,118 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
   );
 
   /**
+   * Create new department
+   */
+  const createDepartment = useCallback(
+    async (
+      departmentData: CreateDepartmentInput,
+    ): Promise<Department | null> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const newDepartment =
+          await paginatedUserManagementService.createDepartment(departmentData);
+
+        // Refresh current departments page if available
+        if (currentParams.departments) {
+          await getDepartmentsPaginated(currentParams.departments.params);
+        }
+
+        return newDepartment;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to create department";
+        setError(errorMessage);
+        console.error(
+          "[usePaginatedUserManagement] Error creating department:",
+          error,
+        );
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, currentParams.departments, getDepartmentsPaginated],
+  );
+
+  /**
+   * Update department
+   */
+  const updateDepartment = useCallback(
+    async (
+      id: string,
+      updates: UpdateDepartmentInput,
+    ): Promise<Department | null> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const updatedDepartment =
+          await paginatedUserManagementService.updateDepartment(id, updates);
+
+        // Refresh current departments page if available
+        if (currentParams.departments) {
+          await getDepartmentsPaginated(currentParams.departments.params);
+        }
+
+        return updatedDepartment;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to update department";
+        setError(errorMessage);
+        console.error(
+          "[usePaginatedUserManagement] Error updating department:",
+          error,
+        );
+        return null;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, currentParams.departments, getDepartmentsPaginated],
+  );
+
+  /**
+   * Delete department
+   */
+  const deleteDepartment = useCallback(
+    async (id: string): Promise<boolean> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        await paginatedUserManagementService.deleteDepartment(id);
+
+        // Refresh current departments page if available
+        if (currentParams.departments) {
+          await getDepartmentsPaginated(currentParams.departments.params);
+        }
+
+        return true;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "Failed to delete department";
+        setError(errorMessage);
+        console.error(
+          "[usePaginatedUserManagement] Error deleting department:",
+          error,
+        );
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError, currentParams.departments, getDepartmentsPaginated],
+  );
+
+  /**
    * Refresh current pages
    */
   const refreshCurrentPage = useCallback(async () => {
@@ -689,6 +813,9 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
     createRole,
     updateRole,
     deleteRole,
+    createDepartment,
+    updateDepartment,
+    deleteDepartment,
     uploadProfilePicture,
     updateUserProfile,
     clearError,

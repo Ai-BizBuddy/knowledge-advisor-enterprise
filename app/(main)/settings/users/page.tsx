@@ -485,94 +485,54 @@ export default function UsersPage() {
       </div>
 
       {/* Users Table */}
-      <Card>
-        <div className="overflow-x-auto">
-          {loading ? (
-            <div className="flex h-64 items-center justify-center">
-              <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
-            </div>
-          ) : (
-            <>
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      User
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Department
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Created
-                    </th>
-                    <th className="relative px-6 py-3 text-center">
-                      <span className="text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                        Actions
-                      </span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                  {users?.data.map((user) => (
-                    <tr
-                      key={user.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <Avatar
-                            img={user.avatar_url}
-                            alt={user.display_name || user.email}
-                            rounded
-                            size="sm"
-                            className="mr-3"
-                          />
-                          <div>
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {user.display_name || user.email}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {user.email}
-                            </div>
-                          </div>
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
+        {loading ? (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Card Layout */}
+            <div className="block lg:hidden">
+              <div className="divide-y divide-gray-200 dark:divide-gray-700">
+                {users?.data.map((user) => (
+                  <div
+                    key={user.id}
+                    className="cursor-pointer p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                  >
+                    <div className="flex items-start space-x-3">
+                      <Avatar
+                        img={user.avatar_url}
+                        alt={user.display_name || user.email}
+                        rounded
+                        size="sm"
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                          {user.display_name || user.email}
                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge color="purple" className="justify-center">
-                          {getRoleName(user.user_roles ?? [])}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-900 dark:text-white">
-                        {getDepartmentName(user.department_id)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <Badge
-                          className="justify-center"
-                          color={getStatusBadgeColor(user.status)}
-                        >
-                          {getStatusDisplayName(user.status)}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-center text-sm font-medium whitespace-nowrap">
-                        <div className="relative inline-block text-left">
-                          <div className="flex items-center justify-center space-x-1">
-                            <Button
-                              size="xs"
-                              color="blue"
+                        <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                          {user.email}
+                        </div>
+                        <div className="mt-2 flex items-center justify-between">
+                          <div className="flex items-center space-x-2">
+                            <Badge color="purple" size="sm">
+                              {getRoleName(user.user_roles ?? [])}
+                            </Badge>
+                            <Badge
+                              color={getStatusBadgeColor(user.status)}
+                              size="sm"
+                            >
+                              {getStatusDisplayName(user.status)}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <button
                               onClick={() => openProfileModal(user)}
-                              className="flex items-center gap-1"
+                              className="p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300"
                             >
                               <svg
-                                className="h-3 w-3"
+                                className="h-4 w-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -584,16 +544,13 @@ export default function UsersPage() {
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                 />
                               </svg>
-                              View
-                            </Button>
-                            <Button
-                              size="xs"
-                              color="gray"
+                            </button>
+                            <button
                               onClick={() => openEditModal(user)}
-                              className="flex items-center gap-1"
+                              className="p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300"
                             >
                               <svg
-                                className="h-3 w-3"
+                                className="h-4 w-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -605,16 +562,13 @@ export default function UsersPage() {
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
-                              Edit
-                            </Button>
-                            <Button
-                              size="xs"
-                              color="alternative"
+                            </button>
+                            <button
                               onClick={() => openDeleteModal(user)}
-                              className="flex items-center gap-1"
+                              className="p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
                             >
                               <svg
-                                className="h-3 w-3"
+                                className="h-4 w-4"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -626,36 +580,220 @@ export default function UsersPage() {
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                               </svg>
-                              Delete
-                            </Button>
+                            </button>
                           </div>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                          {getDepartmentName(user.department_id)} • Created{" "}
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
-              {/* Pagination */}
-              {users && (
-                <div className="p-6">
-                  <Pagination
-                    currentPage={users.pagination.page}
-                    totalPages={users.pagination.totalPages}
-                    pageSize={users.pagination.pageSize}
-                    total={users.pagination.total}
-                    onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                    searchValue={searchTerm}
-                    onSearchChange={handleSearchChange}
-                    searchPlaceholder="Search users by name or email..."
-                  />
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      </Card>
+            {/* Desktop Table Layout */}
+            <div className="hidden lg:block">
+              <div className="overflow-x-auto">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                        User
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                        Role
+                      </th>
+                      <th className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell dark:text-gray-400">
+                        Department
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                        Status
+                      </th>
+                      <th className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase xl:table-cell dark:text-gray-400">
+                        Created
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                    {users?.data.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                      >
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <Avatar
+                              img={user.avatar_url}
+                              alt={user.display_name || user.email}
+                              rounded
+                              size="sm"
+                              className="mr-3"
+                            />
+                            <div className="min-w-0">
+                              <div className="truncate text-sm font-medium text-gray-900 dark:text-white">
+                                {user.display_name || user.email}
+                              </div>
+                              <div className="truncate text-sm text-gray-500 dark:text-gray-400">
+                                {user.email}
+                              </div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className="inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300">
+                            {getRoleName(user.user_roles ?? [])}
+                          </span>
+                        </td>
+                        <td className="hidden px-6 py-4 whitespace-nowrap md:table-cell">
+                          <span className="text-sm text-gray-900 dark:text-white">
+                            {getDepartmentName(user.department_id)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                              user.status === UserStatus.ACTIVE
+                                ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                                : user.status === UserStatus.INACTIVE
+                                  ? "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+                                  : user.status === UserStatus.SUSPENDED
+                                    ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+                                    : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300"
+                            }`}
+                          >
+                            {getStatusDisplayName(user.status)}
+                          </span>
+                        </td>
+                        <td className="hidden px-6 py-4 whitespace-nowrap xl:table-cell">
+                          <span className="text-sm text-gray-500 dark:text-gray-400">
+                            {new Date(user.created_at).toLocaleDateString()}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => openProfileModal(user)}
+                              className="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                            >
+                              <svg
+                                className="mr-1 h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                                />
+                              </svg>
+                              <span className="hidden sm:inline">View</span>
+                            </button>
+                            <button
+                              onClick={() => openEditModal(user)}
+                              className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                            >
+                              <svg
+                                className="mr-1 h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                />
+                              </svg>
+                              <span className="hidden sm:inline">Edit</span>
+                            </button>
+                            <button
+                              onClick={() => openDeleteModal(user)}
+                              className="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                            >
+                              <svg
+                                className="mr-1 h-3 w-3"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                              <span className="hidden sm:inline">Delete</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                    {(!users?.data || users.data.length === 0) && (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          <div className="flex flex-col items-center">
+                            <svg
+                              className="mb-4 h-12 w-12 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                              />
+                            </svg>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">
+                              No users found
+                            </p>
+                            <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
+                              {searchTerm
+                                ? "Try adjusting your search criteria"
+                                : "Get started by adding your first user"}
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Pagination */}
+            {users && (
+              <div className="bg-gray-50 px-6 py-3 dark:bg-gray-700">
+                <Pagination
+                  currentPage={users.pagination.page}
+                  totalPages={users.pagination.totalPages}
+                  pageSize={users.pagination.pageSize}
+                  total={users.pagination.total}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
+                  searchValue={searchTerm}
+                  onSearchChange={handleSearchChange}
+                  searchPlaceholder="Search users by name or email..."
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
       {/* Create User Modal - Using React Hook Form Component */}
       <CreateUserForm

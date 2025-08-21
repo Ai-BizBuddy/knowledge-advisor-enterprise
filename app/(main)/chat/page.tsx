@@ -24,7 +24,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, []);
+  }, [setLoading]);
 
   const handleCloseHistory = () => {
     setOpenHistory(false);

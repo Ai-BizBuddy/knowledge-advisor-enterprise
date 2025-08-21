@@ -15,10 +15,21 @@ import { usePaginatedUserManagement } from "@/hooks/usePaginatedUserManagement";
 import { Pagination } from "@/components/pagination";
 import { Department, CreateDepartmentInput } from "@/interfaces/UserManagement";
 import { DEFAULT_PAGE_SIZE } from "@/interfaces/Pagination";
+import { useToast } from "@/components/toast";
 
 export default function DepartmentsPage() {
-  const { departments, loading, error, getDepartmentsPaginated, clearError } =
-    usePaginatedUserManagement();
+  const {
+    departments,
+    loading,
+    error,
+    getDepartmentsPaginated,
+    clearError,
+    createDepartment,
+    updateDepartment,
+    deleteDepartment,
+  } = usePaginatedUserManagement();
+
+  const { showToast } = useToast();
 
   // Modal states
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -130,22 +141,30 @@ export default function DepartmentsPage() {
   const handleCreateDepartment = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      setShowCreateModal(false);
-      resetForm();
-      // Refresh current page
-      getDepartmentsPaginated({
-        page: currentPage,
-        pageSize,
-        search: searchTerm,
-        is_active:
-          statusFilter === "active"
-            ? true
-            : statusFilter === "inactive"
-              ? false
-              : undefined,
-      });
+      const result = await createDepartment(formData);
+      if (result) {
+        showToast("Department created successfully!", "success");
+        setShowCreateModal(false);
+        resetForm();
+        // Refresh current page
+        getDepartmentsPaginated({
+          page: currentPage,
+          pageSize,
+          search: searchTerm,
+          is_active:
+            statusFilter === "active"
+              ? true
+              : statusFilter === "inactive"
+                ? false
+                : undefined,
+        });
+      }
     } catch (error) {
       console.error("Error creating department:", error);
+      showToast(
+        error instanceof Error ? error.message : "Failed to create department",
+        "error",
+      );
     }
   };
 
@@ -154,23 +173,30 @@ export default function DepartmentsPage() {
     if (!selectedDepartment) return;
 
     try {
-      // Will implement with service integration
-      setShowEditModal(false);
-      resetForm();
-      // Refresh current page
-      getDepartmentsPaginated({
-        page: currentPage,
-        pageSize,
-        search: searchTerm,
-        is_active:
-          statusFilter === "active"
-            ? true
-            : statusFilter === "inactive"
-              ? false
-              : undefined,
-      });
+      const result = await updateDepartment(selectedDepartment.id, formData);
+      if (result) {
+        showToast("Department updated successfully!", "success");
+        setShowEditModal(false);
+        resetForm();
+        // Refresh current page
+        getDepartmentsPaginated({
+          page: currentPage,
+          pageSize,
+          search: searchTerm,
+          is_active:
+            statusFilter === "active"
+              ? true
+              : statusFilter === "inactive"
+                ? false
+                : undefined,
+        });
+      }
     } catch (error) {
       console.error("Error updating department:", error);
+      showToast(
+        error instanceof Error ? error.message : "Failed to update department",
+        "error",
+      );
     }
   };
 
@@ -178,42 +204,68 @@ export default function DepartmentsPage() {
     if (!selectedDepartment) return;
 
     try {
-      setShowDeleteModal(false);
-      setSelectedDepartment(null);
-      // Refresh current page
-      getDepartmentsPaginated({
-        page: currentPage,
-        pageSize,
-        search: searchTerm,
-        is_active:
-          statusFilter === "active"
-            ? true
-            : statusFilter === "inactive"
-              ? false
-              : undefined,
-      });
+      const success = await deleteDepartment(selectedDepartment.id);
+      if (success) {
+        showToast(
+          `Department "${selectedDepartment.name}" deleted successfully!`,
+          "success",
+        );
+        setShowDeleteModal(false);
+        setSelectedDepartment(null);
+        // Refresh current page
+        getDepartmentsPaginated({
+          page: currentPage,
+          pageSize,
+          search: searchTerm,
+          is_active:
+            statusFilter === "active"
+              ? true
+              : statusFilter === "inactive"
+                ? false
+                : undefined,
+        });
+      }
     } catch (error) {
       console.error("Error deleting department:", error);
+      showToast(
+        error instanceof Error ? error.message : "Failed to delete department",
+        "error",
+      );
     }
   };
 
   const toggleDepartmentStatus = async (department: Department) => {
     try {
-      console.log(department);
-      // Refresh current page
-      getDepartmentsPaginated({
-        page: currentPage,
-        pageSize,
-        search: searchTerm,
-        is_active:
-          statusFilter === "active"
-            ? true
-            : statusFilter === "inactive"
-              ? false
-              : undefined,
+      const updatedDepartment = await updateDepartment(department.id, {
+        is_active: !department.is_active,
       });
+      if (updatedDepartment) {
+        const newStatus = updatedDepartment.is_active;
+        showToast(
+          `Department "${department.name}" ${newStatus ? "activated" : "deactivated"} successfully!`,
+          "success",
+        );
+        // Refresh current page
+        getDepartmentsPaginated({
+          page: currentPage,
+          pageSize,
+          search: searchTerm,
+          is_active:
+            statusFilter === "active"
+              ? true
+              : statusFilter === "inactive"
+                ? false
+                : undefined,
+        });
+      }
     } catch (error) {
       console.error("Error toggling department status:", error);
+      showToast(
+        error instanceof Error
+          ? error.message
+          : "Failed to update department status",
+        "error",
+      );
     }
   };
 
@@ -237,24 +289,6 @@ export default function DepartmentsPage() {
   const openDeleteModal = (department: Department) => {
     setSelectedDepartment(department);
     setShowDeleteModal(true);
-  };
-
-  // Utility functions
-  const getDepartmentIcon = (name: string) => {
-    const first = name.charAt(0).toUpperCase();
-    const icons: Record<string, string> = {
-      E: "💻", // Engineering
-      M: "📊", // Marketing
-      S: "💼", // Sales
-      H: "👥", // HR
-      F: "💰", // Finance
-      O: "⚙️", // Operations
-      I: "💡", // IT
-      D: "🎨", // Design
-      P: "📈", // Product
-      L: "⚖️", // Legal
-    };
-    return icons[first] || "🏢";
   };
 
   if (error) {
@@ -453,7 +487,7 @@ export default function DepartmentsPage() {
       </Card>
 
       {/* Departments Table */}
-      <Card>
+      <Card className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex h-64 items-center justify-center">
@@ -461,74 +495,234 @@ export default function DepartmentsPage() {
             </div>
           ) : (
             <>
-              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead className="bg-gray-50 dark:bg-gray-700">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Department
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Created By
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400">
-                      Created
-                    </th>
-                    <th className="relative px-6 py-3">
-                      <span className="sr-only">Actions</span>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
-                  {departments?.data.map((department) => (
-                    <tr
-                      key={department.id}
-                      className="hover:bg-gray-50 dark:hover:bg-gray-700"
-                    >
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-r from-blue-400 to-purple-400 text-lg text-white">
-                              {getDepartmentIcon(department.name)}
-                            </div>
-                          </div>
-                          <div className="ml-4">
-                            <div className="text-sm font-medium text-gray-900 dark:text-white">
-                              {department.name}
-                            </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
-                              {department.description}
-                            </div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                        {department.created_by || "System"}
-                      </td>
-                      <td className="px-6 py-4 text-sm whitespace-nowrap text-gray-500 dark:text-gray-400">
-                        {new Date(department.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
-                        <div className="flex space-x-2">
-                          <Button
-                            size="xs"
-                            color="gray"
-                            onClick={() => openEditModal(department)}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            size="xs"
-                            color="failure"
-                            onClick={() => openDeleteModal(department)}
-                          >
-                            Delete
-                          </Button>
-                        </div>
-                      </td>
+              <div className="min-w-full">
+                <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                  <thead className="bg-gray-50 dark:bg-gray-900">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-indigo-600"
+                        />
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                      >
+                        Name
+                      </th>
+                      <th
+                        scope="col"
+                        className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell dark:text-gray-400"
+                      >
+                        Description
+                      </th>
+                      <th
+                        scope="col"
+                        className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:table-cell dark:text-gray-400"
+                      >
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase lg:table-cell dark:text-gray-400"
+                      >
+                        Created
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                      >
+                        Actions
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                    {departments?.data.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan={6}
+                          className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                        >
+                          <div className="flex flex-col items-center justify-center">
+                            <svg
+                              className="mx-auto h-12 w-12 text-gray-400"
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                              />
+                            </svg>
+                            <h3 className="mt-2 text-sm font-medium text-gray-900 dark:text-white">
+                              No departments found
+                            </h3>
+                            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                              Get started by creating a new department.
+                            </p>
+                            <div className="mt-6">
+                              <Button
+                                onClick={openCreateModal}
+                                className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                              >
+                                <svg
+                                  className="mr-2 h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M12 4v16m8-8H4"
+                                  />
+                                </svg>
+                                Create Department
+                              </Button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      departments?.data.map((department) => (
+                        <tr
+                          key={department.id}
+                          className="transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 rounded border-gray-300 bg-gray-100 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-indigo-600"
+                            />
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="h-10 w-10 flex-shrink-0">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-blue-600">
+                                  <svg
+                                    className="h-5 w-5 text-white"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path
+                                      strokeLinecap="round"
+                                      strokeLinejoin="round"
+                                      strokeWidth={2}
+                                      d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+                                    />
+                                  </svg>
+                                </div>
+                              </div>
+                              <div className="ml-4">
+                                <div className="text-sm font-medium text-gray-900 dark:text-white">
+                                  {department.name}
+                                </div>
+                                <div className="text-sm text-gray-500 sm:hidden dark:text-gray-400">
+                                  {department.description}
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="hidden max-w-xs px-6 py-4 text-sm text-gray-500 md:table-cell dark:text-gray-400">
+                            <div className="truncate">
+                              {department.description || "No description"}
+                            </div>
+                          </td>
+                          <td className="hidden px-6 py-4 whitespace-nowrap sm:table-cell">
+                            <div className="flex items-center space-x-2">
+                              <Badge
+                                color={
+                                  department.is_active ? "success" : "failure"
+                                }
+                                className="text-xs"
+                              >
+                                {department.is_active ? "Active" : "Inactive"}
+                              </Badge>
+                              <button
+                                onClick={() =>
+                                  toggleDepartmentStatus(department)
+                                }
+                                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
+                                title={`${department.is_active ? "Deactivate" : "Activate"} department`}
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                          <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-gray-500 lg:table-cell dark:text-gray-400">
+                            {new Date(
+                              department.created_at,
+                            ).toLocaleDateString()}
+                          </td>
+                          <td className="px-6 py-4 text-right text-sm font-medium whitespace-nowrap">
+                            <div className="flex items-center justify-end space-x-2">
+                              <button
+                                onClick={() => openEditModal(department)}
+                                className="text-indigo-600 transition-colors hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300"
+                                title="Edit department"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                                  />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => openDeleteModal(department)}
+                                className="text-red-600 transition-colors hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                                title="Delete department"
+                              >
+                                <svg
+                                  className="h-4 w-4"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                  />
+                                </svg>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Pagination */}
               {departments && (

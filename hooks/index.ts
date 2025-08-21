@@ -17,8 +17,6 @@ export { useDocumentsManagement } from "./useDocumentsManagement";
 export { useSystemStatus } from "./useSystemStatus";
 export { useReactHookForm } from "./useReactHookForm";
 export { useRolePermissions } from "./useRolePermissions";
-export {
-  usePermissionData,
-  usePermissionDataWithFallback,
-} from "./usePermissionData";
+export { usePermissionDataWithFallback } from "./usePermissionData";
 export { usePermissionResources } from "./usePermissionResources";
+export { usePermissionManagement } from "./usePermissionManagement";

@@ -55,7 +55,7 @@ export default function DocumentsPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, []);
+  }, [setLoading]);
 
   return (
     <div className="min-h-screen">

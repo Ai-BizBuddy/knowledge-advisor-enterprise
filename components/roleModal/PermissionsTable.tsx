@@ -1,11 +1,3 @@
-/**
- * PermissionsTable Component
- *
- * Main table component for role permissions management.
- * Features responsive design, row/column toggles, and accessibility support.
- * Now uses dynamic permission data with enhanced action support (create, read, update, delete, custom).
- */
-
 import React from "react";
 import { Card } from "flowbite-react";
 import { usePermissionDataWithFallback } from "@/hooks";

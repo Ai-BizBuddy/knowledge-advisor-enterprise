@@ -10,12 +10,12 @@ import { Permission } from "./UserManagement";
  * Action types for permissions matrix
  */
 export enum PermissionActions {
-  CREATE = "create",
-  READ = "read",
+  INSERT = "insert",
   UPDATE = "update",
   DELETE = "delete",
+  CREATE = "create", // Alias for INSERT
+  READ = "read",
   ADMIN = "admin",
-  INSERT = "insert", // Alias for CREATE
   MANAGE = "manage", // Alias for ADMIN
 }
 
@@ -25,6 +25,7 @@ export enum PermissionActions {
 export interface ResourceMetadata {
   icon: string;
   displayName: string;
+  description?: string;
 }
 
 /**
@@ -34,6 +35,7 @@ export interface ResourceConfig {
   name: string;
   icon: string;
   displayName: string;
+  description?: string;
   actions: string[];
 }
 
@@ -62,6 +64,8 @@ export interface PermissionRowData {
   resource: string;
   displayName: string;
   icon: string;
+  description?: string;
+  actionCount?: number;
   permissions: {
     [action: string]: Permission | null;
   };
@@ -90,4 +94,4 @@ export interface PermissionsTableProps {
 /**
  * Standard action columns for the table
  */
-export const STANDARD_ACTIONS = ["CREATE", "READ", "UPDATE", "DELETE", "ADMIN"];
+export const STANDARD_ACTIONS = ["INSERT", "UPDATE", "DELETE"];

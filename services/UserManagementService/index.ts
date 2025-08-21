@@ -42,7 +42,7 @@ class UserManagementService {
   private readonly useMockData: boolean;
 
   constructor() {
-    // Force mock data off to ensure production data usage across project
+    // Disable mock data to use production Supabase database
     this.useMockData = false;
   }
 
@@ -1373,6 +1373,46 @@ class UserManagementService {
         created_by: "admin",
         created_at: "2024-01-01T10:00:00Z",
         updated_at: "2024-01-01T10:00:00Z",
+        is_active: true,
+        settings: {},
+      },
+      {
+        id: "dept-3",
+        name: "Sales",
+        description: "Sales and business development",
+        created_by: "admin",
+        created_at: "2024-01-02T10:00:00Z",
+        updated_at: "2024-01-02T10:00:00Z",
+        is_active: true,
+        settings: {},
+      },
+      {
+        id: "dept-4",
+        name: "Human Resources",
+        description: "People operations and talent management",
+        created_by: "admin",
+        created_at: "2024-01-03T10:00:00Z",
+        updated_at: "2024-01-03T10:00:00Z",
+        is_active: true,
+        settings: {},
+      },
+      {
+        id: "dept-5",
+        name: "Finance",
+        description: "Financial planning and accounting",
+        created_by: "admin",
+        created_at: "2024-01-04T10:00:00Z",
+        updated_at: "2024-01-04T10:00:00Z",
+        is_active: false,
+        settings: {},
+      },
+      {
+        id: "dept-6",
+        name: "Operations",
+        description: "Business operations and logistics",
+        created_by: "admin",
+        created_at: "2024-01-05T10:00:00Z",
+        updated_at: "2024-01-05T10:00:00Z",
         is_active: true,
         settings: {},
       },

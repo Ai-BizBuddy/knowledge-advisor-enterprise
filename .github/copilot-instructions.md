@@ -5,6 +5,7 @@
 **Last Updated**: 2025-08-10 00:13:55 UTC
 
 This is a Next.js 15 CSR Only Mode, TypeScript project for an AI-powered knowledge base ingestion system called "Knowledge Advisor". The application manages RAG (Retrieval-Augmented Generation) projects with document upload and processing capabilities.
+This guide = **real implementation steps** (no mockups).
 
 ## 🚨 CRITICAL DEVELOPMENT WORKFLOW
 
@@ -40,7 +41,6 @@ This is a Next.js 15 CSR Only Mode, TypeScript project for an AI-powered knowled
 3. **Additional Checks**
    ```bash
    npm run lint        # Check code quality
-   npm run type-check  # Verify TypeScript types
    ```
 
 ### ⚠️ Important Notes

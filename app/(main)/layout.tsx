@@ -1,7 +1,7 @@
 "use client";
 import { LoadingPage, SlideBar } from "@/components";
 import { useAuthContext } from "@/contexts/AuthContext";
-import { useAuth, usePermissions } from "@/hooks";
+import { useAuth } from "@/hooks";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
 import { useLoading } from "@/contexts/LoadingContext";
