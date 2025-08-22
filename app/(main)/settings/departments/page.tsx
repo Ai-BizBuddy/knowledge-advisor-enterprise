@@ -319,7 +319,7 @@ export default function DepartmentsPage() {
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
           <svg
             className="mr-2 h-4 w-4"
@@ -570,7 +570,7 @@ export default function DepartmentsPage() {
                             <div className="mt-6">
                               <Button
                                 onClick={openCreateModal}
-                                className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+                                className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                               >
                                 <svg
                                   className="mr-2 h-4 w-4"
@@ -606,9 +606,9 @@ export default function DepartmentsPage() {
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div className="flex items-center">
                               <div className="h-10 w-10 flex-shrink-0">
-                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-r from-purple-500 to-blue-600">
+                                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900">
                                   <svg
-                                    className="h-5 w-5 text-white"
+                                    className="h-5 w-5 text-blue-600 dark:text-blue-400"
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"

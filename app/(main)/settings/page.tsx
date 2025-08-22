@@ -11,33 +11,37 @@ const settingsOverview = [
     title: "Users",
     description: "Manage user accounts, profiles, and access",
     href: "/settings/users",
-    icon: "👥",
     stats: { total: 0, active: 0 },
-    gradient: "from-blue-500 to-cyan-500",
+    bgColor: "bg-blue-50 dark:bg-blue-900/20",
+    borderColor: "border-blue-200 dark:border-blue-800",
+    textColor: "text-blue-900 dark:text-blue-100",
   },
   {
     title: "Roles",
     description: "Configure user roles and permission levels",
     href: "/settings/roles",
-    icon: "🛡️",
     stats: { total: 0, system: 0 },
-    gradient: "from-purple-500 to-pink-500",
+    bgColor: "bg-purple-50 dark:bg-purple-900/20",
+    borderColor: "border-purple-200 dark:border-purple-800",
+    textColor: "text-purple-900 dark:text-purple-100",
   },
   {
     title: "Permissions",
     description: "Set up granular access controls",
     href: "/settings/permissions",
-    icon: "🔑",
     stats: { total: 0, resources: 0 },
-    gradient: "from-emerald-500 to-teal-500",
+    bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
+    borderColor: "border-emerald-200 dark:border-emerald-800",
+    textColor: "text-emerald-900 dark:text-emerald-100",
   },
   {
     title: "Departments",
     description: "Organize users by departments",
     href: "/settings/departments",
-    icon: "🏢",
     stats: { total: 0, active: 0 },
-    gradient: "from-orange-500 to-red-500",
+    bgColor: "bg-orange-50 dark:bg-orange-900/20",
+    borderColor: "border-orange-200 dark:border-orange-800",
+    textColor: "text-orange-900 dark:text-orange-100",
   },
 ];
 
@@ -55,20 +59,17 @@ export default function SettingsPage() {
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {settingsOverview.map((item) => (
           <Link key={item.title} href={item.href}>
-            <Card className="group h-full cursor-pointer border-gray-200 transition-all duration-200 hover:shadow-lg dark:border-gray-700">
+            <Card
+              className={`group h-full cursor-pointer border-gray-200 transition-all duration-200 hover:shadow-lg dark:border-gray-700 ${item.bgColor} ${item.borderColor}`}
+            >
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <div className="mb-3 flex items-center space-x-3">
-                    <div
-                      className={`rounded-lg bg-gradient-to-r p-2 ${item.gradient} text-white`}
+                  <div className="mb-3">
+                    <h3
+                      className={`text-lg font-semibold transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400 ${item.textColor}`}
                     >
-                      <span className="text-xl">{item.icon}</span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900 transition-colors group-hover:text-indigo-600 dark:text-white dark:group-hover:text-indigo-400">
-                        {item.title}
-                      </h3>
-                    </div>
+                      {item.title}
+                    </h3>
                   </div>
                   <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
                     {item.description}
@@ -82,7 +83,7 @@ export default function SettingsPage() {
                     ))}
                   </div>
                 </div>
-                <div className="text-gray-400 transition-colors group-hover:text-indigo-600 dark:text-gray-500 dark:group-hover:text-indigo-400">
+                <div className="text-gray-400 transition-colors group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400">
                   <svg
                     className="h-5 w-5"
                     fill="none"
@@ -122,7 +123,7 @@ export default function SettingsPage() {
             className="flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <div className="rounded-lg bg-blue-100 p-2 dark:bg-blue-900">
-              <span className="text-lg">👤</span>
+              <div className="h-5 w-5 rounded bg-blue-600 dark:bg-blue-400"></div>
             </div>
             <div>
               <div className="font-medium text-gray-900 dark:text-white">
@@ -139,7 +140,7 @@ export default function SettingsPage() {
             className="flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <div className="rounded-lg bg-purple-100 p-2 dark:bg-purple-900">
-              <span className="text-lg">🏷️</span>
+              <div className="h-5 w-5 rounded bg-purple-600 dark:bg-purple-400"></div>
             </div>
             <div>
               <div className="font-medium text-gray-900 dark:text-white">
@@ -156,7 +157,7 @@ export default function SettingsPage() {
             className="flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700"
           >
             <div className="rounded-lg bg-orange-100 p-2 dark:bg-orange-900">
-              <span className="text-lg">🏗️</span>
+              <div className="h-5 w-5 rounded bg-orange-600 dark:bg-orange-400"></div>
             </div>
             <div>
               <div className="font-medium text-gray-900 dark:text-white">

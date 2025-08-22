@@ -47,8 +47,13 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   // Handle toggle all actions for this resource (only available actions)
   const handleToggleAllActions = () => {
     const availableResourceActions = resourceActions;
+
+    // Safely check if all available actions are checked
     const allAvailableActionsChecked = availableResourceActions.every(
-      (permission) => actions[permission.action].value === true,
+      (permission) => {
+        const actionExists = actions[permission.action];
+        return actionExists && actionExists.value === true;
+      },
     );
 
     if (allAvailableActionsChecked) {
@@ -62,7 +67,10 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
       // If not all available actions are checked, check all available ones
       const newActions = { ...actions };
       availableResourceActions.forEach((permission) => {
-        newActions[permission.action].value = true;
+        newActions[permission.action] = {
+          id: permission.id,
+          value: true,
+        };
       });
       onChange(resource, newActions);
     }
@@ -79,9 +87,10 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   };
 
   // Calculate if all available actions are checked
-  const allAvailableActionsChecked = resourceActions.every(
-    (permission) => actions[permission.action]?.value === true,
-  );
+  const allAvailableActionsChecked = resourceActions.every((permission) => {
+    const actionExists = actions[permission.action];
+    return actionExists && actionExists.value === true;
+  });
 
   // Check if this is a custom action (not standard CRUD)
   const isCustomAction = (actionKey: string): boolean => {

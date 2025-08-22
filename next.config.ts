@@ -3,9 +3,28 @@ import withFlowbiteReact from "flowbite-react/plugin/nextjs";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["flowbite.com", "images.ctfassets.net", "kolhapur-police.s3.amazonaws.com"],
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "flowbite.com",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "images.ctfassets.net",
+        port: "",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "kolhapur-police.s3.amazonaws.com",
+        port: "",
+        pathname: "/**",
+      },
+    ],
   },
-  output: "standalone"
+  output: "standalone",
 };
 
 export default withFlowbiteReact(nextConfig);

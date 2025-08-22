@@ -587,7 +587,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 <Button
                   type="submit"
                   disabled={!canSubmit}
-                  className="bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 focus:ring-4 focus:ring-indigo-300 dark:focus:ring-indigo-800"
+                  className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
                 >
                   {isSubmitting || isLoading ? (
                     <div className="flex items-center space-x-2">

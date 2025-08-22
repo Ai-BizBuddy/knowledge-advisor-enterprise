@@ -269,7 +269,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     {/* Permission column */}
                     <td className="px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white">
                       <div className="flex items-center">
-                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-100 to-purple-100 dark:from-indigo-900/50 dark:to-purple-900/50">
+                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
                           <span
                             className="text-sm"
                             role="img"

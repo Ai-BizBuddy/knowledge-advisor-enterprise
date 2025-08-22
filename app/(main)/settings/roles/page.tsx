@@ -578,7 +578,7 @@ export default function RolesPage() {
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
           <svg
             className="mr-2 h-4 w-4"
@@ -731,7 +731,7 @@ export default function RolesPage() {
               <div className="mb-4 flex items-start justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="h-12 w-12 flex-shrink-0">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-r from-indigo-400 to-purple-400 text-lg font-semibold text-white">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-100 text-lg font-semibold text-blue-600 dark:bg-blue-900 dark:text-blue-400">
                       {role.name.charAt(0).toUpperCase()}
                     </div>
                   </div>

@@ -406,7 +406,7 @@ export default function UsersPage() {
         </div>
         <Button
           onClick={openCreateModal}
-          className="bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-600 hover:to-blue-700"
+          className="bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
         >
           <svg
             className="mr-2 h-4 w-4"

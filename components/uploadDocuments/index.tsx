@@ -326,9 +326,9 @@ export default function UploadDocument({
                 onChange={onFileChange}
               />
               <div className="space-y-4">
-                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-blue-100 dark:bg-blue-900/30">
                   <svg
-                    className="h-8 w-8 text-blue-400"
+                    className="h-8 w-8 text-blue-600 dark:text-blue-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
