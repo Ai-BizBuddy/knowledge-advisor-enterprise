@@ -17,7 +17,9 @@ export default function CreateKnowledgeBaseModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [status, setStatus] = useState<number>(1);
-  const [visibility, setVisibility] = useState<number>(2);
+  const [visibility, setVisibility] = useState<
+    "public" | "private" | "department" | "custom"
+  >("private");
 
   if (!isOpen) return null;
 
@@ -49,7 +51,7 @@ export default function CreateKnowledgeBaseModal({
             setName("");
             setDescription("");
             setStatus(1);
-            setVisibility(2);
+            setVisibility("private");
           }}
           className="space-y-4"
         >
@@ -109,11 +111,21 @@ export default function CreateKnowledgeBaseModal({
               required
               className="w-full rounded-md border border-gray-300 bg-gray-100 px-4 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
               value={visibility}
-              onChange={(e) => setVisibility(Number(e.target.value))}
+              onChange={(e) =>
+                setVisibility(
+                  e.target.value as
+                    | "public"
+                    | "private"
+                    | "department"
+                    | "custom",
+                )
+              }
             >
               <option disabled>Draft (Not yet active)</option>
-              <option value={1}>Public</option>
-              <option value={2}>Private</option>
+              <option value={"public"}>Public</option>
+              <option value={"private"}>Private</option>
+              <option value={"department"}>Department</option>
+              <option value={"custom"}>Custom</option>
             </select>
             <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
               You can change this status later from the knowledge base settings.
@@ -129,7 +141,7 @@ export default function CreateKnowledgeBaseModal({
                 setName("");
                 setDescription("");
                 setStatus(1);
-                setVisibility(2);
+                setVisibility("private");
               }}
               className="rounded-md bg-gray-200 px-4 py-2 text-gray-900 transition hover:bg-gray-300 dark:bg-gray-700 dark:text-white dark:hover:bg-gray-600"
             >

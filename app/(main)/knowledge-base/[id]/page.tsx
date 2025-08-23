@@ -10,11 +10,47 @@ import {
 } from "@/components";
 import { Breadcrumb, BreadcrumbItem, Button } from "flowbite-react";
 import { useState, useEffect } from "react";
-import { useDocumentsManagement } from "@/hooks";
+import { useDocuments, useKnowledgeBase } from "@/hooks";
 import { useRouter, useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
-import { getKnowledgeBaseById, formatStatus } from "@/data/knowledgeBaseData";
-import { KnowledgeBaseData } from "@/data/knowledgeBaseData";
+import { formatStatus } from "@/data/knowledgeBaseData";
+import { Project, Document } from "@/interfaces/Project";
+
+// Interface that matches what DocumentsTable expects (temporarily for compatibility)
+interface DocumentTableItem {
+  name: string;
+  size: string;
+  type: string;
+  date: string;
+  status: string;
+  uploadedBy: string;
+  avatar: string;
+  project: string[];
+  source: string;
+  uploadDate: string;
+  chunk?: number;
+  syncStatus?: string;
+  lastUpdated?: string;
+}
+
+// Adapter function to convert new Document interface to DocumentsTable-compatible format
+const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
+  name: doc.name,
+  size: doc.file_size
+    ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
+    : "Unknown",
+  type: doc.type.toUpperCase(),
+  date: new Date(doc.created_at).toLocaleDateString(),
+  status: doc.status,
+  uploadedBy: "User", // This field doesn't exist in new interface
+  avatar: "/avatars/default.png", // Default avatar
+  project: [], // This field doesn't exist in new interface
+  source: doc.rag_status || "not_synced",
+  uploadDate: new Date(doc.created_at).toLocaleDateString(),
+  chunk: doc.chunk_count,
+  syncStatus: doc.rag_status === "synced" ? "Synced" : "Not Synced",
+  lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
+});
 
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
@@ -26,55 +62,111 @@ export default function KnowledgeBaseDetail() {
   const [openHistory, setOpenHistory] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [message, setMessage] = useState("");
-  const [knowledgeBase, setKnowledgeBase] = useState<KnowledgeBaseData | null>(
-    null,
-  );
+  const [knowledgeBase, setKnowledgeBase] = useState<Project | null>(null);
+
+  const { getKnowledgeBase } = useKnowledgeBase();
 
   const tabsList = ["Documents", "Chat Assistant"];
 
-  // Get knowledge base data on component mount
-  useEffect(() => {
-    if (id) {
-      const kb = getKnowledgeBaseById(id);
-      setKnowledgeBase(kb || null);
-    }
-    setLoading(false);
-  }, [id, setLoading]);
+  // Additional state for document selection and UI
+  const [selectedDocumentIndex, setSelectedDocumentIndex] = useState<number>(0);
+  const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Use the new useDocuments hook
   const {
     // State
-    selectedDocument,
-    selectedDocuments,
-    searchTerm,
-    sortBy,
-    sortOrder,
-    currentPage,
-
-    // Data
     documents,
-    paginatedDocuments,
+    currentPage,
     totalPages,
     startIndex,
     endIndex,
-
-    // Selection states
-    isAllSelected,
-    isIndeterminate,
+    searchTerm,
 
     // Handlers
-    setSelectedDocument,
-    setSearchTerm,
-    handleSort,
     handlePageChange,
-    handleSelectAll,
-    handleSelectDocument,
-    handleClearSelection,
-  } = useDocumentsManagement();
+    setSearchTerm,
+  } = useDocuments({ knowledgeBaseId: id });
+
+  // Transform documents to DocumentsTable-compatible format
+  const adaptedDocuments = documents.map((doc) =>
+    adaptDocumentToTableFormat(doc),
+  );
+  const paginatedDocuments = adaptedDocuments;
+
+  // Selection logic
+  const isAllSelected =
+    selectedDocuments.length === adaptedDocuments.length &&
+    adaptedDocuments.length > 0;
+  const isIndeterminate =
+    selectedDocuments.length > 0 &&
+    selectedDocuments.length < adaptedDocuments.length;
+
+  // Handle document selection by index (for compatibility with old DocumentsTable)
+  const handleSelectDocument = (index: number) => {
+    setSelectedDocuments((prev) =>
+      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+    );
+  };
+
+  // Handle select all documents
+  const handleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedDocuments([]);
+    } else {
+      setSelectedDocuments(adaptedDocuments.map((_, index) => index));
+    }
+  };
+
+  // Handle clear selection
+  const handleClearSelection = () => {
+    setSelectedDocuments([]);
+  };
+
+  // Handle sort
+  const handleSort = (column: string) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
+
+  // Handle document click
+  const handleDocumentTableClick = (index: number) => {
+    setSelectedDocumentIndex(index);
+    // You can add navigation logic here if needed
+    // const documentId = documents[index]?.id;
+    // if (documentId) {
+    //   router.push(`/knowledge-base/${id}/documents/${documentId}`);
+    // }
+  };
 
   const handleBackButtonClick = () => {
     setLoading(true);
     router.push("/knowledge-base");
   };
+
+  useEffect(() => {
+    const fetchKnowledgeBase = async (kbId: string) => {
+      const kb = await getKnowledgeBase(kbId);
+      return kb;
+    };
+
+    const fetchData = async () => {
+      if (id) {
+        const kb = await fetchKnowledgeBase(id);
+        if (!kb) {
+          setKnowledgeBase(null);
+          return;
+        }
+        setKnowledgeBase(kb);
+      }
+    };
+    fetchData();
+  }, [id, getKnowledgeBase]);
 
   if (!knowledgeBase) {
     return (
@@ -308,28 +400,28 @@ export default function KnowledgeBaseDetail() {
             <DocumentsTable
               documents={paginatedDocuments}
               selectedDocuments={selectedDocuments}
-              selectedDocument={selectedDocument}
+              selectedDocument={selectedDocumentIndex}
               startIndex={startIndex}
               sortBy={sortBy}
               sortOrder={sortOrder}
               onSort={handleSort}
               onSelectAll={handleSelectAll}
               onSelectDocument={handleSelectDocument}
-              onDocumentClick={setSelectedDocument}
+              onDocumentClick={handleDocumentTableClick}
               isAllSelected={isAllSelected}
               isIndeterminate={isIndeterminate}
             />
           </div>
 
           {/* Pagination */}
-          {documents.length > 0 && (
+          {adaptedDocuments.length > 0 && (
             <div>
               <DocumentsPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                totalDocuments={documents.length}
+                totalDocuments={adaptedDocuments.length}
                 onPageChange={handlePageChange}
               />
             </div>

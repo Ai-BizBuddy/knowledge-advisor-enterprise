@@ -30,7 +30,7 @@ export interface CreateProjectInput {
   name: string;
   description: string;
   status: ProjectStatus;
-  visibility: number; // 1=Public, 2=Private (optional, defaults to 2)
+  visibility: 'public' | 'private' | 'department' | 'custom'; // 1=Public, 2=Private (optional, defaults to 2)
 }
 
 // Update project input interface
@@ -73,7 +73,8 @@ export interface KnowledgeBase extends Project {
 export interface CreateDocumentInput {
   name: string;
   type: string;
-  project_id: string;
+  knowledge_base_id: string;
+  status?: string;
   file_size?: number;
   mime_type?: string;
   path: string;

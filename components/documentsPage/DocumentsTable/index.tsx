@@ -1,5 +1,21 @@
-import { Document } from "@/data/documentsData";
 import { getFileIcon } from "@/utils/documentsUtils";
+
+// Interface that matches the expected document structure for the table
+interface Document {
+  name: string;
+  size: string;
+  type: string;
+  date: string;
+  status: string;
+  uploadedBy: string;
+  avatar: string;
+  project: string[];
+  source: string;
+  uploadDate: string;
+  chunk?: number;
+  syncStatus?: string;
+  lastUpdated?: string;
+}
 
 interface DocumentsTableProps {
   documents: Document[];

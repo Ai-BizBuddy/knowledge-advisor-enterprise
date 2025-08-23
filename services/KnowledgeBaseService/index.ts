@@ -208,14 +208,15 @@ class KnowledgeBaseService {
 
       // Get document count for this knowledge base
       const { count: documentCount } = await supabaseTable
-        .from('documents')
+        .from('document')
         .select('*', { count: 'exact', head: true })
-        .eq('project_id', id);
+        .eq('knowledge_base_id', id);
 
       return {
         id: project.id,
         name: project.name,
         description: project.description || '',
+        is_active: project.is_active,
         document_count: documentCount || 0,
         status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
         owner: project.created_by,
@@ -248,7 +249,7 @@ class KnowledgeBaseService {
         description: input.description || '',
         created_by: user.id,
         is_active: input.status === ProjectStatus.ACTIVE,
-        visibility: input.visibility === 2 ? 'private' : 'public', // Default visibility
+        visibility: input.visibility, // Default visibility
         settings: {}, // Default empty settings object
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -308,6 +309,7 @@ class KnowledgeBaseService {
       return {
         id: project.id,
         name: project.name,
+        is_active: project.is_active,
         description: project.description || '',
         document_count: 0, // Not available in current schema
         status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,

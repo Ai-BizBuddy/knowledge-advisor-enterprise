@@ -7,6 +7,7 @@
 
 import { DocumentIngestionService } from './DocumentIngestionService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
+import DocumentService from './DocumentService';
 import { DocumentSearchService } from './DocumentSearchService';
 import { LangflowChatService } from './LangflowChatService';
 import { LangflowSearchService } from './LangflowSearchService';
@@ -40,6 +41,13 @@ export const documentIngestionService = new DocumentIngestionService({
  * Manages knowledge base CRUD operations using Supabase
  */
 export const knowledgeBaseService = new KnowledgeBaseService();
+
+/**
+ * Document Service Instance
+ * 
+ * Manages document CRUD operations using Supabase with pagination support
+ */
+export const documentService = new DocumentService();
 
 /**
  * Document Search Service Instance
