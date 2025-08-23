@@ -4,7 +4,7 @@ export interface Project {
   name: string;
   description: string;
   document_count?: number; // Computed field
-  status: 1 | 2 | 3; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
+  status: 1 | 2; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
   owner: string; // UUID foreign key to auth.users
   is_active: boolean; // Boolean for active status
   created_at: string;
@@ -18,12 +18,11 @@ export interface Project {
 // Status enum for better type safety
 export enum ProjectStatus {
   ACTIVE = 1,
-  PAUSED = 2,
-  DRAFT = 3
+  INACTIVE = 2,
 }
 
 // Helper type for status display
-export type ProjectStatusDisplay = "Active" | "Paused" | "Draft";
+export type ProjectStatusDisplay = "Active" | "Inactive";
 
 // Create project input interface
 export interface CreateProjectInput {
