@@ -22,6 +22,7 @@ interface DocumentTableItem {
   size: string;
   type: string;
   date: string;
+  rag_status?: string;
   status: string;
   uploadedBy: string;
   avatar: string;
@@ -41,7 +42,8 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
     : "Unknown",
   type: doc.file_type,
   date: new Date(doc.created_at).toLocaleDateString(),
-  status: doc.status,
+  rag_status: doc.rag_status || "not_synced",
+  status: doc.status || "",
   uploadedBy: "User", // This field doesn't exist in new interface
   avatar: "/avatars/default.png", // Default avatar
   project: [], // This field doesn't exist in new interface

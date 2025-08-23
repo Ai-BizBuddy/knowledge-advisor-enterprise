@@ -166,7 +166,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       {doc.name}
                     </div>
                     <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {doc.size} • {doc.type}
+                      {doc.size} • {doc.type.toLocaleLowerCase()}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
                       <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -174,11 +174,11 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.status)}`}
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || "")}`}
                         >
-                          {doc.status}
+                          {doc.syncStatus}
                         </span>
-                        {getSyncButton(doc.status)}
+                        {getSyncButton(doc.syncStatus)}
                       </div>
                     </div>
                   </div>
@@ -274,8 +274,8 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         </div>
                       </td>
                       <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400">
-                        <span className="font-medium uppercase">
-                          {doc.type} DOCUMENT
+                        <span className="font-medium">
+                          {doc.type.toLocaleLowerCase()} Document
                         </span>
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap sm:px-6">
@@ -292,7 +292,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         {doc.lastUpdated || doc.date}
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap sm:px-6">
-                        {getSyncButton(doc.status)}
+                        {getSyncButton(doc.syncStatus)}
                       </td>
                       <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6">
                         <button
