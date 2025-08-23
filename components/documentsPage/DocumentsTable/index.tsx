@@ -1,7 +1,8 @@
 import { getFileIcon } from "@/utils/documentsUtils";
-
+import { Document } from "@/interfaces/Project";
 // Interface that matches the expected document structure for the table
-interface Document {
+
+interface DocumentTableItem {
   name: string;
   size: string;
   type: string;
@@ -18,7 +19,7 @@ interface Document {
 }
 
 interface DocumentsTableProps {
-  documents: Document[];
+  documents: DocumentTableItem[];
   selectedDocuments: number[];
   selectedDocument: number;
   startIndex: number;
@@ -177,7 +178,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         >
                           {doc.status}
                         </span>
-                        {getSyncButton(doc.syncStatus)}
+                        {getSyncButton(doc.status)}
                       </div>
                     </div>
                   </div>
@@ -291,7 +292,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         {doc.lastUpdated || doc.date}
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap sm:px-6">
-                        {getSyncButton(doc.syncStatus)}
+                        {getSyncButton(doc.status)}
                       </td>
                       <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6">
                         <button

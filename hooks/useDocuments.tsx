@@ -6,6 +6,8 @@ import DocumentService from "@/services/DocumentService";
 import type {
   Document,
   CreateDocumentInput,
+  CreateMultipleDocumentsInput,
+  CreateDocumentsFromFilesInput,
   UpdateDocumentInput,
   PaginationOptions,
 } from "@/interfaces/Project";
@@ -60,6 +62,12 @@ export interface UseDocumentsReturn {
   // CRUD Operations
   loadDocuments: (page?: number, forceRefresh?: boolean) => Promise<void>;
   createDocument: (data: CreateDocumentInput) => Promise<Document>;
+  createMultipleDocuments: (
+    data: CreateMultipleDocumentsInput,
+  ) => Promise<Document[]>;
+  createDocumentsFromFiles: (
+    data: CreateDocumentsFromFilesInput,
+  ) => Promise<Document[]>;
   updateDocument: (id: string, data: UpdateDocumentInput) => Promise<Document>;
   deleteDocument: (id: string) => Promise<void>;
   getDocument: (id: string) => Promise<Document | null>;
@@ -272,6 +280,71 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         const errorMessage =
           err instanceof Error ? err.message : "Failed to create document";
         console.error("[useDocuments] Error creating document:", err);
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadDocuments, currentPage, documentService],
+  );
+
+  /**
+   * Create multiple documents in batch
+   */
+  const createMultipleDocuments = useCallback(
+    async (data: CreateMultipleDocumentsInput): Promise<Document[]> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const newDocuments =
+          await documentService.createMultipleDocuments(data);
+
+        // Refresh the list to include all new documents
+        await loadDocuments(currentPage, true);
+
+        return newDocuments;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to create multiple documents";
+        console.error("[useDocuments] Error creating multiple documents:", err);
+        setError(errorMessage);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [loadDocuments, currentPage, documentService],
+  );
+
+  /**
+   * Create multiple documents from File objects
+   */
+  const createDocumentsFromFiles = useCallback(
+    async (data: CreateDocumentsFromFilesInput): Promise<Document[]> => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const newDocuments =
+          await documentService.createDocumentsFromFiles(data);
+
+        // Refresh the list to include all new documents
+        await loadDocuments(currentPage, true);
+
+        return newDocuments;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : "Failed to create documents from files";
+        console.error(
+          "[useDocuments] Error creating documents from files:",
+          err,
+        );
         setError(errorMessage);
         throw err;
       } finally {
@@ -537,6 +610,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     // CRUD Operations
     loadDocuments,
     createDocument,
+    createMultipleDocuments,
+    createDocumentsFromFiles,
     updateDocument,
     deleteDocument,
     getDocument,

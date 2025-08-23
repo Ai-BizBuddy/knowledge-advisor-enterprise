@@ -16,7 +16,7 @@ interface Document {
 }
 
 export const getFileIcon = (type: string): string => {
-    const normalizedType = type.toLowerCase();
+    const normalizedType = type;
     if (normalizedType.includes("pdf")) return "📄";
     if (normalizedType.includes("doc") || normalizedType.includes("word")) return "📝";
     if (normalizedType.includes("xlsx") || normalizedType.includes("xls") || normalizedType.includes("excel")) return "📊";

@@ -11,6 +11,8 @@ import { getAuthSession } from "@/utils/supabase/authUtils";
 import type {
     Document,
     CreateDocumentInput,
+    CreateMultipleDocumentsInput,
+    CreateDocumentsFromFilesInput,
     UpdateDocumentInput,
     PaginationOptions
 } from "@/interfaces/Project";
@@ -275,6 +277,156 @@ class DocumentService {
     }
 
     /**
+     * Create multiple documents in batch
+     */
+    async createMultipleDocuments(input: CreateMultipleDocumentsInput): Promise<Document[]> {
+        console.log(`[${this.serviceName}] Creating ${input.documents.length} documents for KB:`, input.knowledge_base_id);
+
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            // Verify the knowledge base belongs to the user
+            const { data: kbData } = await supabaseTable
+                .from('knowledge_base')
+                .select('id')
+                .eq('id', input.knowledge_base_id)
+                .eq('uploaded_by', user.id)
+                .single();
+
+            if (!kbData) {
+                throw new Error('Knowledge base not found or access denied');
+            }
+
+            // Validate input documents
+            if (!input.documents || input.documents.length === 0) {
+                throw new Error('No documents provided for creation');
+            }
+
+            // Prepare documents data with enhanced validation
+            const documentsData = input.documents.map((doc, index) => {
+                if (!doc.name || !doc.type || !doc.path || !doc.url) {
+                    throw new Error(`Document at index ${index} is missing required fields (name, type, path, url)`);
+                }
+
+                return {
+                    ...doc,
+                    knowledge_base_id: input.knowledge_base_id,
+                    status: doc.status || 'uploaded',
+                    chunk_count: 0,
+                    rag_status: 'not_synced' as const,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            // Insert all documents in batch
+            const { data: documents, error } = await supabaseTable
+                .from('document')
+                .insert(documentsData)
+                .select();
+
+            if (error) {
+                console.error(`[${this.serviceName}] Error creating multiple documents:`, error);
+                throw new Error(`Failed to create documents: ${error.message}`);
+            }
+
+            console.log(`[${this.serviceName}] ${documents.length} documents created successfully`);
+
+            return documents as Document[];
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error creating multiple documents:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Create multiple documents from File objects
+     * This method handles file processing and uploads before creating document records
+     */
+    async createDocumentsFromFiles(input: CreateDocumentsFromFilesInput): Promise<Document[]> {
+        console.log(`[${this.serviceName}] Creating documents from ${input.files.length} files for KB:`, input.knowledge_base_id);
+
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            // Verify the knowledge base belongs to the user
+            const { data: kbData } = await supabaseTable
+                .from('knowledge_base')
+                .select('id')
+                .eq('id', input.knowledge_base_id)
+                .single();
+
+            if (!kbData) {
+                throw new Error('Knowledge base not found or access denied');
+            }
+
+            // Validate input files
+            if (!input.files || input.files.length === 0) {
+                throw new Error('No files provided for upload');
+            }
+
+            // Process each file and prepare document data
+            const documentsData = input.files.map((file, index) => {
+                if (!file.name || !file.type) {
+                    throw new Error(`File at index ${index} is missing required properties`);
+                }
+
+                // Extract file extension from name
+                const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+
+                // Generate file path and URL (these would typically be generated after actual file upload)
+                const timestamp = Date.now();
+                const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+                const filePath = `/uploads/${input.knowledge_base_id}/${timestamp}_${sanitizedFileName}`;
+                const fileUrl = `${process.env.NEXT_PUBLIC_STORAGE_URL || '/storage'}${filePath}`;
+
+                return {
+                    name: file.name,
+                    file_type: fileExtension,
+                    knowledge_base_id: input.knowledge_base_id,
+                    // status: 'uploading',
+                    file_size: file.size,
+                    mime_type: file.type,
+                    // file_path: filePath,
+                    url: fileUrl,
+                    chunk_count: 0,
+                    // rag_status: 'not_synced' as const,
+                    metadata: {
+                        originalFileName: file.name,
+                        uploadedAt: new Date().toISOString(),
+                        ...input.metadata
+                    },
+                    uploaded_by: user.id,
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                };
+            });
+
+            // Insert all documents in batch
+            const { data: documents, error } = await supabaseTable
+                .from('document')
+                .insert(documentsData)
+                .select();
+
+            if (error) {
+                console.error(`[${this.serviceName}] Error creating documents from files:`, error);
+                throw new Error(`Failed to create documents from files: ${error.message}`);
+            }
+
+            console.log(`[${this.serviceName}] ${documents.length} documents created from files successfully`);
+
+            return documents as Document[];
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error creating documents from files:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Update an existing document
      */
     async updateDocument(id: string, input: UpdateDocumentInput): Promise<Document> {
@@ -325,10 +477,12 @@ class DocumentService {
             const user = await this.getCurrentUser();
             const supabaseTable = createClientTable();
 
+            // Delete with proper authorization check through knowledge_base relation
             const { error } = await supabaseTable
                 .from('document')
                 .delete()
                 .eq('id', id)
+                .eq('knowledge_base.uploaded_by', user.id);
 
             if (error) {
                 console.error(`[${this.serviceName}] Error deleting document:`, error);

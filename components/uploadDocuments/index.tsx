@@ -1,4 +1,6 @@
 "use client";
+import { useDocuments } from "@/hooks";
+import { useParams } from "next/navigation";
 import React, { useState, useRef, JSX, useEffect } from "react";
 
 interface UploadDocumentProps {
@@ -12,7 +14,10 @@ export default function UploadDocument({
 }: UploadDocumentProps) {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [error, setError] = useState<string>("");
+  const [isUploading, setIsUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const params = useParams();
+  const id = params.id as string;
 
   const supportedTypes = [
     "application/pdf",
@@ -25,6 +30,10 @@ export default function UploadDocument({
   ];
   const maxFiles = 10;
   const maxSize = 10 * 1024 * 1024; // 10MB
+
+  const { createDocumentsFromFiles, loading } = useDocuments({
+    knowledgeBaseId: id,
+  });
 
   // svg icons for file types .pdf, .doc, .docx, .txt, .md, .xlsx, .xls
   const iconsFileType: Record<
@@ -154,7 +163,7 @@ export default function UploadDocument({
   };
 
   const handleFiles = (files: FileList | null) => {
-    if (!files) return;
+    if (!files || isUploading || loading) return;
     const arr = Array.from(files);
     if (arr.length + selectedFiles.length > maxFiles) {
       setError(`You can upload up to ${maxFiles} files.`);
@@ -214,9 +223,13 @@ export default function UploadDocument({
           <div className="p-6">
             <button
               className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-white"
+              disabled={isUploading || loading}
               onClick={() => {
-                onClose();
-                setSelectedFiles([]); // Clear selected files on close
+                if (!isUploading && !loading) {
+                  onClose();
+                  setSelectedFiles([]);
+                  setError("");
+                }
               }}
             >
               ✕
@@ -226,7 +239,24 @@ export default function UploadDocument({
 
         {/* Upload Document File area */}
         <div className="max-h-[70vh] overflow-y-auto p-6">
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && (
+            <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-400">
+              <div className="flex items-center gap-2">
+                <svg
+                  className="h-4 w-4 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <span>{error}</span>
+              </div>
+            </div>
+          )}
           {selectedFiles.length > 0 ? (
             <>
               <div className="mt-4 flex flex-col gap-2 text-left">
@@ -290,10 +320,18 @@ export default function UploadDocument({
                 {/* check max file and max file size */}
                 {selectedFiles.length < maxFiles && (
                   <div
-                    className="relative cursor-pointer rounded-2xl border-2 border-dashed border-gray-600 p-8 text-center transition-all duration-300 hover:border-gray-500"
-                    onDrop={onDrop}
-                    onDragOver={(e) => e.preventDefault()}
-                    onClick={onBrowse}
+                    className={`relative cursor-pointer rounded-2xl border-2 border-dashed border-gray-600 p-8 text-center transition-all duration-300 hover:border-gray-500 ${
+                      isUploading || loading
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }`}
+                    onDrop={isUploading || loading ? undefined : onDrop}
+                    onDragOver={
+                      isUploading || loading
+                        ? undefined
+                        : (e) => e.preventDefault()
+                    }
+                    onClick={isUploading || loading ? undefined : onBrowse}
                   >
                     <input
                       ref={inputRef}
@@ -302,9 +340,12 @@ export default function UploadDocument({
                       accept=".pdf,.doc,.docx,.txt,.md,.xlsx,.xls"
                       className="hidden"
                       onChange={onFileChange}
+                      disabled={isUploading || loading}
                     />
                     <span className="absolute inset-0 flex items-center justify-center font-medium text-blue-400 hover:text-blue-300">
-                      + Add more files
+                      {isUploading || loading
+                        ? "Uploading..."
+                        : "+ Add more files"}
                     </span>
                   </div>
                 )}
@@ -312,10 +353,14 @@ export default function UploadDocument({
             </>
           ) : (
             <div
-              className="relative cursor-pointer rounded-2xl border-2 border-dashed border-gray-600 p-8 text-center transition-all duration-300 hover:border-gray-500 hover:bg-blue-50 dark:hover:bg-gray-800"
-              onDrop={onDrop}
-              onDragOver={(e) => e.preventDefault()}
-              onClick={onBrowse}
+              className={`relative cursor-pointer rounded-2xl border-2 border-dashed border-gray-600 p-8 text-center transition-all duration-300 hover:border-gray-500 hover:bg-blue-50 dark:hover:bg-gray-800 ${
+                isUploading || loading ? "pointer-events-none opacity-50" : ""
+              }`}
+              onDrop={isUploading || loading ? undefined : onDrop}
+              onDragOver={
+                isUploading || loading ? undefined : (e) => e.preventDefault()
+              }
+              onClick={isUploading || loading ? undefined : onBrowse}
             >
               <input
                 ref={inputRef}
@@ -324,6 +369,7 @@ export default function UploadDocument({
                 accept=".pdf,.doc,.docx,.txt,.md,.xlsx,.xls"
                 className="hidden"
                 onChange={onFileChange}
+                disabled={isUploading || loading}
               />
               <div className="space-y-4">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500/20 to-indigo-500/20">
@@ -363,14 +409,45 @@ export default function UploadDocument({
               {selectedFiles.length} of {maxFiles} files selected
             </span>
             <button
-              className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none"
-              onClick={() => {
-                // Handle file upload logic here
-                console.log("Files ready to upload:", selectedFiles);
-                onClose();
+              className="rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              disabled={isUploading || loading}
+              onClick={async () => {
+                try {
+                  setIsUploading(true);
+                  setError("");
+
+                  await createDocumentsFromFiles({
+                    knowledge_base_id: id,
+                    files: selectedFiles,
+                    metadata: {
+                      uploadSource: "upload_modal",
+                      uploadedAt: new Date().toISOString(),
+                      totalFiles: selectedFiles.length,
+                    },
+                  });
+
+                  // Reset and close on success
+                  setSelectedFiles([]);
+                  onClose();
+                } catch (err) {
+                  setError(
+                    err instanceof Error
+                      ? err.message
+                      : "Failed to upload documents. Please try again.",
+                  );
+                } finally {
+                  setIsUploading(false);
+                }
               }}
             >
-              Upload
+              {isUploading || loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                  <span>Uploading...</span>
+                </div>
+              ) : (
+                `Upload ${selectedFiles.length} ${selectedFiles.length === 1 ? "file" : "files"}`
+              )}
             </button>
           </div>
         )}

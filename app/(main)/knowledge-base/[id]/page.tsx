@@ -39,7 +39,7 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
     : "Unknown",
-  type: doc.type.toUpperCase(),
+  type: doc.file_type,
   date: new Date(doc.created_at).toLocaleDateString(),
   status: doc.status,
   uploadedBy: "User", // This field doesn't exist in new interface
@@ -83,40 +83,69 @@ export default function KnowledgeBaseDetail() {
     startIndex,
     endIndex,
     searchTerm,
+    totalItems,
 
     // Handlers
     handlePageChange,
     setSearchTerm,
+    refresh,
   } = useDocuments({ knowledgeBaseId: id });
 
   // Transform documents to DocumentsTable-compatible format
   const adaptedDocuments = documents.map((doc) =>
     adaptDocumentToTableFormat(doc),
   );
-  const paginatedDocuments = adaptedDocuments;
 
-  // Selection logic
+  // Clear selection เมื่อ documents เปลี่ยน (เช่น search, filter)
+  useEffect(() => {
+    setSelectedDocuments([]);
+  }, [documents.length, currentPage, searchTerm]);
+
+  // Selection logic - แก้ไขให้ทำงานถูกต้องกับ pagination
+  // DocumentsTable ส่ง actualIndex มาให้เรา (startIndex + pageIndex)
+  const currentPageSelectedCount = selectedDocuments.filter(
+    (index) => index >= startIndex && index < startIndex + documents.length,
+  ).length;
+
   const isAllSelected =
-    selectedDocuments.length === adaptedDocuments.length &&
-    adaptedDocuments.length > 0;
+    currentPageSelectedCount === documents.length && documents.length > 0;
   const isIndeterminate =
-    selectedDocuments.length > 0 &&
-    selectedDocuments.length < adaptedDocuments.length;
+    currentPageSelectedCount > 0 && currentPageSelectedCount < documents.length;
 
-  // Handle document selection by index (for compatibility with old DocumentsTable)
-  const handleSelectDocument = (index: number) => {
+  // Handle document selection by pageIndex (DocumentsTable ส่ง pageIndex มา)
+  const handleSelectDocument = (pageIndex: number) => {
+    // แปลง pageIndex เป็น actualIndex เพื่อให้ตรงกับสิ่งที่ DocumentsTable คาดหวัง
+    const actualIndex = startIndex + pageIndex;
+    console.log(
+      "Toggling selection for pageIndex:",
+      pageIndex,
+      "actualIndex:",
+      actualIndex,
+    );
     setSelectedDocuments((prev) =>
-      prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index],
+      prev.includes(actualIndex)
+        ? prev.filter((i) => i !== actualIndex)
+        : [...prev, actualIndex],
     );
   };
 
-  // Handle select all documents
+  // Handle select all documents (แก้ไขให้ select เฉพาะในหน้าปัจจุบัน)
   const handleSelectAll = () => {
     if (isAllSelected) {
       setSelectedDocuments([]);
     } else {
-      setSelectedDocuments(adaptedDocuments.map((_, index) => index));
+      // สร้าง actualIndex array สำหรับหน้าปัจจุบัน
+      const currentPageIndices = documents.map(
+        (_, pageIndex) => startIndex + pageIndex,
+      );
+      setSelectedDocuments(currentPageIndices);
     }
+  };
+
+  // Clear selection เมื่อเปลี่ยนหน้า
+  const handlePageChangeWithClearSelection = (page: number) => {
+    setSelectedDocuments([]); // Clear selection เมื่อเปลี่ยนหน้า
+    handlePageChange(page);
   };
 
   // Handle clear selection
@@ -332,7 +361,8 @@ export default function KnowledgeBaseDetail() {
               {selectedDocuments.length > 0 && (
                 <>
                   <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                    {selectedDocuments.length} selected
+                    {currentPageSelectedCount} of {documents.length} selected
+                    (current page)
                   </span>
                   <button
                     onClick={handleClearSelection}
@@ -398,7 +428,7 @@ export default function KnowledgeBaseDetail() {
           {/* Documents Table */}
           <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
             <DocumentsTable
-              documents={paginatedDocuments}
+              documents={adaptedDocuments}
               selectedDocuments={selectedDocuments}
               selectedDocument={selectedDocumentIndex}
               startIndex={startIndex}
@@ -414,15 +444,15 @@ export default function KnowledgeBaseDetail() {
           </div>
 
           {/* Pagination */}
-          {adaptedDocuments.length > 0 && (
+          {documents.length > 0 && (
             <div>
               <DocumentsPagination
                 currentPage={currentPage}
                 totalPages={totalPages}
                 startIndex={startIndex}
                 endIndex={endIndex}
-                totalDocuments={adaptedDocuments.length}
-                onPageChange={handlePageChange}
+                totalDocuments={totalItems}
+                onPageChange={handlePageChangeWithClearSelection}
               />
             </div>
           )}
@@ -502,7 +532,11 @@ export default function KnowledgeBaseDetail() {
       {/* Modals */}
       <UploadDocument
         isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+          // Refresh documents list to show newly uploaded files
+          refresh();
+        }}
       />
 
       {openHistory && <ChatHistoryList onClose={() => setOpenHistory(false)} />}
