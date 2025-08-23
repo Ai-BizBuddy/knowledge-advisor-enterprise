@@ -13,48 +13,68 @@ export default function ChatCard({
   status,
   isUser = false,
 }: IChatCardProps) {
-  const containerClasses = `flex items-start gap-2.5 ${
-    isUser ? "justify-end flex-row-reverse" : ""
+  const containerClasses = `flex items-end gap-3 mb-4 chat-message ${
+    isUser
+      ? "justify-end chat-message-user"
+      : "justify-start chat-message-assistant"
   }`;
 
-  const messageClasses = `flex flex-col bg-gray-200 dark:bg-gray-700 p-3 rounded-xl w-full max-w-[320px] leading-1.5 ${
-    isUser ? "items-end text-right" : ""
+  const messageClasses = `flex flex-col max-w-xs lg:max-w-md xl:max-w-lg message-bubble ${
+    isUser
+      ? "bg-blue-600 text-white rounded-2xl rounded-br-md px-4 py-3"
+      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
   }`;
 
-  const headerClasses = `flex items-center space-x-2 rtl:space-x-reverse ${
-    isUser ? "flex-row-reverse space-x-reverse" : ""
-  }`;
+  const formatTime = (timestamp: string) => {
+    if (!timestamp) return "";
+    const date = new Date(timestamp);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  };
 
   return (
     <div className={containerClasses}>
-      {/* Only show avatar for non-user messages */}
+      {/* Avatar for assistant only */}
       {!isUser && (
-        <Image
-          className="h-8 w-8 rounded-full"
-          src={avatar || "/assets/logo-ka.svg"}
-          width={UI_CONSTANTS.AVATAR_SIZE}
-          height={UI_CONSTANTS.AVATAR_SIZE}
-          alt={`${name} avatar`}
-        />
+        <div className="flex-shrink-0">
+          <Image
+            className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-700"
+            src={avatar || "/assets/logo-ka.svg"}
+            width={UI_CONSTANTS.AVATAR_SIZE}
+            height={UI_CONSTANTS.AVATAR_SIZE}
+            alt={`${name} avatar`}
+          />
+        </div>
       )}
 
-      <div className={messageClasses}>
-        <div className={headerClasses}>
-          <span className="text-sm font-semibold text-gray-900 dark:text-white">
-            {name}
-          </span>
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-            {time}
-          </span>
+      <div className="flex flex-col space-y-1">
+        {/* Message bubble */}
+        <div className={messageClasses}>
+          <p className="text-sm leading-relaxed break-words whitespace-pre-wrap">
+            {message}
+          </p>
         </div>
-        <p className="py-2 text-sm font-normal text-gray-900 dark:text-white">
-          {message}
-        </p>
-        {status && (
-          <span className="text-sm font-normal text-gray-500 dark:text-gray-400">
-            {status}
-          </span>
-        )}
+
+        {/* Time and status */}
+        <div
+          className={`flex items-center gap-2 px-2 ${
+            isUser ? "justify-end" : "justify-start"
+          }`}
+        >
+          {time && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {formatTime(time)}
+            </span>
+          )}
+          {status && (
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              {status}
+            </span>
+          )}
+        </div>
       </div>
     </div>
   );

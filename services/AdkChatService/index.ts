@@ -105,7 +105,7 @@ class AdkChatService {
 
   constructor(config: AdkChatServiceConfig = {}) {
     this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_ADK_BASE_URL || 'https://matters-fed-layout-mice.trycloudflare.com';
-    
+
     this.client = new BaseFetchClient({
       baseURL: this.baseUrl,
       timeout: config.timeout || 120000, // 2 minutes
@@ -151,7 +151,7 @@ class AdkChatService {
     ];
 
     const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-    
+
     return {
       success: true,
       content: randomResponse,
@@ -166,13 +166,13 @@ class AdkChatService {
   private async getAuthHeaders(): Promise<Record<string, string>> {
     try {
       const accessToken = await getAccessToken();
-      
+
       if (accessToken) {
         return {
           'Authorization': `Bearer ${accessToken}`
         };
       }
-      
+
       console.warn(`[${this.serviceName}] No access token available for request`);
       return {};
     } catch (error) {
@@ -192,7 +192,7 @@ class AdkChatService {
   ): Promise<AdkChatResult> {
     console.log(`[${this.serviceName}] Sending message with streaming:`, { input });
     const startTime = Date.now();
-    
+
     // Return mock data for development/testing
     if (this.useMockData) {
       return this.simulateStreaming(input.question, onStreamData, onComplete).then(() => {
@@ -204,7 +204,7 @@ class AdkChatService {
         };
       });
     }
-    
+
     try {
       // Use sessionId from input if available, otherwise null for first call
       const sessionId = input.sessionId || null;
@@ -221,8 +221,8 @@ class AdkChatService {
       const authHeaders = await this.getAuthHeaders();
 
       // Use EventSource for SSE streaming
-      const url = `${this.baseUrl}/api/chat`;
-      
+      const url = `${this.baseUrl}api/chat`;
+
       return new Promise<AdkChatResult>((resolve) => {
         let fullContent = '';
         let hasError = false;
@@ -241,148 +241,148 @@ class AdkChatService {
           },
           body: JSON.stringify(request)
         })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
+          .then(response => {
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
 
-          const reader = response.body?.getReader();
-          if (!reader) {
-            throw new Error('No response body reader available');
-          }
+            const reader = response.body?.getReader();
+            if (!reader) {
+              throw new Error('No response body reader available');
+            }
 
-          const decoder = new TextDecoder();
+            const decoder = new TextDecoder();
 
-          const readStream = (): Promise<void> => {
-            return reader.read().then(({ done, value }) => {
-              if (done) {
-                // Stream is complete - only trigger completion if we haven't already completed
-                // and if we didn't receive a final non-partial chunk
-                if (!hasError && !hasCompleted) {
-                  hasCompleted = true;
-                  console.log(`[${this.serviceName}] Stream done (EOF), completing with final content length: ${fullContent.length}`);
-                  onComplete(fullContent);
-                  resolve({
-                    success: true,
-                    content: fullContent,
-                    sessionId: responseSessionId || sessionId || undefined,
-                    responseTime: Date.now() - startTime
-                  });
+            const readStream = (): Promise<void> => {
+              return reader.read().then(({ done, value }) => {
+                if (done) {
+                  // Stream is complete - only trigger completion if we haven't already completed
+                  // and if we didn't receive a final non-partial chunk
+                  if (!hasError && !hasCompleted) {
+                    hasCompleted = true;
+                    console.log(`[${this.serviceName}] Stream done (EOF), completing with final content length: ${fullContent.length}`);
+                    onComplete(fullContent);
+                    resolve({
+                      success: true,
+                      content: fullContent,
+                      sessionId: responseSessionId || sessionId || undefined,
+                      responseTime: Date.now() - startTime
+                    });
+                  }
+                  return;
                 }
-                return;
-              }
 
-              const chunk = decoder.decode(value, { stream: true });
-              const lines = chunk.split('\n');
+                const chunk = decoder.decode(value, { stream: true });
+                const lines = chunk.split('\n');
 
-              for (const line of lines) {
-                if (line.startsWith('data: ')) {
-                  try {
-                    const data = line.slice(6).trim();
-                    
-                    // Skip empty data
-                    if (!data) continue;
-                    
-                    // Handle [DONE] signal
-                    if (data === '[DONE]') {
-                      console.log(`[${this.serviceName}] Received [DONE] signal`);
-                      if (!hasCompleted) {
-                        hasCompleted = true;
-                        onComplete(fullContent);
-                        resolve({
-                          success: true,
-                          content: fullContent,
-                          sessionId: responseSessionId || sessionId || undefined,
-                          responseTime: Date.now() - startTime
-                        });
-                      }
-                      return;
-                    }
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    try {
+                      const data = line.slice(6).trim();
 
-                    const parsed: AdkStreamingResponse = JSON.parse(data);
-                    
-                    // Capture sessionId from response (for first call when sessionId was null)
-                    if (parsed.session && !responseSessionId) {
-                      responseSessionId = parsed.session;
-                    }
-                    
-                    // Process streaming content - each message has a unique ID and text chunk
-                    if (parsed.data?.content?.parts?.[0]?.text && parsed.data?.id) {
-                      const newText = parsed.data.content.parts[0].text;
-                      const messageId = parsed.data.id;
-                      const isPartial = parsed.data.partial;
-                      
-                      // Debug logging for tracking
-                      console.log(`[${this.serviceName}] Processing streaming chunk:`, {
-                        messageId,
-                        newText,
-                        partial: isPartial,
-                        currentLength: fullContent.length
-                      });
-                      
-                      // Skip if we already processed this message ID to prevent duplicates
-                      if (messageId === lastProcessedId) {
-                        console.log(`[${this.serviceName}] Skipping duplicate message ID: ${messageId}`);
-                        continue;
-                      }
-                      
-                      // Update last processed ID
-                      lastProcessedId = messageId;
-                      
-                      // If this is the final chunk (partial=false), mark as complete
-                      if (!isPartial && !hasCompleted) {
-                        hasCompleted = true;
-                        console.log(`[${this.serviceName}] Final chunk received, completing with total content length: ${newText.length}`);
-                        onComplete(newText);
-                        resolve({
-                          success: true,
-                          content: newText,
-                          sessionId: responseSessionId || sessionId || undefined,
-                          responseTime: Date.now() - startTime
-                        });
+                      // Skip empty data
+                      if (!data) continue;
+
+                      // Handle [DONE] signal
+                      if (data === '[DONE]') {
+                        console.log(`[${this.serviceName}] Received [DONE] signal`);
+                        if (!hasCompleted) {
+                          hasCompleted = true;
+                          onComplete(fullContent);
+                          resolve({
+                            success: true,
+                            content: fullContent,
+                            sessionId: responseSessionId || sessionId || undefined,
+                            responseTime: Date.now() - startTime
+                          });
+                        }
                         return;
                       }
 
-                      // Append new text chunk to full content (accumulate all chunks)
-                      if (newText) {
-                        fullContent += newText;
-                        console.log(`[${this.serviceName}] Added chunk: "${newText}", Total length: ${fullContent.length}`);
-                        
-                        // Update UI with current accumulated content after each chunk
-                        onStreamData(fullContent);
+                      const parsed: AdkStreamingResponse = JSON.parse(data);
+
+                      // Capture sessionId from response (for first call when sessionId was null)
+                      if (parsed.session && !responseSessionId) {
+                        responseSessionId = parsed.session;
                       }
+
+                      // Process streaming content - each message has a unique ID and text chunk
+                      if (parsed.data?.content?.parts?.[0]?.text && parsed.data?.id) {
+                        const newText = parsed.data.content.parts[0].text;
+                        const messageId = parsed.data.id;
+                        const isPartial = parsed.data.partial;
+
+                        // Debug logging for tracking
+                        console.log(`[${this.serviceName}] Processing streaming chunk:`, {
+                          messageId,
+                          newText,
+                          partial: isPartial,
+                          currentLength: fullContent.length
+                        });
+
+                        // Skip if we already processed this message ID to prevent duplicates
+                        if (messageId === lastProcessedId) {
+                          console.log(`[${this.serviceName}] Skipping duplicate message ID: ${messageId}`);
+                          continue;
+                        }
+
+                        // Update last processed ID
+                        lastProcessedId = messageId;
+
+                        // If this is the final chunk (partial=false), mark as complete
+                        if (!isPartial && !hasCompleted) {
+                          hasCompleted = true;
+                          console.log(`[${this.serviceName}] Final chunk received, completing with total content length: ${newText.length}`);
+                          onComplete(newText);
+                          resolve({
+                            success: true,
+                            content: newText,
+                            sessionId: responseSessionId || sessionId || undefined,
+                            responseTime: Date.now() - startTime
+                          });
+                          return;
+                        }
+
+                        // Append new text chunk to full content (accumulate all chunks)
+                        if (newText) {
+                          fullContent += newText;
+                          console.log(`[${this.serviceName}] Added chunk: "${newText}", Total length: ${fullContent.length}`);
+
+                          // Update UI with current accumulated content after each chunk
+                          onStreamData(fullContent);
+                        }
+                      }
+
+                    } catch (parseError) {
+                      console.warn(`[${this.serviceName}] Failed to parse SSE data:`, parseError, 'Raw line:', line.slice(6).trim());
                     }
-                    
-                  } catch (parseError) {
-                    console.warn(`[${this.serviceName}] Failed to parse SSE data:`, parseError, 'Raw line:', line.slice(6).trim());
                   }
                 }
-              }
 
-              return readStream();
+                return readStream();
+              });
+            }
+
+            return readStream();
+          })
+          .catch(error => {
+            console.error(`[${this.serviceName}] Streaming error:`, error);
+            hasError = true;
+            onError(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            resolve({
+              success: false,
+              content: '',
+              error: error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
+              responseTime: Date.now() - startTime
             });
-          }
-
-          return readStream();
-        })
-        .catch(error => {
-          console.error(`[${this.serviceName}] Streaming error:`, error);
-          hasError = true;
-          onError(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
-          resolve({
-            success: false,
-            content: '',
-            error: error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
-            responseTime: Date.now() - startTime
           });
-        });
       });
 
     } catch (error) {
       console.error(`[${this.serviceName}] Error in sendMessageWithStreaming:`, error);
       const errorMessage = error instanceof Error ? error.message : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
       onError(errorMessage);
-      
+
       return {
         success: false,
         content: '',
@@ -450,7 +450,7 @@ class AdkChatService {
       const authHeaders = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/health`, {
         method: 'GET',
-        headers: { 
+        headers: {
           'Accept': 'application/json',
           ...authHeaders
         }

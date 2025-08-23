@@ -9,12 +9,14 @@ import {
   ChatHistoryList,
 } from "@/components";
 import { Breadcrumb, BreadcrumbItem, Button } from "flowbite-react";
-import { useState, useEffect } from "react";
-import { useDocuments, useKnowledgeBase } from "@/hooks";
+import { useState, useEffect, useRef, use } from "react";
+import { useAdkChat, useDocuments, useKnowledgeBase } from "@/hooks";
 import { useRouter, useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
 import { formatStatus } from "@/data/knowledgeBaseData";
 import { Project, Document } from "@/interfaces/Project";
+import Image from "next/image";
+import { ChatSession } from "@/hooks/useChatHistory";
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -75,6 +77,19 @@ export default function KnowledgeBaseDetail() {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [toasts, setToasts] = useState<
+    Array<{ id: string; message: string; type: "success" | "error" | "info" }>
+  >([]);
+
+  // Chat scroll ref
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of chat
+  const scrollToBottom = () => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  };
 
   // Use the new useDocuments hook
   const {
@@ -93,6 +108,16 @@ export default function KnowledgeBaseDetail() {
     refresh,
   } = useDocuments({ knowledgeBaseId: id });
 
+  const {
+    messages,
+    isTyping,
+    connectionStatus,
+    addWelcomeMessage,
+    sendMessage,
+    createNewChat,
+    setMessages,
+  } = useAdkChat();
+
   // Transform documents to DocumentsTable-compatible format
   const adaptedDocuments = documents.map((doc) =>
     adaptDocumentToTableFormat(doc),
@@ -102,6 +127,41 @@ export default function KnowledgeBaseDetail() {
   useEffect(() => {
     setSelectedDocuments([]);
   }, [documents.length, currentPage, searchTerm]);
+
+  useEffect(() => {
+    if (id && messages.length === 0) {
+      addWelcomeMessage();
+    }
+  }, [id, messages.length, addWelcomeMessage]);
+
+  useEffect(() => {
+    if (connectionStatus === "timeout") {
+      const toastId = Date.now().toString();
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: toastId,
+          message: "การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ",
+          type: "error",
+        },
+      ]);
+    } else if (connectionStatus === "error") {
+      const toastId = Date.now().toString();
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: toastId,
+          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่",
+          type: "error",
+        },
+      ]);
+    }
+  }, [connectionStatus]);
+
+  // Auto-scroll to bottom when messages or typing status changes
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isTyping]);
 
   // Selection logic - แก้ไขให้ทำงานถูกต้องกับ pagination
   // DocumentsTable ส่ง actualIndex มาให้เรา (startIndex + pageIndex)
@@ -198,6 +258,53 @@ export default function KnowledgeBaseDetail() {
     };
     fetchData();
   }, [id, getKnowledgeBase]);
+
+  const handleSendMessage = async () => {
+    try {
+      if (!message.trim()) return;
+
+      const kbSelection = id
+        ? [
+            {
+              id: id,
+              name: knowledgeBase?.name || "Unknown",
+              selected: true,
+              documentCount: 0, // This will be updated by the real-time table
+            },
+          ]
+        : [];
+
+      await sendMessage(message, kbSelection, true);
+      setMessage("");
+
+      // Small delay to ensure message is added to state, then scroll
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    } catch (err) {
+      console.error("[KnowledgeBaseDetail] Chat error:", err);
+      // Show error toast
+      const toastId = Date.now().toString();
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: toastId,
+          message: "ไม่สามารถส่งข้อความได้ กรุณาลองใหม่",
+          type: "error",
+        },
+      ]);
+
+      // Auto remove toast after 5 seconds
+      setTimeout(() => {
+        setToasts((prev) => prev.filter((t) => t.id !== toastId));
+      }, 5000);
+    }
+  };
+
+  const handleLoadChatSession = (session: ChatSession) => {
+    setMessages(session.messages);
+    setOpenHistory(false);
+  };
 
   if (!knowledgeBase) {
     return (
@@ -302,7 +409,9 @@ export default function KnowledgeBaseDetail() {
             <Button
               type="button"
               color="light"
-              onClick={() => alert("Start new chat!")}
+              onClick={() => {
+                createNewChat();
+              }}
               className="flex items-center justify-center gap-2"
             >
               <svg
@@ -466,66 +575,148 @@ export default function KnowledgeBaseDetail() {
           {/* Chat Actions Bar */}
 
           {/* Chat Interface */}
-          <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex h-[70vh] flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900">
             {/* Chat Messages Area */}
-            <div className="h-[40vh] space-y-4 overflow-y-auto p-3 sm:h-[50vh] sm:p-4 lg:h-[60vh] lg:p-6">
-              <div>
-                <ChatCard
-                  avatar="/assets/logo-ka.svg"
-                  name="Bonnie Green"
-                  time="11:46"
-                  message="That's awesome. I think our users will really appreciate the improvements."
-                  status=""
-                />
-              </div>
-              <div className="flex justify-end">
-                <ChatCard
-                  avatar="https://kolhapur-police.s3.amazonaws.com/a8f0c667-0c14-4894-a36d-5441b4c6e677.jpg"
-                  name="Chris Brown"
-                  time="11:59"
-                  isUser
-                  message="Umm, I'm sorry to hear that. Can you provide any more details about the issue?"
-                  status=""
-                />
-              </div>
-              <div>
-                <BotTypingBubble />
-              </div>
+            <div
+              ref={chatMessagesRef}
+              className="chat-scroll-container flex-1 space-y-2 overflow-y-auto p-4"
+            >
+              {messages.length === 0 && (
+                <div className="flex h-full flex-col items-center justify-center py-12 text-center">
+                  <div className="mb-4">
+                    <Image
+                      src="/assets/logo-ka.svg"
+                      width={64}
+                      height={64}
+                      alt="Knowledge Assistant"
+                      className="mx-auto opacity-50"
+                    />
+                  </div>
+                  <h3 className="mb-2 text-lg font-medium text-gray-900 dark:text-white">
+                    เริ่มต้นการสนทนากับ Knowledge Assistant
+                  </h3>
+                  <p className="max-w-md text-sm text-gray-500 dark:text-gray-400">
+                    ถามคำถามเกี่ยวกับเอกสารใน Knowledge Base นี้
+                    ฉันจะช่วยหาข้อมูลและตอบคำถามของคุณ
+                  </p>
+                </div>
+              )}
+
+              {messages.map((message, index) => {
+                if (message.type === "user") {
+                  return (
+                    <ChatCard
+                      key={index}
+                      avatar=""
+                      name="User"
+                      time=""
+                      isUser
+                      message={message.content}
+                      status=""
+                    />
+                  );
+                }
+                if (message.type === "assistant") {
+                  return (
+                    <ChatCard
+                      key={index}
+                      avatar="/assets/logo-ka.svg"
+                      name="Knowledge Assistant"
+                      time=""
+                      message={message.content}
+                      status=""
+                    />
+                  );
+                }
+              })}
+
+              {isTyping && <BotTypingBubble />}
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 p-3 sm:p-4 lg:p-6 dark:border-gray-600">
+            <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
               <form
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (!message.trim()) return;
-                  alert(`ส่งข้อความ: ${message}`);
-                  setMessage("");
+                  await handleSendMessage();
                 }}
-                className="flex items-center gap-2 sm:gap-3"
+                className="flex items-end gap-3"
               >
-                <input
-                  type="text"
-                  placeholder="Type your message..."
-                  className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 transition-colors duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none sm:px-4 sm:py-2.5 sm:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                />
+                <div className="flex-1">
+                  <textarea
+                    ref={(textarea) => {
+                      if (textarea) {
+                        textarea.style.height = "auto";
+                        textarea.style.height =
+                          Math.min(textarea.scrollHeight, 120) + "px";
+                      }
+                    }}
+                    placeholder="พิมพ์ข้อความของคุณที่นี่..."
+                    className="auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                    value={message}
+                    onChange={(e) => {
+                      setMessage(e.target.value);
+                      // Auto-resize textarea
+                      e.target.style.height = "auto";
+                      e.target.style.height =
+                        Math.min(e.target.scrollHeight, 120) + "px";
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        if (message.trim()) {
+                          handleSendMessage();
+                        }
+                      }
+                    }}
+                    rows={1}
+                    style={{
+                      minHeight: "44px",
+                      maxHeight: "120px",
+                    }}
+                  />
+                </div>
                 <button
                   type="submit"
-                  className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:h-11 sm:w-11"
-                  disabled={!message.trim()}
-                  aria-label="Send message"
+                  className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+                  disabled={!message.trim() || isTyping}
+                  aria-label="ส่งข้อความ"
                 >
-                  <svg
-                    className="h-4 w-4 sm:h-5 sm:w-5"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                  </svg>
+                  {isTyping ? (
+                    <svg
+                      className="h-5 w-5 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                  ) : (
+                    <svg
+                      className="h-5 w-5"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                  )}
                 </button>
               </form>
+              <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                กด Enter เพื่อส่งข้อความ, Shift + Enter เพื่อขึ้นบรรทัดใหม่
+              </p>
             </div>
           </div>
         </div>
@@ -541,7 +732,11 @@ export default function KnowledgeBaseDetail() {
         }}
       />
 
-      {openHistory && <ChatHistoryList onClose={() => setOpenHistory(false)} />}
+      <ChatHistoryList
+        isOpen={openHistory}
+        onClose={() => setOpenHistory(false)}
+        onLoadSession={handleLoadChatSession}
+      />
     </div>
   );
 }

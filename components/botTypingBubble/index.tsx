@@ -1,31 +1,47 @@
-import { UI_CONSTANTS } from '@/constants';
+import { UI_CONSTANTS } from "@/constants";
+import Image from "next/image";
 
 /**
  * BotTypingBubble component shows a typing indicator for the chat bot
  */
 export default function BotTypingBubble() {
-    return (
-        <div className="flex items-start gap-2.5">
-            {/* Bot Avatar */}
-            <div className="w-8 h-8 rounded-full bg-gray-300 dark:bg-gray-700" />
+  return (
+    <div className="chat-message-assistant mb-4 flex items-end gap-3">
+      {/* Bot Avatar */}
+      <div className="flex-shrink-0">
+        <Image
+          className="h-8 w-8 rounded-full ring-2 ring-white dark:ring-gray-700"
+          src="/assets/logo-ka.svg"
+          width={UI_CONSTANTS.AVATAR_SIZE}
+          height={UI_CONSTANTS.AVATAR_SIZE}
+          alt="Bot avatar"
+        />
+      </div>
 
-            {/* Typing bubble */}
-            <div className="px-4 py-2.5 rounded-2xl bg-gray-200 dark:bg-gray-700 text-sm text-gray-700 dark:text-gray-200 max-w-[320px] rounded-bl-none">
-                <div className="flex space-x-1" role="status" aria-label="Bot is typing">
-                    <span
-                        className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_1}ms` }}
-                    />
-                    <span
-                        className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_2}ms` }}
-                    />
-                    <span
-                        className="w-2 h-2 bg-gray-500 dark:bg-gray-400 rounded-full animate-bounce"
-                        style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_3}ms` }}
-                    />
-                </div>
-            </div>
+      {/* Typing bubble */}
+      <div className="typing-indicator rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+        <div
+          className="flex items-center space-x-1"
+          role="status"
+          aria-label="Bot is typing"
+        >
+          <span className="mr-2 text-sm text-gray-500 dark:text-gray-400">
+            กำลังพิมพ์
+          </span>
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_1}ms` }}
+          />
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_2}ms` }}
+          />
+          <span
+            className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_3}ms` }}
+          />
         </div>
-    );
+      </div>
+    </div>
+  );
 }

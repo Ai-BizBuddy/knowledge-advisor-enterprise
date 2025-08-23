@@ -1,6 +1,8 @@
 "use client";
 
+import { ChatSession, useChatHistory } from "@/hooks/useChatHistory";
 import ChatHistoryCard from "../chatHistoryCard";
+import { useCallback, useEffect, useState } from "react";
 
 const histories = [
   {
@@ -27,12 +29,31 @@ const histories = [
 ];
 
 interface Props {
+  isOpen: boolean;
   onClose: () => void;
+  onLoadSession: (session: ChatSession) => void;
 }
 
-export default function ChatHistoryList({ onClose }: Props) {
-  return (
-    // <div className="w-full absolute  mx-auto space-y-4 text-white">
+export default function ChatHistoryList({
+  isOpen,
+  onClose,
+  onLoadSession,
+}: Props) {
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const { getChatSessions, deleteChatSession, exportChatSession } =
+    useChatHistory();
+  const loadSessions = useCallback(() => {
+    const chatSessions = getChatSessions();
+    setSessions(chatSessions);
+  }, [getChatSessions]);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadSessions();
+    }
+  }, [isOpen, loadSessions]);
+
+  return isOpen ? (
     <div
       className="fixed inset-0 z-50 overscroll-contain bg-black/50 backdrop-blur-sm"
       onClick={onClose}
@@ -62,18 +83,36 @@ export default function ChatHistoryList({ onClose }: Props) {
             </svg>
           </span>
         </div>
-        {histories.map((h, i) => (
+        {sessions.map((h, i) => (
           <ChatHistoryCard
             key={i}
             title={h.title}
-            dateTime={h.dateTime}
-            messageCount={h.messageCount}
-            size={h.size}
-            tags={h.tags}
+            dateTime={new Date(h.updatedAt).toLocaleDateString("th-TH", {
+              year: "numeric",
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+            messageCount={h.messages.length}
+            size={""}
+            tags={h.knowledgeBases}
+            onDelete={() => {
+              deleteChatSession(h.id);
+              loadSessions();
+            }}
+            onExport={() => {
+              exportChatSession(h);
+            }}
           />
-        ))}
+        ))}{" "}
+        {sessions.length === 0 && (
+          <div className="mt-10 text-center text-gray-500 dark:text-gray-400">
+            ไม่มีประวัติการสนทนา
+          </div>
+        )}
         {/*  */}
       </div>
     </div>
-  );
+  ) : null;
 }
