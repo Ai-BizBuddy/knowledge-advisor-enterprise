@@ -7,7 +7,7 @@ import {
 import KnowledgeBasePagination from "@/components/knowledgeBasePagination";
 import KnowledgeBaseSearch from "@/components/knowledgeBaseSearch";
 import { useLoading } from "@/contexts/LoadingContext";
-import { useKnowledgeBaseManagement } from "@/hooks/useKnowledgeBaseManagement";
+import { useKnowledgeBase } from "@/hooks/useKnowledgeBase";
 import { useEffect, useState } from "react";
 
 export default function KnowledgeBase() {
@@ -16,38 +16,38 @@ export default function KnowledgeBase() {
 
   const {
     // State
+    projects,
+    loading,
     searchTerm,
     selectedTab,
+    tabCounts,
+
+    // Pagination
     currentPage,
     totalPages,
     startIndex,
     endIndex,
     totalItems,
 
-    // Data
-    paginatedKnowledgeBases,
-    tabCounts,
+    loadKnowledgeBases,
 
     // Handlers
-    setSearchTerm,
     handleTabChange,
     handlePageChange,
     handleKnowledgeBaseClick,
     handleKnowledgeBaseDelete,
-  } = useKnowledgeBaseManagement();
+    searchKnowledgeBases,
+    createKnowledgeBase,
+  } = useKnowledgeBase();
 
   const tabList = [
     { label: "All", count: tabCounts.all },
     { label: "Active", count: tabCounts.active },
-    { label: "Paused", count: tabCounts.paused },
-    { label: "Draft", count: tabCounts.draft },
+    { label: "Inactive", count: tabCounts.inactive },
   ];
 
-  useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
-
   const handleTabSelect = (tab: string) => {
+    console.log("Selected tab:", tab);
     handleTabChange(tab);
   };
 
@@ -59,6 +59,18 @@ export default function KnowledgeBase() {
       day: "numeric",
     });
   };
+
+  const handleKnowledgeBaseSearch = async (query: string) => {
+    await searchKnowledgeBases(query);
+  };
+
+  useEffect(() => {
+    setLoading(loading);
+  }, [loading, setLoading]);
+
+  useEffect(() => {
+    loadKnowledgeBases(1);
+  }, []);
 
   return (
     <div className="min-h-screen">
@@ -107,7 +119,7 @@ export default function KnowledgeBase() {
             <div className="flex-1 sm:max-w-md">
               <KnowledgeBaseSearch
                 searchTerm={searchTerm}
-                onSearchChange={setSearchTerm}
+                onSearchChange={handleKnowledgeBaseSearch}
                 placeholder="Search knowledge bases by name, description, or category..."
               />
             </div>
@@ -115,7 +127,8 @@ export default function KnowledgeBase() {
             {/* Results Count */}
             <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
               <span>
-                {totalItems} knowledge base{totalItems !== 1 ? "s" : ""} found
+                {totalItems} knowledge base
+                {totalItems !== 1 ? "s" : ""} found
               </span>
             </div>
           </div>
@@ -135,18 +148,22 @@ export default function KnowledgeBase() {
         </div>
 
         {/* Content Area */}
-        {paginatedKnowledgeBases.length > 0 ? (
+        {projects.length > 0 ? (
           <div className="space-y-6">
             {/* Knowledge Base Cards Grid */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {paginatedKnowledgeBases.map((kb) => (
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+              {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
+                  isActive={kb.is_active}
                   title={kb.name}
                   detail={kb.description}
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
                   onDelete={() => handleKnowledgeBaseDelete(kb.id)}
-                  onDetail={() => handleKnowledgeBaseClick(kb.id)}
+                  onDetail={() => {
+                    handleKnowledgeBaseClick(kb.id);
+                    setLoading(true);
+                  }}
                 />
               ))}
             </div>
@@ -213,7 +230,10 @@ export default function KnowledgeBase() {
         <CreateKnowledgeBaseModal
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
-          onSubmit={(data) => console.log("Created:", data)}
+          onSubmit={async (data) => {
+            await createKnowledgeBase(data);
+            setOpenModal(false);
+          }}
         />
       </div>
     </div>

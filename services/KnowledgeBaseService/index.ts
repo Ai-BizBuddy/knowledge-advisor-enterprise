@@ -1,39 +1,24 @@
-/**
- * Knowledge Base Service - Supabase Implementation
- * 
- * This service handles all CRUD operations for knowledge bases using Supabase
- * with fetch API instead of Axios. Follows the project's strict TypeScript standards.
- */
-
 import { createClientTable } from "@/utils/supabase/client";
 import { getAuthSession } from "@/utils/supabase/authUtils";
-import type { 
-  Project, 
-  CreateProjectInput, 
-  UpdateProjectInput
+import type {
+  Project,
+  CreateProjectInput,
+  UpdateProjectInput,
+  PaginationOptions,
 } from "@/interfaces/Project";
 import { ProjectStatus } from "@/interfaces/Project";
-import type { SupabaseProjectRow } from "@/interfaces/AxiosTypes";
-
-/**
- * Knowledge Base Service Configuration
- */
-interface KnowledgeBaseServiceConfig {
-  useMockData?: boolean;
-}
 
 /**
  * Knowledge Base Service Class
- * 
+ *
  * Handles all knowledge base operations including CRUD, document management,
  * and processing status tracking.
  */
 class KnowledgeBaseService {
-  private readonly serviceName = 'KnowledgeBase';
-  private readonly useMockData: boolean;
+  private readonly serviceName = "KnowledgeBase";
 
-  constructor(config: KnowledgeBaseServiceConfig = {}) {
-    this.useMockData = config.useMockData || false;
+  constructor() {
+    // Service initialization
   }
   /**
    * Get current user from Supabase auth
@@ -41,11 +26,12 @@ class KnowledgeBaseService {
   private async getCurrentUser() {
     try {
       const session = await getAuthSession();
-      
+
       if (!session?.user) {
-        throw new Error('User not authenticated');
+        throw new Error("User not authenticated");
       }
-      
+
+      console.log(`[${this.serviceName}] Current user ID:`, session.user.id);
       return session.user;
     } catch (error) {
       console.error(`[${this.serviceName}] Error getting current user:`, error);
@@ -53,85 +39,129 @@ class KnowledgeBaseService {
     }
   }
 
-  /**
-   * Get mock projects for development
-   */
-  private getMockProjects(): Project[] {
-    return [
-      {
-        id: "1",
-        name: "Enterprise Documentation",
-        description: "Company-wide knowledge base for all enterprise documentation",
-        document_count: 156,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-01-15T10:30:00Z",
-        updated_at: "2024-03-15T14:20:00Z",
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98
-      },
-      {
-        id: "2", 
-        name: "Customer Support Hub",
-        description: "Knowledge base for customer support team with FAQ and procedures",
-        document_count: 89,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-02-01T09:15:00Z",
-        updated_at: "2024-03-14T16:45:00Z",
-        lastSync: "5 hours ago",
-        queries: 867,
-        accuracy: 95
-      },
-      {
-        id: "3",
-        name: "Product Documentation",
-        description: "Technical documentation for all product features and APIs",
-        document_count: 234,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-01-20T11:00:00Z",
-        updated_at: "2024-03-16T08:30:00Z",
-        lastSync: "1 hour ago",
-        queries: 2156,
-        accuracy: 97
-      },
-      {
-        id: "4",
-        name: "Training Materials",
-        description: "Employee training and onboarding documentation",
-        document_count: 67,
-        status: ProjectStatus.PAUSED,
-        owner: "mock-user-id",
-        created_at: "2024-02-10T14:45:00Z",
-        updated_at: "2024-03-10T12:00:00Z",
-        lastSync: "3 days ago",
-        queries: 445,
-        accuracy: 94
-      }
-    ];
-  }
-
-  /**
-   * Fetch all knowledge bases for the current user
-   */
-  async getProjects(): Promise<Project[]> {
-    
-    if (this.useMockData) {
-      return this.getMockProjects();
-    }
+  async searchProject(
+    query: string,
+    paginationOptions: PaginationOptions,
+  ): Promise<{ data: Project[]; count: number }> {
+    console.log(
+      `[${this.serviceName}] Searching knowledge bases with query:`,
+      query,
+    );
 
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-      
-      
+
+      // Get total count for search results
+      const { count, error: countError } = await supabaseTable
+        .from("knowledge_base")
+        .select("*", { count: "exact", head: true })
+        .eq("created_by", user.id)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
+
+      if (countError) {
+        console.error(
+          `[${this.serviceName}] Error getting search count:`,
+          countError,
+        );
+      }
+
+      // Get paginated search results
       const { data: projects, error } = await supabaseTable
-        .from('knowledge_base')
-        .select('*')
-        .eq('owner', user.id)
-        .order('created_at', { ascending: false });
+        .from("knowledge_base")
+        .select("*")
+        .eq("created_by", user.id)
+        .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
+        .order("created_at", { ascending: false })
+        .range(paginationOptions.startIndex, paginationOptions.endIndex);
+
+      if (error) {
+        console.error(`[${this.serviceName}] Supabase query error:`, error);
+        throw new Error(`Failed to search knowledge bases: ${error.message}`);
+      }
+
+      if (!projects || projects.length === 0) {
+        console.log(
+          `[${this.serviceName}] No knowledge bases found for query:`,
+          query,
+        );
+        return { data: [], count: 0 };
+      }
+
+      console.log(
+        `[${this.serviceName}] Found ${projects.length} knowledge bases for query: ${query} (Total: ${count})`,
+      );
+
+      // Transform Supabase rows to Project objects
+      return { data: projects, count: count || 0 };
+    } catch (error) {
+      console.error(
+        `[${this.serviceName}] Error searching knowledge bases:`,
+        error,
+      );
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch all knowledge bases for the current user with proper pagination
+   */
+  async getProjects(
+    paginationOptions: PaginationOptions,
+    filters?: { status?: string; searchTerm?: string },
+  ): Promise<{ data: Project[]; count: number }> {
+    console.log(
+      `[${this.serviceName}] Fetching knowledge bases with pagination:`,
+      paginationOptions,
+      "filters:",
+      filters,
+    );
+
+    try {
+      const user = await this.getCurrentUser();
+      const supabaseTable = createClientTable();
+
+      console.log(`[${this.serviceName}] Querying Supabase for user:`, user.id);
+
+      // Build base query
+      let countQuery = supabaseTable
+        .from("knowledge_base")
+        .select("*", { count: "exact", head: true })
+        .eq("created_by", user.id);
+
+      let dataQuery = supabaseTable
+        .from("knowledge_base")
+        .select("*")
+        .eq("created_by", user.id);
+
+      // Apply filters
+      if (filters?.status && filters.status !== "all") {
+        const statusValue = filters.status === "active" ? true : false;
+        countQuery = countQuery.eq("is_active", statusValue);
+        dataQuery = dataQuery.eq("is_active", statusValue);
+      }
+
+      if (filters?.searchTerm && filters.searchTerm.trim()) {
+        const searchTerm = filters.searchTerm.trim();
+        countQuery = countQuery.or(
+          `name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`,
+        );
+        dataQuery = dataQuery.or(
+          `name.ilike.%${searchTerm}%,description.ilike.%${searchTerm}%`,
+        );
+      }
+
+      // Get total count first
+      const { count, error: countError } = await countQuery;
+
+      if (countError) {
+        console.error(`[${this.serviceName}] Error getting count:`, countError);
+      }
+
+      // Get paginated data
+      const { data: projects, error } = await dataQuery
+        .order("created_at", { ascending: false })
+        .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -139,26 +169,21 @@ class KnowledgeBaseService {
       }
 
       if (!projects || projects.length === 0) {
-        return [];
+        console.log(`[${this.serviceName}] No knowledge bases found for user`);
+        return { data: [], count: 0 };
       }
 
-        // Transform Supabase rows to Project objects
-      return projects.map((row: SupabaseProjectRow) => ({
-        id: row.id,
-        name: row.name,
-        description: row.description || '',
-        document_count: row.document_count || 0,
-        status: (row.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: row.owner,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        lastSync: this.formatLastSync(row.updated_at),
-        queries: 0, // Default value - not available in current schema
-        accuracy: 0 // Default value - not available in current schema
-      }));
+      console.log(
+        `[${this.serviceName}] Found ${projects.length} knowledge bases (Total: ${count})`,
+      );
 
+      // Transform Supabase rows to Project objects
+      return { data: projects, count: count || 0 };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error fetching knowledge bases:`, error);
+      console.error(
+        `[${this.serviceName}] Error fetching knowledge bases:`,
+        error,
+      );
       throw error;
     }
   }
@@ -167,47 +192,50 @@ class KnowledgeBaseService {
    * Get a specific knowledge base by ID
    */
   async getProject(id: string): Promise<Project | null> {
-
-    if (this.useMockData) {
-      const mockProjects = this.getMockProjects();
-      return mockProjects.find(p => p.id === id) || null;
-    }
-
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-      
+
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
-        .select('*')
-        .eq('id', id)
-        .eq('owner', user.id)
+        .from("knowledge_base")
+        .select("*")
+        .eq("id", id)
+        .eq("created_by", user.id)
         .single();
 
       if (error) {
-        if (error.code === 'PGRST116') {
+        if (error.code === "PGRST116") {
           return null;
         }
-        console.error(`[${this.serviceName}] Error fetching knowledge base:`, error);
+        console.error(
+          `[${this.serviceName}] Error fetching knowledge base:`,
+          error,
+        );
         throw new Error(`Failed to fetch knowledge base: ${error.message}`);
       }
+
+      // Get document count for this knowledge base
+      const { count: documentCount } = await supabaseTable
+        .from("documents")
+        .select("*", { count: "exact", head: true })
+        .eq("project_id", id);
 
       return {
         id: project.id,
         name: project.name,
-        description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
+        description: project.description || "",
+        document_count: documentCount || 0,
+        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        owner: project.created_by,
+        is_active: project.is_active || false,
         created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: project.queries || 0,
-        accuracy: project.accuracy || 0
-      };
-
+        updated_at: project.updated_at || project.created_at,
+      } as Project;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error fetching knowledge base:`, error);
+      console.error(
+        `[${this.serviceName}] Error fetching knowledge base:`,
+        error,
+      );
       throw error;
     }
   }
@@ -216,67 +244,42 @@ class KnowledgeBaseService {
    * Create a new knowledge base
    */
   async createProject(input: CreateProjectInput): Promise<Project> {
-
-    if (this.useMockData) {
-      const newProject: Project = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: input.name,
-        description: input.description || '',
-        document_count: 0,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        lastSync: "Never",
-        queries: 0,
-        accuracy: 0
-      };
-      return newProject;
-    }
-
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      // status is stored as smallint in the DB, so we use ProjectStatus.ACTIVE (number)
+      // Create project data according to the database schema
       const projectData = {
         name: input.name,
-        description: input.description || '',
-        owner: user.id,
-        status: ProjectStatus.ACTIVE,
-        document_count: 0,
+        description: input.description || "",
+        created_by: user.id,
+        is_active: input.status === ProjectStatus.ACTIVE,
+        visibility: input.visibility,
+        settings: {}, // Default empty settings object
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from("knowledge_base")
         .insert([projectData])
         .select()
         .single();
 
       if (error) {
-        console.error(`[${this.serviceName}] Error creating knowledge base:`, error);
+        console.error(
+          `[${this.serviceName}] Error creating knowledge base:`,
+          error,
+        );
         throw new Error(`Failed to create knowledge base: ${error.message}`);
       }
 
-
-      return {
-        id: project.id,
-        name: project.name,
-        description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
-        created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: 0, // Not in schema
-        accuracy: 0 // Not in schema
-      };
-
+      return project as Project;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error creating knowledge base:`, error);
+      console.error(
+        `[${this.serviceName}] Error creating knowledge base:`,
+        error,
+      );
       throw error;
     }
   }
@@ -285,60 +288,52 @@ class KnowledgeBaseService {
    * Update an existing knowledge base
    */
   async updateProject(id: string, input: UpdateProjectInput): Promise<Project> {
-
-    if (this.useMockData) {
-      const mockProjects = this.getMockProjects();
-      const existing = mockProjects.find(p => p.id === id);
-      if (!existing) {
-        throw new Error('Knowledge base not found');
-      }
-      
-      return {
-        ...existing,
-        ...input,
-        updated_at: new Date().toISOString()
-      };
-    }
-
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-      
+
       const updateData = {
         ...input,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from("knowledge_base")
         .update(updateData)
-        .eq('id', id)
-        .eq('owner', user.id)
+        .eq("id", id)
+        .eq("created_by", user.id)
         .select()
         .single();
 
       if (error) {
-        console.error(`[${this.serviceName}] Error updating knowledge base:`, error);
+        console.error(
+          `[${this.serviceName}] Error updating knowledge base:`,
+          error,
+        );
         throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
 
-      
+      console.log(
+        `[${this.serviceName}] Knowledge base updated successfully:`,
+        id,
+      );
+
       return {
         id: project.id,
         name: project.name,
-        description: project.description || '',
-        document_count: project.document_count || 0,
-        status: (project.status as ProjectStatus) || ProjectStatus.ACTIVE,
-        owner: project.owner,
+        description: project.description || "",
+        document_count: 0, // Not available in current schema
+        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        owner: project.created_by,
+        is_active: project.is_active || false,
         created_at: project.created_at,
-        updated_at: project.updated_at,
-        lastSync: this.formatLastSync(project.updated_at),
-        queries: project.queries || 0,
-        accuracy: project.accuracy || 0
-      };
-
+        updated_at: project.updated_at || project.created_at,
+      } as Project;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error updating knowledge base:`, error);
+      console.error(
+        `[${this.serviceName}] Error updating knowledge base:`,
+        error,
+      );
       throw error;
     }
   }
@@ -347,29 +342,28 @@ class KnowledgeBaseService {
    * Delete a knowledge base
    */
   async deleteProject(id: string): Promise<void> {
-
-    if (this.useMockData) {
-      return;
-    }
-
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-      
+
       const { error } = await supabaseTable
-        .from('knowledge_base')
+        .from("knowledge_base")
         .delete()
-        .eq('id', id)
-        .eq('owner', user.id);
+        .eq("id", id)
+        .eq("created_by", user.id);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error deleting knowledge base:`, error);
+        console.error(
+          `[${this.serviceName}] Error deleting knowledge base:`,
+          error,
+        );
         throw new Error(`Failed to delete knowledge base: ${error.message}`);
       }
-
-
     } catch (error) {
-      console.error(`[${this.serviceName}] Error deleting knowledge base:`, error);
+      console.error(
+        `[${this.serviceName}] Error deleting knowledge base:`,
+        error,
+      );
       throw error;
     }
   }
@@ -387,12 +381,11 @@ class KnowledgeBaseService {
     if (diffHours < 1) {
       return "Just now";
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     } else {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
     }
   }
 }
 
 export { KnowledgeBaseService };
-export type { KnowledgeBaseServiceConfig };

@@ -13,12 +13,13 @@ import { useState, useEffect } from "react";
 import { useDocumentsManagement } from "@/hooks";
 import { useRouter, useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
-import { getKnowledgeBaseById, formatStatus } from "@/data/knowledgeBaseData";
+import { formatStatus, getKnowledgeBaseById } from "@/data/knowledgeBaseData";
 import { KnowledgeBaseData } from "@/data/knowledgeBaseData";
 
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
   const params = useParams();
+  const id = params.id as string;
   const { setLoading } = useLoading();
 
   const [currentTab, setCurrentTabs] = useState("Documents");
@@ -33,12 +34,23 @@ export default function KnowledgeBaseDetail() {
 
   // Get knowledge base data on component mount
   useEffect(() => {
-    if (params.id) {
-      const kb = getKnowledgeBaseById(params.id as string);
-      setKnowledgeBase(kb || null);
-    }
-    setLoading(false);
-  }, [params.id, setLoading]);
+    const fetchKnowledgeBase = async () => {
+      if (id) {
+        try {
+          setLoading(true);
+          const kb = await getKnowledgeBaseById(id);
+          setKnowledgeBase(kb);
+        } catch (error) {
+          console.error("Error fetching knowledge base:", error);
+          setKnowledgeBase(null);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchKnowledgeBase();
+  }, [id, setLoading]);
 
   const {
     // State

@@ -22,16 +22,6 @@ import { documentSearchService } from "@/services";
 import type { DocumentSearchResult } from "@/services/DocumentSearchService";
 
 /**
- * Knowledge Base Service - Supabase Implementation
- *
- * This service handles all CRUD operations for knowledge bases using Supabase
- * with the knowledge_advisor.knowledge_base table schema.
- */
-
-// Flag to determine if we should use mock data (set to false for production)
-const USE_MOCK_DATA = false; // Temporarily set to true while debugging Supabase connection
-
-/**
  * Get current user from Supabase auth
  */
 async function getCurrentUser() {
@@ -53,80 +43,6 @@ async function getCurrentUser() {
  * Fetch all knowledge bases for the current user
  */
 export async function getProjects(): Promise<Project[]> {
-  if (USE_MOCK_DATA) {
-    // Return mock data for development
-    return [
-      {
-        id: "1",
-        name: "Enterprise Documentation",
-        description:
-          "Company-wide knowledge base for all enterprise documentation",
-        document_count: 156,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-01-15T10:30:00Z",
-        updated_at: "2024-03-15T14:20:00Z",
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98,
-      },
-      {
-        id: "2",
-        name: "Customer Support Hub",
-        description:
-          "Knowledge base for customer support team with FAQ and procedures",
-        document_count: 89,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-02-01T09:15:00Z",
-        updated_at: "2024-03-14T16:45:00Z",
-        lastSync: "5 hours ago",
-        queries: 867,
-        accuracy: 95,
-      },
-      {
-        id: "3",
-        name: "Product Documentation",
-        description:
-          "Technical documentation for all product features and APIs",
-        document_count: 234,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-01-20T11:00:00Z",
-        updated_at: "2024-03-16T08:30:00Z",
-        lastSync: "1 hour ago",
-        queries: 2156,
-        accuracy: 97,
-      },
-      {
-        id: "4",
-        name: "Training Materials",
-        description: "Employee training and onboarding materials",
-        document_count: 67,
-        status: ProjectStatus.PAUSED,
-        owner: "mock-user-id",
-        created_at: "2024-02-10T13:45:00Z",
-        updated_at: "2024-03-10T10:15:00Z",
-        lastSync: "1 week ago",
-        queries: 445,
-        accuracy: 92,
-      },
-      {
-        id: "5",
-        name: "Legal & Compliance",
-        description: "Legal documents, policies, and compliance guidelines",
-        document_count: 123,
-        status: ProjectStatus.ACTIVE,
-        owner: "mock-user-id",
-        created_at: "2024-01-25T15:20:00Z",
-        updated_at: "2024-03-12T12:00:00Z",
-        lastSync: "3 days ago",
-        queries: 678,
-        accuracy: 99,
-      },
-    ];
-  }
-
   try {
     const user = await getCurrentUser();
 
@@ -173,19 +89,12 @@ export async function getProjects(): Promise<Project[]> {
           return {
             ...project,
             document_count: count || 0,
-            // Add mock data for display (these would come from analytics in real app)
-            lastSync: "2 hours ago",
-            queries: 1243,
-            accuracy: 98,
           } as Project;
         } catch (err) {
           console.warn(`Error processing project ${project.id}:`, err);
           return {
             ...project,
             document_count: 0,
-            lastSync: "Never",
-            queries: 0,
-            accuracy: 0,
           } as Project;
         }
       }),
@@ -202,16 +111,6 @@ export async function getProjects(): Promise<Project[]> {
  * Fetch a single knowledge base by ID
  */
 export async function getProjectById(id: string): Promise<Project> {
-  if (USE_MOCK_DATA) {
-    // Return mock data for development
-    const mockProjects = await getProjects(); // Get mock data from getProjects
-    const project = mockProjects.find((p) => p.id === id);
-    if (!project) {
-      throw new Error(`Knowledge base with ID ${id} not found`);
-    }
-    return project;
-  }
-
   try {
     const user = await getCurrentUser();
 
@@ -224,6 +123,7 @@ export async function getProjectById(id: string): Promise<Project> {
         name,
         description,
         status,
+        visibility,
         owner,
         created_at,
         updated_at
@@ -259,10 +159,7 @@ export async function getProjectById(id: string): Promise<Project> {
     const result = {
       ...data,
       document_count: count || 0,
-      // Add mock data for display
-      lastSync: "2 hours ago",
-      queries: 1243,
-      accuracy: 98,
+      visibility: data.visibility,
     } as Project;
 
     return result;
@@ -278,24 +175,6 @@ export async function getProjectById(id: string): Promise<Project> {
 export async function createProject(
   projectData: CreateProjectInput,
 ): Promise<Project> {
-  if (USE_MOCK_DATA) {
-    // Simulate creating a new project with mock data
-    const newProject: Project = {
-      id: `mock-${Date.now()}`,
-      name: projectData.name,
-      description: projectData.description,
-      status: projectData.status,
-      document_count: 0,
-      owner: "mock-user-id",
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      lastSync: "Never",
-      queries: 0,
-      accuracy: 0,
-    };
-    return newProject;
-  }
-
   const user = await getCurrentUser();
 
   const supabase = createClientTable();
@@ -331,9 +210,6 @@ export async function createProject(
   return {
     ...data,
     document_count: 0,
-    lastSync: "Never",
-    queries: 0,
-    accuracy: 0,
   } as Project;
 }
 
@@ -383,9 +259,6 @@ export async function updateProject(
   return {
     ...data,
     document_count: count || 0,
-    lastSync: "2 hours ago",
-    queries: 1243,
-    accuracy: 98,
   } as Project;
 }
 
@@ -443,100 +316,6 @@ export async function deleteProject(id: string): Promise<void> {
 export async function getDocumentsByProjectId(
   projectId: string,
 ): Promise<Document[]> {
-  if (USE_MOCK_DATA) {
-    // Return mock documents for development
-    const mockDocuments: Document[] = [
-      {
-        id: "doc-1",
-        name: "Employee Handbook 2024.pdf",
-        type: "PDF",
-        status: "processed",
-        project_id: projectId,
-        chunk_count: 45,
-        file_size: 2400000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-15T10:30:00Z",
-        updated_at: "2024-03-15T10:45:00Z",
-        path: "documents/employee-handbook-2024.pdf",
-        url: "https://example.com/employee-handbook-2024.pdf",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-15T11:00:00Z",
-        metadata: { pages: 156 },
-      },
-      {
-        id: "doc-2",
-        name: "API Documentation v3.2.md",
-        type: "Markdown",
-        status: "processing",
-        project_id: projectId,
-        chunk_count: 28,
-        file_size: 1800000,
-        mime_type: "text/markdown",
-        created_at: "2024-03-14T16:45:00Z",
-        updated_at: "2024-03-14T17:00:00Z",
-        path: "documents/api-documentation-v3.2.md",
-        url: "https://example.com/api-documentation-v3.2.md",
-        rag_status: "syncing",
-        last_rag_sync: "2024-03-14T17:15:00Z",
-        metadata: { pages: 89 },
-      },
-      {
-        id: "doc-3",
-        name: "Security Policies.docx",
-        type: "DOCX",
-        status: "processed",
-        project_id: projectId,
-        chunk_count: 23,
-        file_size: 856000,
-        mime_type:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        created_at: "2024-03-13T09:15:00Z",
-        updated_at: "2024-03-13T09:30:00Z",
-        path: "documents/security-policies.docx",
-        url: "https://example.com/security-policies.docx",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-13T10:00:00Z",
-        metadata: { pages: 45 },
-      },
-      {
-        id: "doc-4",
-        name: "Training Module - New Hires.pdf",
-        type: "PDF",
-        status: "processed",
-        project_id: projectId,
-        chunk_count: 67,
-        file_size: 5200000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-12T14:20:00Z",
-        updated_at: "2024-03-12T14:35:00Z",
-        path: "documents/training-module-new-hires.pdf",
-        url: "https://example.com/training-module-new-hires.pdf",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-12T15:00:00Z",
-        metadata: { pages: 234 },
-      },
-      {
-        id: "doc-5",
-        name: "Legal Compliance Guide.pdf",
-        type: "PDF",
-        status: "error",
-        project_id: projectId,
-        chunk_count: 0,
-        file_size: 3100000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-11T11:00:00Z",
-        updated_at: "2024-03-11T11:15:00Z",
-        path: "documents/legal-compliance-guide.pdf",
-        url: "https://example.com/legal-compliance-guide.pdf",
-        rag_status: "error",
-        last_rag_sync: "2024-03-11T11:30:00Z",
-        metadata: { pages: 0, error: "Processing failed - corrupt file" },
-      },
-    ];
-
-    return mockDocuments;
-  }
-
   try {
     const supabase = createClientTable();
     const { data, error } = await supabase
@@ -603,40 +382,6 @@ export async function uploadDocument(
 ) {
   const sanitizedName = sanitizeFileName(file.name);
   const sanitizedPath = `documents/${sanitizedName}`;
-
-  if (USE_MOCK_DATA) {
-    // Simulate upload with mock data
-    const mockDocument: Document = {
-      id: `mock-doc-${Date.now()}`,
-      name: file.name,
-      type: file.type.includes("pdf")
-        ? "PDF"
-        : file.type.includes("word")
-          ? "DOCX"
-          : "TXT",
-      status: "uploaded",
-      project_id: projectId,
-      chunk_count: 0,
-      file_size: file.size,
-      mime_type: file.type,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      path: path,
-      url: URL.createObjectURL(file), // Temporary URL for demo
-      rag_status: "not_synced",
-      metadata: options?.metadata || {},
-    };
-
-    // Simulate upload delay
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    return {
-      success: true,
-      document: mockDocument,
-      message: "Document uploaded successfully (mock)",
-    };
-  }
-
   try {
     // Check if bucket exists, create if not
     const supabase = createClient();
@@ -1103,9 +848,6 @@ export async function getProjectsPaginated(
       return {
         ...project,
         document_count: docCount || 0,
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98,
       } as Project;
     }),
   );
@@ -1160,9 +902,6 @@ export async function searchProjects(query: string): Promise<Project[]> {
       return {
         ...project,
         document_count: count || 0,
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98,
       } as Project;
     }),
   );
@@ -1214,9 +953,6 @@ export async function getProjectsByStatus(
       return {
         ...project,
         document_count: count || 0,
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98,
       } as Project;
     }),
   );
@@ -1237,6 +973,7 @@ export async function duplicateProject(
 
   // Create the duplicate
   const duplicateData: CreateProjectInput = {
+    visibility: original.visibility,
     name: newName,
     description: `Copy of ${original.description}`,
     status: ProjectStatus.DRAFT,
@@ -1306,9 +1043,6 @@ export async function batchUpdateProjects(
       return {
         ...project,
         document_count: count || 0,
-        lastSync: "2 hours ago",
-        queries: 1243,
-        accuracy: 98,
       } as Project;
     }),
   );
@@ -1536,16 +1270,6 @@ export async function getDocumentSearchAnalytics(
     projectId,
   );
 
-  if (USE_MOCK_DATA) {
-    return {
-      searchTime: Math.floor(Math.random() * 1000) + 200,
-      langflowResponseTime: Math.floor(Math.random() * 500) + 100,
-      supabaseQueryTime: Math.floor(Math.random() * 200) + 50,
-      totalDocumentsScanned: Math.floor(Math.random() * 100) + 10,
-      totalDocumentsReturned: Math.floor(Math.random() * 20) + 1,
-    };
-  }
-
   try {
     // Use the document search service with the projectId
     const filters = projectId ? { projectId } : {};
@@ -1576,142 +1300,6 @@ export async function getDocumentSearchAnalytics(
  * Fetch all documents across all projects for the current user
  */
 export async function getAllDocuments(): Promise<Document[]> {
-  if (USE_MOCK_DATA) {
-    // Return mock documents for development - combining documents from multiple projects
-    const mockDocuments: Document[] = [
-      {
-        id: "doc-1",
-        name: "Employee Handbook 2024.pdf",
-        type: "PDF",
-        status: "processed",
-        project_id: "1",
-        chunk_count: 45,
-        file_size: 2400000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-15T10:30:00Z",
-        updated_at: "2024-03-15T10:45:00Z",
-        path: "documents/employee-handbook-2024.pdf",
-        url: "https://example.com/employee-handbook-2024.pdf",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-15T11:00:00Z",
-        metadata: {
-          pages: 156,
-          project_name: "Enterprise Documentation",
-          uploaded_by: "Sarah Johnson",
-        },
-      },
-      {
-        id: "doc-2",
-        name: "API Documentation v3.2.md",
-        type: "Markdown",
-        status: "processing",
-        project_id: "3",
-        chunk_count: 28,
-        file_size: 1800000,
-        mime_type: "text/markdown",
-        created_at: "2024-03-14T16:45:00Z",
-        updated_at: "2024-03-14T17:00:00Z",
-        path: "documents/api-documentation-v3.2.md",
-        url: "https://example.com/api-documentation-v3.2.md",
-        rag_status: "syncing",
-        last_rag_sync: "2024-03-14T17:15:00Z",
-        metadata: {
-          pages: 89,
-          project_name: "Product Documentation",
-          uploaded_by: "Mike Chen",
-        },
-      },
-      {
-        id: "doc-3",
-        name: "Customer Support FAQ.docx",
-        type: "DOCX",
-        status: "processed",
-        project_id: "2",
-        chunk_count: 23,
-        file_size: 856000,
-        mime_type:
-          "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-        created_at: "2024-03-13T09:15:00Z",
-        updated_at: "2024-03-13T09:30:00Z",
-        path: "documents/customer-support-faq.docx",
-        url: "https://example.com/customer-support-faq.docx",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-13T10:00:00Z",
-        metadata: {
-          pages: 45,
-          project_name: "Customer Support Hub",
-          uploaded_by: "Emma Wilson",
-        },
-      },
-      {
-        id: "doc-4",
-        name: "Training Module - Security.pdf",
-        type: "PDF",
-        status: "processed",
-        project_id: "4",
-        chunk_count: 67,
-        file_size: 5200000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-12T14:20:00Z",
-        updated_at: "2024-03-12T14:35:00Z",
-        path: "documents/training-module-security.pdf",
-        url: "https://example.com/training-module-security.pdf",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-12T15:00:00Z",
-        metadata: {
-          pages: 234,
-          project_name: "Training Materials",
-          uploaded_by: "David Rodriguez",
-        },
-      },
-      {
-        id: "doc-5",
-        name: "Legal Compliance Guide.pdf",
-        type: "PDF",
-        status: "failed",
-        project_id: "5",
-        chunk_count: 0,
-        file_size: 3100000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-11T11:00:00Z",
-        updated_at: "2024-03-11T11:15:00Z",
-        path: "documents/legal-compliance-guide.pdf",
-        url: "https://example.com/legal-compliance-guide.pdf",
-        rag_status: "error",
-        last_rag_sync: "2024-03-11T11:30:00Z",
-        metadata: {
-          pages: 0,
-          error: "Processing failed - corrupt file",
-          project_name: "Legal & Compliance",
-          uploaded_by: "Lisa Thompson",
-        },
-      },
-      {
-        id: "doc-6",
-        name: "Research Paper - AI Ethics.pdf",
-        type: "PDF",
-        status: "processed",
-        project_id: "6",
-        chunk_count: 34,
-        file_size: 4700000,
-        mime_type: "application/pdf",
-        created_at: "2024-03-10T13:30:00Z",
-        updated_at: "2024-03-10T13:45:00Z",
-        path: "documents/research-paper-ai-ethics.pdf",
-        url: "https://example.com/research-paper-ai-ethics.pdf",
-        rag_status: "synced",
-        last_rag_sync: "2024-03-10T14:00:00Z",
-        metadata: {
-          pages: 78,
-          project_name: "Research & Development",
-          uploaded_by: "Dr. James Park",
-        },
-      },
-    ];
-
-    return mockDocuments;
-  }
-
   try {
     const user = await getCurrentUser();
     const supabase = createClientTable();

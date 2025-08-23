@@ -13,8 +13,17 @@ export const useKnowledgeBaseSelection = () => {
   const [loading, setLoading] = useState(true);
   const [selectAllKB, setSelectAllKB] = useState(false);  const loadKnowledgeBases = useCallback(async () => {
     try {
-      const projects = await knowledgeBaseService.getProjects();
-      const kbSelection: KnowledgeBaseSelection[] = projects.map(project => ({
+      // Provide required pagination options - fetch all knowledge bases for selection
+      const paginationOptions = {
+        currentPage: 1,
+        totalPages: 1,
+        startIndex: 0,
+        endIndex: 999, // Large number to get all knowledge bases
+        totalItems: 0,
+      };
+      
+      const result = await knowledgeBaseService.getProjects(paginationOptions);
+      const kbSelection: KnowledgeBaseSelection[] = result.data.map(project => ({
         id: project.id,
         name: project.name,
         selected: false,

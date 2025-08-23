@@ -3,15 +3,13 @@ export interface Project {
   id: string; // UUID in Supabase
   name: string;
   description: string;
+  visibility: string;
   document_count?: number; // Computed field
   status: ProjectStatus; // Use enum instead of raw numbers
   owner: string; // UUID foreign key to auth.users
+  is_active: boolean; // Boolean for active status
   created_at: string;
   updated_at?: string;
-  // Display properties for UI
-  lastSync?: string;
-  queries?: number;
-  accuracy?: number;
 }
 
 // Status enum for better type safety
@@ -29,6 +27,7 @@ export interface CreateProjectInput {
   name: string;
   description: string;
   status: ProjectStatus;
+  visibility: string; // 1=Public, 2=Private (optional, defaults to 2)
 }
 
 // Update project input interface
@@ -102,10 +101,11 @@ export interface ProjectAnalytics {
 
 // Pagination interface
 export interface PaginationOptions {
-  page: number;
-  limit: number;
-  sortBy?: "created_at" | "updated_at" | "name";
-  sortOrder?: "asc" | "desc";
+  currentPage: number;
+  totalPages: number;
+  startIndex: number; // Optional for manual pagination
+  endIndex: number; // Optional for manual pagination
+  totalItems: number; // Optional for manual pagination
 }
 
 // Paginated response interface
