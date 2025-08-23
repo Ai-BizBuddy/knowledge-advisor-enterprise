@@ -112,7 +112,7 @@ class KnowledgeBaseService {
    * Fetch all knowledge bases for the current user with proper pagination
    */
   async getProjects(
-    paginationOptions: PaginationOptions,
+    paginationOptions?: PaginationOptions,
     filters?: { status?: string; searchTerm?: string }
   ): Promise<{ data: Project[], count: number }> {
     console.log(`[${this.serviceName}] Fetching knowledge bases with pagination:`, paginationOptions, 'filters:', filters);
@@ -155,9 +155,11 @@ class KnowledgeBaseService {
       }
 
       // Get paginated data
-      const { data: projects, error } = await dataQuery
-        .order('created_at', { ascending: false })
-        .range(paginationOptions.startIndex, paginationOptions.endIndex);
+      const { data: projects, error } = paginationOptions
+        ? await dataQuery
+          .order('created_at', { ascending: false })
+          .range(paginationOptions.startIndex, paginationOptions.endIndex)
+        : await dataQuery.order('created_at', { ascending: false });
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -218,7 +220,7 @@ class KnowledgeBaseService {
         description: project.description || '',
         is_active: project.is_active,
         document_count: documentCount || 0,
-        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        status: project.is_active ? 1 : 2,
         owner: project.created_by,
         created_at: project.created_at,
         updated_at: project.updated_at || project.created_at,
@@ -312,7 +314,7 @@ class KnowledgeBaseService {
         is_active: project.is_active,
         description: project.description || '',
         document_count: 0, // Not available in current schema
-        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        status: project.is_active ? 1 : 2,
         owner: project.created_by,
         created_at: project.created_at,
         updated_at: project.updated_at || project.created_at,

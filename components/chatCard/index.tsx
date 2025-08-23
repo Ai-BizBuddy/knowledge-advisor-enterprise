@@ -13,7 +13,7 @@ export default function ChatCard({
   status,
   isUser = false,
 }: IChatCardProps) {
-  const containerClasses = `flex items-end gap-3 mb-4 chat-message ${
+  const containerClasses = `flex items-start gap-3 mb-4 chat-message ${
     isUser
       ? "justify-end chat-message-user"
       : "justify-start chat-message-assistant"
@@ -21,8 +21,8 @@ export default function ChatCard({
 
   const messageClasses = `flex flex-col max-w-xs lg:max-w-md xl:max-w-lg message-bubble ${
     isUser
-      ? "bg-blue-600 text-white rounded-2xl rounded-br-md px-4 py-3"
-      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-bl-md px-4 py-3 shadow-sm"
+      ? "bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3"
+      : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm"
   }`;
 
   const formatTime = (timestamp: string) => {

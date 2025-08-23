@@ -274,7 +274,7 @@ export default function KnowledgeBaseDetail() {
           ]
         : [];
 
-      await sendMessage(message, kbSelection, true);
+      await sendMessage(message, kbSelection);
       setMessage("");
 
       // Small delay to ensure message is added to state, then scroll
@@ -579,7 +579,7 @@ export default function KnowledgeBaseDetail() {
             {/* Chat Messages Area */}
             <div
               ref={chatMessagesRef}
-              className="chat-scroll-container flex-1 space-y-2 overflow-y-auto p-4"
+              className="chat-scroll-container width-full flex-1 space-y-2 overflow-y-auto p-4"
             >
               {messages.length === 0 && (
                 <div className="flex h-full flex-col items-center justify-center py-12 text-center">
@@ -634,7 +634,7 @@ export default function KnowledgeBaseDetail() {
             </div>
 
             {/* Message Input */}
-            <div className="border-t border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
+            <div className="width-full border-t border-gray-200 bg-white p-4 dark:border-gray-600 dark:bg-gray-800">
               <form
                 onSubmit={async (e) => {
                   e.preventDefault();
