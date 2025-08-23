@@ -20,32 +20,14 @@ import {
 import { useToast } from "@/components/toast";
 import UserManagementService from "@/services/UserManagementService";
 import type { Permission } from "@/interfaces/UserManagement";
+import type {
+  PermissionsTableProps,
+  PermissionTableRow,
+  PermissionModalData,
+} from "./PermissionsTable.types";
 
-interface PermissionTableRow {
-  id: number;
-  resource: string;
-  action: string;
-  description?: string;
-  isActive: boolean;
-  createdAt: string;
-  displayName: string;
-  icon: string;
-}
-
-interface PermissionModalData {
-  id?: number;
-  resource: string;
-  action: string;
-  description: string;
-}
-
-interface PermissionsTableProps {
-  selectedPermissions?: number[];
-  onPermissionChange?: (permissionIds: number[]) => void;
-  readonly?: boolean;
-  showSummary?: boolean;
-  className?: string;
-}
+// Re-export types for easier consumption
+export type { PermissionsTableProps, PermissionTableRow, PermissionModalData };
 
 /**
  * PermissionsTable Component
@@ -329,7 +311,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                           size="xs"
                           color="blue"
                           onClick={() => openViewModal(permission)}
-                          className="flex items-center gap-1"
+                          className="flex items-center justify-center"
+                          title="View permission"
                         >
                           <svg
                             className="h-3 w-3"
@@ -344,7 +327,6 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                               d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                             />
                           </svg>
-                          <span className="hidden sm:inline">View</span>
                         </Button>
                         {!readonly && (
                           <>
@@ -352,7 +334,8 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                               size="xs"
                               color="gray"
                               onClick={() => openEditModal(permission)}
-                              className="flex items-center gap-1"
+                              className="flex items-center justify-center"
+                              title="Edit permission"
                             >
                               <svg
                                 className="h-3 w-3"
@@ -367,13 +350,13 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
-                              <span className="hidden sm:inline">Edit</span>
                             </Button>
                             <Button
                               size="xs"
                               color="alternative"
                               onClick={() => openDeleteModal(permission)}
-                              className="flex items-center gap-1"
+                              className="flex items-center justify-center"
+                              title="Delete permission"
                             >
                               <svg
                                 className="h-3 w-3"
@@ -388,7 +371,6 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                               </svg>
-                              <span className="hidden sm:inline">Delete</span>
                             </Button>
                           </>
                         )}

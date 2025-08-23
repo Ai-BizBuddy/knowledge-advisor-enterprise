@@ -189,69 +189,6 @@ class UserManagementService {
   }
 
   /**
-   * Fallback method to get users from auth.profiles table only
-   */
-  private async getUsersFromAuthProfiles(
-    filter: UserFilter = {},
-  ): Promise<User[]> {
-    try {
-      return await executeWithAuth(async (client) => {
-        const authClient = client.schema("auth");
-
-        let query = authClient.from("profiles").select(`
-            id,
-            full_name,
-            avatar_url,
-            created_at,
-            updated_at
-          `);
-
-        // Filter out deleted users
-        query = query.is("deleted_at", null);
-
-        // Apply search filter if provided
-        if (filter.search) {
-          query = query.ilike("full_name", `%${filter.search}%`);
-        }
-
-        const { data, error } = await query;
-
-        if (error) {
-          throw new Error(`Failed to fetch auth profiles: ${error.message}`);
-        }
-
-        // Convert auth profiles to User interface
-        const users: User[] = (data || []).map((profile) => ({
-          id: profile.id,
-          email: "", // Will need to get from auth.users if needed
-          display_name: profile.full_name || "",
-          avatar_url: profile.avatar_url,
-          user_roles: [], // Default role as array
-          status: UserStatus.ACTIVE,
-          profile: {
-            full_name: profile.full_name || "",
-            avatar_url: profile.avatar_url || "",
-          },
-          created_at: profile.created_at || new Date().toISOString(),
-          updated_at:
-            profile.updated_at ||
-            profile.created_at ||
-            new Date().toISOString(),
-          metadata: {},
-        }));
-
-        return users;
-      });
-    } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getUsersFromAuthProfiles:`,
-        error,
-      );
-      throw error;
-    }
-  }
-
-  /**
    * Get user by ID
    */
   async getUserById(id: string): Promise<User> {
@@ -372,32 +309,35 @@ class UserManagementService {
   }
 
   /**
-   * Create a new user
+   * Create a new user using create_user_full RPC function
    */
   async createUser(userData: CreateUserInput): Promise<User> {
     try {
-      const supabase = createClient();
       const supabaseAuth = createClientAuth();
 
-      // Create auth user first
-      const { data: authData, error: authError } =
-        await supabase.auth.admin.createUser({
-          email: userData.email,
-          password: userData.password,
-          email_confirm: true,
-          user_metadata: {
-            department_id: userData.department_id,
-            display_name: userData.display_name,
-            ...userData.metadata,
-          },
-        });
+      // Call the create_user_full RPC function
+      const { data: rpcResult, error: rpcError } = await supabaseAuth.rpc(
+        "create_user_full",
+        {
+          p_email: userData.email,
+          p_password: userData.password,
+          p_display_name: userData.display_name || null,
+          p_department_id: userData.department_id || null,
+          p_role_ids: userData.role_ids,
+        },
+      );
 
-      if (authError) {
-        // Handle specific Supabase auth errors
+      if (rpcError) {
+        console.error(
+          `[${this.serviceName}] Error creating user via RPC:`,
+          rpcError,
+        );
+
+        // Handle specific error cases
         if (
-          authError.message?.includes("User already registered") ||
-          authError.message?.includes("already been registered") ||
-          authError.status === 422
+          rpcError.message?.includes("duplicate key") ||
+          rpcError.message?.includes("already exists") ||
+          rpcError.code === "23505"
         ) {
           const emailExistsError: UserManagementError = new Error(
             "A user with this email address has already been registered",
@@ -405,69 +345,26 @@ class UserManagementService {
           emailExistsError.code = "email_exists";
           throw emailExistsError;
         }
-        throw new Error(`Failed to create auth user: ${authError.message}`);
+
+        throw new Error(`Failed to create user: ${rpcError.message}`);
       }
 
-      if (!authData.user) {
-        throw new Error("Failed to create auth user - no user data returned");
-      }
-
-      // Create auth.profiles entry with display_name as full_name
-      const { error: profileError } = await supabaseAuth
-        .from("profiles")
-        .insert([
-          {
-            id: authData.user.id,
-            full_name: userData.display_name || userData.email.split("@")[0],
-            avatar_url: "",
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          },
-        ]);
-
-      if (profileError) {
-        console.error(
-          `[${this.serviceName}] Failed to create profile:`,
-          profileError,
+      if (!rpcResult || rpcResult.length === 0) {
+        throw new Error(
+          "Failed to create user - no user data returned from RPC",
         );
-        // Don't throw here as we might still want to continue with user creation
       }
 
-      // Create user roles associations
-      if (userData.role_ids && userData.role_ids.length > 0) {
-        const userRoleInserts = userData.role_ids.map((roleId) => ({
-          user_id: authData.user.id,
-          role_id: roleId,
-        }));
+      const createdUserId = rpcResult[0].user_id;
+      const createdUserEmail = rpcResult[0].email;
 
-        const { error: roleError } = await supabaseAuth
-          .from("user_roles")
-          .insert(userRoleInserts);
-        if (roleError) {
-          console.error(
-            `[${this.serviceName}] Failed to assign roles:`,
-            roleError,
-          );
-        }
-      }
+      console.log(`[${this.serviceName}] User created successfully via RPC:`, {
+        id: createdUserId,
+        email: createdUserEmail,
+      });
 
-      // Update user with department if provided
-      if (userData.department_id) {
-        const { error: deptError } = await supabaseAuth
-          .from("users")
-          .update({ department_id: userData.department_id })
-          .eq("id", authData.user.id);
-
-        if (deptError) {
-          console.warn(
-            `[${this.serviceName}] Failed to update user metadata:`,
-            deptError,
-          );
-        }
-      }
-
-      // Fetch the created user with roles to return
-      const { data: profileData, error: fetchError } = await supabaseAuth
+      // Fetch the complete user data with roles and profile
+      const { data: completeUserData, error: fetchError } = await supabaseAuth
         .from("profiles")
         .select(
           `
@@ -478,7 +375,7 @@ class UserManagementService {
           updated_at
         `,
         )
-        .eq("id", authData.user.id)
+        .eq("id", createdUserId)
         .single();
 
       if (fetchError) {
@@ -491,21 +388,60 @@ class UserManagementService {
         );
       }
 
+      // Fetch user roles for the created user
+      let userRoles: UserRoleRow[] = [];
+      if (userData.role_ids && userData.role_ids.length > 0) {
+        try {
+          const { data: rolesData, error: rolesError } = await supabaseAuth
+            .from("user_roles")
+            .select(
+              `
+              role:roles(
+                id,
+                name,
+                description
+              )
+            `,
+            )
+            .eq("user_id", createdUserId);
+
+          if (!rolesError && rolesData) {
+            userRoles = (rolesData as unknown[]).map((userRole: unknown) => {
+              const roleEntry = userRole as {
+                role: { id: number; name: string; description: string };
+              };
+              return {
+                role: {
+                  id: roleEntry.role?.id || 0,
+                  name: roleEntry.role?.name || "",
+                  description: roleEntry.role?.description || "",
+                },
+              };
+            });
+          }
+        } catch (rolesFetchError) {
+          console.warn(
+            `[${this.serviceName}] Could not fetch roles for created user:`,
+            rolesFetchError,
+          );
+        }
+      }
+
       // Construct User object to return
       const newUser: User = {
-        id: authData.user.id,
-        email: userData.email,
-        display_name: profileData.full_name,
-        avatar_url: profileData.avatar_url,
-        user_roles: [], // Will be populated when roles are fetched
+        id: createdUserId,
+        email: createdUserEmail,
+        display_name: completeUserData.full_name,
+        avatar_url: completeUserData.avatar_url || "",
+        user_roles: userRoles,
         department_id: userData.department_id,
         status: UserStatus.ACTIVE,
         profile: {
-          full_name: profileData.full_name || "",
-          avatar_url: profileData.avatar_url || "",
+          full_name: completeUserData.full_name || "",
+          avatar_url: completeUserData.avatar_url || "",
         },
-        created_at: profileData.created_at || new Date().toISOString(),
-        updated_at: profileData.updated_at || new Date().toISOString(),
+        created_at: completeUserData.created_at || new Date().toISOString(),
+        updated_at: completeUserData.updated_at || new Date().toISOString(),
       };
 
       return newUser;
@@ -523,69 +459,26 @@ class UserManagementService {
       const supabase = createClient();
       const supabaseAuth = createClientAuth();
 
-      // Prepare updates for auth.users table (exclude fields that don't exist in auth schema)
-      const authUpdates: Record<string, unknown> = {};
-      if (updates.email) authUpdates.email = updates.email;
-      if (updates.status) authUpdates.status = updates.status;
+      // Use update_user RPC function to handle all user updates
+      const { data: updateResult, error: updateError } = await supabaseAuth.rpc(
+        "update_user",
+        {
+          p_user_id: id,
+          p_email: updates.email || null,
+          p_display_name: updates.display_name || null,
+          p_department_id: updates.department_id || null,
+        },
+      );
 
-      // Handle display_name through user metadata update
-      if (updates.display_name !== undefined) {
-        // Update user metadata instead of direct column
-        const { error: metaError } = await supabase.auth.admin.updateUserById(
-          id,
-          {
-            user_metadata: { display_name: updates.display_name },
-          },
+      if (updateError) {
+        console.error(
+          `[${this.serviceName}] Error updating user via RPC:`,
+          updateError,
         );
-
-        if (metaError) {
-          console.error(
-            `[${this.serviceName}] Error updating user metadata:`,
-            metaError,
-          );
-          throw new Error(
-            `Failed to update user metadata: ${metaError.message}`,
-          );
-        }
+        throw new Error(`Failed to update user: ${updateError.message}`);
       }
 
-      // Update other fields in auth.users if they exist
-      if (Object.keys(authUpdates).length > 0) {
-        const { error: authUpdateError } = await supabaseAuth
-          .from("users")
-          .update({
-            ...authUpdates,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
-
-        if (authUpdateError) {
-          console.error(
-            `[${this.serviceName}] Error updating auth user:`,
-            authUpdateError,
-          );
-          // Don't throw here, continue with other updates
-        }
-      }
-
-      // Handle department_id updates
-      if (updates.department_id !== undefined) {
-        const { error: deptError } = await supabaseAuth
-          .from("users")
-          .update({
-            department_id: updates.department_id,
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", id);
-
-        if (deptError) {
-          console.error(
-            `[${this.serviceName}] Error updating user department:`,
-            deptError,
-          );
-          // Don't throw here, continue with other updates
-        }
-      }
+      console.log("User updated successfully via RPC", updateResult);
 
       // Handle role updates
       if (updates.role_ids && updates.role_ids.length > 0) {

@@ -1,37 +1,16 @@
 "use client";
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import {
-  Card,
-  Button,
-  Modal,
-  Label,
-  TextInput,
-  Select,
-  Badge,
-  Avatar,
-} from "flowbite-react";
+import { Card, Button, Modal, Label, Badge, Avatar } from "flowbite-react";
 import { usePaginatedUserManagement } from "@/hooks/usePaginatedUserManagement";
 import { Pagination } from "@/components/pagination";
+import { TableSearch } from "@/components";
 import { ProfilePictureUpload } from "@/components/profilePictureUpload";
-import { CreateUserForm } from "@/components/userManagement";
+import { UserFormModal } from "@/components/userManagement";
 import { useToast } from "@/components/toast";
-import {
-  User,
-  UpdateUserInput,
-  UserStatus,
-  UserRoleRow,
-} from "@/interfaces/UserManagement";
+import { User, UserStatus, UserRoleRow } from "@/interfaces/UserManagement";
 import { DEFAULT_PAGE_SIZE } from "@/interfaces/Pagination";
 import { SUCCESS_MESSAGES } from "@/constants";
-
-interface EditUserFormData {
-  email: string;
-  display_name: string;
-  role_ids: number[];
-  department_id: string;
-  status: UserStatus;
-}
 
 export default function UsersPage() {
   const { showToast } = useToast();
@@ -47,7 +26,6 @@ export default function UsersPage() {
     getAllRoles,
     getAllDepartments,
     getUserStatistics,
-    updateUser,
     deleteUser,
     uploadProfilePicture,
     updateUserProfile,
@@ -55,20 +33,13 @@ export default function UsersPage() {
   } = usePaginatedUserManagement();
 
   // Modal states
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
+  const [showUserModal, setShowUserModal] = useState(false);
+  const [userModalMode, setUserModalMode] = useState<"create" | "edit">(
+    "create",
+  );
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
-
-  // Form state for editing users only (create form uses React Hook Form)
-  const [formData, setFormData] = useState<EditUserFormData>({
-    email: "",
-    display_name: "",
-    role_ids: [], // Default to basic user role
-    department_id: "",
-    status: UserStatus.ACTIVE,
-  });
 
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState("");
@@ -160,26 +131,19 @@ export default function UsersPage() {
     setCurrentPage(1); // Reset to first page when page size changes
   }, []);
 
-  // Form handlers
-  const resetForm = () => {
-    setFormData({
-      email: "",
-      display_name: "",
-      role_ids: [],
-      department_id: "",
-      status: UserStatus.ACTIVE,
-    });
-    setSelectedUser(null);
-  };
-
-  // Handle successful user creation from the new form component
-  const handleUserCreationSuccess = async (newUser: User) => {
-    console.log(newUser);
-    // Show success toast
-    showToast(SUCCESS_MESSAGES.USER_CREATED, "success");
+  // Handle successful user creation/edit from the unified modal
+  const handleUserSuccess = async (user: User) => {
+    console.log(user);
+    // Show success toast based on the current mode
+    const message =
+      userModalMode === "create"
+        ? SUCCESS_MESSAGES.USER_CREATED
+        : SUCCESS_MESSAGES.USER_UPDATED;
+    showToast(message, "success");
 
     // Close modal
-    setShowCreateModal(false);
+    setShowUserModal(false);
+    setSelectedUser(null);
 
     // Refresh users list and statistics
     await Promise.all([
@@ -190,42 +154,6 @@ export default function UsersPage() {
       }),
       getUserStatistics(),
     ]);
-  };
-
-  const handleUpdateUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedUser) return;
-
-    // Validate at least one role is selected
-    if (formData.role_ids.length === 0) {
-      showToast("Please select at least one role", "error");
-      return;
-    }
-
-    try {
-      const updates: UpdateUserInput = {
-        email: formData.email,
-        display_name: formData.display_name,
-        role_ids: formData.role_ids,
-        department_id: formData.department_id,
-        status: formData.status,
-      };
-
-      const updatedUser = await updateUser(selectedUser.id, updates);
-      if (updatedUser) {
-        showToast(SUCCESS_MESSAGES.USER_UPDATED, "success");
-        setShowEditModal(false);
-        resetForm();
-        // Refresh user statistics after updating a user
-        await getUserStatistics();
-      }
-    } catch (error) {
-      console.error("Error updating user:", error);
-      showToast(
-        error instanceof Error ? error.message : "Failed to update user",
-        "error",
-      );
-    }
   };
 
   const handleDeleteUser = async () => {
@@ -274,20 +202,15 @@ export default function UsersPage() {
 
   // Modal openers
   const openCreateModal = () => {
-    resetForm();
-    setShowCreateModal(true);
+    setSelectedUser(null);
+    setUserModalMode("create");
+    setShowUserModal(true);
   };
 
   const openEditModal = (user: User) => {
     setSelectedUser(user);
-    setFormData({
-      email: user.email,
-      display_name: user.display_name || "",
-      role_ids: user.user_roles?.map((userRole) => userRole.role.id) ?? [],
-      department_id: user.department_id || "",
-      status: user.status,
-    });
-    setShowEditModal(true);
+    setUserModalMode("edit");
+    setShowUserModal(true);
   };
 
   const openDeleteModal = (user: User) => {
@@ -482,6 +405,17 @@ export default function UsersPage() {
             </div>
           </div>
         </Card>
+      </div>
+
+      {/* Search and Filters */}
+      <div className="mb-6">
+        <TableSearch
+          searchValue={searchTerm}
+          onSearchChange={handleSearchChange}
+          searchPlaceholder="Search users by name or email..."
+          pageSize={pageSize}
+          onPageSizeChange={handlePageSizeChange}
+        />
       </div>
 
       {/* Users Table */}
@@ -680,9 +614,10 @@ export default function UsersPage() {
                             <button
                               onClick={() => openProfileModal(user)}
                               className="inline-flex items-center rounded-md bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                              title="View user"
                             >
                               <svg
-                                className="mr-1 h-3 w-3"
+                                className="h-3 w-3"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -694,14 +629,14 @@ export default function UsersPage() {
                                   d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
                                 />
                               </svg>
-                              <span className="hidden sm:inline">View</span>
                             </button>
                             <button
                               onClick={() => openEditModal(user)}
                               className="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                              title="Edit user"
                             >
                               <svg
-                                className="mr-1 h-3 w-3"
+                                className="h-3 w-3"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -713,14 +648,14 @@ export default function UsersPage() {
                                   d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                 />
                               </svg>
-                              <span className="hidden sm:inline">Edit</span>
                             </button>
                             <button
                               onClick={() => openDeleteModal(user)}
                               className="inline-flex items-center rounded-md bg-red-100 px-2 py-1 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
+                              title="Delete user"
                             >
                               <svg
-                                className="mr-1 h-3 w-3"
+                                className="h-3 w-3"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -732,7 +667,6 @@ export default function UsersPage() {
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                               </svg>
-                              <span className="hidden sm:inline">Delete</span>
                             </button>
                           </div>
                         </td>
@@ -777,17 +711,13 @@ export default function UsersPage() {
 
             {/* Pagination */}
             {users && (
-              <div className="bg-gray-50 px-6 py-3 dark:bg-gray-700">
+              <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
                 <Pagination
                   currentPage={users.pagination.page}
                   totalPages={users.pagination.totalPages}
                   pageSize={users.pagination.pageSize}
                   total={users.pagination.total}
                   onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                  searchValue={searchTerm}
-                  onSearchChange={handleSearchChange}
-                  searchPlaceholder="Search users by name or email..."
                 />
               </div>
             )}
@@ -795,148 +725,28 @@ export default function UsersPage() {
         )}
       </div>
 
-      {/* Create User Modal - Using React Hook Form Component */}
-      <CreateUserForm
-        isOpen={showCreateModal}
-        onClose={() => setShowCreateModal(false)}
-        onSuccess={handleUserCreationSuccess}
+      {/* Unified User Modal - Handles both create and edit */}
+      <UserFormModal
+        isOpen={showUserModal}
+        onClose={() => {
+          setShowUserModal(false);
+          setSelectedUser(null);
+        }}
+        onSuccess={handleUserSuccess}
+        mode={userModalMode}
+        user={selectedUser}
         availableRoles={allRoles}
         availableDepartments={allDepartments}
       />
-
-      {/* Edit User Modal */}
-      <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
-        <div className="p-6">
-          <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
-            Edit User
-          </h3>
-          <form onSubmit={handleUpdateUser} className="space-y-4">
-            <div>
-              <Label htmlFor="edit_email">Email Address *</Label>
-              <TextInput
-                id="edit_email"
-                type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_display_name">Display Name</Label>
-              <TextInput
-                id="edit_display_name"
-                type="text"
-                value={formData.display_name}
-                onChange={(e) =>
-                  setFormData({ ...formData, display_name: e.target.value })
-                }
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="edit_role">Roles *</Label>
-              <div className="space-y-2">
-                {allRoles.map((role) => (
-                  <div key={role.id} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      id={`edit-role-${role.id}`}
-                      className="mr-2 h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700"
-                      checked={formData.role_ids.includes(role.id)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            role_ids: [...formData.role_ids, role.id],
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            role_ids: formData.role_ids.filter(
-                              (id: number) => id !== role.id,
-                            ),
-                          });
-                        }
-                      }}
-                    />
-                    <label
-                      htmlFor={`edit-role-${role.id}`}
-                      className="text-sm font-medium text-gray-700 dark:text-gray-300"
-                    >
-                      {role.name}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              {formData.role_ids.length === 0 && (
-                <p className="mt-1 text-sm text-red-500">
-                  At least one role must be selected
-                </p>
-              )}
-            </div>
-
-            <div>
-              <Label htmlFor="edit_department">Department</Label>
-              <Select
-                id="edit_department"
-                value={formData.department_id}
-                onChange={(e) =>
-                  setFormData({ ...formData, department_id: e.target.value })
-                }
-              >
-                <option value="">No Department</option>
-                {allDepartments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="edit_status">Status</Label>
-              <Select
-                id="edit_status"
-                value={formData.status}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    status: e.target.value as UserStatus,
-                  })
-                }
-              >
-                <option value={UserStatus.ACTIVE}>Active</option>
-                <option value={UserStatus.INACTIVE}>Inactive</option>
-                <option value={UserStatus.SUSPENDED}>Suspended</option>
-                <option value={UserStatus.PENDING}>Pending</option>
-              </Select>
-            </div>
-
-            <div className="flex justify-end space-x-2">
-              <Button color="gray" onClick={() => setShowEditModal(false)}>
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading || formData.role_ids.length === 0}
-              >
-                {loading ? "Updating..." : "Update User"}
-              </Button>
-            </div>
-          </form>
-        </div>
-      </Modal>
 
       {/* Profile Modal */}
       <Modal
         show={showProfileModal}
         onClose={() => setShowProfileModal(false)}
-        size="lg"
+        size="xl"
+        className="z-[100]"
       >
-        <div className="p-6">
+        <div className="relative p-6">
           <h3 className="mb-6 text-lg font-bold text-gray-900 dark:text-white">
             User Profile
           </h3>
@@ -1001,49 +811,108 @@ export default function UsersPage() {
         </div>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation Modal - Updated design */}
       <Modal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        size="md"
+        size="lg"
+        className="z-[100]"
       >
-        <div className="p-6">
+        <div className="relative p-8">
           <div className="text-center">
-            <svg
-              className="mx-auto mb-4 h-14 w-14 text-red-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
-              />
-            </svg>
-            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+              <svg
+                className="h-8 w-8 text-red-600 dark:text-red-400"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                />
+              </svg>
+            </div>
+
+            <h3 className="mb-2 text-xl font-semibold text-gray-900 dark:text-white">
+              Delete User
+            </h3>
+
+            <p className="mb-2 text-gray-500 dark:text-gray-400">
               Are you sure you want to delete{" "}
-              <span className="font-semibold">
+              <span className="font-semibold text-gray-900 dark:text-white">
                 {selectedUser?.display_name || selectedUser?.email}
               </span>
               ?
-            </h3>
-            <p className="text-sm text-gray-400 dark:text-gray-500">
-              This action cannot be undone. All user data and access will be
-              permanently removed.
             </p>
 
+            <div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h4 className="text-sm font-medium text-red-800 dark:text-red-200">
+                    Warning: This action cannot be undone
+                  </h4>
+                  <p className="mt-1 text-sm text-red-700 dark:text-red-300">
+                    All user data, permissions, and access will be permanently
+                    removed from the system.
+                  </p>
+                </div>
+              </div>
+            </div>
+
             <div className="mt-6 flex justify-center gap-4">
+              <Button color="gray" onClick={() => setShowDeleteModal(false)}>
+                Cancel
+              </Button>
               <Button
                 color="failure"
                 onClick={handleDeleteUser}
                 disabled={loading}
+                className="focus:ring-red-300"
               >
-                {loading ? "Deleting..." : "Yes, delete"}
-              </Button>
-              <Button color="gray" onClick={() => setShowDeleteModal(false)}>
-                Cancel
+                {loading ? (
+                  <div className="flex items-center">
+                    <svg
+                      className="mr-2 h-4 w-4 animate-spin"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      />
+                    </svg>
+                    Deleting...
+                  </div>
+                ) : (
+                  "Yes, delete user"
+                )}
               </Button>
             </div>
           </div>

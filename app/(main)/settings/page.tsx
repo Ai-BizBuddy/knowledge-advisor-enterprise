@@ -11,7 +11,6 @@ const settingsOverview = [
     title: "Users",
     description: "Manage user accounts, profiles, and access",
     href: "/settings/users",
-    stats: { total: 0, active: 0 },
     bgColor: "bg-blue-50 dark:bg-blue-900/20",
     borderColor: "border-blue-200 dark:border-blue-800",
     textColor: "text-blue-900 dark:text-blue-100",
@@ -20,7 +19,6 @@ const settingsOverview = [
     title: "Roles",
     description: "Configure user roles and permission levels",
     href: "/settings/roles",
-    stats: { total: 0, system: 0 },
     bgColor: "bg-purple-50 dark:bg-purple-900/20",
     borderColor: "border-purple-200 dark:border-purple-800",
     textColor: "text-purple-900 dark:text-purple-100",
@@ -29,7 +27,6 @@ const settingsOverview = [
     title: "Permissions",
     description: "Set up granular access controls",
     href: "/settings/permissions",
-    stats: { total: 0, resources: 0 },
     bgColor: "bg-emerald-50 dark:bg-emerald-900/20",
     borderColor: "border-emerald-200 dark:border-emerald-800",
     textColor: "text-emerald-900 dark:text-emerald-100",
@@ -38,7 +35,6 @@ const settingsOverview = [
     title: "Departments",
     description: "Organize users by departments",
     href: "/settings/departments",
-    stats: { total: 0, active: 0 },
     bgColor: "bg-orange-50 dark:bg-orange-900/20",
     borderColor: "border-orange-200 dark:border-orange-800",
     textColor: "text-orange-900 dark:text-orange-100",
@@ -74,14 +70,6 @@ export default function SettingsPage() {
                   <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
                     {item.description}
                   </p>
-                  <div className="flex space-x-4 text-xs text-gray-500 dark:text-gray-500">
-                    {Object.entries(item.stats).map(([key, value]) => (
-                      <div key={key} className="flex items-center space-x-1">
-                        <span className="capitalize">{key}:</span>
-                        <span className="font-medium">{value}</span>
-                      </div>
-                    ))}
-                  </div>
                 </div>
                 <div className="text-gray-400 transition-colors group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400">
                   <svg

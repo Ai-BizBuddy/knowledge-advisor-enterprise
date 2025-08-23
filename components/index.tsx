@@ -35,6 +35,11 @@ export * from "./toast";
 
 // Permissions Table Components
 export { PermissionsTable } from "./PermissionsTable";
+export type { PermissionsTableProps } from "./PermissionsTable";
 export * from "./rolePermissionsManager";
+
+// Table Search Components
+export * from "./tableSearch";
+
 // Layout Components
 export * from "./layouts";

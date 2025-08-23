@@ -13,6 +13,7 @@ import {
 } from "flowbite-react";
 import { usePaginatedUserManagement } from "@/hooks/usePaginatedUserManagement";
 import { Pagination } from "@/components/pagination";
+import { TableSearch } from "@/components";
 import { Department, CreateDepartmentInput } from "@/interfaces/UserManagement";
 import { DEFAULT_PAGE_SIZE } from "@/interfaces/Pagination";
 import { useToast } from "@/components/toast";
@@ -106,25 +107,6 @@ export default function DepartmentsPage() {
       });
     },
     [pageSize, searchTerm, statusFilter, getDepartmentsPaginated],
-  );
-
-  const handlePageSizeChange = useCallback(
-    (newPageSize: number) => {
-      setPageSize(newPageSize);
-      setCurrentPage(1);
-      getDepartmentsPaginated({
-        page: 1,
-        pageSize: newPageSize,
-        search: searchTerm,
-        is_active:
-          statusFilter === "active"
-            ? true
-            : statusFilter === "inactive"
-              ? false
-              : undefined,
-      });
-    },
-    [searchTerm, statusFilter, getDepartmentsPaginated],
   );
 
   // Form handlers
@@ -486,8 +468,19 @@ export default function DepartmentsPage() {
         </div>
       </Card>
 
+      {/* Search and Filters */}
+      <div className="mb-6">
+        <TableSearch
+          searchValue={searchTerm}
+          onSearchChange={setSearchTerm}
+          searchPlaceholder="Search departments by name..."
+          pageSize={pageSize}
+          onPageSizeChange={setPageSize}
+        />
+      </div>
+
       {/* Departments Table */}
-      <Card className="border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
         <div className="overflow-x-auto">
           {loading ? (
             <div className="flex h-64 items-center justify-center">
@@ -497,7 +490,7 @@ export default function DepartmentsPage() {
             <>
               <div className="min-w-full">
                 <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-900">
+                  <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
                       <th
                         scope="col"
@@ -726,24 +719,20 @@ export default function DepartmentsPage() {
 
               {/* Pagination */}
               {departments && (
-                <div className="p-6">
+                <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
                   <Pagination
                     currentPage={departments.pagination.page}
                     totalPages={departments.pagination.totalPages}
                     pageSize={departments.pagination.pageSize}
                     total={departments.pagination.total}
                     onPageChange={handlePageChange}
-                    onPageSizeChange={handlePageSizeChange}
-                    searchValue={searchTerm}
-                    onSearchChange={setSearchTerm}
-                    searchPlaceholder="Search departments by name or description..."
                   />
                 </div>
               )}
             </>
           )}
         </div>
-      </Card>
+      </div>
 
       {/* Create Department Modal */}
       <Modal

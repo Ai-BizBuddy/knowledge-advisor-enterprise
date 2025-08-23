@@ -1,20 +1,14 @@
 /**
  * Pagination Component
  *
- * Reusable pagination controls for tables with search and page size selection.
+ * Reusable pagination controls for tables (navigation only).
+ * For search functionality, use TableSearch component separately.
  */
 
 import React from "react";
-import { Button, Select, TextInput } from "flowbite-react";
-import { PAGE_SIZE_OPTIONS } from "@/interfaces/Pagination";
 import type { PaginationControls } from "@/interfaces/Pagination";
 
 export interface PaginationProps extends PaginationControls {
-  searchValue?: string;
-  onSearchChange?: (search: string) => void;
-  searchPlaceholder?: string;
-  showSearch?: boolean;
-  showPageSizeSelector?: boolean;
   className?: string;
 }
 
@@ -24,12 +18,6 @@ export const Pagination: React.FC<PaginationProps> = ({
   pageSize,
   total,
   onPageChange,
-  onPageSizeChange,
-  searchValue = "",
-  onSearchChange,
-  searchPlaceholder = "Search...",
-  showSearch = true,
-  showPageSizeSelector = true,
   className = "",
 }) => {
   const startItem = (currentPage - 1) * pageSize + 1;
@@ -74,119 +62,181 @@ export const Pagination: React.FC<PaginationProps> = ({
   const visiblePages = getVisiblePages();
 
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Search and Page Size Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {showSearch && onSearchChange && (
-          <div className="w-full sm:w-80">
-            <TextInput
-              type="text"
-              placeholder={searchPlaceholder}
-              value={searchValue}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="w-full"
-            />
-          </div>
-        )}
-
-        {showPageSizeSelector && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              Show
-            </span>
-            <Select
-              value={pageSize.toString()}
-              onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
-              className="w-20"
-            >
-              {PAGE_SIZE_OPTIONS.map((size) => (
-                <option key={size} value={size.toString()}>
-                  {size}
-                </option>
-              ))}
-            </Select>
-            <span className="text-sm text-gray-700 dark:text-gray-300">
-              entries
-            </span>
-          </div>
-        )}
-      </div>
-
-      {/* Pagination Info and Controls */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        {/* Info */}
+    <div className={`${className}`}>
+      {/* Desktop Layout: 3-column layout */}
+      <div className="hidden items-center justify-between md:flex">
+        {/* Left: Results Info */}
         <div className="text-sm text-gray-700 dark:text-gray-300">
           Showing <span className="font-medium">{startItem}</span> to{" "}
           <span className="font-medium">{endItem}</span> of{" "}
           <span className="font-medium">{total}</span> results
         </div>
 
-        {/* Pagination Controls */}
+        {/* Center: Page Info */}
+        <div className="text-sm text-gray-500 dark:text-gray-400">
+          Page {currentPage} of {totalPages}
+        </div>
+
+        {/* Right: Navigation Controls */}
         {totalPages > 1 && (
           <div className="flex items-center space-x-1">
             {/* Previous Button */}
-            <Button
-              size="sm"
-              color="gray"
+            <button
               disabled={currentPage === 1}
               onClick={() => onPageChange(currentPage - 1)}
-              className="px-3 py-2"
+              className="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
             >
               <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className="mr-1 h-4 w-4"
+                aria-hidden="true"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
+                  fillRule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clipRule="evenodd"
                 />
               </svg>
-            </Button>
+              Previous
+            </button>
 
             {/* Page Numbers */}
             {visiblePages.map((page, index) => (
               <React.Fragment key={index}>
                 {page === "..." ? (
-                  <span className="px-3 py-2 text-gray-500">...</span>
+                  <span className="flex items-center justify-center border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400">
+                    ...
+                  </span>
                 ) : (
-                  <Button
-                    size="sm"
-                    color={currentPage === page ? "blue" : "gray"}
+                  <button
                     onClick={() => onPageChange(page as number)}
-                    className="px-3 py-2"
+                    className={`flex items-center justify-center rounded-lg border px-3 py-2 text-sm leading-tight transition-colors ${
+                      currentPage === page
+                        ? "border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
+                        : "border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                    }`}
                   >
                     {page}
-                  </Button>
+                  </button>
                 )}
               </React.Fragment>
             ))}
 
             {/* Next Button */}
-            <Button
-              size="sm"
-              color="gray"
+            <button
               disabled={currentPage === totalPages}
               onClick={() => onPageChange(currentPage + 1)}
-              className="px-3 py-2"
+              className="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
             >
+              Next
               <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className="ml-1 h-4 w-4"
+                aria-hidden="true"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
                 />
               </svg>
-            </Button>
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Mobile Layout: Stacked */}
+      <div className="flex flex-col space-y-3 md:hidden">
+        {/* Results Info and Page Info */}
+        <div className="flex items-center justify-between text-sm">
+          <div className="text-gray-700 dark:text-gray-300">
+            <span className="font-medium">
+              {startItem}-{endItem}
+            </span>{" "}
+            of <span className="font-medium">{total}</span>
+          </div>
+          <div className="text-gray-500 dark:text-gray-400">
+            Page {currentPage} of {totalPages}
+          </div>
+        </div>
+
+        {/* Navigation Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between">
+            {/* Previous Button */}
+            <button
+              disabled={currentPage === 1}
+              onClick={() => onPageChange(currentPage - 1)}
+              className="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              <svg
+                className="mr-1 h-4 w-4"
+                aria-hidden="true"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              Previous
+            </button>
+
+            {/* Page Numbers - Show only current and adjacent pages on mobile */}
+            <div className="flex items-center space-x-1">
+              {visiblePages
+                .filter((page) => {
+                  if (page === "...") return false;
+                  const pageNum = page as number;
+                  return (
+                    Math.abs(pageNum - currentPage) <= 1 ||
+                    pageNum === 1 ||
+                    pageNum === totalPages
+                  );
+                })
+                .map((page, index) => (
+                  <button
+                    key={index}
+                    onClick={() => onPageChange(page as number)}
+                    className={`flex items-center justify-center rounded-lg border px-3 py-2 text-sm leading-tight transition-colors ${
+                      currentPage === page
+                        ? "border-blue-500 bg-blue-600 text-white hover:bg-blue-700"
+                        : "border-gray-300 bg-white text-gray-500 hover:bg-gray-100 hover:text-gray-700 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+            </div>
+
+            {/* Next Button */}
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(currentPage + 1)}
+              className="flex items-center justify-center rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm leading-tight text-gray-500 hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white"
+            >
+              Next
+              <svg
+                className="ml-1 h-4 w-4"
+                aria-hidden="true"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
           </div>
         )}
       </div>

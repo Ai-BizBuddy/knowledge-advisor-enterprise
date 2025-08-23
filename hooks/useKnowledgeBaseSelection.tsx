@@ -9,9 +9,12 @@ export interface KnowledgeBaseSelection {
 }
 
 export const useKnowledgeBaseSelection = () => {
-  const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBaseSelection[]>([]);
+  const [knowledgeBases, setKnowledgeBases] = useState<
+    KnowledgeBaseSelection[]
+  >([]);
   const [loading, setLoading] = useState(true);
-  const [selectAllKB, setSelectAllKB] = useState(false);  const loadKnowledgeBases = useCallback(async () => {
+  const [selectAllKB, setSelectAllKB] = useState(false);
+  const loadKnowledgeBases = useCallback(async () => {
     try {
       // Provide required pagination options - fetch all knowledge bases for selection
       const paginationOptions = {
@@ -21,18 +24,20 @@ export const useKnowledgeBaseSelection = () => {
         endIndex: 999, // Large number to get all knowledge bases
         totalItems: 0,
       };
-      
+
       const result = await knowledgeBaseService.getProjects(paginationOptions);
-      const kbSelection: KnowledgeBaseSelection[] = result.data.map(project => ({
-        id: project.id,
-        name: project.name,
-        selected: false,
-        documentCount: project.document_count || 0
-      }));
+      const kbSelection: KnowledgeBaseSelection[] = result.data.map(
+        (project) => ({
+          id: project.id,
+          name: project.name,
+          selected: false,
+          documentCount: project.document_count || 0,
+        }),
+      );
       setKnowledgeBases(kbSelection);
       setLoading(false);
     } catch (error) {
-      console.error('Error loading knowledge bases:', error);
+      console.error("Error loading knowledge bases:", error);
       setLoading(false);
     }
   }, []);
@@ -41,32 +46,32 @@ export const useKnowledgeBaseSelection = () => {
     loadKnowledgeBases();
   }, [loadKnowledgeBases]);
   const handleSelectKnowledgeBase = useCallback((kbId: string) => {
-    setKnowledgeBases(prev => 
-      prev.map(kb => 
-        kb.id === kbId ? { ...kb, selected: !kb.selected } : kb
-      )
+    setKnowledgeBases((prev) =>
+      prev.map((kb) =>
+        kb.id === kbId ? { ...kb, selected: !kb.selected } : kb,
+      ),
     );
   }, []);
 
   const handleSelectAllKB = useCallback(() => {
     const newSelectAll = !selectAllKB;
     setSelectAllKB(newSelectAll);
-    setKnowledgeBases(prev => 
-      prev.map(kb => ({ ...kb, selected: newSelectAll }))
+    setKnowledgeBases((prev) =>
+      prev.map((kb) => ({ ...kb, selected: newSelectAll })),
     );
   }, [selectAllKB]);
 
   const getSelectedKnowledgeBases = useCallback(() => {
-    return knowledgeBases.filter(kb => kb.selected);
+    return knowledgeBases.filter((kb) => kb.selected);
   }, [knowledgeBases]);
 
   const getSelectedCount = useCallback(() => {
-    return knowledgeBases.filter(kb => kb.selected).length;
+    return knowledgeBases.filter((kb) => kb.selected).length;
   }, [knowledgeBases]);
 
   const getTotalDocuments = useCallback(() => {
     return knowledgeBases
-      .filter(kb => kb.selected)
+      .filter((kb) => kb.selected)
       .reduce((sum, kb) => sum + kb.documentCount, 0);
   }, [knowledgeBases]);
 
@@ -78,6 +83,6 @@ export const useKnowledgeBaseSelection = () => {
     handleSelectAllKB,
     getSelectedKnowledgeBases,
     getSelectedCount,
-    getTotalDocuments
+    getTotalDocuments,
   };
 };

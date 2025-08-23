@@ -34,7 +34,7 @@ export interface PaginationControls {
   pageSize: number;
   total: number;
   onPageChange: (page: number) => void;
-  onPageSizeChange: (pageSize: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
 }
 
 export const DEFAULT_PAGE_SIZE = 10;
