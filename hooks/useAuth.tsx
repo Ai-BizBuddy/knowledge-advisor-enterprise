@@ -1,9 +1,9 @@
 'use client';
 
+import { useAuthContext } from '@/contexts/AuthContext';
+import { Session } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { createClient } from '../utils/supabase/client';
-import { Session } from '@supabase/supabase-js';
-import { useAuthContext } from '@/contexts/AuthContext';
 
 interface AuthState {
   loading: boolean;
