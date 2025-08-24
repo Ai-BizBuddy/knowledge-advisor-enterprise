@@ -40,7 +40,7 @@ export default function LoginPage() {
       setIsSubmitting(true);
       setLoading(true);
       await login(form.email, form.password);
-      
+
       // Check if login was successful
       const session = await getSession();
       if (session) {
@@ -124,7 +124,10 @@ export default function LoginPage() {
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               <Checkbox id='remember' disabled={isSubmitting} />
-              <Label htmlFor='remember' className={isSubmitting ? 'opacity-50' : ''}>
+              <Label
+                htmlFor='remember'
+                className={isSubmitting ? 'opacity-50' : ''}
+              >
                 Remember me
               </Label>
             </div>
@@ -138,11 +141,7 @@ export default function LoginPage() {
             </a>
           </div>
 
-          <Button 
-            type='submit' 
-            className='w-full' 
-            disabled={isSubmitting}
-          >
+          <Button type='submit' className='w-full' disabled={isSubmitting}>
             {isSubmitting ? (
               <div className='flex items-center justify-center'>
                 <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent'></div>
