@@ -230,7 +230,6 @@ class KnowledgeBaseService {
         document_count: documentCount || 0,
         status: project.is_active ? 1 : 2,
         owner: project.created_by,
-        is_active: (project.is_active as boolean) || false,
         created_at: project.created_at,
         updated_at: project.updated_at || project.created_at,
       } as Project;
@@ -329,7 +328,6 @@ class KnowledgeBaseService {
         document_count: 0, // Not available in current schema
         status: project.is_active ? 1 : 2,
         owner: project.created_by,
-        is_active: project.is_active || false,
         created_at: project.created_at,
         updated_at: project.updated_at || project.created_at,
       } as Project;
