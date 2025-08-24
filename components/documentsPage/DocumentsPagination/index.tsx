@@ -174,29 +174,6 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
               </>
             )}
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-400">
-            Page {currentPage} of {totalPages}
-          </div>
-          {onItemsPerPageChange && (
-            <div className="flex items-center gap-2">
-              <label className="text-sm text-gray-700 dark:text-gray-300">
-                Show:
-              </label>
-              <select
-                value={itemsPerPage}
-                onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-              >
-                <option value={5}>5</option>
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-              </select>
-              <span className="text-sm text-gray-700 dark:text-gray-300">
-                per page
-              </span>
-            </div>
-          )}
 
           {/* Go to page input */}
           {totalPages > 5 && (

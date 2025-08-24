@@ -101,18 +101,11 @@ export function useAllUserDocuments(
   const loadingRef = useRef(false);
 
   // Debounced search term
-  const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const debouncedSearchTerm = useDebounce(searchTerm, 500);
 
-  // Computed values
-  const startIndex = useMemo(
-    () => (currentPage - 1) * itemsPerPage,
-    [currentPage, itemsPerPage],
-  );
-
-  const endIndex = useMemo(
-    () => startIndex + itemsPerPage - 1,
-    [startIndex, itemsPerPage],
-  );
+  // Calculate pagination indices
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
   // Filter documents based on status and type
   const filteredDocuments = useMemo(() => {
@@ -174,9 +167,12 @@ export function useAllUserDocuments(
    * Load documents with pagination and filters
    */
   const loadDocuments = useCallback(
-    async (page: number = currentPage, forceRefresh: boolean = false) => {
-      // Prevent concurrent calls
-      if (loadingRef.current && !forceRefresh) return;
+    async (page = 1, forceRefresh = false) => {
+      // Prevent redundant calls when already loading (unless forced)
+      if (loadingRef.current && !forceRefresh) {
+        console.log("[useAllUserDocuments] Already loading, skipping call");
+        return;
+      }
 
       try {
         loadingRef.current = true;
@@ -187,14 +183,14 @@ export function useAllUserDocuments(
           currentPage: page,
           totalPages: 0,
           startIndex: (page - 1) * itemsPerPage,
-          endIndex: page * itemsPerPage - 1,
+          endIndex: (page - 1) * itemsPerPage + itemsPerPage - 1,
           totalItems: 0,
         };
 
         const filters = {
           status: selectedStatus !== "all" ? selectedStatus : undefined,
           type: selectedType !== "all" ? selectedType : undefined,
-          searchTerm: debouncedSearchTerm || undefined,
+          searchTerm: debouncedSearchTerm.trim() || undefined,
         };
 
         const result = await documentService.getAllUserDocuments(
@@ -221,7 +217,6 @@ export function useAllUserDocuments(
       }
     },
     [
-      currentPage,
       itemsPerPage,
       selectedStatus,
       selectedType,
@@ -293,10 +288,11 @@ export function useAllUserDocuments(
   const filterByStatus = useCallback(
     async (status: string): Promise<Document[]> => {
       setSelectedStatus(status);
-      await loadDocuments(1, true);
-      return filteredDocuments;
+      setCurrentPage(1);
+      // Don't call loadDocuments here - useEffect will handle it automatically
+      return filteredDocuments; // Return current documents, the effect will update them
     },
-    [loadDocuments, filteredDocuments],
+    [filteredDocuments],
   );
 
   /**
@@ -305,26 +301,30 @@ export function useAllUserDocuments(
   const filterByType = useCallback(
     async (type: string): Promise<Document[]> => {
       setSelectedType(type);
-      await loadDocuments(1, true);
-      return filteredDocuments;
+      setCurrentPage(1);
+      // Don't call loadDocuments here - useEffect will handle it automatically
+      return filteredDocuments; // Return current documents, the effect will update them
     },
-    [loadDocuments, filteredDocuments],
+    [filteredDocuments],
   );
 
   // Event handlers
-  const handleStatusChange = useCallback((status: string) => {
-    setSelectedStatus(status);
-    setCurrentPage(1);
-  }, []);
+  const handleStatusChange = useCallback(
+    (status: string) => {
+      filterByStatus(status);
+    },
+    [filterByStatus],
+  );
 
-  const handleTypeChange = useCallback((type: string) => {
-    setSelectedType(type);
-    setCurrentPage(1);
-  }, []);
+  const handleTypeChange = useCallback(
+    (type: string) => {
+      filterByType(type);
+    },
+    [filterByType],
+  );
 
   const handlePageChange = useCallback(
     (page: number) => {
-      setCurrentPage(page);
       loadDocuments(page);
     },
     [loadDocuments],
@@ -350,37 +350,19 @@ export function useAllUserDocuments(
     setError(null);
   }, []);
 
-  // Effects
+  // Auto-load on mount and when filters/pagination change
   useEffect(() => {
     if (autoLoad) {
       loadDocuments(1, true);
     }
-  }, [autoLoad, loadDocuments]);
-
-  // Reload when filters change
-  useEffect(() => {
-    if (
-      debouncedSearchTerm !== "" ||
-      selectedStatus !== "all" ||
-      selectedType !== "all"
-    ) {
-      loadDocuments(1, true);
-    }
-  }, [debouncedSearchTerm, selectedStatus, selectedType, loadDocuments]);
-
-  // Reload when itemsPerPage changes
-  useEffect(() => {
-    if (documents.length > 0) {
-      loadDocuments(1, true);
-    }
-  }, [itemsPerPage, documents.length, loadDocuments]);
-
-  // Reload when currentPage changes
-  useEffect(() => {
-    if (autoLoad && currentPage > 1) {
-      loadDocuments(currentPage);
-    }
-  }, [currentPage, autoLoad, loadDocuments]);
+  }, [
+    autoLoad,
+    selectedStatus,
+    selectedType,
+    debouncedSearchTerm, // Use debounced search term
+    itemsPerPage,
+    loadDocuments,
+  ]);
 
   return {
     // State
@@ -390,7 +372,7 @@ export function useAllUserDocuments(
     error,
     currentPage,
     totalPages,
-    startIndex,
+    startIndex: startIndex + 1,
     endIndex,
     totalItems,
     itemsPerPage,
