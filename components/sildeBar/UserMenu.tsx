@@ -1,6 +1,6 @@
 import { APP_STRINGS } from '@/constants';
 import { useUserProfile } from '@/hooks/useUserProfile';
-import Image from 'next/image';
+import { useEffect, useRef } from 'react';
 
 interface UserMenuProps {
   isOpen: boolean;
@@ -13,6 +13,25 @@ interface UserMenuProps {
  */
 export const UserMenu = ({ isOpen, onToggle, handleLogout }: UserMenuProps) => {
   const { userProfile, loading } = useUserProfile();
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        isOpen &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        onToggle();
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen, onToggle]);
 
   // Display values with fallbacks
   const displayName =
@@ -20,12 +39,9 @@ export const UserMenu = ({ isOpen, onToggle, handleLogout }: UserMenuProps) => {
     userProfile?.email?.split('@')[0] ||
     APP_STRINGS.DEFAULT_USER_NAME;
   const displayEmail = userProfile?.email || APP_STRINGS.DEFAULT_USER_EMAIL;
-  const avatarUrl =
-    userProfile?.avatar_url ||
-    'https://flowbite.com/docs/images/people/profile-picture-5.jpg';
 
   return (
-    <div className='relative'>
+    <div className='relative' ref={menuRef}>
       <button
         type='button'
         className='flex rounded-full bg-gray-800 text-sm focus:ring-4 focus:ring-gray-300 dark:focus:ring-gray-600'
@@ -34,19 +50,9 @@ export const UserMenu = ({ isOpen, onToggle, handleLogout }: UserMenuProps) => {
         disabled={loading}
       >
         <span className='sr-only'>Open user menu</span>
-        <Image
-          width={32}
-          height={32}
-          className='h-8 w-8 rounded-full'
-          src={avatarUrl}
-          alt='user photo'
-          priority={false}
-          onError={(e) => {
-            // Fallback to default image on error
-            e.currentTarget.src =
-              'https://flowbite.com/docs/images/people/profile-picture-5.jpg';
-          }}
-        />
+        <div className='flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 text-sm font-semibold text-white'>
+          {displayName.charAt(0).toUpperCase()}
+        </div>
       </button>
 
       {isOpen && (

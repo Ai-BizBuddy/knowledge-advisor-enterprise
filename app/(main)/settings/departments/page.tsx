@@ -1,22 +1,21 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import {
-  Card,
-  Button,
-  Modal,
-  Label,
-  TextInput,
-  Badge,
-  Textarea,
-  Checkbox,
-} from 'flowbite-react';
-import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
-import { Pagination } from '@/components/pagination';
 import { TableSearch } from '@/components';
-import { Department, CreateDepartmentInput } from '@/interfaces/UserManagement';
-import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { Pagination } from '@/components/pagination';
 import { useToast } from '@/components/toast';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { CreateDepartmentInput, Department } from '@/interfaces/UserManagement';
+import {
+  Button,
+  Card,
+  Checkbox,
+  Label,
+  Modal,
+  TextInput,
+  Textarea,
+} from 'flowbite-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function DepartmentsPage() {
   const {
@@ -211,41 +210,6 @@ export default function DepartmentsPage() {
       console.error('Error deleting department:', error);
       showToast(
         error instanceof Error ? error.message : 'Failed to delete department',
-        'error',
-      );
-    }
-  };
-
-  const toggleDepartmentStatus = async (department: Department) => {
-    try {
-      const updatedDepartment = await updateDepartment(department.id, {
-        is_active: !department.is_active,
-      });
-      if (updatedDepartment) {
-        const newStatus = updatedDepartment.is_active;
-        showToast(
-          `Department "${department.name}" ${newStatus ? 'activated' : 'deactivated'} successfully!`,
-          'success',
-        );
-        // Refresh current page
-        getDepartmentsPaginated({
-          page: currentPage,
-          pageSize,
-          search: searchTerm,
-          is_active:
-            statusFilter === 'active'
-              ? true
-              : statusFilter === 'inactive'
-                ? false
-                : undefined,
-        });
-      }
-    } catch (error) {
-      console.error('Error toggling department status:', error);
-      showToast(
-        error instanceof Error
-          ? error.message
-          : 'Failed to update department status',
         'error',
       );
     }

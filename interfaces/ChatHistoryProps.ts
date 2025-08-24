@@ -6,6 +6,7 @@ interface ChatHistoryProps {
   tags: string[];
   onDelete: () => void;
   onExport: () => void;
+  onClick?: () => void;
 }
 
 export type { ChatHistoryProps };

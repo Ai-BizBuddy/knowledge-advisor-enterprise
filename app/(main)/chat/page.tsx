@@ -13,18 +13,14 @@ import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function ChatPage() {
-  const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
+  const [isOnline, setIsOnline] = useState(true);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
-  const [toasts, setToasts] = useState<
-    Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>
-  >([]);
   const { setLoading } = useLoading();
 
   const {
     messages,
     isTyping,
-    connectionStatus,
     addWelcomeMessage,
     sendMessage,
     createNewChat,
@@ -33,13 +29,10 @@ export default function ChatPage() {
 
   const {
     knowledgeBases,
-    loading,
-    selectAllKB,
     handleSelectKnowledgeBase,
     handleSelectAllKB,
     getSelectedKnowledgeBases,
     getSelectedCount,
-    getTotalDocuments,
   } = useKnowledgeBaseSelection();
 
   useEffect(() => {
@@ -70,30 +63,6 @@ export default function ChatPage() {
     setMessage('');
     await sendMessage(cloneValue, selectedKBs, isOnline);
   };
-
-  useEffect(() => {
-    if (connectionStatus === 'timeout') {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: 'การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ',
-          type: 'error',
-        },
-      ]);
-    } else if (connectionStatus === 'error') {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่',
-          type: 'error',
-        },
-      ]);
-    }
-  }, [connectionStatus]);
 
   return (
     <>

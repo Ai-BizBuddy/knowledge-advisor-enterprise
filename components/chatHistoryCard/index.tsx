@@ -8,9 +8,13 @@ export default function ChatHistoryCard({
   tags,
   onDelete,
   onExport,
+  onClick,
 }: ChatHistoryProps) {
   return (
-    <div className='cursor-pointer rounded-lg bg-white p-4 text-white shadow transition-all hover:shadow-lg dark:bg-gray-900/95'>
+    <div
+      className='cursor-pointer rounded-lg bg-white p-4 text-white shadow transition-all hover:shadow-lg dark:bg-gray-900/95'
+      onClick={onClick}
+    >
       <div className='flex items-start justify-between'>
         <div>
           <h3 className='mb-1 text-sm font-semibold text-gray-900 dark:text-white'>
@@ -32,7 +36,10 @@ export default function ChatHistoryCard({
             <button
               className='rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-500/10 hover:text-blue-400'
               title='ส่งออก'
-              onClick={onExport}
+              onClick={(e) => {
+                e.stopPropagation();
+                onExport();
+              }}
             >
               <svg
                 className='h-4 w-4'
@@ -51,7 +58,10 @@ export default function ChatHistoryCard({
             <button
               className='rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-500/10 hover:text-red-400'
               title='ลบ'
-              onClick={onDelete}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
             >
               <svg
                 className='h-4 w-4'

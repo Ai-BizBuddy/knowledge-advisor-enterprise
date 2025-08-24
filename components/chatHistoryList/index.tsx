@@ -1,37 +1,13 @@
 'use client';
 
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
-import ChatHistoryCard from '../chatHistoryCard';
 import { useCallback, useEffect, useState } from 'react';
-
-const histories = [
-  {
-    title: 'มาตรฐานสินค้าทางการเกษตร',
-    dateTime: '7 ก.ค. 2568 22:48',
-    messageCount: 4,
-    size: '1 KB',
-    tags: ['ประกาศคำสั่งแต่งตั้งคณะกรรมการวิชาการ', 'มาตรฐานสินค้าทางการเกษตร'],
-  },
-  {
-    title: 'AI ในภาคอุตสาหกรรม',
-    dateTime: '2 ก.ค. 2568 10:15',
-    messageCount: 7,
-    size: '2.5 KB',
-    tags: ['AI usage', 'ความปลอดภัย'],
-  },
-  {
-    title: 'นโยบายด้านข้อมูลในสถานศึกษา',
-    dateTime: '28 มิ.ย. 2568 09:00',
-    messageCount: 3,
-    size: '890 B',
-    tags: ['GDPR', 'นโยบายการเข้าถึง'],
-  },
-];
+import ChatHistoryCard from '../chatHistoryCard';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onLoadSession: (session: ChatSession) => void;
+  onLoadSession?: (session: ChatSession) => void;
 }
 
 export default function ChatHistoryList({
@@ -97,6 +73,7 @@ export default function ChatHistoryList({
             messageCount={h.messages.length}
             size={''}
             tags={h.knowledgeBases}
+            onClick={() => onLoadSession?.(h)}
             onDelete={() => {
               deleteChatSession(h.id);
               loadSessions();

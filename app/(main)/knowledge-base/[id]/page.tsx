@@ -77,9 +77,6 @@ export default function KnowledgeBaseDetail() {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-  const [toasts, setToasts] = useState<
-    Array<{ id: string; message: string; type: 'success' | 'error' | 'info' }>
-  >([]);
 
   // Chat scroll ref
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -111,7 +108,6 @@ export default function KnowledgeBaseDetail() {
   const {
     messages,
     isTyping,
-    connectionStatus,
     addWelcomeMessage,
     sendMessage,
     createNewChat,
@@ -133,30 +129,6 @@ export default function KnowledgeBaseDetail() {
       addWelcomeMessage();
     }
   }, [id, messages.length, addWelcomeMessage]);
-
-  useEffect(() => {
-    if (connectionStatus === 'timeout') {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: 'การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ',
-          type: 'error',
-        },
-      ]);
-    } else if (connectionStatus === 'error') {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: 'เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่',
-          type: 'error',
-        },
-      ]);
-    }
-  }, [connectionStatus]);
 
   // Auto-scroll to bottom when messages or typing status changes
   useEffect(() => {
@@ -283,21 +255,6 @@ export default function KnowledgeBaseDetail() {
       }, 100);
     } catch (err) {
       console.error('[KnowledgeBaseDetail] Chat error:', err);
-      // Show error toast
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: 'ไม่สามารถส่งข้อความได้ กรุณาลองใหม่',
-          type: 'error',
-        },
-      ]);
-
-      // Auto remove toast after 5 seconds
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== toastId));
-      }, 5000);
     }
   };
 
