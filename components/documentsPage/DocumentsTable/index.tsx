@@ -279,22 +279,11 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6">
                         <button
-                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          className="inline-flex items-center rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800"
                           onClick={(e) => e.stopPropagation()}
+                          title="Delete document"
                         >
-                          <svg
-                            className="h-5 w-5"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                            />
-                          </svg>
+                          Delete
                         </button>
                       </td>
                     </tr>
