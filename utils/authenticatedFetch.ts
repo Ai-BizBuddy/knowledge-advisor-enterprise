@@ -1,6 +1,6 @@
 /**
  * Authenticated Fetch Client - Enhanced fetch client with Supabase Auth integration
- * 
+ *
  * Automatically handles token refresh and includes auth headers for all requests
  */
 
@@ -26,7 +26,10 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       // If we get a 401, handle auth error
       if (response.status === 401) {
         console.error('Authentication error: 401 Unauthorized');
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login'
+        ) {
           window.location.href = '/login';
         }
       }
@@ -37,7 +40,10 @@ class AuthenticatedFetchClient extends BaseFetchClient {
     this.addErrorInterceptor((error) => {
       if (error.status === 401) {
         console.error('Authentication error:', error);
-        if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        if (
+          typeof window !== 'undefined' &&
+          window.location.pathname !== '/login'
+        ) {
           window.location.href = '/login';
         }
       }
@@ -48,11 +54,16 @@ class AuthenticatedFetchClient extends BaseFetchClient {
   /**
    * Add authentication header to request config
    */
-  private async addAuthHeader(config: TypedFetchConfig): Promise<TypedFetchConfig> {
+  private async addAuthHeader(
+    config: TypedFetchConfig,
+  ): Promise<TypedFetchConfig> {
     try {
       // Get the current session
-      const { data: { session }, error } = await this.supabase.auth.getSession();
-      
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.getSession();
+
       if (error) {
         console.error('Error getting session for API request:', error);
         return config;
@@ -64,8 +75,8 @@ class AuthenticatedFetchClient extends BaseFetchClient {
           ...config,
           headers: {
             ...config.headers,
-            'Authorization': `Bearer ${session.access_token}`,
-          }
+            Authorization: `Bearer ${session.access_token}`,
+          },
         };
       }
 
@@ -79,33 +90,54 @@ class AuthenticatedFetchClient extends BaseFetchClient {
   /**
    * Enhanced request methods with auth
    */
-  async get<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async get<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const authConfig = await this.addAuthHeader(config || {});
     return super.get<T>(url, authConfig);
   }
 
-  async post<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const authConfig = await this.addAuthHeader(config || {});
     return super.post<T>(url, data, authConfig);
   }
 
-  async put<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const authConfig = await this.addAuthHeader(config || {});
     return super.put<T>(url, data, authConfig);
   }
 
-  async delete<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async delete<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const authConfig = await this.addAuthHeader(config || {});
     return super.delete<T>(url, authConfig);
   }
 
-  async patch<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const authConfig = await this.addAuthHeader(config || {});
     return super.patch<T>(url, data, authConfig);
   }
   async getCurrentSession() {
     try {
-      const { data: { session }, error } = await this.supabase.auth.getSession();
+      const {
+        data: { session },
+        error,
+      } = await this.supabase.auth.getSession();
       return { session, error };
     } catch (error) {
       return { session: null, error };
@@ -125,7 +157,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
    */
   async authenticatedRequest<T = unknown>(
     url: string,
-    config?: TypedFetchConfig
+    config?: TypedFetchConfig,
   ): Promise<TypedFetchResponse<T>> {
     let retryCount = 0;
     const maxRetries = 1;
@@ -134,7 +166,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       try {
         // Check if we have a valid session
         const { session, error } = await this.getCurrentSession();
-        
+
         if (error || !session) {
           throw new Error('No valid session found');
         }
@@ -144,21 +176,21 @@ class AuthenticatedFetchClient extends BaseFetchClient {
           const expiresAt = session.expires_at * 1000;
           const now = Date.now();
           const timeUntilExpiry = expiresAt - now;
-          
-          if (timeUntilExpiry < 5 * 60 * 1000) { // 5 minutes
+
+          if (timeUntilExpiry < 5 * 60 * 1000) {
+            // 5 minutes
             await this.supabase.auth.refreshSession();
           }
         }
 
         // Make the request (auth header will be added by interceptor)
         return await this.get<T>(url, config);
-
       } catch (error: unknown) {
         const typedError = error as { status?: number };
-        
+
         if (typedError.status === 401 && retryCount < maxRetries) {
           retryCount++;
-          
+
           try {
             await this.supabase.auth.refreshSession();
             continue; // Retry the request
@@ -167,7 +199,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
             throw error;
           }
         }
-        
+
         throw error;
       }
     }
@@ -177,7 +209,10 @@ class AuthenticatedFetchClient extends BaseFetchClient {
 }
 
 // Create singleton instances for different APIs
-const createAuthenticatedClient = (baseURL: string, config?: Partial<ApiClientConfig>) => {
+const createAuthenticatedClient = (
+  baseURL: string,
+  config?: Partial<ApiClientConfig>,
+) => {
   return new AuthenticatedFetchClient({
     baseURL,
     timeout: 30000,
@@ -189,11 +224,11 @@ const createAuthenticatedClient = (baseURL: string, config?: Partial<ApiClientCo
 
 // API clients for different services
 export const ingressServiceClient = createAuthenticatedClient(
-  process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:3001'
+  process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:3001',
 );
 
 export const langflowClient = createAuthenticatedClient(
-  process.env.NEXT_PUBLIC_LANGFLOW_URL || 'http://localhost:7860'
+  process.env.NEXT_PUBLIC_LANGFLOW_URL || 'http://localhost:7860',
 );
 
 export const apiClient = createAuthenticatedClient('/api');

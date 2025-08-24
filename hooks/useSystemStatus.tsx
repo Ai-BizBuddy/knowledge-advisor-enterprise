@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { createClientAuth } from "@/utils/supabase/client";
+import { useState, useEffect } from 'react';
+import { createClientAuth } from '@/utils/supabase/client';
 
 interface SystemStatus {
   totalUsers: number;
@@ -27,20 +27,20 @@ export function useSystemStatus() {
 
         // Total Users from auth.users
         const { count: userCount, error: userError } = await supabase
-          .from("users")
-          .select("id", { count: "exact", head: true });
+          .from('users')
+          .select('id', { count: 'exact', head: true });
 
         // System Roles from auth.roles
         const { count: roleCount, error: roleError } = await supabase
-          .from("roles")
-          .select("id", { count: "exact", head: true });
+          .from('roles')
+          .select('id', { count: 'exact', head: true });
 
         // Active Sessions: users signed in within last 24 hours
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { count: activeCount, error: activeError } = await supabase
-          .from("users")
-          .select("id", { count: "exact", head: true })
-          .gte("last_sign_in_at", since);
+          .from('users')
+          .select('id', { count: 'exact', head: true })
+          .gte('last_sign_in_at', since);
 
         if (!isMounted) return;
 
@@ -61,7 +61,7 @@ export function useSystemStatus() {
         setSystemStatus((prev) => ({
           ...prev,
           loading: false,
-          error: error instanceof Error ? error.message : "Unknown error",
+          error: error instanceof Error ? error.message : 'Unknown error',
         }));
       }
     }

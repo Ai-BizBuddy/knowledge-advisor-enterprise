@@ -8,8 +8,8 @@
  * New code should use authUtils.ts for cleaner auth-aware operations.
  */
 
-import { createClient } from "@/utils/supabase/client";
-import { Session, SupabaseClient } from "@supabase/supabase-js";
+import { createClient } from '@/utils/supabase/client';
+import { Session, SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Enhanced Supabase client with automatic token refresh
@@ -48,7 +48,7 @@ export class SupabaseAuthClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error("Error getting session:", error);
+        console.error('Error getting session:', error);
         return;
       }
 
@@ -67,7 +67,7 @@ export class SupabaseAuthClient {
         await this.refreshToken();
       }
     } catch (error) {
-      console.error("Error ensuring valid token:", error);
+      console.error('Error ensuring valid token:', error);
     }
   }
 
@@ -85,12 +85,12 @@ export class SupabaseAuthClient {
         const { data, error } = await this.supabase.auth.refreshSession();
 
         if (error) {
-          console.error("Token refresh failed:", error);
+          console.error('Token refresh failed:', error);
 
           // If refresh fails with specific errors, handle auth failure
           if (
-            error.message.includes("refresh_token_not_found") ||
-            error.message.includes("invalid_refresh_token")
+            error.message.includes('refresh_token_not_found') ||
+            error.message.includes('invalid_refresh_token')
           ) {
             this.handleAuthFailure();
           }
@@ -103,7 +103,7 @@ export class SupabaseAuthClient {
 
         return null;
       } catch (error) {
-        console.error("Token refresh error:", error);
+        console.error('Token refresh error:', error);
         return null;
       } finally {
         this.refreshPromise = null;
@@ -122,10 +122,10 @@ export class SupabaseAuthClient {
 
     // Redirect to login page
     if (
-      typeof window !== "undefined" &&
-      window.location.pathname !== "/login"
+      typeof window !== 'undefined' &&
+      window.location.pathname !== '/login'
     ) {
-      window.location.href = "/login";
+      window.location.href = '/login';
     }
   }
 
@@ -140,13 +140,13 @@ export class SupabaseAuthClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error("Error getting session:", error);
+        console.error('Error getting session:', error);
         return null;
       }
 
       return session;
     } catch (error) {
-      console.error("Error getting session:", error);
+      console.error('Error getting session:', error);
       return null;
     }
   }
@@ -194,7 +194,7 @@ export class SupabaseAuthClient {
       // If we get an auth error, try to refresh and retry once
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      if (errorMessage.includes("JWT") || errorMessage.includes("expired")) {
+      if (errorMessage.includes('JWT') || errorMessage.includes('expired')) {
         const newSession = await this.refreshToken();
 
         if (newSession) {
@@ -203,7 +203,7 @@ export class SupabaseAuthClient {
         } else {
           // If refresh fails, handle auth failure
           this.handleAuthFailure();
-          throw new Error("Authentication failed");
+          throw new Error('Authentication failed');
         }
       }
 
@@ -217,7 +217,7 @@ export class SupabaseAuthClient {
    */
   public createTable(targetSchema?: string) {
     const schema =
-      targetSchema || process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || "knowledge";
+      targetSchema || process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || 'knowledge';
     return this.supabase.schema(schema);
   }
 }

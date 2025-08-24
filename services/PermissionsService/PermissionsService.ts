@@ -1,6 +1,6 @@
-import { createClientAuth, createClient } from "@/utils/supabase/client";
-import { Permission, PermissionAction } from "@/interfaces/UserManagement";
-import { ResourceConfig } from "@/interfaces/Permissions";
+import { createClientAuth, createClient } from '@/utils/supabase/client';
+import { Permission, PermissionAction } from '@/interfaces/UserManagement';
+import { ResourceConfig } from '@/interfaces/Permissions';
 
 export interface PermissionMatrix {
   [resource: string]: {
@@ -39,14 +39,14 @@ class PermissionsService {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.error("[PermissionsService] No authenticated user:", userError);
+        console.error('[PermissionsService] No authenticated user:', userError);
         return null;
       }
 
       // Get user's roles and permissions using auth schema client
       const authClient = createClientAuth();
       const { data: userData, error: userDataError } = await authClient
-        .from("users")
+        .from('users')
         .select(
           `
           id,
@@ -69,12 +69,12 @@ class PermissionsService {
           )
         `,
         )
-        .eq("id", user.id)
+        .eq('id', user.id)
         .single();
 
       if (userDataError) {
         console.error(
-          "[PermissionsService] Error fetching user data:",
+          '[PermissionsService] Error fetching user data:',
           userDataError,
         );
         return null;
@@ -105,7 +105,7 @@ class PermissionsService {
 
       // Get direct permissions (if any user has direct permissions)
       const { data: directPermissions } = await authClient
-        .from("user_permissions")
+        .from('user_permissions')
         .select(
           `
           permissions(
@@ -118,7 +118,7 @@ class PermissionsService {
           )
         `,
         )
-        .eq("user_id", user.id);
+        .eq('user_id', user.id);
 
       const directPerms =
         directPermissions
@@ -130,13 +130,13 @@ class PermissionsService {
 
       return {
         userId: user.id,
-        email: user.email || "",
+        email: user.email || '',
         roles,
         directPermissions: directPerms,
       };
     } catch (error) {
       console.error(
-        "[PermissionsService] Error getting current user permissions:",
+        '[PermissionsService] Error getting current user permissions:',
         error,
       );
       return null;
@@ -151,10 +151,10 @@ class PermissionsService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
-        .select("*")
-        .order("resource", { ascending: true })
-        .order("action", { ascending: true });
+        .from('permissions')
+        .select('*')
+        .order('resource', { ascending: true })
+        .order('action', { ascending: true });
 
       if (error) {
         throw new Error(`Failed to fetch permissions: ${error.message}`);
@@ -163,7 +163,7 @@ class PermissionsService {
       return data || [];
     } catch (error) {
       console.error(
-        "[PermissionsService] Error fetching all permissions:",
+        '[PermissionsService] Error fetching all permissions:',
         error,
       );
       throw error;
@@ -191,9 +191,9 @@ class PermissionsService {
 
       // Delete existing role permissions
       const { error: deleteError } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .delete()
-        .eq("role_id", roleId);
+        .eq('role_id', roleId);
 
       if (deleteError) {
         throw new Error(
@@ -225,7 +225,7 @@ class PermissionsService {
 
       if (newRolePermissions.length > 0) {
         const { error: insertError } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .insert(newRolePermissions);
 
         if (insertError) {
@@ -238,7 +238,7 @@ class PermissionsService {
       return true;
     } catch (error) {
       console.error(
-        "[PermissionsService] Error saving role permissions:",
+        '[PermissionsService] Error saving role permissions:',
         error,
       );
       throw error;
@@ -258,7 +258,7 @@ class PermissionsService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
+        .from('permissions')
         .insert({
           name,
           resource,
@@ -275,7 +275,7 @@ class PermissionsService {
 
       return data;
     } catch (error) {
-      console.error("[PermissionsService] Error creating permission:", error);
+      console.error('[PermissionsService] Error creating permission:', error);
       throw error;
     }
   }
@@ -321,12 +321,12 @@ class PermissionsService {
 
       if (newPermissions.length > 0) {
         const { error } = await supabase
-          .from("permissions")
+          .from('permissions')
           .insert(newPermissions);
 
         if (error) {
           console.error(
-            "[PermissionsService] Error creating missing permissions:",
+            '[PermissionsService] Error creating missing permissions:',
             error,
           );
           // Don't throw here, as this is non-critical
@@ -338,7 +338,7 @@ class PermissionsService {
       }
     } catch (error) {
       console.error(
-        "[PermissionsService] Error ensuring permissions exist:",
+        '[PermissionsService] Error ensuring permissions exist:',
         error,
       );
       // Don't throw, as this is non-critical for the UI
@@ -381,7 +381,7 @@ class PermissionsService {
       return hasDirectPermission;
     } catch (error) {
       console.error(
-        "[PermissionsService] Error checking user permission:",
+        '[PermissionsService] Error checking user permission:',
         error,
       );
       return false;
@@ -396,9 +396,9 @@ class PermissionsService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
-        .select("resource, action")
-        .not("resource", "is", null);
+        .from('permissions')
+        .select('resource, action')
+        .not('resource', 'is', null);
 
       if (error) {
         throw new Error(`Failed to fetch resources: ${error.message}`);
@@ -422,14 +422,14 @@ class PermissionsService {
       // Convert map to desired output
       return Array.from(resourceMap.entries()).map(([key, actions]) => ({
         name: key,
-        icon: "lock", // Default icon for all resources
+        icon: 'lock', // Default icon for all resources
         displayName: key.charAt(0).toUpperCase() + key.slice(1), // Capitalize first letter for display
         description: `${key} resource permissions`,
         actions: Array.from(new Set(actions)),
       }));
     } catch (error) {
       console.error(
-        "[PermissionsService] Error fetching unique resources:",
+        '[PermissionsService] Error fetching unique resources:',
         error,
       );
       throw error;
@@ -446,9 +446,9 @@ class PermissionsService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
-        .select("resource, action")
-        .not("action", "is", null);
+        .from('permissions')
+        .select('resource, action')
+        .not('action', 'is', null);
 
       if (error) {
         throw new Error(`Failed to fetch actions: ${error.message}`);
@@ -474,7 +474,7 @@ class PermissionsService {
       }));
     } catch (error) {
       console.error(
-        "[PermissionsService] Error fetching unique actions:",
+        '[PermissionsService] Error fetching unique actions:',
         error,
       );
       throw error;
@@ -489,7 +489,7 @@ class PermissionsService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .select(
           `
           permissions(
@@ -498,7 +498,7 @@ class PermissionsService {
           )
         `,
         )
-        .eq("role_id", roleId);
+        .eq('role_id', roleId);
 
       if (error) {
         throw new Error(`Failed to fetch role permissions: ${error.message}`);
@@ -523,7 +523,7 @@ class PermissionsService {
       return matrix;
     } catch (error) {
       console.error(
-        "[PermissionsService] Error getting role permissions matrix:",
+        '[PermissionsService] Error getting role permissions matrix:',
         error,
       );
       throw error;

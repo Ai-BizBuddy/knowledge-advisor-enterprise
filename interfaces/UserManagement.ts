@@ -68,10 +68,10 @@ export type UserDisplayPermission = User & {
  * User status enum
  */
 export enum UserStatus {
-  ACTIVE = "active",
-  INACTIVE = "inactive",
-  SUSPENDED = "suspended",
-  PENDING = "pending",
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
+  SUSPENDED = 'suspended',
+  PENDING = 'pending',
 }
 
 /**
@@ -89,7 +89,7 @@ export interface Role {
 }
 
 export interface UserRoleRow {
-  role: Pick<Role, "id" | "name" | "description">;
+  role: Pick<Role, 'id' | 'name' | 'description'>;
 }
 
 /**
@@ -109,12 +109,12 @@ export interface Permission {
  * Permission actions enum
  */
 export enum PermissionAction {
-  CREATE = "create",
-  READ = "read",
-  UPDATE = "update",
-  DELETE = "delete",
-  MANAGE = "manage", // Full access
-  EXECUTE = "execute", // For special actions like RAG sync
+  CREATE = 'create',
+  READ = 'read',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  MANAGE = 'manage', // Full access
+  EXECUTE = 'execute', // For special actions like RAG sync
 }
 
 /**
@@ -130,10 +130,10 @@ export interface FeatureAccess {
  * Access level enum
  */
 export enum AccessLevel {
-  NONE = "none",
-  READ = "read",
-  WRITE = "write",
-  ADMIN = "admin",
+  NONE = 'none',
+  READ = 'read',
+  WRITE = 'write',
+  ADMIN = 'admin',
 }
 
 /**
@@ -228,8 +228,8 @@ export interface UserFilter {
   role_ids?: number[]; // Array of role IDs for filtering
   department_ids?: string[];
   search?: string;
-  sort_by?: "email" | "display_name" | "created_at" | "last_login_at";
-  sort_order?: "asc" | "desc";
+  sort_by?: 'email' | 'display_name' | 'created_at' | 'last_login_at';
+  sort_order?: 'asc' | 'desc';
   include_deleted?: boolean;
 }
 
@@ -272,24 +272,24 @@ export interface UserSession {
  * Default system roles
  */
 export const SYSTEM_ROLES = {
-  SUPER_ADMIN: "super_admin",
-  ADMIN: "admin",
-  MANAGER: "manager",
-  USER: "user",
-  VIEWER: "viewer",
+  SUPER_ADMIN: 'super_admin',
+  ADMIN: 'admin',
+  MANAGER: 'manager',
+  USER: 'user',
+  VIEWER: 'viewer',
 } as const;
 
 /**
  * Default features for navigation control
  */
 export const FEATURES = {
-  DASHBOARD: "dashboard",
-  PROJECTS: "projects",
-  DOCUMENTS: "documents",
-  CHAT: "chat",
-  USER_MANAGEMENT: "user_management",
-  SETTINGS: "settings",
-  TEAM: "team",
+  DASHBOARD: 'dashboard',
+  PROJECTS: 'projects',
+  DOCUMENTS: 'documents',
+  CHAT: 'chat',
+  USER_MANAGEMENT: 'user_management',
+  SETTINGS: 'settings',
+  TEAM: 'team',
 } as const;
 
 /**

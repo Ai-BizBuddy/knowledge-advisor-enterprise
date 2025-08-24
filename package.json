@@ -7,8 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
     "format": "prettier . --write",
-    "format:check": "prettier . --check"
+    "format:check": "prettier . --check",
+    "quotes:check": "eslint . --ext .ts,.tsx,.js,.jsx",
+    "quotes:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix && prettier . --write"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",

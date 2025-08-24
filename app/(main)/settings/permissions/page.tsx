@@ -1,11 +1,11 @@
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Card, Button, Spinner, Alert } from "flowbite-react";
-import { usePermissionManagement } from "@/hooks";
-import { Pagination } from "@/components/pagination";
-import { TableSearch } from "@/components";
-import { DEFAULT_PAGE_SIZE } from "@/interfaces/Pagination";
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Spinner, Alert } from 'flowbite-react';
+import { usePermissionManagement } from '@/hooks';
+import { Pagination } from '@/components/pagination';
+import { TableSearch } from '@/components';
+import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 
 export default function PermissionsPage() {
   const {
@@ -16,7 +16,7 @@ export default function PermissionsPage() {
   } = usePermissionManagement();
 
   // Search and pagination state
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
 
@@ -47,10 +47,10 @@ export default function PermissionsPage() {
   // Early return for config loading state
   if (configLoading && resourceConfigs.length === 0) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-center">
-          <Spinner size="xl" />
-          <div className="mt-4 text-lg font-medium text-gray-600 dark:text-gray-400">
+      <div className='flex h-64 items-center justify-center'>
+        <div className='text-center'>
+          <Spinner size='xl' />
+          <div className='mt-4 text-lg font-medium text-gray-600 dark:text-gray-400'>
             Loading permissions configuration...
           </div>
         </div>
@@ -61,13 +61,13 @@ export default function PermissionsPage() {
   // Error handling for configs
   if (configError) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <Alert color="failure" className="max-w-md">
-          <div className="text-center">
-            <div className="mb-2 font-medium">Error loading permissions</div>
-            <div className="text-sm">{configError}</div>
-            <div className="mt-4 flex justify-center gap-2">
-              <Button onClick={clearConfigError} size="sm" color="gray">
+      <div className='flex h-64 items-center justify-center'>
+        <Alert color='failure' className='max-w-md'>
+          <div className='text-center'>
+            <div className='mb-2 font-medium'>Error loading permissions</div>
+            <div className='text-sm'>{configError}</div>
+            <div className='mt-4 flex justify-center gap-2'>
+              <Button onClick={clearConfigError} size='sm' color='gray'>
                 Reload Config
               </Button>
             </div>
@@ -78,43 +78,43 @@ export default function PermissionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
+          <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
             Permissions Management
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className='text-gray-600 dark:text-gray-400'>
             Manage system permissions for resources and actions
           </p>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
         <Card>
-          <div className="flex items-center">
-            <div className="rounded-lg bg-blue-100 p-3 dark:bg-blue-900">
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-blue-100 p-3 dark:bg-blue-900'>
               <svg
-                className="h-6 w-6 text-blue-600 dark:text-blue-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='h-6 w-6 text-blue-600 dark:text-blue-300'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                  d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
                 />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
                 Total Resources
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {resourceConfigs.length}
               </p>
             </div>
@@ -122,27 +122,27 @@ export default function PermissionsPage() {
         </Card>
 
         <Card>
-          <div className="flex items-center">
-            <div className="rounded-lg bg-green-100 p-3 dark:bg-green-900">
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-green-100 p-3 dark:bg-green-900'>
               <svg
-                className="h-6 w-6 text-green-600 dark:text-green-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='h-6 w-6 text-green-600 dark:text-green-300'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
+                  d='M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z'
                 />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
                 Total Actions
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {resourceConfigs.reduce((acc, r) => acc + r.actions.length, 0)}
               </p>
             </div>
@@ -150,27 +150,27 @@ export default function PermissionsPage() {
         </Card>
 
         <Card>
-          <div className="flex items-center">
-            <div className="rounded-lg bg-purple-100 p-3 dark:bg-purple-900">
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-purple-100 p-3 dark:bg-purple-900'>
               <svg
-                className="h-6 w-6 text-purple-600 dark:text-purple-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='h-6 w-6 text-purple-600 dark:text-purple-300'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                  d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z'
                 />
               </svg>
             </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
                 Avg Actions/Resource
               </p>
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
                 {resourceConfigs.length
                   ? Math.round(
                       resourceConfigs.reduce(
@@ -186,99 +186,99 @@ export default function PermissionsPage() {
       </div>
 
       {/* Search and Filters */}
-      <div className="mb-6">
+      <div className='mb-6'>
         <TableSearch
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
-          searchPlaceholder="Search permission resources..."
+          searchPlaceholder='Search permission resources...'
           pageSize={pageSize}
           onPageSizeChange={setPageSize}
         />
       </div>
 
       {/* Enhanced Permissions Table */}
-      <div className="overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800">
+      <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
         {configLoading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="text-center">
-              <Spinner size="xl" />
-              <div className="mt-4 text-lg font-medium text-gray-600 dark:text-gray-400">
+          <div className='flex h-64 items-center justify-center'>
+            <div className='text-center'>
+              <Spinner size='xl' />
+              <div className='mt-4 text-lg font-medium text-gray-600 dark:text-gray-400'>
                 Loading permissions...
               </div>
             </div>
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <div className="min-w-full">
-                <table className="w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
+            <div className='overflow-x-auto'>
+              <div className='min-w-full'>
+                <table className='w-full divide-y divide-gray-200 dark:divide-gray-700'>
+                  <thead className='bg-gray-50 dark:bg-gray-700'>
                     <tr>
                       <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                        scope='col'
+                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
                       >
                         Resource
                       </th>
                       <th
-                        scope="col"
-                        className="px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                        scope='col'
+                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
                       >
                         Description
                       </th>
                       <th
-                        scope="col"
-                        className="px-6 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400"
+                        scope='col'
+                        className='px-6 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
                       >
                         Available Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
+                  <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
                     {paginatedResources.map((resource) => (
                       <tr
                         key={resource.key}
-                        className="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+                        className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'
                       >
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="flex items-center space-x-3">
-                            <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900">
+                        <td className='px-6 py-4 whitespace-nowrap'>
+                          <div className='flex items-center space-x-3'>
+                            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900'>
                               <svg
-                                className="h-5 w-5 text-indigo-600 dark:text-indigo-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                                className='h-5 w-5 text-indigo-600 dark:text-indigo-400'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
                               >
                                 <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
                                   strokeWidth={2}
-                                  d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                                  d='M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z'
                                 />
                               </svg>
                             </div>
                             <div>
-                              <div className="text-sm font-medium text-gray-900 dark:text-white">
+                              <div className='text-sm font-medium text-gray-900 dark:text-white'>
                                 {resource.name}
                               </div>
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
+                              <div className='text-sm text-gray-500 dark:text-gray-400'>
                                 {resource.actions.length} action
-                                {resource.actions.length !== 1 ? "s" : ""}
+                                {resource.actions.length !== 1 ? 's' : ''}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                        <td className='px-6 py-4'>
+                          <div className='text-sm text-gray-600 dark:text-gray-300'>
                             {resource.description}
                           </div>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-wrap justify-center gap-2">
+                        <td className='px-6 py-4'>
+                          <div className='flex flex-wrap justify-center gap-2'>
                             {resource.actions.map((action) => (
                               <span
                                 key={`${resource.key}-${action}`}
-                                className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+                                className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                               >
                                 {action.toUpperCase()}
                               </span>
@@ -292,33 +292,33 @@ export default function PermissionsPage() {
                       <tr>
                         <td
                           colSpan={3}
-                          className="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400"
+                          className='px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400'
                         >
-                          <div className="flex flex-col items-center">
-                            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800">
+                          <div className='flex flex-col items-center'>
+                            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800'>
                               <svg
-                                className="h-6 w-6 text-gray-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
+                                className='h-6 w-6 text-gray-400'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
                               >
                                 <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
                                   strokeWidth={2}
-                                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                                  d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
                                 />
                               </svg>
                             </div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className='text-sm text-gray-500 dark:text-gray-400'>
                               No resources found matching your search.
                             </div>
                             {searchTerm && (
-                              <div className="mt-2">
+                              <div className='mt-2'>
                                 <Button
-                                  color="gray"
-                                  size="sm"
-                                  onClick={() => setSearchTerm("")}
+                                  color='gray'
+                                  size='sm'
+                                  onClick={() => setSearchTerm('')}
                                 >
                                   Clear search
                                 </Button>
@@ -335,7 +335,7 @@ export default function PermissionsPage() {
 
             {/* Pagination */}
             {totalItems > 0 && (
-              <div className="border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800">
+              <div className='border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}

@@ -1,15 +1,15 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { knowledgeBaseService } from "@/services";
+import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { knowledgeBaseService } from '@/services';
 import type {
   Project,
   CreateProjectInput,
   UpdateProjectInput,
   ProjectStatus,
   ProjectAnalytics,
-} from "@/interfaces/Project";
+} from '@/interfaces/Project';
 
 export interface UseKnowledgeBaseReturn {
   // State
@@ -85,8 +85,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const [itemsPerPage, setItemsPerPage] = useState(10); // 3x3 grid for cards
 
   // Filter state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedTab, setSelectedTab] = useState("All");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedTab, setSelectedTab] = useState('All');
 
   // Calculate pagination indices
   const startIndex = (currentPage - 1) * itemsPerPage + 1;
@@ -138,15 +138,15 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
           searchTerm: search,
         };
 
-        console.log("Sending pagination to API:", paginationOptions);
-        console.log("Sending filters to API:", filters);
+        console.log('Sending pagination to API:', paginationOptions);
+        console.log('Sending filters to API:', filters);
 
         const results = await knowledgeBaseService.getProjects(
           paginationOptions,
           filters,
         );
 
-        console.log("API response:", {
+        console.log('API response:', {
           dataLength: results.data.length,
           totalCount: results.count,
           startIndex,
@@ -159,15 +159,15 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
         if (forceRefresh) {
           // When force refreshing, reset filters
-          setSearchTerm("");
-          setSelectedTab("All");
+          setSearchTerm('');
+          setSelectedTab('All');
           setCurrentPage(1);
         }
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to load knowledge bases";
+          err instanceof Error ? err.message : 'Failed to load knowledge bases';
         setError(errorMessage);
-        console.error("Error loading knowledge bases:", err);
+        console.error('Error loading knowledge bases:', err);
       } finally {
         setLoading(false);
       }
@@ -193,7 +193,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to create knowledge base";
+            : 'Failed to create knowledge base';
         setError(errorMessage);
         throw err;
       } finally {
@@ -220,7 +220,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to update knowledge base";
+            : 'Failed to update knowledge base';
         setError(errorMessage);
         throw err;
       }
@@ -236,7 +236,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       setProjects((prev) => prev.filter((p) => p.id !== id));
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to delete knowledge base";
+        err instanceof Error ? err.message : 'Failed to delete knowledge base';
       setError(errorMessage);
       throw err;
     }
@@ -250,7 +250,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         return await knowledgeBaseService.getProject(id);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to get knowledge base";
+          err instanceof Error ? err.message : 'Failed to get knowledge base';
         setError(errorMessage);
         throw err;
       }
@@ -281,7 +281,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to update knowledge bases";
+            : 'Failed to update knowledge bases';
         setError(errorMessage);
         throw err;
       }
@@ -299,7 +299,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       setProjects((prev) => prev.filter((p) => !ids.includes(p.id)));
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to delete knowledge bases";
+        err instanceof Error ? err.message : 'Failed to delete knowledge bases';
       setError(errorMessage);
       throw err;
     }
@@ -309,7 +309,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const searchKnowledgeBases = useCallback(
     async (query: string): Promise<void> => {
       try {
-        console.log("Searching knowledge bases with query:", query);
+        console.log('Searching knowledge bases with query:', query);
         setSearchTerm(query);
         setCurrentPage(1); // Reset to first page for search results
         await loadKnowledgeBases(1, false, undefined, query);
@@ -317,7 +317,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to search knowledge bases";
+            : 'Failed to search knowledge bases';
         setError(errorMessage);
         throw err;
       }
@@ -336,7 +336,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to filter knowledge bases";
+            : 'Failed to filter knowledge bases';
         setError(errorMessage);
         throw err;
       }
@@ -357,7 +357,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   // Page change handler
   const handlePageChange = useCallback(
     async (page: number) => {
-      console.log("Page changed to:", page);
+      console.log('Page changed to:', page);
       setCurrentPage(page);
       await loadKnowledgeBases(page);
     },
@@ -378,7 +378,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       try {
         await deleteKnowledgeBase(id);
       } catch (err) {
-        console.error("Error deleting knowledge base:", err);
+        console.error('Error deleting knowledge base:', err);
       }
     },
     [deleteKnowledgeBase],
@@ -391,7 +391,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setError(null);
         const project = await knowledgeBaseService.getProject(id);
         if (!project) {
-          throw new Error("Project not found");
+          throw new Error('Project not found');
         }
 
         const mockAnalytics: ProjectAnalytics = {
@@ -401,13 +401,13 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
           recentActivity: 0,
           averageChunkCount: 0,
           syncSuccessRate: 100,
-          mostRecentSync: "Recently",
+          mostRecentSync: 'Recently',
         };
 
         return mockAnalytics;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to get analytics";
+          err instanceof Error ? err.message : 'Failed to get analytics';
         setError(errorMessage);
         throw err;
       }

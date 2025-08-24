@@ -1,16 +1,16 @@
-"use client";
+'use client';
 
-import { Document } from "@/interfaces/Project";
-import { getAllDocuments } from "@/services/Project/supabase";
-import { useCallback, useEffect, useState } from "react";
-import { useKnowledgeBase } from "./useKnowledgeBase";
+import { Document } from '@/interfaces/Project';
+import { getAllDocuments } from '@/services/Project/supabase';
+import { useCallback, useEffect, useState } from 'react';
+import { useKnowledgeBase } from './useKnowledgeBase';
 
 export interface ActivityItem {
   id: string;
-  type: "upload" | "query" | "knowledgebase" | "processing" | "error";
+  type: 'upload' | 'query' | 'knowledgebase' | 'processing' | 'error';
   message: string;
   time: string;
-  status: "success" | "error" | "info" | "warning";
+  status: 'success' | 'error' | 'info' | 'warning';
   projectId?: string;
   documentId?: string;
 }
@@ -48,13 +48,13 @@ export const useRecentActivity = (
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffMinutes < 1) {
-      return "Just now";
+      return 'Just now';
     } else if (diffMinutes < 60) {
-      return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
+      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     } else {
-      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
   };
 
@@ -62,7 +62,7 @@ export const useRecentActivity = (
   const getProjectName = useCallback(
     (projectId: string): string => {
       const project = projects?.find((p) => p.id === projectId);
-      return project?.name || "Unknown Project";
+      return project?.name || 'Unknown Project';
     },
     [projects],
   );
@@ -78,37 +78,37 @@ export const useRecentActivity = (
       try {
         documents = await getAllDocuments();
       } catch (err) {
-        console.error("Error fetching documents for activity:", err);
+        console.error('Error fetching documents for activity:', err);
       }
 
       // Process documents into activity items
       const documentActivities: ActivityItem[] = documents.map((doc) => {
         // Determine activity type based on document status
-        let activityType: "upload" | "processing" | "error";
-        let status: "success" | "error" | "info";
+        let activityType: 'upload' | 'processing' | 'error';
+        let status: 'success' | 'error' | 'info';
 
-        if (doc.status === "processed" || doc.status === "uploaded") {
-          activityType = "upload";
-          status = "success";
-        } else if (doc.status === "processing") {
-          activityType = "processing";
-          status = "info";
-        } else if (doc.status === "error" || doc.status === "failed") {
-          activityType = "error";
-          status = "error";
+        if (doc.status === 'processed' || doc.status === 'uploaded') {
+          activityType = 'upload';
+          status = 'success';
+        } else if (doc.status === 'processing') {
+          activityType = 'processing';
+          status = 'info';
+        } else if (doc.status === 'error' || doc.status === 'failed') {
+          activityType = 'error';
+          status = 'error';
         } else {
-          activityType = "upload";
-          status = "info";
+          activityType = 'upload';
+          status = 'info';
         }
 
         const projectName =
           doc.metadata?.project_name || getProjectName(doc.knowledge_base_id);
 
         // Create message based on activity type
-        let message = "";
-        if (activityType === "upload") {
+        let message = '';
+        if (activityType === 'upload') {
           message = `Document "${doc.name}" uploaded to ${projectName}`;
-        } else if (activityType === "processing") {
+        } else if (activityType === 'processing') {
           message = `Processing document "${doc.name}" in ${projectName}`;
         } else {
           message = `Error processing document "${doc.name}" in ${projectName}`;
@@ -129,10 +129,10 @@ export const useRecentActivity = (
       const kbActivities: ActivityItem[] =
         projects?.map((project) => ({
           id: `kb-${project.id}`,
-          type: "knowledgebase",
-          message: `Knowledge base "${project.name}" ${project.updated_at ? "updated" : "created"}`,
+          type: 'knowledgebase',
+          message: `Knowledge base "${project.name}" ${project.updated_at ? 'updated' : 'created'}`,
           time: formatRelativeTime(project.updated_at || project.created_at),
-          status: "info",
+          status: 'info',
           projectId: project.id,
         })) || [];
 
@@ -143,7 +143,7 @@ export const useRecentActivity = (
       allActivities.sort((a, b) => {
         // Extract time information from strings like "2 hours ago"
         const getTimeValue = (timeStr: string) => {
-          if (timeStr === "Just now") return 0;
+          if (timeStr === 'Just now') return 0;
 
           const match = timeStr.match(/(\d+)\s+(minute|hour|day)s?\s+ago/);
           if (!match) return Number.MAX_SAFE_INTEGER;
@@ -151,8 +151,8 @@ export const useRecentActivity = (
           const [, value, unit] = match;
           const numValue = parseInt(value, 10);
 
-          if (unit === "minute") return numValue;
-          if (unit === "hour") return numValue * 60; // Convert hours to minutes
+          if (unit === 'minute') return numValue;
+          if (unit === 'hour') return numValue * 60; // Convert hours to minutes
           return numValue * 60 * 24; // Convert days to minutes
         };
 
@@ -164,9 +164,9 @@ export const useRecentActivity = (
       setActivities(limitedActivities);
     } catch (err) {
       const errorMsg =
-        err instanceof Error ? err.message : "Failed to load recent activity";
+        err instanceof Error ? err.message : 'Failed to load recent activity';
       setError(errorMsg);
-      console.error("Error loading recent activity:", err);
+      console.error('Error loading recent activity:', err);
     } finally {
       setLoading(false);
     }

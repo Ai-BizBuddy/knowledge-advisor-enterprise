@@ -5,15 +5,15 @@
  * feature access throughout the application.
  */
 
-import { useState, useEffect, useCallback } from "react";
-import { createClient } from "@/utils/supabase/client";
-import UserManagementService from "@/services/UserManagementService";
+import { useState, useEffect, useCallback } from 'react';
+import { createClient } from '@/utils/supabase/client';
+import UserManagementService from '@/services/UserManagementService';
 import type {
   User,
   Permission,
   FeatureAccess,
   UserSession,
-} from "@/interfaces/UserManagement";
+} from '@/interfaces/UserManagement';
 
 interface UsePermissionsState {
   currentUser: User | null;
@@ -97,9 +97,9 @@ export const usePermissions = (): UsePermissions => {
       }));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to load permissions";
+        error instanceof Error ? error.message : 'Failed to load permissions';
       setError(errorMessage);
-      console.error("[usePermissions] Error loading permissions:", error);
+      console.error('[usePermissions] Error loading permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -115,7 +115,7 @@ export const usePermissions = (): UsePermissions => {
       return state.permissions.some(
         (permission) =>
           permission.resource === resource &&
-          (permission.action === action || permission.action === "manage"),
+          (permission.action === action || permission.action === 'manage'),
       );
     },
     [state.permissions],
@@ -129,7 +129,7 @@ export const usePermissions = (): UsePermissions => {
       if (!state.features.length) return false;
 
       const featureAccess = state.features.find((f) => f.feature === feature);
-      return featureAccess ? featureAccess.access_level !== "none" : false;
+      return featureAccess ? featureAccess.access_level !== 'none' : false;
     },
     [state.features],
   );
@@ -149,28 +149,28 @@ export const usePermissions = (): UsePermissions => {
           adminOnly?: boolean;
         }
       > = {
-        "/dashboard": { feature: "dashboard" },
-        "/chat": { feature: "chat" },
-        "/knowledge-base": {
-          feature: "projects",
-          resource: "project",
-          action: "read",
+        '/dashboard': { feature: 'dashboard' },
+        '/chat': { feature: 'chat' },
+        '/knowledge-base': {
+          feature: 'projects',
+          resource: 'project',
+          action: 'read',
         },
-        "/documents": {
-          feature: "documents",
-          resource: "document",
-          action: "read",
+        '/documents': {
+          feature: 'documents',
+          resource: 'document',
+          action: 'read',
         },
-        "/user-management": {
-          feature: "user_management",
-          resource: "user",
-          action: "read",
+        '/user-management': {
+          feature: 'user_management',
+          resource: 'user',
+          action: 'read',
           adminOnly: true,
         },
-        "/settings": {
-          feature: "user_management",
-          resource: "user",
-          action: "read",
+        '/settings': {
+          feature: 'user_management',
+          resource: 'user',
+          action: 'read',
           adminOnly: true,
         },
       };
@@ -185,7 +185,7 @@ export const usePermissions = (): UsePermissions => {
         const hasAdminRole = state.currentUser?.user_roles?.some((userRole) => {
           // Basic check based on role name for common admin patterns
           const roleName = userRole.role.name?.toLowerCase();
-          return roleName?.includes("admin") || roleName?.includes("super");
+          return roleName?.includes('admin') || roleName?.includes('super');
         });
 
         if (!hasAdminRole) return false;

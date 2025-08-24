@@ -1,5 +1,5 @@
-import { useCallback } from "react";
-import { ChatMessage } from "@/hooks/useChat";
+import { useCallback } from 'react';
+import { ChatMessage } from '@/hooks/useChat';
 
 export interface ChatSession {
   id: string;
@@ -13,7 +13,7 @@ export interface ChatSession {
 export const useChatHistory = () => {
   const getChatSessions = useCallback((): ChatSession[] => {
     if (typeof window === 'undefined') return [];
-    
+
     try {
       const sessions = localStorage.getItem('chatSessions');
       return sessions ? JSON.parse(sessions) : [];
@@ -23,34 +23,42 @@ export const useChatHistory = () => {
     }
   }, []);
 
-  const saveChatSession = useCallback((messages: ChatMessage[], title: string, knowledgeBases: string[]) => {
-    const sessions = getChatSessions();
-    const newSession: ChatSession = {
-      id: Date.now().toString(),
-      title,
-      messages,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      knowledgeBases
-    };
-    
-    const updatedSessions = [newSession, ...sessions];
-    localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
-    return newSession;
-  }, [getChatSessions]);
+  const saveChatSession = useCallback(
+    (messages: ChatMessage[], title: string, knowledgeBases: string[]) => {
+      const sessions = getChatSessions();
+      const newSession: ChatSession = {
+        id: Date.now().toString(),
+        title,
+        messages,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        knowledgeBases,
+      };
 
-  const deleteChatSession = useCallback((sessionId: string) => {
-    const sessions = getChatSessions();
-    const updatedSessions = sessions.filter(session => session.id !== sessionId);
-    localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
-  }, [getChatSessions]);
+      const updatedSessions = [newSession, ...sessions];
+      localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
+      return newSession;
+    },
+    [getChatSessions],
+  );
+
+  const deleteChatSession = useCallback(
+    (sessionId: string) => {
+      const sessions = getChatSessions();
+      const updatedSessions = sessions.filter(
+        (session) => session.id !== sessionId,
+      );
+      localStorage.setItem('chatSessions', JSON.stringify(updatedSessions));
+    },
+    [getChatSessions],
+  );
   const exportChatSession = useCallback((session: ChatSession) => {
     const chatText = session.messages
-      .map(msg => `${msg.type === 'user' ? 'คุณ' : 'AI'}: ${msg.content}`)
+      .map((msg) => `${msg.type === 'user' ? 'คุณ' : 'AI'}: ${msg.content}`)
       .join('\n\n');
-    
+
     const exportData = `แชทเซสชัน: ${session.title}\nสร้างเมื่อ: ${new Date(session.createdAt).toLocaleString('th-TH')}\nKnowledge Base: ${session.knowledgeBases.join(', ')}\n\n${chatText}`;
-    
+
     const blob = new Blob([exportData], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -66,6 +74,6 @@ export const useChatHistory = () => {
     saveChatSession,
     getChatSessions,
     deleteChatSession,
-    exportChatSession
+    exportChatSession,
   };
 };

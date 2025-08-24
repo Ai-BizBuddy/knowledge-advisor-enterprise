@@ -5,8 +5,8 @@
  * Returns structured data: { [resource]: [{ action, id }] }
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import UserManagementService from "@/services/UserManagementService";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import UserManagementService from '@/services/UserManagementService';
 
 export interface PermissionResourceData {
   [resource: string]: { action: string; id: string }[];
@@ -44,7 +44,7 @@ export function usePermissionResources(): UsePermissionResourcesReturn {
       const data = await userManagementService.getPermissionResources();
 
       console.log(
-        "[usePermissionResources] Fetched resources data:",
+        '[usePermissionResources] Fetched resources data:',
         Object.keys(data).length,
         data,
       );
@@ -53,8 +53,8 @@ export function usePermissionResources(): UsePermissionResourcesReturn {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Failed to fetch permission resources";
-      console.error("[usePermissionResources] Error:", errorMessage);
+          : 'Failed to fetch permission resources';
+      console.error('[usePermissionResources] Error:', errorMessage);
       setError(errorMessage);
 
       // Don't set fallback data - let it stay empty to force real Supabase data

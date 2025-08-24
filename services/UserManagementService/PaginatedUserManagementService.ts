@@ -1,4 +1,4 @@
-import UserManagementService from "../UserManagementService";
+import UserManagementService from '../UserManagementService';
 import {
   User,
   Role,
@@ -7,17 +7,17 @@ import {
   UserFilter,
   CreateRoleInput,
   UpdateRoleInput,
-} from "@/interfaces/UserManagement";
+} from '@/interfaces/UserManagement';
 import {
   PaginationParams,
   PaginatedResponse,
   DEFAULT_PAGE_SIZE,
-} from "@/interfaces/Pagination";
+} from '@/interfaces/Pagination';
 import {
   createClientTable,
   createClient,
   createClientAuth,
-} from "@/utils/supabase/client";
+} from '@/utils/supabase/client';
 
 class PaginatedUserManagementService extends UserManagementService {
   /**
@@ -31,8 +31,8 @@ class PaginatedUserManagementService extends UserManagementService {
       page,
       pageSize,
       search,
-      sortBy = "created_at",
-      sortOrder = "desc",
+      sortBy = 'created_at',
+      sortOrder = 'desc',
     } = params;
     const offset = (page - 1) * pageSize;
 
@@ -40,7 +40,7 @@ class PaginatedUserManagementService extends UserManagementService {
       const supabase = createClientAuth();
 
       // Build the query
-      let query = supabase.from("users").select(
+      let query = supabase.from('users').select(
         `
           id,
           email,
@@ -59,11 +59,11 @@ class PaginatedUserManagementService extends UserManagementService {
           profile:profiles(full_name, avatar_url),
           department!fk_users_department(name)
         `,
-        { count: "exact" },
+        { count: 'exact' },
       );
       // Apply filters
       if (!filter.include_deleted) {
-        query = query.is("deleted_at", null);
+        query = query.is('deleted_at', null);
       }
 
       if (search) {
@@ -71,23 +71,23 @@ class PaginatedUserManagementService extends UserManagementService {
       }
 
       if (filter.status && filter.status.length > 0) {
-        query = query.in("status", filter.status);
+        query = query.in('status', filter.status);
       }
 
       if (filter.role_ids && filter.role_ids.length > 0) {
-        query = query.overlaps("role_id", filter.role_ids);
+        query = query.overlaps('role_id', filter.role_ids);
       }
 
       if (filter.department_ids && filter.department_ids.length > 0) {
-        query = query.in("department_id", filter.department_ids);
+        query = query.in('department_id', filter.department_ids);
       }
-      query = query.order(sortBy, { ascending: sortOrder === "asc" });
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
       query = query.range(offset, offset + pageSize - 1);
       const { data, error, count } = await query;
 
       if (error) {
         console.error(
-          "[PaginatedUserManagementService] Error fetching users:",
+          '[PaginatedUserManagementService] Error fetching users:',
           error,
         );
         throw new Error(`Failed to fetch users: ${error.message}`);
@@ -115,7 +115,7 @@ class PaginatedUserManagementService extends UserManagementService {
       };
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error in getUsersPaginated:",
+        '[PaginatedUserManagementService] Error in getUsersPaginated:',
         error,
       );
       throw error;
@@ -132,15 +132,15 @@ class PaginatedUserManagementService extends UserManagementService {
       page,
       pageSize,
       search,
-      sortBy = "level",
-      sortOrder = "desc",
+      sortBy = 'level',
+      sortOrder = 'desc',
     } = params;
     const offset = (page - 1) * pageSize;
 
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from("roles").select(
+      let query = supabase.from('roles').select(
         `
           id,
           name,
@@ -150,7 +150,7 @@ class PaginatedUserManagementService extends UserManagementService {
           created_at,
           updated_at
         `,
-        { count: "exact" },
+        { count: 'exact' },
       );
 
       if (search) {
@@ -159,7 +159,7 @@ class PaginatedUserManagementService extends UserManagementService {
         );
       }
 
-      query = query.order(sortBy, { ascending: sortOrder === "asc" });
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
       query = query.range(offset, offset + pageSize - 1);
 
       const { data, error, count } = await query;
@@ -173,7 +173,7 @@ class PaginatedUserManagementService extends UserManagementService {
         (data || []).map(async (role) => {
           try {
             const { data: permissionsData } = await supabase
-              .from("role_permissions")
+              .from('role_permissions')
               .select(
                 `
                 permissions (
@@ -186,7 +186,7 @@ class PaginatedUserManagementService extends UserManagementService {
                 )
               `,
               )
-              .eq("role_id", role.id);
+              .eq('role_id', role.id);
 
             const permissions =
               permissionsData
@@ -223,7 +223,7 @@ class PaginatedUserManagementService extends UserManagementService {
       };
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error in getRolesPaginated:",
+        '[PaginatedUserManagementService] Error in getRolesPaginated:',
         error,
       );
       throw error;
@@ -240,15 +240,15 @@ class PaginatedUserManagementService extends UserManagementService {
       page,
       pageSize,
       search,
-      sortBy = "resource",
-      sortOrder = "asc",
+      sortBy = 'resource',
+      sortOrder = 'asc',
     } = params;
     const offset = (page - 1) * pageSize;
 
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from("permissions").select("*", { count: "exact" });
+      let query = supabase.from('permissions').select('*', { count: 'exact' });
 
       if (search) {
         query = query.or(
@@ -256,7 +256,7 @@ class PaginatedUserManagementService extends UserManagementService {
         );
       }
 
-      query = query.order(sortBy, { ascending: sortOrder === "asc" });
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
       query = query.range(offset, offset + pageSize - 1);
 
       const { data, error, count } = await query;
@@ -281,7 +281,7 @@ class PaginatedUserManagementService extends UserManagementService {
       };
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error in getPermissionsPaginated:",
+        '[PaginatedUserManagementService] Error in getPermissionsPaginated:',
         error,
       );
       throw error;
@@ -298,15 +298,15 @@ class PaginatedUserManagementService extends UserManagementService {
       page,
       pageSize,
       search,
-      sortBy = "name",
-      sortOrder = "asc",
+      sortBy = 'name',
+      sortOrder = 'asc',
     } = params;
     const offset = (page - 1) * pageSize;
 
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from("department").select("*", { count: "exact" });
+      let query = supabase.from('department').select('*', { count: 'exact' });
 
       if (search) {
         query = query.or(
@@ -314,7 +314,7 @@ class PaginatedUserManagementService extends UserManagementService {
         );
       }
 
-      query = query.order(sortBy, { ascending: sortOrder === "asc" });
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
       query = query.range(offset, offset + pageSize - 1);
 
       const { data, error, count } = await query;
@@ -339,7 +339,7 @@ class PaginatedUserManagementService extends UserManagementService {
       };
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error in getDepartmentsPaginated:",
+        '[PaginatedUserManagementService] Error in getDepartmentsPaginated:',
         error,
       );
       throw error;
@@ -354,15 +354,15 @@ class PaginatedUserManagementService extends UserManagementService {
       const supabase = createClient();
 
       // Create a unique filename
-      const fileExt = file.name.split(".").pop();
+      const fileExt = file.name.split('.').pop();
       const fileName = `${userId}-${Date.now()}.${fileExt}`;
       const filePath = `profiles/${fileName}`;
 
       // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from("avatars")
+        .from('avatars')
         .upload(filePath, file, {
-          cacheControl: "3600",
+          cacheControl: '3600',
           upsert: false,
         });
 
@@ -372,13 +372,13 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get public URL
       const { data: urlData } = supabase.storage
-        .from("avatars")
+        .from('avatars')
         .getPublicUrl(filePath);
 
       return urlData.publicUrl;
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error uploading profile picture:",
+        '[PaginatedUserManagementService] Error uploading profile picture:',
         error,
       );
       throw error;
@@ -400,13 +400,13 @@ class PaginatedUserManagementService extends UserManagementService {
       const supabase = createClientTable();
 
       const { data, error } = await supabase
-        .from("users")
+        .from('users')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", userId)
-        .select("*")
+        .eq('id', userId)
+        .select('*')
         .single();
 
       if (error) {
@@ -415,23 +415,23 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Also update auth.profiles if it exists
       try {
-        const authClient = supabase.schema("auth");
+        const authClient = supabase.schema('auth');
         await authClient
-          .from("profiles")
+          .from('profiles')
           .update({
             full_name: updates.display_name,
             avatar_url: updates.avatar_url,
             updated_at: new Date().toISOString(),
           })
-          .eq("id", userId);
+          .eq('id', userId);
       } catch (profileError) {
-        console.warn("Could not update auth.profiles:", profileError);
+        console.warn('Could not update auth.profiles:', profileError);
       }
 
       return data as User;
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error updating user profile:",
+        '[PaginatedUserManagementService] Error updating user profile:',
         error,
       );
       throw error;
@@ -453,9 +453,9 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get total users count
       const { count: totalUsers, error: totalError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .is("deleted_at", null);
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .is('deleted_at', null);
 
       if (totalError) {
         throw new Error(
@@ -465,10 +465,10 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get active users count
       const { count: activeUsers, error: activeError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "active")
-        .is("deleted_at", null);
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'active')
+        .is('deleted_at', null);
 
       if (activeError) {
         throw new Error(
@@ -478,10 +478,10 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get inactive users count
       const { count: inactiveUsers, error: inactiveError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "inactive")
-        .is("deleted_at", null);
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'inactive')
+        .is('deleted_at', null);
 
       if (inactiveError) {
         throw new Error(
@@ -491,10 +491,10 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get suspended users count
       const { count: suspendedUsers, error: suspendedError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "suspended")
-        .is("deleted_at", null);
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'suspended')
+        .is('deleted_at', null);
 
       if (suspendedError) {
         throw new Error(
@@ -504,10 +504,10 @@ class PaginatedUserManagementService extends UserManagementService {
 
       // Get pending users count
       const { count: pendingUsers, error: pendingError } = await supabase
-        .from("users")
-        .select("*", { count: "exact", head: true })
-        .eq("status", "pending")
-        .is("deleted_at", null);
+        .from('users')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending')
+        .is('deleted_at', null);
 
       if (pendingError) {
         throw new Error(
@@ -524,7 +524,7 @@ class PaginatedUserManagementService extends UserManagementService {
       };
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error getting user statistics:",
+        '[PaginatedUserManagementService] Error getting user statistics:',
         error,
       );
       throw error;
@@ -539,7 +539,7 @@ class PaginatedUserManagementService extends UserManagementService {
       return await super.createRole(roleData);
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error creating role:",
+        '[PaginatedUserManagementService] Error creating role:',
         error,
       );
       throw error;
@@ -554,7 +554,7 @@ class PaginatedUserManagementService extends UserManagementService {
       return await super.updateRole(id, updates);
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error updating role:",
+        '[PaginatedUserManagementService] Error updating role:',
         error,
       );
       throw error;
@@ -569,7 +569,7 @@ class PaginatedUserManagementService extends UserManagementService {
       await super.deleteRole(id);
     } catch (error) {
       console.error(
-        "[PaginatedUserManagementService] Error deleting role:",
+        '[PaginatedUserManagementService] Error deleting role:',
         error,
       );
       throw error;

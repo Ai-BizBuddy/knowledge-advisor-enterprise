@@ -5,10 +5,10 @@
  * and integration with the PermissionsTable component.
  */
 
-import { useState, useCallback, useMemo } from "react";
-import UserManagementService from "@/services/UserManagementService";
-import { useToast } from "@/components/toast";
-import type { Permission } from "@/interfaces/UserManagement";
+import { useState, useCallback, useMemo } from 'react';
+import UserManagementService from '@/services/UserManagementService';
+import { useToast } from '@/components/toast';
+import type { Permission } from '@/interfaces/UserManagement';
 
 interface UseRolePermissionsState {
   permissions: Permission[];
@@ -80,9 +80,9 @@ export const useRolePermissions = (): UseRolePermissions => {
       }));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to load permissions";
+        error instanceof Error ? error.message : 'Failed to load permissions';
       setError(errorMessage);
-      showToast("Error loading permissions: " + errorMessage, "error");
+      showToast('Error loading permissions: ' + errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -109,9 +109,9 @@ export const useRolePermissions = (): UseRolePermissions => {
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Failed to load role permissions";
+            : 'Failed to load role permissions';
         setError(errorMessage);
-        showToast("Error loading role permissions: " + errorMessage, "error");
+        showToast('Error loading role permissions: ' + errorMessage, 'error');
       } finally {
         setLoading(false);
       }
@@ -136,14 +136,14 @@ export const useRolePermissions = (): UseRolePermissions => {
           currentRolePermissions: permissionIds,
         }));
 
-        showToast("Role permissions updated successfully", "success");
+        showToast('Role permissions updated successfully', 'success');
       } catch (error) {
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "Failed to update role permissions";
+            : 'Failed to update role permissions';
         setError(errorMessage);
-        showToast("Error updating permissions: " + errorMessage, "error");
+        showToast('Error updating permissions: ' + errorMessage, 'error');
         throw error;
       } finally {
         setSaving(false);

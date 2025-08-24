@@ -1,6 +1,6 @@
 /**
  * useApiClient Hook - Provides authenticated API client instances
- * 
+ *
  * Hook for accessing authenticated API clients with automatic token refresh
  */
 
@@ -23,12 +23,15 @@ interface UseApiClient {
  * Hook for authenticated API clients
  */
 export const useApiClient = (): UseApiClient => {
-  const clients = useMemo(() => ({
-    apiClient,
-    ingressServiceClient,
-    langflowClient,
-    createClient: createAuthenticatedClient,
-  }), []);
+  const clients = useMemo(
+    () => ({
+      apiClient,
+      ingressServiceClient,
+      langflowClient,
+      createClient: createAuthenticatedClient,
+    }),
+    [],
+  );
 
   return clients;
 };

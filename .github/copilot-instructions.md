@@ -4,8 +4,10 @@
 
 **Last Updated**: 2025-08-10 00:13:55 UTC
 
-This is a Next.js 15 CSR Only Mode, TypeScript project for an AI-powered knowledge base ingestion system called "Knowledge Advisor". The application manages RAG (Retrieval-Augmented Generation) projects with document upload and processing capabilities.
-This guide = **real implementation steps** (no mockups).
+This is a Next.js 15 CSR Only Mode, TypeScript project for an AI-powered knowledge base ingestion
+system called "Knowledge Advisor". The application manages RAG (Retrieval-Augmented Generation)
+projects with document upload and processing capabilities. This guide = **real implementation
+steps** (no mockups).
 
 ## 🚨 CRITICAL DEVELOPMENT WORKFLOW
 
@@ -140,7 +142,7 @@ function handleCallback(cb: any) {}
 interface ApiResponse<T> {
   data: T;
   error: string | null;
-  status: "success" | "error";
+  status: 'success' | 'error';
 }
 
 const data: ApiResponse<Project[]> = response.data;
@@ -151,7 +153,7 @@ function handleCallback<T>(cb: (data: T) => void) {}
 if (error instanceof Error) {
   console.error(error.message);
 } else {
-  console.error("Unknown error occurred");
+  console.error('Unknown error occurred');
 }
 ```
 
@@ -170,7 +172,7 @@ export interface Project {
   updated_at: string;
 }
 
-export type ProjectStatus = "active" | "paused" | "archived";
+export type ProjectStatus = 'active' | 'paused' | 'archived';
 
 export interface CreateProjectRequest {
   name: string;
@@ -237,14 +239,14 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 
 ```typescript
 // /src/hooks/useReactHookForm.ts
-import { useForm, UseFormProps } from "react-hook-form";
+import { useForm, UseFormProps } from 'react-hook-form';
 
 export function useReactHookForm<TFormValues extends Record<string, unknown>>(
   options?: UseFormProps<TFormValues>,
 ) {
   return useForm<TFormValues>({
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     ...options,
   });
 }
@@ -306,24 +308,22 @@ const CreateProjectForm: React.FC = () => {
 
 ```typescript
 // /src/actions/project.actions.ts
-"use server";
+'use server';
 
-import { createClient } from "@/utils/supabase/server";
-import { revalidatePath } from "next/cache";
+import { createClient } from '@/utils/supabase/server';
+import { revalidatePath } from 'next/cache';
 
-export async function createProject(
-  data: CreateProjectRequest,
-): Promise<TypedResponse<Project>> {
+export async function createProject(data: CreateProjectRequest): Promise<TypedResponse<Project>> {
   try {
     const supabase = createClient();
 
     const { data: user } = await supabase.auth.getUser();
     if (!user.user) {
-      return { success: false, error: "Unauthorized" };
+      return { success: false, error: 'Unauthorized' };
     }
 
     const { data: project, error } = await supabase
-      .from("projects")
+      .from('projects')
       .insert({
         ...data,
         owner_id: user.user.id,
@@ -335,13 +335,13 @@ export async function createProject(
       return { success: false, error: error.message };
     }
 
-    revalidatePath("/dashboard");
+    revalidatePath('/dashboard');
     return { success: true, data: project };
   } catch (error) {
-    console.error("Create project error:", error);
+    console.error('Create project error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Unknown error",
+      error: error instanceof Error ? error.message : 'Unknown error',
     };
   }
 }
@@ -371,7 +371,7 @@ const handleCreateProject = async (data: ProjectFormValues) => {
   const result = await createProject(data);
 
   if (!result.success) {
-    setError(result.error || "Failed to create project");
+    setError(result.error || 'Failed to create project');
     return;
   }
 
@@ -408,23 +408,20 @@ const handleCreateProject = async (data: ProjectFormValues) => {
 
 ```typescript
 // Glass morphism effect
-const glassStyles =
-  "bg-slate-900/80 backdrop-blur-xl border border-slate-700/50";
+const glassStyles = 'bg-slate-900/80 backdrop-blur-xl border border-slate-700/50';
 
 // Gradient backgrounds
-const gradientBg =
-  "bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-blue-500/10";
+const gradientBg = 'bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-blue-500/10';
 
 // Interactive states
-const hoverStates =
-  "hover:bg-slate-800 hover:scale-105 transition-all duration-200";
+const hoverStates = 'hover:bg-slate-800 hover:scale-105 transition-all duration-200';
 
 // Button variants
 const buttonVariants = {
-  primary: "bg-indigo-600 hover:bg-indigo-700 text-white",
-  secondary: "bg-slate-700 hover:bg-slate-600 text-slate-200",
-  danger: "bg-red-600 hover:bg-red-700 text-white",
-  ghost: "bg-transparent hover:bg-slate-800 text-slate-300",
+  primary: 'bg-indigo-600 hover:bg-indigo-700 text-white',
+  secondary: 'bg-slate-700 hover:bg-slate-600 text-slate-200',
+  danger: 'bg-red-600 hover:bg-red-700 text-white',
+  ghost: 'bg-transparent hover:bg-slate-800 text-slate-300',
 };
 ```
 
@@ -513,12 +510,9 @@ Next.js 15 + TypeScript + Supabase + Tailwind + Framer Motion
 
 ## Golden Rules
 
-❌ NO `any` types → use `unknown`, interfaces, unions
-✅ React Hook Form: `useReactHookForm<T>()`
-✅ Server Actions for mutations
-✅ Component per folder with index.tsx
-✅ Mobile-first + dark theme + glass morphism
-🚨 ALWAYS test before claiming completion
+❌ NO `any` types → use `unknown`, interfaces, unions ✅ React Hook Form: `useReactHookForm<T>()` ✅
+Server Actions for mutations ✅ Component per folder with index.tsx ✅ Mobile-first + dark theme +
+glass morphism 🚨 ALWAYS test before claiming completion
 
 ## Patterns
 

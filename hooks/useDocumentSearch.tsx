@@ -4,15 +4,15 @@
  * Custom React hook for document search functionality using Langflow AI and Supabase
  */
 
-import type { Document } from "@/interfaces/Project";
-import type { DocumentSearchResult } from "@/services/DocumentSearchService";
+import type { Document } from '@/interfaces/Project';
+import type { DocumentSearchResult } from '@/services/DocumentSearchService';
 import {
   getDocumentSearchAnalytics,
   searchDocuments,
   searchDocumentsInProjects,
   testDocumentSearchConnection,
-} from "@/services/Project/supabase";
-import { useCallback, useState } from "react";
+} from '@/services/Project/supabase';
+import { useCallback, useState } from 'react';
 
 // Helper function to convert search result item to Document format
 const convertSearchResultToDocument = (searchResult: {
@@ -27,16 +27,16 @@ const convertSearchResultToDocument = (searchResult: {
     id: searchResult.id,
     name: searchResult.title,
     file_type: searchResult.documentType,
-    status: "synced",
+    status: 'synced',
     knowledge_base_id: searchResult.projectId,
     chunk_count: 0,
     file_size: 0,
-    mime_type: "",
+    mime_type: '',
     updated_at: searchResult.lastModified,
     created_at: searchResult.lastModified,
-    path: "",
-    url: "",
-    rag_status: "synced" as const,
+    path: '',
+    url: '',
+    rag_status: 'synced' as const,
     last_rag_sync: searchResult.lastModified,
     metadata: searchResult.metadata,
   };
@@ -138,7 +138,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           documentIds: [],
           totalFound: 0,
           searchQuery: query,
-          error: "Search query cannot be empty",
+          error: 'Search query cannot be empty',
         };
         return emptyResult;
       }
@@ -160,7 +160,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           try {
             analytics = await getDocumentSearchAnalytics(query, projectId);
           } catch (analyticsError) {
-            console.warn("Failed to get search analytics:", analyticsError);
+            console.warn('Failed to get search analytics:', analyticsError);
           }
         }
 
@@ -168,7 +168,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           ...prev,
           isSearching: false,
           searchResults: result,
-          searchError: result.success ? null : result.error || "Search failed",
+          searchError: result.success ? null : result.error || 'Search failed',
           analytics,
         }));
 
@@ -182,7 +182,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred";
+            : 'An unexpected error occurred';
 
         setState((prev) => ({
           ...prev,
@@ -229,7 +229,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           documentIds: [],
           totalFound: 0,
           searchQuery: query,
-          error: "Search query cannot be empty",
+          error: 'Search query cannot be empty',
         };
         return emptyResult;
       }
@@ -248,7 +248,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           ...prev,
           isSearching: false,
           searchResults: result,
-          searchError: result.success ? null : result.error || "Search failed",
+          searchError: result.success ? null : result.error || 'Search failed',
         }));
 
         // Add to history if successful
@@ -261,7 +261,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "An unexpected error occurred";
+            : 'An unexpected error occurred';
 
         setState((prev) => ({
           ...prev,
@@ -322,7 +322,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     try {
       return await testDocumentSearchConnection();
     } catch (error) {
-      console.error("Failed to test search connection:", error);
+      console.error('Failed to test search connection:', error);
       return false;
     }
   }, []);

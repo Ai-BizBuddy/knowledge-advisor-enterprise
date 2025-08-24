@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from "react";
-import { createClient } from "../utils/supabase/client";
-import { Session } from "@supabase/supabase-js";
-import { useAuthContext } from "@/contexts/AuthContext";
+import { useState } from 'react';
+import { createClient } from '../utils/supabase/client';
+import { Session } from '@supabase/supabase-js';
+import { useAuthContext } from '@/contexts/AuthContext';
 
 interface AuthState {
   loading: boolean;
@@ -36,7 +36,10 @@ export function useAuth(): UseAuth {
 
   const login = async (email: string, password: string) => {
     setState({ loading: true, error: null, success: false });
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
     setState({
       loading: false,
       error: error ? error.message : null,

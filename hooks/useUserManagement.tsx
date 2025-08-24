@@ -5,8 +5,8 @@
  * with proper state management and error handling.
  */
 
-import { useState, useCallback } from "react";
-import UserManagementService from "@/services/UserManagementService";
+import { useState, useCallback } from 'react';
+import UserManagementService from '@/services/UserManagementService';
 import type {
   User,
   Role,
@@ -18,7 +18,7 @@ import type {
   PermissionCheckResult,
   UserSession,
   PermissionAction,
-} from "@/interfaces/UserManagement";
+} from '@/interfaces/UserManagement';
 
 interface UseUserManagementState {
   users: User[];
@@ -103,9 +103,9 @@ export const useUserManagement = (): UseUserManagement => {
         setState((prev) => ({ ...prev, users }));
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to fetch users";
+          error instanceof Error ? error.message : 'Failed to fetch users';
         setError(errorMessage);
-        console.error("[useUserManagement] Error fetching users:", error);
+        console.error('[useUserManagement] Error fetching users:', error);
       } finally {
         setLoading(false);
       }
@@ -123,9 +123,9 @@ export const useUserManagement = (): UseUserManagement => {
         return await userManagementService.getUserById(id);
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to fetch user";
+          error instanceof Error ? error.message : 'Failed to fetch user';
         setError(errorMessage);
-        console.error("[useUserManagement] Error fetching user:", error);
+        console.error('[useUserManagement] Error fetching user:', error);
         return null;
       }
     },
@@ -152,9 +152,9 @@ export const useUserManagement = (): UseUserManagement => {
         return newUser;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to create user";
+          error instanceof Error ? error.message : 'Failed to create user';
         setError(errorMessage);
-        console.error("[useUserManagement] Error creating user:", error);
+        console.error('[useUserManagement] Error creating user:', error);
         return null;
       } finally {
         setLoading(false);
@@ -185,9 +185,9 @@ export const useUserManagement = (): UseUserManagement => {
         return updatedUser;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to update user";
+          error instanceof Error ? error.message : 'Failed to update user';
         setError(errorMessage);
-        console.error("[useUserManagement] Error updating user:", error);
+        console.error('[useUserManagement] Error updating user:', error);
         return null;
       } finally {
         setLoading(false);
@@ -216,9 +216,9 @@ export const useUserManagement = (): UseUserManagement => {
         return true;
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to delete user";
+          error instanceof Error ? error.message : 'Failed to delete user';
         setError(errorMessage);
-        console.error("[useUserManagement] Error deleting user:", error);
+        console.error('[useUserManagement] Error deleting user:', error);
         return false;
       } finally {
         setLoading(false);
@@ -239,9 +239,9 @@ export const useUserManagement = (): UseUserManagement => {
       setState((prev) => ({ ...prev, roles }));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch roles";
+        error instanceof Error ? error.message : 'Failed to fetch roles';
       setError(errorMessage);
-      console.error("[useUserManagement] Error fetching roles:", error);
+      console.error('[useUserManagement] Error fetching roles:', error);
     } finally {
       setLoading(false);
     }
@@ -259,9 +259,9 @@ export const useUserManagement = (): UseUserManagement => {
       setState((prev) => ({ ...prev, permissions }));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch permissions";
+        error instanceof Error ? error.message : 'Failed to fetch permissions';
       setError(errorMessage);
-      console.error("[useUserManagement] Error fetching permissions:", error);
+      console.error('[useUserManagement] Error fetching permissions:', error);
     } finally {
       setLoading(false);
     }
@@ -279,9 +279,9 @@ export const useUserManagement = (): UseUserManagement => {
       setState((prev) => ({ ...prev, departments }));
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch departments";
+        error instanceof Error ? error.message : 'Failed to fetch departments';
       setError(errorMessage);
-      console.error("[useUserManagement] Error fetching departments:", error);
+      console.error('[useUserManagement] Error fetching departments:', error);
     } finally {
       setLoading(false);
     }
@@ -305,12 +305,12 @@ export const useUserManagement = (): UseUserManagement => {
         );
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to check permission";
+          error instanceof Error ? error.message : 'Failed to check permission';
         setError(errorMessage);
-        console.error("[useUserManagement] Error checking permission:", error);
+        console.error('[useUserManagement] Error checking permission:', error);
         return {
           allowed: false,
-          reason: "Error checking permissions",
+          reason: 'Error checking permissions',
         };
       }
     },
@@ -330,9 +330,9 @@ export const useUserManagement = (): UseUserManagement => {
         setState((prev) => ({ ...prev, currentUserSession: session }));
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Failed to get user session";
+          error instanceof Error ? error.message : 'Failed to get user session';
         setError(errorMessage);
-        console.error("[useUserManagement] Error getting user session:", error);
+        console.error('[useUserManagement] Error getting user session:', error);
       } finally {
         setLoading(false);
       }

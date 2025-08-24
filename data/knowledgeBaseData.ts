@@ -1,4 +1,4 @@
-import { Project } from "@/interfaces/Project";
+import { Project } from '@/interfaces/Project';
 
 export interface KnowledgeBaseData extends Project {
   queries?: number;
@@ -12,5 +12,5 @@ export interface KnowledgeBaseData extends Project {
 
 // Helper function to format status for display
 export const formatStatus = (status: boolean): string => {
-  return status ? "Active" : "Inactive";
+  return status ? 'Active' : 'Inactive';
 };

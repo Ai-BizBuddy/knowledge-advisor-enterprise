@@ -6,17 +6,17 @@
  * Uses fetch API instead of Axios following project standards.
  */
 
-import type { Document } from "@/interfaces/Project";
-import { BaseFetchClient } from "@/utils/fetchClient";
-import { createClient } from "@/utils/supabase/client";
+import type { Document } from '@/interfaces/Project';
+import { BaseFetchClient } from '@/utils/fetchClient';
+import { createClient } from '@/utils/supabase/client';
 
 /**
  * Langflow search request interface
  */
 export interface LangflowSearchRequest {
   input_value: string;
-  output_type: "chat";
-  input_type: "chat";
+  output_type: 'chat';
+  input_type: 'chat';
 }
 
 /**
@@ -86,26 +86,26 @@ interface LangflowSearchServiceConfig {
  */
 class LangflowSearchService {
   private client: BaseFetchClient;
-  private readonly serviceName = "LangflowSearch";
+  private readonly serviceName = 'LangflowSearch';
   private readonly useMockData: boolean;
 
   constructor(config: LangflowSearchServiceConfig = {}) {
     const baseUrl =
       config.baseUrl ||
       process.env.NEXT_PUBLIC_LANGFLOW_URL ||
-      "https://kann.zapto.org";
+      'https://kann.zapto.org';
     const searchPath =
       config.searchPath ||
       process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH ||
-      "/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431";
+      '/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431';
 
     this.client = new BaseFetchClient({
       baseURL: `${baseUrl}${searchPath}`,
       timeout: config.timeout || 30000,
       retryAttempts: config.retryAttempts || 2,
       defaultHeaders: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -138,49 +138,49 @@ class LangflowSearchService {
     documentIds: string[];
   } {
     const mockDocumentIds = [
-      "a126781b-0f17-4731-bed5-497d74c5bb7d",
-      "b234892c-1g28-5842-cfe6-598e85d6cc8e",
-      "c345903d-2h39-6953-dfg7-609f96e7dd9f",
+      'a126781b-0f17-4731-bed5-497d74c5bb7d',
+      'b234892c-1g28-5842-cfe6-598e85d6cc8e',
+      'c345903d-2h39-6953-dfg7-609f96e7dd9f',
     ];
 
     const results: SearchResult[] = [
       {
         content: `This document provides comprehensive information about ${query}. It covers the fundamental concepts, best practices, and implementation details that are essential for understanding this topic.`,
         relevanceScore: 0.95,
-        source: "Getting Started Guide",
-        page: "17",
+        source: 'Getting Started Guide',
+        page: '17',
         documentId: mockDocumentIds[0],
         metadata: {
-          documentType: "PDF",
-          lastModified: "2024-03-15T10:30:00Z",
-          projectId: "1",
-          page: "17",
+          documentType: 'PDF',
+          lastModified: '2024-03-15T10:30:00Z',
+          projectId: '1',
+          page: '17',
         },
       },
       {
         content: `Advanced techniques and troubleshooting tips for ${query}. This section includes real-world examples and common pitfalls to avoid when working with these concepts.`,
         relevanceScore: 0.87,
-        source: "Advanced User Manual",
-        page: "11",
+        source: 'Advanced User Manual',
+        page: '11',
         documentId: mockDocumentIds[1],
         metadata: {
-          documentType: "Markdown",
-          lastModified: "2024-03-14T16:45:00Z",
-          projectId: "2",
-          page: "11",
+          documentType: 'Markdown',
+          lastModified: '2024-03-14T16:45:00Z',
+          projectId: '2',
+          page: '11',
         },
       },
       {
         content: `Frequently asked questions about ${query}. Find quick answers to common issues and learn from the experiences of other users.`,
         relevanceScore: 0.76,
-        source: "FAQ Collection",
-        page: "5",
+        source: 'FAQ Collection',
+        page: '5',
         documentId: mockDocumentIds[2],
         metadata: {
-          documentType: "HTML",
-          lastModified: "2024-03-13T09:20:00Z",
-          projectId: "3",
-          page: "5",
+          documentType: 'HTML',
+          lastModified: '2024-03-13T09:20:00Z',
+          projectId: '3',
+          page: '5',
         },
       },
     ];
@@ -211,9 +211,9 @@ class LangflowSearchService {
       if (documentsIdsMatch) {
         const idsString = documentsIdsMatch[1];
         result.documentIds = idsString
-          .split(",")
-          .map((id) => id.trim().replace(/["']/g, ""))
-          .filter((id) => id.length > 0 && id !== "undefined" && id !== "null");
+          .split(',')
+          .map((id) => id.trim().replace(/["']/g, ''))
+          .filter((id) => id.length > 0 && id !== 'undefined' && id !== 'null');
       }
 
       // Extract pages array
@@ -221,11 +221,11 @@ class LangflowSearchService {
       if (pagesMatch) {
         const pagesString = pagesMatch[1];
         result.pages = pagesString
-          .split(",")
-          .map((page) => page.trim().replace(/["']/g, ""))
+          .split(',')
+          .map((page) => page.trim().replace(/["']/g, ''))
           .filter(
             (page) =>
-              page.length > 0 && page !== "undefined" && page !== "null",
+              page.length > 0 && page !== 'undefined' && page !== 'null',
           );
       } // Extract content array - handle multiline content with quotes
       const contentMatch = responseText.match(/content:\s*\[\s*([^\]]+)\s*\]/i);
@@ -233,9 +233,9 @@ class LangflowSearchService {
         const contentString = contentMatch[1];
         // Split by commas but preserve content within quotes
         const contentItems = [];
-        let currentItem = "";
+        let currentItem = '';
         let inQuotes = false;
-        let quoteChar = "";
+        let quoteChar = '';
 
         for (let i = 0; i < contentString.length; i++) {
           const char = contentString[i];
@@ -245,12 +245,12 @@ class LangflowSearchService {
             quoteChar = char;
           } else if (char === quoteChar && inQuotes) {
             inQuotes = false;
-            quoteChar = "";
-          } else if (char === "," && !inQuotes) {
+            quoteChar = '';
+          } else if (char === ',' && !inQuotes) {
             if (currentItem.trim()) {
-              contentItems.push(currentItem.trim().replace(/^["']|["']$/g, ""));
+              contentItems.push(currentItem.trim().replace(/^["']|["']$/g, ''));
             }
-            currentItem = "";
+            currentItem = '';
             continue;
           }
 
@@ -259,13 +259,13 @@ class LangflowSearchService {
 
         // Add the last item
         if (currentItem.trim()) {
-          contentItems.push(currentItem.trim().replace(/^["']|["']$/g, ""));
+          contentItems.push(currentItem.trim().replace(/^["']|["']$/g, ''));
         }
 
         result.content = contentItems.filter((content) => content.length > 0);
       }
 
-      console.log("Processed search result:", {
+      console.log('Processed search result:', {
         documentIds: result.documentIds,
         pages: result.pages,
         contentCount: result.content.length,
@@ -367,7 +367,7 @@ class LangflowSearchService {
       const supabase = createClient();
 
       const { data: documents, error } = await supabase
-        .from("documents")
+        .from('documents')
         .select(
           `
           id,
@@ -383,7 +383,7 @@ class LangflowSearchService {
           updated_at
         `,
         )
-        .in("id", documentIds);
+        .in('id', documentIds);
 
       if (error) {
         console.error(
@@ -410,9 +410,9 @@ class LangflowSearchService {
             metadata: doc.metadata,
             created_at: doc.created_at,
             updated_at: doc.updated_at,
-            path: "",
-            url: "",
-            rag_status: "synced" as const,
+            path: '',
+            url: '',
+            rag_status: 'synced' as const,
             last_rag_sync: doc.updated_at,
           };
           orderedDocuments.push(fullDoc);
@@ -455,7 +455,7 @@ class LangflowSearchService {
               projectId: document.knowledge_base_id,
               projectName:
                 (document.metadata?.project_name as string) ||
-                "Unknown Project",
+                'Unknown Project',
               uploadedAt: document.created_at,
               fileSize: document.file_size,
               chunkCount: document.chunk_count,
@@ -506,17 +506,17 @@ class LangflowSearchService {
     try {
       const request: LangflowSearchRequest = {
         input_value: query,
-        output_type: "chat",
-        input_type: "chat",
+        output_type: 'chat',
+        input_type: 'chat',
       };
 
-      console.log("Sending search request:", {
+      console.log('Sending search request:', {
         query: query,
         body: request,
       });
 
       const response = await this.client.post<LangflowSearchResponse>(
-        "?stream=false",
+        '?stream=false',
         request,
       );
       const { results, documentIds } = this.extractSearchResults(
@@ -590,7 +590,7 @@ class LangflowSearchService {
       // Extract potential suggestions from search results
       const suggestions = searchResponse.results.slice(0, 5).map((result) => {
         // Extract first meaningful phrase from content
-        const words = result.content.split(" ").slice(0, 3).join(" ");
+        const words = result.content.split(' ').slice(0, 3).join(' ');
         return `${partialQuery} ${words}`;
       });
 
@@ -606,7 +606,7 @@ class LangflowSearchService {
    */
   async checkHealth(): Promise<boolean> {
     try {
-      const response = await this.search("health check");
+      const response = await this.search('health check');
       return response.results.length >= 0; // Any response indicates health
     } catch (error) {
       console.warn(`[${this.serviceName}] Health check failed:`, error);
@@ -632,12 +632,12 @@ class LangflowSearchService {
       return {
         available: isHealthy,
         responseTime,
-        version: "1.0.0",
+        version: '1.0.0',
       };
     } catch (error) {
       return {
         available: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
@@ -651,7 +651,7 @@ class LangflowSearchService {
     );
 
     return results.map((result, index) => {
-      if (result.status === "fulfilled") {
+      if (result.status === 'fulfilled') {
         return result.value;
       } else {
         return {

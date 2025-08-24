@@ -1,10 +1,10 @@
-"use client";
-import { LoadingPage, SlideBar } from "@/components";
-import { useAuthContext } from "@/contexts/AuthContext";
-import { useAuth } from "@/hooks";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
-import { useLoading } from "@/contexts/LoadingContext";
+'use client';
+import { LoadingPage, SlideBar } from '@/components';
+import { useAuthContext } from '@/contexts/AuthContext';
+import { useAuth } from '@/hooks';
+import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { useLoading } from '@/contexts/LoadingContext';
 
 export default function MainLayout({
   children,
@@ -23,7 +23,7 @@ export default function MainLayout({
     await logout();
     // Use setTimeout to avoid hydration mismatch
     setTimeout(() => {
-      window.location.href = "/login";
+      window.location.href = '/login';
     }, 0);
   };
 
@@ -31,10 +31,10 @@ export default function MainLayout({
     // Auth context will handle redirects automatically
     // This is just for backward compatibility
     const checkAuth = async () => {
-      if (!authLoading && !user && pathname !== "/login") {
+      if (!authLoading && !user && pathname !== '/login') {
         // Use setTimeout to avoid hydration mismatch
         setTimeout(() => {
-          window.location.href = "/login";
+          window.location.href = '/login';
         }, 0);
       }
     };

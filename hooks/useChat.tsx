@@ -1,9 +1,9 @@
-import { useState, useCallback } from "react";
-import { langflowChatService } from "@/services";
+import { useState, useCallback } from 'react';
+import { langflowChatService } from '@/services';
 
 export interface ChatMessage {
   id: string;
-  type: "user" | "assistant";
+  type: 'user' | 'assistant';
   content: string;
   timestamp: string;
   selectedKnowledgeBase?: string[];
@@ -22,8 +22,8 @@ export const useChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
-    "connected" | "connecting" | "error" | "timeout"
-  >("connected");
+    'connected' | 'connecting' | 'error' | 'timeout'
+  >('connected');
 
   const addMessage = useCallback((message: ChatMessage) => {
     setMessages((prev) => [...prev, message]);
@@ -32,12 +32,12 @@ export const useChat = () => {
   const addWelcomeMessage = useCallback(() => {
     const welcomeMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: "assistant",
+      type: 'assistant',
       content:
-        "สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!",
+        'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
       timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
       }),
     };
     setMessages([welcomeMessage]);
@@ -48,12 +48,12 @@ export const useChat = () => {
         if (selectedKBs.length === 0) {
           const errorMessage: ChatMessage = {
             id: Date.now().toString(),
-            type: "assistant",
+            type: 'assistant',
             content:
-              "กรุณาเลือก Knowledge Base อย่างน้อย 1 รายการก่อนที่จะถามคำถามครับ",
+              'กรุณาเลือก Knowledge Base อย่างน้อย 1 รายการก่อนที่จะถามคำถามครับ',
             timestamp: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: '2-digit',
+              minute: '2-digit',
             }),
           };
           addMessage(errorMessage);
@@ -64,11 +64,11 @@ export const useChat = () => {
       // Add user message
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
-        type: "user",
+        type: 'user',
         content,
         timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
+          hour: '2-digit',
+          minute: '2-digit',
         }),
         selectedKnowledgeBase: selectedKBs.map((kb) => kb.name),
       };
@@ -76,39 +76,39 @@ export const useChat = () => {
 
       // Start typing and set connecting status
       setIsTyping(true);
-      setConnectionStatus("connecting");
+      setConnectionStatus('connecting');
       try {
         // Send message to Langflow Chat API
         const chatResult = await langflowChatService.sendMessage({
           question: content,
           filters: {
-            project_id: selectedKBs.map((kb) => kb.id).join(","),
+            project_id: selectedKBs.map((kb) => kb.id).join(','),
           },
         });
 
         // Update connection status based on result
         if (chatResult.success) {
-          setConnectionStatus("connected");
+          setConnectionStatus('connected');
         } else {
           if (
-            chatResult.error?.includes("ใช้เวลานานเกินไป") ||
-            chatResult.error?.includes("timeout")
+            chatResult.error?.includes('ใช้เวลานานเกินไป') ||
+            chatResult.error?.includes('timeout')
           ) {
-            setConnectionStatus("timeout");
+            setConnectionStatus('timeout');
           } else {
-            setConnectionStatus("error");
+            setConnectionStatus('error');
           }
         }
 
         const aiResponse: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          type: "assistant",
+          type: 'assistant',
           content: chatResult.success
             ? chatResult.content
-            : chatResult.error || "ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล",
+            : chatResult.error || 'ขออภัยครับ เกิดข้อผิดพลาดในการประมวลผล',
           timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
           sessionId: chatResult.sessionId,
           responseTime: chatResult.responseTime,
@@ -116,17 +116,17 @@ export const useChat = () => {
 
         addMessage(aiResponse);
       } catch (error) {
-        console.error("Chat error:", error);
-        setConnectionStatus("error");
+        console.error('Chat error:', error);
+        setConnectionStatus('error');
 
         const errorResponse: ChatMessage = {
           id: (Date.now() + 1).toString(),
-          type: "assistant",
+          type: 'assistant',
           content:
-            "ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI Assistant กรุณาลองใหม่อีกครั้ง",
+            'ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI Assistant กรุณาลองใหม่อีกครั้ง',
           timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
         };
         addMessage(errorResponse);
@@ -134,7 +134,7 @@ export const useChat = () => {
         setIsTyping(false);
         // Reset connection status to connected after a delay if there was an error
         setTimeout(() => {
-          setConnectionStatus("connected");
+          setConnectionStatus('connected');
         }, 5000);
       }
     },

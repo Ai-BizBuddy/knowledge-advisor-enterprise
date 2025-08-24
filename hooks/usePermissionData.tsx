@@ -5,10 +5,10 @@
  * Now includes full resource+action data structure for enhanced permissions table.
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import UserManagementService from "@/services/UserManagementService";
-import type { Permission } from "@/interfaces/UserManagement";
-import { usePermissionResources } from "./usePermissionResources";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import UserManagementService from '@/services/UserManagementService';
+import type { Permission } from '@/interfaces/UserManagement';
+import { usePermissionResources } from './usePermissionResources';
 
 export interface DynamicPermissionData {
   resources: string[];
@@ -119,8 +119,8 @@ export function usePermissionData(): UsePermissionDataReturn {
       setPermissions(permissionsData);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch permissions";
-      console.error("[usePermissionData] Error:", errorMessage);
+        err instanceof Error ? err.message : 'Failed to fetch permissions';
+      console.error('[usePermissionData] Error:', errorMessage);
       setError(errorMessage);
     } finally {
       setLoading(false);
@@ -152,7 +152,7 @@ export function usePermissionData(): UsePermissionDataReturn {
   );
 
   const getStandardActions = useCallback((): string[] => {
-    return ["insert", "read", "update", "delete"];
+    return ['insert', 'read', 'update', 'delete'];
   }, []);
 
   const getCustomActionsForResource = useCallback(

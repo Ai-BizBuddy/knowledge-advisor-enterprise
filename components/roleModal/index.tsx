@@ -4,10 +4,10 @@
  * Main exports for the role creation modal system
  */
 
-export { RoleModal } from "./RoleModal";
-export { PermissionsTable } from "./PermissionsTable";
-export { PermissionRow } from "./PermissionRow";
-export { ActionHeader } from "./ActionHeader";
+export { RoleModal } from './RoleModal';
+export { PermissionsTable } from './PermissionsTable';
+export { PermissionRow } from './PermissionRow';
+export { ActionHeader } from './ActionHeader';
 
 // Export types
 export type {
@@ -20,4 +20,4 @@ export type {
   PermissionRow as PermissionRowType,
   ActionKey,
   AccessLevel,
-} from "@/interfaces/RoleModal";
+} from '@/interfaces/RoleModal';

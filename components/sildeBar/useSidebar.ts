@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from "react";
-import { usePathname } from "next/navigation";
-import { getDefaultNavigationItems } from "./constants";
-import type { NavigationMenuItem } from "./types";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { getDefaultNavigationItems } from './constants';
+import type { NavigationMenuItem } from './types';
 
 /**
  * Custom hook for managing sidebar state and navigation logic

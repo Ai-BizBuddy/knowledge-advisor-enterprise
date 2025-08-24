@@ -1,5 +1,5 @@
-import { DarkThemeToggle } from "flowbite-react";
-import { useEffect, useState } from "react";
+import { DarkThemeToggle } from 'flowbite-react';
+import { useEffect, useState } from 'react';
 
 /**
  * Hydration-safe wrapper for DarkThemeToggle
@@ -15,7 +15,7 @@ export const SafeDarkThemeToggle = () => {
   if (!mounted) {
     // Return a placeholder that matches the approximate size
     return (
-      <div className="h-6 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700" />
+      <div className='h-6 w-10 animate-pulse rounded-full bg-gray-200 dark:bg-gray-700' />
     );
   }
 

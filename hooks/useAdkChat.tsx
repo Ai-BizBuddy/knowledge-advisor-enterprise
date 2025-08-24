@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
-import { adkChatService } from "@/services";
-import { createClient } from "@/utils/supabase/client";
+import { useState, useCallback } from 'react';
+import { adkChatService } from '@/services';
+import { createClient } from '@/utils/supabase/client';
 
 export interface ChatMessage {
   id: string;
-  type: "user" | "assistant";
+  type: 'user' | 'assistant';
   content: string;
   timestamp: string;
   selectedKnowledgeBase?: string[];
@@ -25,8 +25,8 @@ export const useAdkChat = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
-    "connected" | "connecting" | "error" | "timeout"
-  >("connected");
+    'connected' | 'connecting' | 'error' | 'timeout'
+  >('connected');
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -45,7 +45,7 @@ export const useAdkChat = () => {
         return user.id;
       }
     } catch (error) {
-      console.error("Error getting user:", error);
+      console.error('Error getting user:', error);
     }
     return null;
   }, [userId, supabase]);
@@ -70,12 +70,12 @@ export const useAdkChat = () => {
   const addWelcomeMessage = useCallback(() => {
     const welcomeMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: "assistant",
+      type: 'assistant',
       content:
-        "สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!",
+        'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
       timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
       }),
     };
     setMessages([welcomeMessage]);
@@ -85,17 +85,17 @@ export const useAdkChat = () => {
     setMessages([]);
     setCurrentSessionId(null);
     setIsTyping(false);
-    setConnectionStatus("connected");
+    setConnectionStatus('connected');
 
     // Add welcome message for new chat
     const welcomeMessage: ChatMessage = {
       id: Date.now().toString(),
-      type: "assistant",
+      type: 'assistant',
       content:
-        "สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!",
+        'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
       timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
+        hour: '2-digit',
+        minute: '2-digit',
       }),
     };
     setMessages([welcomeMessage]);
@@ -111,12 +111,12 @@ export const useAdkChat = () => {
         if (selectedKBs.length === 0) {
           const errorMessage: ChatMessage = {
             id: Date.now().toString(),
-            type: "assistant",
+            type: 'assistant',
             content:
-              "กรุณาเลือก Knowledge Base อย่างน้อย 1 รายการก่อนที่จะถามคำถามครับ",
+              'กรุณาเลือก Knowledge Base อย่างน้อย 1 รายการก่อนที่จะถามคำถามครับ',
             timestamp: new Date().toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
+              hour: '2-digit',
+              minute: '2-digit',
             }),
           };
           addMessage(errorMessage);
@@ -129,11 +129,11 @@ export const useAdkChat = () => {
       if (!currentUserId) {
         const errorMessage: ChatMessage = {
           id: Date.now().toString(),
-          type: "assistant",
-          content: "ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาเข้าสู่ระบบใหม่",
+          type: 'assistant',
+          content: 'ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาเข้าสู่ระบบใหม่',
           timestamp: new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
+            hour: '2-digit',
+            minute: '2-digit',
           }),
         };
         addMessage(errorMessage);
@@ -143,11 +143,11 @@ export const useAdkChat = () => {
       // Add user message
       const userMessage: ChatMessage = {
         id: Date.now().toString(),
-        type: "user",
+        type: 'user',
         content,
         timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
+          hour: '2-digit',
+          minute: '2-digit',
         }),
         selectedKnowledgeBase: selectedKBs.map((kb) => kb.name),
         onlineMode,
@@ -156,17 +156,17 @@ export const useAdkChat = () => {
 
       // Start typing and set connecting status
       setIsTyping(true);
-      setConnectionStatus("connecting");
+      setConnectionStatus('connecting');
 
       // Create AI response message for streaming
       const aiMessageId = (Date.now() + 1).toString();
       const aiMessage: ChatMessage = {
         id: aiMessageId,
-        type: "assistant",
-        content: "",
+        type: 'assistant',
+        content: '',
         timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
+          hour: '2-digit',
+          minute: '2-digit',
         }),
         isStreaming: true,
       };
@@ -191,7 +191,7 @@ export const useAdkChat = () => {
           // Complete handler
           (finalContent: string) => {
             updateMessage(aiMessageId, finalContent, true);
-            setConnectionStatus("connected");
+            setConnectionStatus('connected');
             setIsTyping(false);
           },
           // Error handler
@@ -201,7 +201,7 @@ export const useAdkChat = () => {
               `ขออภัยครับ เกิดข้อผิดพลาด: ${error}`,
               true,
             );
-            setConnectionStatus("error");
+            setConnectionStatus('error');
             setIsTyping(false);
           },
         );
@@ -211,14 +211,14 @@ export const useAdkChat = () => {
           setCurrentSessionId(chatResult.sessionId);
         }
       } catch (error) {
-        console.error("Chat error:", error);
-        setConnectionStatus("error");
+        console.error('Chat error:', error);
+        setConnectionStatus('error');
         setIsTyping(false);
 
         const errorMessage =
           error instanceof Error
             ? error.message
-            : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+            : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
         updateMessage(
           aiMessageId,
           `ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อ: ${errorMessage}`,
@@ -227,7 +227,7 @@ export const useAdkChat = () => {
 
         // Reset connection status after a delay
         setTimeout(() => {
-          setConnectionStatus("connected");
+          setConnectionStatus('connected');
         }, 5000);
       }
     },

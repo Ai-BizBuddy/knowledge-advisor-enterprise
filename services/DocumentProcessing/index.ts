@@ -1,5 +1,5 @@
-import axios, { AxiosResponse, InternalAxiosRequestConfig } from "axios";
-import type { Axios } from "axios";
+import axios, { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
+import type { Axios } from 'axios';
 import type {
   DocumentSyncRequest,
   DocumentSyncResponse,
@@ -8,7 +8,7 @@ import type {
   DocumentProcessingConfig,
   PendingDocumentsResponse,
   FailedJobsResponse,
-} from "@/interfaces/Project";
+} from '@/interfaces/Project';
 
 /**
  * Document Processing API Client
@@ -23,7 +23,7 @@ class DocumentProcessingApiClient {
   constructor(config?: Partial<DocumentProcessingConfig>) {
     this.config = {
       baseUrl:
-        process.env.NEXT_PUBLIC_INGRESS_SERVICE || "https://localhost:5001",
+        process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001',
       timeout: 30000, // 30 seconds
       retryAttempts: 1,
       ...config,
@@ -33,8 +33,8 @@ class DocumentProcessingApiClient {
       baseURL: this.config.baseUrl,
       timeout: this.config.timeout,
       headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -49,7 +49,7 @@ class DocumentProcessingApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        console.log("[DocumentProcessingAPI] Request:", {
+        console.log('[DocumentProcessingAPI] Request:', {
           url: config.url,
           method: config.method,
           data: config.data,
@@ -58,7 +58,7 @@ class DocumentProcessingApiClient {
         return config;
       },
       (error: Error) => {
-        console.error("[DocumentProcessingAPI] Request error:", error);
+        console.error('[DocumentProcessingAPI] Request error:', error);
         return Promise.reject(error);
       },
     );
@@ -69,7 +69,7 @@ class DocumentProcessingApiClient {
         return response;
       },
       (error: Error & { response?: AxiosResponse; code?: string }) => {
-        console.error("[DocumentProcessingAPI] Response error:", {
+        console.error('[DocumentProcessingAPI] Response error:', {
           status: error.response?.status,
           statusText: error.response?.statusText,
           data: error.response?.data,
@@ -86,9 +86,9 @@ class DocumentProcessingApiClient {
   private handleApiError(
     error: Error & { response?: AxiosResponse; code?: string },
   ): Error {
-    if (error.code === "ECONNREFUSED") {
+    if (error.code === 'ECONNREFUSED') {
       return new Error(
-        "Document processing service is not available. Please check if the service is running on localhost:5001",
+        'Document processing service is not available. Please check if the service is running on localhost:5001',
       );
     }
 
@@ -110,7 +110,7 @@ class DocumentProcessingApiClient {
       }
     }
 
-    return new Error(error.message || "Unknown API error");
+    return new Error(error.message || 'Unknown API error');
   }
 
   /**
@@ -143,7 +143,7 @@ class DocumentProcessingApiClient {
   ): Promise<DocumentSyncResponse> {
     return this.withRetry(async () => {
       const response: AxiosResponse<DocumentSyncResponse> =
-        await this.client.post("/api/Documents/sync", request);
+        await this.client.post('/api/Documents/sync', request);
       return response.data;
     });
   }
@@ -174,7 +174,7 @@ class DocumentProcessingApiClient {
   async getPendingDocuments(): Promise<PendingDocumentsResponse> {
     return this.withRetry(async () => {
       const response = await this.client.get<PendingDocumentsResponse>(
-        "/api/Documents/pending",
+        '/api/Documents/pending',
       );
       return response.data;
     });
@@ -198,7 +198,7 @@ class DocumentProcessingApiClient {
   async getFailedJobs(): Promise<FailedJobsResponse> {
     return this.withRetry(async () => {
       const response =
-        await this.client.get<FailedJobsResponse>("/api/Jobs/failed");
+        await this.client.get<FailedJobsResponse>('/api/Jobs/failed');
       return response.data;
     });
   }
@@ -218,10 +218,10 @@ class DocumentProcessingApiClient {
   async healthCheck(): Promise<boolean> {
     try {
       // Try to get pending documents as a health check
-      await this.client.get("/api/Documents/pending", { timeout: 5000 });
+      await this.client.get('/api/Documents/pending', { timeout: 5000 });
       return true;
     } catch (error) {
-      console.warn("[DocumentProcessingAPI] Health check failed:", error);
+      console.warn('[DocumentProcessingAPI] Health check failed:', error);
       return false;
     }
   }
@@ -271,8 +271,8 @@ class DocumentProcessingApiClient {
 
         // Check if processing is complete
         if (
-          status.status === "completed" ||
-          status.status === "failed" ||
+          status.status === 'completed' ||
+          status.status === 'failed' ||
           status.progress >= 100
         ) {
           return status;
@@ -318,7 +318,7 @@ class DocumentProcessingApiClient {
         }
 
         // Check if job is complete
-        if (status.status === "completed" || status.status === "failed") {
+        if (status.status === 'completed' || status.status === 'failed') {
           return status;
         }
 

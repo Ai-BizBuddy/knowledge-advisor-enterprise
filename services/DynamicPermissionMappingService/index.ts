@@ -1,5 +1,5 @@
-import { createClientAuth } from "@/utils/supabase/client";
-import { Permission } from "@/interfaces/UserManagement";
+import { createClientAuth } from '@/utils/supabase/client';
+import { Permission } from '@/interfaces/UserManagement';
 
 // Type definitions
 export type ActionKey = string;
@@ -38,43 +38,43 @@ export class DynamicPermissionMappingService {
       this.mappings.length > 0 &&
       now - this.lastFetch < this.CACHE_DURATION
     ) {
-      console.log("Using cached permission mappings");
+      console.log('Using cached permission mappings');
       return this.mappings;
     }
 
     try {
-      console.log("Fetching permissions from database...");
+      console.log('Fetching permissions from database...');
       const supabase = createClientAuth();
 
       const { data: permissions, error } = await supabase
-        .from("permissions")
-        .select("*")
-        .order("resource", { ascending: true })
-        .order("action", { ascending: true });
+        .from('permissions')
+        .select('*')
+        .order('resource', { ascending: true })
+        .order('action', { ascending: true });
 
       if (error) {
-        console.error("Error fetching permissions:", error);
+        console.error('Error fetching permissions:', error);
         throw new Error(`Failed to fetch permissions: ${error.message}`);
       }
 
-      console.log("Fetched permissions from database:", permissions);
+      console.log('Fetched permissions from database:', permissions);
 
       // Convert database permissions to mapping format
       this.mappings = (permissions || []).map((permission: Permission) => {
         return {
-          resource: permission.resource || "",
-          action: (permission.action || "read") as ActionKey,
+          resource: permission.resource || '',
+          action: (permission.action || 'read') as ActionKey,
           permissionId: permission.id,
           permissionName: permission.name,
         };
       });
 
       this.lastFetch = now;
-      console.log("Created dynamic mappings:", this.mappings);
+      console.log('Created dynamic mappings:', this.mappings);
 
       return this.mappings;
     } catch (error) {
-      console.error("Error in fetchAndCreateMappings:", error);
+      console.error('Error in fetchAndCreateMappings:', error);
       throw error;
     }
   }

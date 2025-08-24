@@ -19,14 +19,14 @@ export enum ProjectStatus {
 }
 
 // Helper type for status display
-export type ProjectStatusDisplay = "Active" | "Inactive";
+export type ProjectStatusDisplay = 'Active' | 'Inactive';
 
 // Create project input interface
 export interface CreateProjectInput {
   name: string;
   description: string;
   status: ProjectStatus;
-  visibility: "public" | "private" | "department" | "custom"; // 1=Public, 2=Private (optional, defaults to 2)
+  visibility: 'public' | 'private' | 'department' | 'custom'; // 1=Public, 2=Private (optional, defaults to 2)
 }
 
 // Update project input interface
@@ -50,7 +50,7 @@ export interface Document {
   created_at: string;
   path: string; // Storage file path
   url: string; // Signed URL or public URL
-  rag_status?: "not_synced" | "syncing" | "synced" | "error";
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   metadata?: Record<string, unknown>; // Additional metadata about the document
 }
@@ -81,7 +81,7 @@ export interface CreateDocumentInput {
 // Multiple documents creation input interface
 export interface CreateMultipleDocumentsInput {
   knowledge_base_id: string;
-  documents: Omit<CreateDocumentInput, "knowledge_base_id">[];
+  documents: Omit<CreateDocumentInput, 'knowledge_base_id'>[];
 }
 
 // Enhanced interface for file-based document creation
@@ -96,7 +96,7 @@ export interface UpdateDocumentInput {
   name?: string;
   status?: string;
   chunk_count?: number;
-  rag_status?: "not_synced" | "syncing" | "synced" | "error";
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   metadata?: Record<string, unknown>;
 }
@@ -150,7 +150,7 @@ export interface BatchOperationResult {
 // RAG sync options interface
 export interface RAGSyncOptions {
   force?: boolean; // Force sync even if already synced
-  priority?: "low" | "normal" | "high";
+  priority?: 'low' | 'normal' | 'high';
   retryCount?: number;
 }
 

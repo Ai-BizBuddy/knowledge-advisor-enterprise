@@ -16,7 +16,7 @@ export interface PermissionRow {
 }
 
 // Access level options for the dropdown
-export type AccessLevel = "User" | "Manager" | "Admin" | "Super Admin";
+export type AccessLevel = 'User' | 'Manager' | 'Admin' | 'Super Admin';
 
 // Form data structure using React Hook Form
 export interface CreateRoleFormData extends Record<string, unknown> {
@@ -46,35 +46,35 @@ export const ACCESS_LEVELS: Record<
   AccessLevel,
   { level: number; description: string }
 > = {
-  User: { level: 50, description: "Standard user permissions" },
-  Manager: { level: 70, description: "Team management permissions" },
-  Admin: { level: 90, description: "System administration permissions" },
-  "Super Admin": { level: 100, description: "Full system access" },
+  User: { level: 50, description: 'Standard user permissions' },
+  Manager: { level: 70, description: 'Team management permissions' },
+  Admin: { level: 90, description: 'System administration permissions' },
+  'Super Admin': { level: 100, description: 'Full system access' },
 };
 
 // Form validation rules
 export const VALIDATION_RULES = {
   roleName: {
-    required: "Role name is required",
-    minLength: { value: 2, message: "Role name must be at least 2 characters" },
+    required: 'Role name is required',
+    minLength: { value: 2, message: 'Role name must be at least 2 characters' },
     maxLength: {
       value: 50,
-      message: "Role name must be less than 50 characters",
+      message: 'Role name must be less than 50 characters',
     },
     pattern: {
       value: /^[a-zA-Z0-9\s_-]+$/,
       message:
-        "Role name can only contain letters, numbers, spaces, hyphens, and underscores",
+        'Role name can only contain letters, numbers, spaces, hyphens, and underscores',
     },
   },
   description: {
     maxLength: {
       value: 200,
-      message: "Description must be less than 200 characters",
+      message: 'Description must be less than 200 characters',
     },
   },
   accessLevel: {
-    required: "Access level is required",
+    required: 'Access level is required',
   },
 };
 
@@ -87,7 +87,7 @@ export interface RoleModalProps {
   onClose: () => void;
   onSubmit: (payload: CreateRolePayload) => Promise<void>;
   loading?: boolean;
-  mode?: "create" | "edit";
+  mode?: 'create' | 'edit';
   initialData?: {
     id: string;
     roleName: string;

@@ -5,14 +5,14 @@
  * error handling, and validation following the project's standards.
  */
 
-"use client";
+'use client';
 
-import React, { useState, useEffect } from "react";
-import { Button, Label, TextInput, Select, Modal } from "flowbite-react";
-import { useReactHookForm, useUserManagement } from "@/hooks";
-import { usePaginatedUserManagement } from "@/hooks/usePaginatedUserManagement";
-import { useToast } from "@/components/toast";
-import { SUCCESS_MESSAGES } from "@/constants";
+import React, { useState, useEffect } from 'react';
+import { Button, Label, TextInput, Select, Modal } from 'flowbite-react';
+import { useReactHookForm, useUserManagement } from '@/hooks';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { useToast } from '@/components/toast';
+import { SUCCESS_MESSAGES } from '@/constants';
 import type {
   CreateUserInput,
   UpdateUserInput,
@@ -20,8 +20,8 @@ import type {
   User,
   Role,
   Department,
-} from "@/interfaces/UserManagement";
-import { UserStatus } from "@/interfaces/UserManagement";
+} from '@/interfaces/UserManagement';
+import { UserStatus } from '@/interfaces/UserManagement';
 
 interface UserFormData extends Record<string, unknown> {
   email: string;
@@ -36,7 +36,7 @@ interface UserFormData extends Record<string, unknown> {
 interface UserFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  mode: "create" | "edit";
+  mode: 'create' | 'edit';
   user?: User | null;
   availableRoles?: Role[];
   availableDepartments?: Department[];
@@ -77,11 +77,11 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
   const handleRoleChange = (roleId: number, checked: boolean) => {
     if (checked) {
       setSelectedRoles((prev) => [...prev, roleId]);
-      form.setValue("role_ids", [...selectedRoles, roleId]);
+      form.setValue('role_ids', [...selectedRoles, roleId]);
     } else {
       setSelectedRoles((prev) => prev.filter((id) => id !== roleId));
       form.setValue(
-        "role_ids",
+        'role_ids',
         selectedRoles.filter((id) => id !== roleId),
       );
     }
@@ -89,12 +89,12 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
   const form = useReactHookForm<UserFormData>({
     defaultValues: {
-      email: "",
-      password: "",
-      confirmPassword: "",
-      display_name: "",
+      email: '',
+      password: '',
+      confirmPassword: '',
+      display_name: '',
       role_ids: [],
-      department_id: "",
+      department_id: '',
       status: UserStatus.ACTIVE,
     },
   });
@@ -102,28 +102,28 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
   // Initialize form data when modal opens for editing
   useEffect(() => {
     if (isOpen) {
-      if (mode === "edit" && user) {
+      if (mode === 'edit' && user) {
         // Initialize edit form with user data
         const userRoleIds =
           user.user_roles?.map((userRole) => userRole.role.id) ?? [];
 
         form.reset({
           email: user.email,
-          display_name: user.display_name || "",
+          display_name: user.display_name || '',
           role_ids: userRoleIds,
-          department_id: user.department_id || "",
+          department_id: user.department_id || '',
           status: user.status,
         });
         setSelectedRoles(userRoleIds);
-      } else if (mode === "create") {
+      } else if (mode === 'create') {
         // Initialize create form with empty values
         form.reset({
-          email: "",
-          password: "",
-          confirmPassword: "",
-          display_name: "",
+          email: '',
+          password: '',
+          confirmPassword: '',
+          display_name: '',
           role_ids: [],
-          department_id: "",
+          department_id: '',
           status: UserStatus.ACTIVE,
         });
         setSelectedRoles([]);
@@ -157,7 +157,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         try {
           await Promise.all(promises);
         } catch (error) {
-          console.warn("Could not load form data:", error);
+          console.warn('Could not load form data:', error);
         }
       }
     };
@@ -184,19 +184,19 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
       // Validate that at least one role is selected
       if (selectedRoles.length === 0) {
-        form.setError("role_ids", {
-          type: "manual",
-          message: "Please select at least one role",
+        form.setError('role_ids', {
+          type: 'manual',
+          message: 'Please select at least one role',
         });
         return;
       }
 
-      if (mode === "create") {
+      if (mode === 'create') {
         // Validate password confirmation for create mode
         if (data.password !== data.confirmPassword) {
-          form.setError("confirmPassword", {
-            type: "manual",
-            message: "Passwords do not match",
+          form.setError('confirmPassword', {
+            type: 'manual',
+            message: 'Passwords do not match',
           });
           return;
         }
@@ -205,12 +205,12 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         const createUserData: CreateUserInput = {
           email: data.email.trim(),
           password: data.password!,
-          display_name: data.display_name.trim() || data.email.split("@")[0],
+          display_name: data.display_name.trim() || data.email.split('@')[0],
           role_ids: selectedRoles.length > 0 ? selectedRoles : [3], // Default to basic user role if none selected
           department_id: data.department_id || undefined,
           metadata: {
-            created_by: "admin", // TODO: Get from current user context
-            created_via: "admin_panel",
+            created_by: 'admin', // TODO: Get from current user context
+            created_via: 'admin_panel',
           },
         };
 
@@ -220,11 +220,11 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
           // Success - reset form and close modal
           form.reset();
           setSelectedRoles([]);
-          showToast(SUCCESS_MESSAGES.USER_CREATED, "success");
+          showToast(SUCCESS_MESSAGES.USER_CREATED, 'success');
           onSuccess?.(newUser);
           onClose();
         }
-      } else if (mode === "edit" && user) {
+      } else if (mode === 'edit' && user) {
         // Prepare update user input
         const updateUserData: UpdateUserInput = {
           email: data.email,
@@ -238,7 +238,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
         if (updatedUser) {
           // Success - close modal
-          showToast(SUCCESS_MESSAGES.USER_UPDATED, "success");
+          showToast(SUCCESS_MESSAGES.USER_UPDATED, 'success');
           onSuccess?.(updatedUser);
           onClose();
         }
@@ -247,21 +247,21 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
       // Handle specific email exists error
       if (err instanceof Error) {
         const error = err as UserManagementError;
-        if (error.code === "email_exists") {
-          form.setError("email", {
-            type: "manual",
+        if (error.code === 'email_exists') {
+          form.setError('email', {
+            type: 'manual',
             message: error.message,
           });
         } else {
-          form.setError("root", {
-            type: "manual",
+          form.setError('root', {
+            type: 'manual',
             message: error.message || `Failed to ${mode} user`,
           });
         }
       } else {
-        form.setError("root", {
-          type: "manual",
-          message: "An unexpected error occurred",
+        form.setError('root', {
+          type: 'manual',
+          message: 'An unexpected error occurred',
         });
       }
     } finally {
@@ -271,63 +271,63 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
   if (!isOpen) return null;
 
-  const isCreateMode = mode === "create";
-  const title = isCreateMode ? "Create New User" : "Edit User";
+  const isCreateMode = mode === 'create';
+  const title = isCreateMode ? 'Create New User' : 'Edit User';
   const subtitle = isCreateMode
-    ? "Add a new user to the system with role and department assignment"
-    : "Update user information, roles, and permissions";
+    ? 'Add a new user to the system with role and department assignment'
+    : 'Update user information, roles, and permissions';
 
   return (
-    <Modal show={isOpen} onClose={onClose} size="2xl" className="z-[100]">
-      <div className="relative max-h-[90vh] overflow-y-auto p-8">
-        <div className="mb-6">
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+    <Modal show={isOpen} onClose={onClose} size='2xl' className='z-[100]'>
+      <div className='relative max-h-[90vh] overflow-y-auto p-8'>
+        <div className='mb-6'>
+          <h3 className='text-xl font-semibold text-gray-900 dark:text-white'>
             {title}
           </h3>
-          <p className="text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>
+          <p className='text-sm text-gray-500 dark:text-gray-400'>{subtitle}</p>
         </div>
 
-        <div className="relative space-y-6">
+        <div className='relative space-y-6'>
           {/* Global error message */}
           {error && (
-            <div className="rounded-lg bg-red-100 p-3 text-sm text-red-600 dark:bg-red-900 dark:text-red-300">
+            <div className='rounded-lg bg-red-100 p-3 text-sm text-red-600 dark:bg-red-900 dark:text-red-300'>
               {error}
             </div>
           )}
 
           {/* Root form error */}
           {form.formState.errors.root && (
-            <div className="rounded-lg bg-red-100 p-3 text-sm text-red-600 dark:bg-red-900 dark:text-red-300">
+            <div className='rounded-lg bg-red-100 p-3 text-sm text-red-600 dark:bg-red-900 dark:text-red-300'>
               {form.formState.errors.root.message}
             </div>
           )}
 
           {/* Form */}
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
             {/* Basic Information Section */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 {/* Email Field */}
                 <div>
-                  <Label htmlFor="email" className="mb-2 block">
+                  <Label htmlFor='email' className='mb-2 block'>
                     Email Address *
                   </Label>
                   <TextInput
-                    id="email"
-                    type="email"
-                    placeholder="user@example.com"
-                    {...form.register("email", {
-                      required: "Email is required",
+                    id='email'
+                    type='email'
+                    placeholder='user@example.com'
+                    {...form.register('email', {
+                      required: 'Email is required',
                       pattern: {
                         value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                        message: "Please enter a valid email address",
+                        message: 'Please enter a valid email address',
                       },
                     })}
-                    color={form.formState.errors.email ? "failure" : "gray"}
+                    color={form.formState.errors.email ? 'failure' : 'gray'}
                     disabled={isSubmitting}
                   />
                   {form.formState.errors.email && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                       {form.formState.errors.email.message}
                     </p>
                   )}
@@ -335,31 +335,31 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
                 {/* Display Name Field */}
                 <div>
-                  <Label htmlFor="display_name" className="mb-2 block">
+                  <Label htmlFor='display_name' className='mb-2 block'>
                     Display Name
                   </Label>
                   <TextInput
-                    id="display_name"
-                    type="text"
-                    placeholder="John Doe"
-                    {...form.register("display_name", {
+                    id='display_name'
+                    type='text'
+                    placeholder='John Doe'
+                    {...form.register('display_name', {
                       minLength: {
                         value: 2,
-                        message: "Display name must be at least 2 characters",
+                        message: 'Display name must be at least 2 characters',
                       },
                       maxLength: {
                         value: 100,
                         message:
-                          "Display name must be less than 100 characters",
+                          'Display name must be less than 100 characters',
                       },
                     })}
                     color={
-                      form.formState.errors.display_name ? "failure" : "gray"
+                      form.formState.errors.display_name ? 'failure' : 'gray'
                     }
                     disabled={isSubmitting}
                   />
                   {form.formState.errors.display_name && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                       {form.formState.errors.display_name.message}
                     </p>
                   )}
@@ -368,35 +368,35 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
               {/* Password fields only for create mode */}
               {isCreateMode && (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                   {/* Password Field */}
                   <div>
-                    <Label htmlFor="password" className="mb-2 block">
+                    <Label htmlFor='password' className='mb-2 block'>
                       Password *
                     </Label>
                     <TextInput
-                      id="password"
-                      type="password"
-                      placeholder="••••••••"
-                      {...form.register("password", {
-                        required: "Password is required",
+                      id='password'
+                      type='password'
+                      placeholder='••••••••'
+                      {...form.register('password', {
+                        required: 'Password is required',
                         minLength: {
                           value: 8,
-                          message: "Password must be at least 8 characters",
+                          message: 'Password must be at least 8 characters',
                         },
                         pattern: {
                           value: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/,
                           message:
-                            "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+                            'Password must contain at least one uppercase letter, one lowercase letter, and one number',
                         },
                       })}
                       color={
-                        form.formState.errors.password ? "failure" : "gray"
+                        form.formState.errors.password ? 'failure' : 'gray'
                       }
                       disabled={isSubmitting}
                     />
                     {form.formState.errors.password && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                         {form.formState.errors.password.message}
                       </p>
                     )}
@@ -404,25 +404,25 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
                   {/* Confirm Password Field */}
                   <div>
-                    <Label htmlFor="confirmPassword" className="mb-2 block">
+                    <Label htmlFor='confirmPassword' className='mb-2 block'>
                       Confirm Password *
                     </Label>
                     <TextInput
-                      id="confirmPassword"
-                      type="password"
-                      placeholder="••••••••"
-                      {...form.register("confirmPassword", {
-                        required: "Please confirm your password",
+                      id='confirmPassword'
+                      type='password'
+                      placeholder='••••••••'
+                      {...form.register('confirmPassword', {
+                        required: 'Please confirm your password',
                       })}
                       color={
                         form.formState.errors.confirmPassword
-                          ? "failure"
-                          : "gray"
+                          ? 'failure'
+                          : 'gray'
                       }
                       disabled={isSubmitting}
                     />
                     {form.formState.errors.confirmPassword && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                         {form.formState.errors.confirmPassword.message}
                       </p>
                     )}
@@ -432,40 +432,40 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
             </div>
 
             {/* Roles & Permissions Section */}
-            <div className="space-y-4">
+            <div className='space-y-4'>
               {/* Multiple Role Selection */}
               <div>
-                <Label className="mb-3 block">User Roles *</Label>
-                <div className="relative max-h-32 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700">
+                <Label className='mb-3 block'>User Roles *</Label>
+                <div className='relative max-h-32 space-y-2 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-4 dark:border-gray-600 dark:bg-gray-700'>
                   {roles.length === 0 ? (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className='text-sm text-gray-500 dark:text-gray-400'>
                       Loading roles...
                     </p>
                   ) : (
                     roles.map((role) => (
                       <div
                         key={role.id}
-                        className="relative flex items-start space-x-3 rounded-md bg-white p-3 shadow-sm dark:bg-gray-800"
+                        className='relative flex items-start space-x-3 rounded-md bg-white p-3 shadow-sm dark:bg-gray-800'
                       >
                         <input
-                          type="checkbox"
+                          type='checkbox'
                           id={`role-${role.id}`}
                           checked={selectedRoles.includes(role.id)}
                           onChange={(e) =>
                             handleRoleChange(role.id, e.target.checked)
                           }
-                          className="mt-1 h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600"
+                          className='mt-1 h-4 w-4 rounded border-gray-300 bg-gray-100 text-blue-600 focus:ring-2 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-blue-600'
                           disabled={isSubmitting}
                         />
-                        <div className="flex-1">
+                        <div className='flex-1'>
                           <label
                             htmlFor={`role-${role.id}`}
-                            className="cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-300"
+                            className='cursor-pointer text-sm font-medium text-gray-900 dark:text-gray-300'
                           >
                             {role.name}
                           </label>
                           {role.description && (
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                            <p className='text-xs text-gray-500 dark:text-gray-400'>
                               {role.description}
                             </p>
                           )}
@@ -475,7 +475,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
                   )}
                 </div>
                 {form.formState.errors.role_ids && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                  <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                     {form.formState.errors.role_ids.message}
                   </p>
                 )}
@@ -483,33 +483,33 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
             </div>
 
             {/* Department & Status Section */}
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 {/* Department Selection */}
                 <div>
-                  <Label htmlFor="department_id" className="mb-2 block">
+                  <Label htmlFor='department_id' className='mb-2 block'>
                     Department
                   </Label>
                   <Select
-                    id="department_id"
-                    {...form.register("department_id")}
+                    id='department_id'
+                    {...form.register('department_id')}
                     color={
-                      form.formState.errors.department_id ? "failure" : "gray"
+                      form.formState.errors.department_id ? 'failure' : 'gray'
                     }
                     disabled={isSubmitting}
                   >
-                    <option value="">Select a department (optional)</option>
+                    <option value=''>Select a department (optional)</option>
                     {departments.map((department) => (
                       <option key={department.id} value={department.id}>
                         {department.name}
                         {department.description
                           ? ` - ${department.description}`
-                          : ""}
+                          : ''}
                       </option>
                     ))}
                   </Select>
                   {form.formState.errors.department_id && (
-                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                       {form.formState.errors.department_id.message}
                     </p>
                   )}
@@ -518,13 +518,13 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
                 {/* Status Selection (only for edit mode) */}
                 {!isCreateMode && (
                   <div>
-                    <Label htmlFor="status" className="mb-2 block">
+                    <Label htmlFor='status' className='mb-2 block'>
                       Account Status
                     </Label>
                     <Select
-                      id="status"
-                      {...form.register("status")}
-                      color={form.formState.errors.status ? "failure" : "gray"}
+                      id='status'
+                      {...form.register('status')}
+                      color={form.formState.errors.status ? 'failure' : 'gray'}
                       disabled={isSubmitting}
                     >
                       <option value={UserStatus.ACTIVE}>Active</option>
@@ -533,7 +533,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
                       <option value={UserStatus.PENDING}>Pending</option>
                     </Select>
                     {form.formState.errors.status && (
-                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
                         {form.formState.errors.status.message}
                       </p>
                     )}
@@ -543,47 +543,47 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
             </div>
 
             {/* Form Actions */}
-            <div className="flex justify-end gap-3 border-t border-gray-200 pt-6 dark:border-gray-700">
+            <div className='flex justify-end gap-3 border-t border-gray-200 pt-6 dark:border-gray-700'>
               <Button
-                type="button"
-                color="gray"
+                type='button'
+                color='gray'
                 onClick={onClose}
                 disabled={isSubmitting}
               >
                 Cancel
               </Button>
               <Button
-                type="submit"
-                color="blue"
+                type='submit'
+                color='blue'
                 disabled={isSubmitting || selectedRoles.length === 0}
               >
                 {isSubmitting ? (
-                  <div className="flex items-center">
+                  <div className='flex items-center'>
                     <svg
-                      className="mr-2 h-4 w-4 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
+                      className='mr-2 h-4 w-4 animate-spin'
+                      fill='none'
+                      viewBox='0 0 24 24'
                     >
                       <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
+                        className='opacity-25'
+                        cx='12'
+                        cy='12'
+                        r='10'
+                        stroke='currentColor'
+                        strokeWidth='4'
                       />
                       <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        className='opacity-75'
+                        fill='currentColor'
+                        d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
                       />
                     </svg>
-                    {isCreateMode ? "Creating..." : "Updating..."}
+                    {isCreateMode ? 'Creating...' : 'Updating...'}
                   </div>
                 ) : isCreateMode ? (
-                  "Create User"
+                  'Create User'
                 ) : (
-                  "Update User"
+                  'Update User'
                 )}
               </Button>
             </div>

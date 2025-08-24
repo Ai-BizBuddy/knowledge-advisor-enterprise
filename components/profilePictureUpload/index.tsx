@@ -1,2 +1,2 @@
-export { ProfilePictureUpload } from "./ProfilePictureUpload";
-export type { ProfilePictureUploadProps } from "./ProfilePictureUpload";
+export { ProfilePictureUpload } from './ProfilePictureUpload';
+export type { ProfilePictureUploadProps } from './ProfilePictureUpload';

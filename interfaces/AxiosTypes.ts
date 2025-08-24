@@ -111,7 +111,7 @@ export interface FileUploadUpdateData {
  * Document processing update data type
  */
 export interface DocumentProcessingUpdateData {
-  rag_status?: "not_synced" | "syncing" | "synced" | "error";
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   chunk_count?: number;
   status?: string;

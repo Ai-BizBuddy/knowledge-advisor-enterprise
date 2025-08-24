@@ -5,8 +5,8 @@
  * across all services in the application.
  */
 
-import { supabaseAuthClient } from "@/utils/supabase/authInterceptor";
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { supabaseAuthClient } from '@/utils/supabase/authInterceptor';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Create an auth-aware Supabase client with automatic token refresh
@@ -26,7 +26,7 @@ export const createAuthAwareTable = () => {
  * Create an auth-aware auth schema client with automatic token refresh
  */
 export const createAuthAwareAuth = () => {
-  return supabaseAuthClient.createTable("auth");
+  return supabaseAuthClient.createTable('auth');
 };
 
 /**

@@ -1,7 +1,7 @@
 // Enhanced type definitions for Supabase operations to replace 'any' types
 
-import { createClient } from "@/utils/supabase/client";
-import type { SupabaseProjectRow } from "@/interfaces/AxiosTypes";
+import { createClient } from '@/utils/supabase/client';
+import type { SupabaseProjectRow } from '@/interfaces/AxiosTypes';
 
 /**
  * Type for Supabase client with proper table access
@@ -86,7 +86,7 @@ export interface SupabaseDocumentRow {
   file_size?: number;
   mime_type?: string;
   status?: string;
-  rag_status?: "not_synced" | "syncing" | "synced" | "error";
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   chunk_count?: number;
   last_rag_sync?: string;
   created_at: string;
@@ -113,7 +113,7 @@ export interface DocumentWithProject {
   updated_at: string;
   path?: string;
   url?: string;
-  rag_status?: "not_synced" | "syncing" | "synced" | "error";
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   metadata?: Record<string, unknown>;
   knowledge_base?: Array<{
@@ -129,7 +129,7 @@ export interface TypedSupabaseTable {
   from(table: string): {
     select: (
       columns?: string,
-      options?: { count?: "exact"; head?: boolean },
+      options?: { count?: 'exact'; head?: boolean },
     ) => Promise<SupabaseQueryResult<unknown>>;
     insert: (
       data: Record<string, unknown>,

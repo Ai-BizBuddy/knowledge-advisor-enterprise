@@ -1,6 +1,6 @@
 interface DocumentsControlsProps {
   sortBy: string;
-  sortOrder: "asc" | "desc";
+  sortOrder: 'asc' | 'desc';
   onSortChange: (sortBy: string) => void;
   onSortOrderToggle: () => void;
 }
@@ -12,54 +12,54 @@ export const DocumentsControls: React.FC<DocumentsControlsProps> = ({
   onSortOrderToggle,
 }) => {
   return (
-    <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div className="flex items-center gap-4">
+    <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
+      <div className='flex items-center gap-4'>
         {/* Sort Dropdown */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <div className='flex items-center gap-2'>
+          <span className='text-sm font-medium text-gray-700 dark:text-gray-300'>
             Sort by:
           </span>
           <select
             value={sortBy}
             onChange={(e) => onSortChange(e.target.value)}
-            className="rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+            className='rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300'
           >
-            <option value="Date">Date</option>
-            <option value="Name">Name</option>
-            <option value="Size">Size</option>
-            <option value="Type">Type</option>
-            <option value="Uploaded By">Uploaded By</option>
+            <option value='Date'>Date</option>
+            <option value='Name'>Name</option>
+            <option value='Size'>Size</option>
+            <option value='Type'>Type</option>
+            <option value='Uploaded By'>Uploaded By</option>
           </select>
           <button
             onClick={onSortOrderToggle}
-            className="flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+            className='flex items-center justify-center rounded-lg border border-gray-300 bg-white p-2 text-gray-700 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
           >
-            {sortOrder === "asc" ? (
+            {sortOrder === 'asc' ? (
               <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='h-4 w-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"
+                  d='M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12'
                 />
               </svg>
             ) : (
               <svg
-                className="h-4 w-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+                className='h-4 w-4'
+                fill='none'
+                stroke='currentColor'
+                viewBox='0 0 24 24'
               >
                 <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
                   strokeWidth={2}
-                  d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4"
+                  d='M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4'
                 />
               </svg>
             )}

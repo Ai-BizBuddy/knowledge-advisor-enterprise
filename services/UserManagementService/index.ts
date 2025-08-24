@@ -5,9 +5,9 @@
  * with comprehensive type safety and error handling.
  */
 
-import { createClient, createClientAuth } from "@/utils/supabase/client";
-import { executeWithAuth, getAuthSession } from "@/utils/supabase/authUtils";
-import { extractUserClaims, hasRole, hasPermission } from "@/utils/jwtUtils";
+import { createClient, createClientAuth } from '@/utils/supabase/client';
+import { executeWithAuth, getAuthSession } from '@/utils/supabase/authUtils';
+import { extractUserClaims, hasRole, hasPermission } from '@/utils/jwtUtils';
 import {
   User,
   Role,
@@ -32,13 +32,13 @@ import {
   UserRoleRow,
   Profile,
   UserManagementError,
-} from "@/interfaces/UserManagement";
+} from '@/interfaces/UserManagement';
 
 /**
  * User Management Service Class
  */
 class UserManagementService {
-  private readonly serviceName = "UserManagement";
+  private readonly serviceName = 'UserManagement';
   private readonly useMockData: boolean;
 
   constructor() {
@@ -54,7 +54,7 @@ class UserManagementService {
       const session = await getAuthSession();
 
       if (!session?.user) {
-        throw new Error("User not authenticated");
+        throw new Error('User not authenticated');
       }
 
       return session.user;
@@ -71,9 +71,9 @@ class UserManagementService {
     try {
       return await executeWithAuth(async (client) => {
         // Use auth.users as the primary source
-        const authClient = client.schema("auth");
+        const authClient = client.schema('auth');
 
-        let query = authClient.from("users").select(`
+        let query = authClient.from('users').select(`
             id,
             email,
             avatar_url,
@@ -98,7 +98,7 @@ class UserManagementService {
 
         // Filter out deleted users unless explicitly requested
         if (!filter.include_deleted) {
-          query = query.is("deleted_at", null);
+          query = query.is('deleted_at', null);
         }
 
         // Apply search filter
@@ -109,9 +109,9 @@ class UserManagementService {
         }
 
         // Apply sorting
-        const sortBy = filter.sort_by || "created_at";
-        const sortOrder = filter.sort_order || "desc";
-        query = query.order(sortBy, { ascending: sortOrder === "asc" });
+        const sortBy = filter.sort_by || 'created_at';
+        const sortOrder = filter.sort_order || 'desc';
+        query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
         const { data: usersData, error } = await query;
 
@@ -128,7 +128,7 @@ class UserManagementService {
             rawUser.raw_user_meta_data?.full_name ||
             rawUser.profiles?.[0]?.full_name ||
             rawUser.email ||
-            "";
+            '';
 
           // Transform user_roles array structure - now roles is nested inside user_roles
           const userRoles: UserRoleRow[] = (rawUser.user_roles || []).flatMap(
@@ -138,8 +138,8 @@ class UserManagementService {
               (userRoleEntry.roles || []).map((role) => ({
                 role: {
                   id: role.id || 0,
-                  name: role.name || "",
-                  description: role.description || "",
+                  name: role.name || '',
+                  description: role.description || '',
                 },
               })),
           );
@@ -148,7 +148,7 @@ class UserManagementService {
           const profile: Profile = {
             full_name: rawUser.profiles?.[0]?.full_name || displayName,
             avatar_url:
-              rawUser.profiles?.[0]?.avatar_url || rawUser.avatar_url || "",
+              rawUser.profiles?.[0]?.avatar_url || rawUser.avatar_url || '',
           };
 
           // Transform department if exists
@@ -164,7 +164,7 @@ class UserManagementService {
 
           return {
             id: rawUser.id,
-            email: rawUser.email || "",
+            email: rawUser.email || '',
             display_name: displayName,
             avatar_url: rawUser.avatar_url || profile.avatar_url,
             user_roles: userRoles,
@@ -195,14 +195,14 @@ class UserManagementService {
     if (this.useMockData) {
       // Return a mock user since getMockUsers doesn't exist
       return {
-        id: "mock-user-1",
-        email: "mock@example.com",
-        display_name: "Mock User",
+        id: 'mock-user-1',
+        email: 'mock@example.com',
+        display_name: 'Mock User',
         user_roles: [],
         status: UserStatus.ACTIVE,
         profile: {
-          full_name: "Mock User",
-          avatar_url: "",
+          full_name: 'Mock User',
+          avatar_url: '',
         },
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
@@ -213,7 +213,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("users")
+        .from('users')
         .select(
           `
           id,
@@ -242,15 +242,15 @@ class UserManagementService {
           )
         `,
         )
-        .eq("id", id)
+        .eq('id', id)
         .single<UserDisplayPermission>();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           // User not found in custom table, try auth.users
           return await this.getUserByIdFromAuth(id);
         }
-        if (error.code === "42P01") {
+        if (error.code === '42P01') {
           // Table doesn't exist, fall back to auth.users
           return await this.getUserByIdFromAuth(id);
         }
@@ -285,16 +285,16 @@ class UserManagementService {
 
       const authUser = data.user;
       const displayName =
-        authUser.user_metadata?.display_name || authUser.email || "";
+        authUser.user_metadata?.display_name || authUser.email || '';
       return {
         id: authUser.id,
-        email: authUser.email || "",
+        email: authUser.email || '',
         display_name: displayName,
         user_roles: [], // Default role as array
         status: UserStatus.ACTIVE,
         profile: {
           full_name: displayName,
-          avatar_url: authUser.user_metadata?.avatar_url || "",
+          avatar_url: authUser.user_metadata?.avatar_url || '',
         },
         created_at: authUser.created_at,
         updated_at: authUser.updated_at || authUser.created_at,
@@ -317,7 +317,7 @@ class UserManagementService {
 
       // Call the create_user_full RPC function
       const { data: rpcResult, error: rpcError } = await supabaseAuth.rpc(
-        "create_user_full",
+        'create_user_full',
         {
           p_email: userData.email,
           p_password: userData.password,
@@ -335,14 +335,14 @@ class UserManagementService {
 
         // Handle specific error cases
         if (
-          rpcError.message?.includes("duplicate key") ||
-          rpcError.message?.includes("already exists") ||
-          rpcError.code === "23505"
+          rpcError.message?.includes('duplicate key') ||
+          rpcError.message?.includes('already exists') ||
+          rpcError.code === '23505'
         ) {
           const emailExistsError: UserManagementError = new Error(
-            "A user with this email address has already been registered",
+            'A user with this email address has already been registered',
           );
-          emailExistsError.code = "email_exists";
+          emailExistsError.code = 'email_exists';
           throw emailExistsError;
         }
 
@@ -351,7 +351,7 @@ class UserManagementService {
 
       if (!rpcResult || rpcResult.length === 0) {
         throw new Error(
-          "Failed to create user - no user data returned from RPC",
+          'Failed to create user - no user data returned from RPC',
         );
       }
 
@@ -365,7 +365,7 @@ class UserManagementService {
 
       // Fetch the complete user data with roles and profile
       const { data: completeUserData, error: fetchError } = await supabaseAuth
-        .from("profiles")
+        .from('profiles')
         .select(
           `
           id,
@@ -375,7 +375,7 @@ class UserManagementService {
           updated_at
         `,
         )
-        .eq("id", createdUserId)
+        .eq('id', createdUserId)
         .single();
 
       if (fetchError) {
@@ -393,7 +393,7 @@ class UserManagementService {
       if (userData.role_ids && userData.role_ids.length > 0) {
         try {
           const { data: rolesData, error: rolesError } = await supabaseAuth
-            .from("user_roles")
+            .from('user_roles')
             .select(
               `
               role:roles(
@@ -403,7 +403,7 @@ class UserManagementService {
               )
             `,
             )
-            .eq("user_id", createdUserId);
+            .eq('user_id', createdUserId);
 
           if (!rolesError && rolesData) {
             userRoles = (rolesData as unknown[]).map((userRole: unknown) => {
@@ -413,8 +413,8 @@ class UserManagementService {
               return {
                 role: {
                   id: roleEntry.role?.id || 0,
-                  name: roleEntry.role?.name || "",
-                  description: roleEntry.role?.description || "",
+                  name: roleEntry.role?.name || '',
+                  description: roleEntry.role?.description || '',
                 },
               };
             });
@@ -432,13 +432,13 @@ class UserManagementService {
         id: createdUserId,
         email: createdUserEmail,
         display_name: completeUserData.full_name,
-        avatar_url: completeUserData.avatar_url || "",
+        avatar_url: completeUserData.avatar_url || '',
         user_roles: userRoles,
         department_id: userData.department_id,
         status: UserStatus.ACTIVE,
         profile: {
-          full_name: completeUserData.full_name || "",
-          avatar_url: completeUserData.avatar_url || "",
+          full_name: completeUserData.full_name || '',
+          avatar_url: completeUserData.avatar_url || '',
         },
         created_at: completeUserData.created_at || new Date().toISOString(),
         updated_at: completeUserData.updated_at || new Date().toISOString(),
@@ -461,7 +461,7 @@ class UserManagementService {
 
       // Use update_user RPC function to handle all user updates
       const { data: updateResult, error: updateError } = await supabaseAuth.rpc(
-        "update_user",
+        'update_user',
         {
           p_user_id: id,
           p_email: updates.email || null,
@@ -478,12 +478,12 @@ class UserManagementService {
         throw new Error(`Failed to update user: ${updateError.message}`);
       }
 
-      console.log("User updated successfully via RPC", updateResult);
+      console.log('User updated successfully via RPC', updateResult);
 
       // Handle role updates
       if (updates.role_ids && updates.role_ids.length > 0) {
         // First, remove existing user roles
-        await supabaseAuth.from("user_roles").delete().eq("user_id", id);
+        await supabaseAuth.from('user_roles').delete().eq('user_id', id);
 
         // Then add new roles
         const roleInserts = updates.role_ids.map((roleId) => ({
@@ -492,7 +492,7 @@ class UserManagementService {
         }));
 
         const { error: roleError } = await supabaseAuth
-          .from("user_roles")
+          .from('user_roles')
           .insert(roleInserts);
 
         if (roleError) {
@@ -506,7 +506,7 @@ class UserManagementService {
 
       // Get updated user data
       const { data, error } = await supabaseAuth
-        .from("users")
+        .from('users')
         .select(
           `
           id,
@@ -525,7 +525,7 @@ class UserManagementService {
           )
         `,
         )
-        .eq("id", id)
+        .eq('id', id)
         .single();
 
       if (error) {
@@ -541,7 +541,7 @@ class UserManagementService {
       const displayName =
         authUser.user?.user_metadata?.display_name ||
         authUser.user?.email ||
-        "";
+        '';
 
       // Transform user_roles to match expected format
       const userRoles: UserRoleRow[] = (data.user_roles || []).map(
@@ -556,8 +556,8 @@ class UserManagementService {
           return {
             role: {
               id: role?.id || 0,
-              name: role?.name || "",
-              description: role?.description || "",
+              name: role?.name || '',
+              description: role?.description || '',
             },
           };
         },
@@ -573,7 +573,7 @@ class UserManagementService {
         status: data.status,
         profile: {
           full_name: displayName,
-          avatar_url: data.avatar_url || "",
+          avatar_url: data.avatar_url || '',
         },
         created_at: data.created_at,
         updated_at: data.updated_at,
@@ -594,9 +594,9 @@ class UserManagementService {
 
       // Delete user profile first
       const { error: profileError } = await supabaseTable
-        .from("users")
+        .from('users')
         .delete()
-        .eq("id", id);
+        .eq('id', id);
 
       if (profileError) {
         console.error(
@@ -632,7 +632,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("roles")
+        .from('roles')
         .select(
           `
           id,
@@ -644,7 +644,7 @@ class UserManagementService {
           updated_at
         `,
         )
-        .order("level", { ascending: false });
+        .order('level', { ascending: false });
 
       if (error) {
         console.error(`[${this.serviceName}] Error fetching roles:`, error);
@@ -656,7 +656,7 @@ class UserManagementService {
         (data || []).map(async (role) => {
           try {
             const { data: permissionsData } = await supabase
-              .from("role_permissions")
+              .from('role_permissions')
               .select(
                 `
                 permissions (
@@ -669,7 +669,7 @@ class UserManagementService {
                 )
               `,
               )
-              .eq("role_id", role.id);
+              .eq('role_id', role.id);
 
             const permissions =
               permissionsData
@@ -709,10 +709,10 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
-        .select("*")
-        .order("resource", { ascending: true })
-        .order("action", { ascending: true });
+        .from('permissions')
+        .select('*')
+        .order('resource', { ascending: true })
+        .order('action', { ascending: true });
 
       if (error) {
         console.error(
@@ -739,11 +739,11 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
-        .select("id, resource, action")
-        .not("resource", "is", null)
-        .order("resource", { ascending: true })
-        .order("action", { ascending: true });
+        .from('permissions')
+        .select('id, resource, action')
+        .not('resource', 'is', null)
+        .order('resource', { ascending: true })
+        .order('action', { ascending: true });
 
       if (error) {
         console.error(
@@ -798,7 +798,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
+        .from('permissions')
         .insert([
           {
             name: permissionData.name,
@@ -808,7 +808,7 @@ class UserManagementService {
             created_at: new Date().toISOString(),
           },
         ])
-        .select("*")
+        .select('*')
         .single();
 
       if (error) {
@@ -837,10 +837,10 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("permissions")
+        .from('permissions')
         .update(updates)
-        .eq("id", id)
-        .select("*")
+        .eq('id', id)
+        .select('*')
         .single();
 
       if (error) {
@@ -866,9 +866,9 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { error } = await supabase
-        .from("permissions")
+        .from('permissions')
         .delete()
-        .eq("id", id);
+        .eq('id', id);
 
       if (error) {
         console.error(
@@ -890,11 +890,11 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      console.log("Creating role with data:", roleData);
+      console.log('Creating role with data:', roleData);
 
       // Create role
       const { data: roleRow, error: roleError } = await supabase
-        .from("roles")
+        .from('roles')
         .insert([
           {
             name: roleData.name,
@@ -905,7 +905,7 @@ class UserManagementService {
             updated_at: new Date().toISOString(),
           },
         ])
-        .select("*")
+        .select('*')
         .single();
 
       if (roleError) {
@@ -913,7 +913,7 @@ class UserManagementService {
         throw new Error(`Failed to create role: ${roleError.message}`);
       }
 
-      console.log("Created role:", roleRow);
+      console.log('Created role:', roleRow);
       debugger;
       // Add permissions to role in auth.role_permissions table
       if (roleData.permission_ids.length > 0) {
@@ -922,10 +922,10 @@ class UserManagementService {
           permission_id: permissionId,
         }));
 
-        console.log("Inserting role permissions:", rolePermissions);
+        console.log('Inserting role permissions:', rolePermissions);
 
         const { error: permError } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .insert(rolePermissions);
 
         if (permError) {
@@ -935,7 +935,7 @@ class UserManagementService {
           );
           // Don't throw here to avoid orphaned role, just log the error
         } else {
-          console.log("Successfully inserted role permissions");
+          console.log('Successfully inserted role permissions');
         }
       }
 
@@ -954,35 +954,35 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      console.log("Updating role with ID:", id, "updates:", updates);
+      console.log('Updating role with ID:', id, 'updates:', updates);
 
       // Update role
       const { error: roleError } = await supabase
-        .from("roles")
+        .from('roles')
         .update({
           name: updates.name,
           description: updates.description,
           level: updates.level,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", id);
+        .eq('id', id);
 
       if (roleError) {
         console.error(`[${this.serviceName}] Error updating role:`, roleError);
         throw new Error(`Failed to update role: ${roleError.message}`);
       }
 
-      console.log("Updated role successfully");
+      console.log('Updated role successfully');
 
       // Update permissions if provided in auth.role_permissions table
       if (updates.permission_ids !== undefined) {
-        console.log("Updating permissions to:", updates.permission_ids);
+        console.log('Updating permissions to:', updates.permission_ids);
 
         // Remove existing permissions
         const { error: deleteError } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .delete()
-          .eq("role_id", id);
+          .eq('role_id', id);
 
         if (deleteError) {
           console.error(
@@ -990,7 +990,7 @@ class UserManagementService {
             deleteError,
           );
         } else {
-          console.log("Removed existing permissions");
+          console.log('Removed existing permissions');
         }
 
         // Add new permissions
@@ -1002,10 +1002,10 @@ class UserManagementService {
             }),
           );
 
-          console.log("Inserting new permissions:", rolePermissions);
+          console.log('Inserting new permissions:', rolePermissions);
 
           const { error: permError } = await supabase
-            .from("role_permissions")
+            .from('role_permissions')
             .insert(rolePermissions);
 
           if (permError) {
@@ -1014,7 +1014,7 @@ class UserManagementService {
               permError,
             );
           } else {
-            console.log("Successfully updated role permissions");
+            console.log('Successfully updated role permissions');
           }
         }
       }
@@ -1034,7 +1034,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      const { error } = await supabase.from("roles").delete().eq("id", id);
+      const { error } = await supabase.from('roles').delete().eq('id', id);
 
       if (error) {
         console.error(`[${this.serviceName}] Error deleting role:`, error);
@@ -1054,7 +1054,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("roles")
+        .from('roles')
         .select(
           `
           id,
@@ -1066,11 +1066,11 @@ class UserManagementService {
           updated_at
         `,
         )
-        .eq("id", id)
+        .eq('id', id)
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           throw new Error(`Role with ID ${id} not found`);
         }
         console.error(`[${this.serviceName}] Error fetching role:`, error);
@@ -1081,7 +1081,7 @@ class UserManagementService {
       let permissions: Permission[] = [];
       try {
         const { data: permissionsData } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .select(
             `
             permissions (
@@ -1094,7 +1094,7 @@ class UserManagementService {
             )
           `,
           )
-          .eq("role_id", id);
+          .eq('role_id', id);
 
         permissions =
           permissionsData
@@ -1130,9 +1130,9 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("department")
-        .select("*")
-        .order("name", { ascending: true });
+        .from('department')
+        .select('*')
+        .order('name', { ascending: true });
 
       if (error) {
         console.error(
@@ -1160,7 +1160,7 @@ class UserManagementService {
       const currentUser = await this.getCurrentUser();
 
       const { data, error } = await supabase
-        .from("department")
+        .from('department')
         .insert([
           {
             name: departmentData.name,
@@ -1172,7 +1172,7 @@ class UserManagementService {
             updated_at: new Date().toISOString(),
           },
         ])
-        .select("*")
+        .select('*')
         .single();
 
       if (error) {
@@ -1201,13 +1201,13 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("department")
+        .from('department')
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
         })
-        .eq("id", id)
-        .select("*")
+        .eq('id', id)
+        .select('*')
         .single();
 
       if (error) {
@@ -1232,7 +1232,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      const { error } = await supabase.from("department").delete().eq("id", id);
+      const { error } = await supabase.from('department').delete().eq('id', id);
 
       if (error) {
         console.error(
@@ -1250,62 +1250,62 @@ class UserManagementService {
   private getMockDepartments(): Department[] {
     return [
       {
-        id: "dept-1",
-        name: "Engineering",
-        description: "Software development and technical teams",
-        created_by: "admin",
-        created_at: "2024-01-01T10:00:00Z",
-        updated_at: "2024-01-01T10:00:00Z",
+        id: 'dept-1',
+        name: 'Engineering',
+        description: 'Software development and technical teams',
+        created_by: 'admin',
+        created_at: '2024-01-01T10:00:00Z',
+        updated_at: '2024-01-01T10:00:00Z',
         is_active: true,
         settings: {},
       },
       {
-        id: "dept-2",
-        name: "Marketing",
-        description: "Marketing and communications",
-        created_by: "admin",
-        created_at: "2024-01-01T10:00:00Z",
-        updated_at: "2024-01-01T10:00:00Z",
+        id: 'dept-2',
+        name: 'Marketing',
+        description: 'Marketing and communications',
+        created_by: 'admin',
+        created_at: '2024-01-01T10:00:00Z',
+        updated_at: '2024-01-01T10:00:00Z',
         is_active: true,
         settings: {},
       },
       {
-        id: "dept-3",
-        name: "Sales",
-        description: "Sales and business development",
-        created_by: "admin",
-        created_at: "2024-01-02T10:00:00Z",
-        updated_at: "2024-01-02T10:00:00Z",
+        id: 'dept-3',
+        name: 'Sales',
+        description: 'Sales and business development',
+        created_by: 'admin',
+        created_at: '2024-01-02T10:00:00Z',
+        updated_at: '2024-01-02T10:00:00Z',
         is_active: true,
         settings: {},
       },
       {
-        id: "dept-4",
-        name: "Human Resources",
-        description: "People operations and talent management",
-        created_by: "admin",
-        created_at: "2024-01-03T10:00:00Z",
-        updated_at: "2024-01-03T10:00:00Z",
+        id: 'dept-4',
+        name: 'Human Resources',
+        description: 'People operations and talent management',
+        created_by: 'admin',
+        created_at: '2024-01-03T10:00:00Z',
+        updated_at: '2024-01-03T10:00:00Z',
         is_active: true,
         settings: {},
       },
       {
-        id: "dept-5",
-        name: "Finance",
-        description: "Financial planning and accounting",
-        created_by: "admin",
-        created_at: "2024-01-04T10:00:00Z",
-        updated_at: "2024-01-04T10:00:00Z",
+        id: 'dept-5',
+        name: 'Finance',
+        description: 'Financial planning and accounting',
+        created_by: 'admin',
+        created_at: '2024-01-04T10:00:00Z',
+        updated_at: '2024-01-04T10:00:00Z',
         is_active: false,
         settings: {},
       },
       {
-        id: "dept-6",
-        name: "Operations",
-        description: "Business operations and logistics",
-        created_by: "admin",
-        created_at: "2024-01-05T10:00:00Z",
-        updated_at: "2024-01-05T10:00:00Z",
+        id: 'dept-6',
+        name: 'Operations',
+        description: 'Business operations and logistics',
+        created_by: 'admin',
+        created_at: '2024-01-05T10:00:00Z',
+        updated_at: '2024-01-05T10:00:00Z',
         is_active: true,
         settings: {},
       },
@@ -1396,7 +1396,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("roles")
+        .from('roles')
         .select(
           `
           id,
@@ -1408,7 +1408,7 @@ class UserManagementService {
           updated_at
         `,
         )
-        .ilike("name", roleName)
+        .ilike('name', roleName)
         .single();
 
       if (error) {
@@ -1423,7 +1423,7 @@ class UserManagementService {
       let permissions: Permission[] = [];
       try {
         const { data: permissionsData } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .select(
             `
             permissions (
@@ -1436,7 +1436,7 @@ class UserManagementService {
             )
           `,
           )
-          .eq("role_id", data.id);
+          .eq('role_id', data.id);
 
         permissions =
           permissionsData
@@ -1509,7 +1509,7 @@ class UserManagementService {
             role: {
               id: jwtData?.role_ids[index],
               name: role,
-              description: "",
+              description: '',
             },
           }) as UserRoleRow,
       ) as UserRoleRow[];
@@ -1517,26 +1517,26 @@ class UserManagementService {
       let permissions: Permission[] = [];
       const userData: User = {
         id: authData.user.id,
-        email: authData.user.email || "",
+        email: authData.user.email || '',
         display_name:
           (authData.user.user_metadata?.display_name as string) ||
           authData.user.email ||
-          "",
+          '',
         user_roles: userRoles,
         status: UserStatus.ACTIVE,
         profile: {
           full_name:
             (authData.user.user_metadata?.display_name as string) ||
             authData.user.email ||
-            "",
-          avatar_url: (authData.user.user_metadata?.avatar_url as string) || "",
+            '',
+          avatar_url: (authData.user.user_metadata?.avatar_url as string) || '',
         },
         created_at: authData.user.created_at,
         updated_at: authData.user.updated_at || authData.user.created_at,
         department_id: jwtData?.department_id,
         department: jwtData?.department_name
           ? {
-              id: jwtData.department_id || "",
+              id: jwtData.department_id || '',
               name: jwtData.department_name,
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
@@ -1549,9 +1549,9 @@ class UserManagementService {
         const jwtPermissions = jwtData.permissions.map((perm, index) => ({
           id: permissions.length + index + 1,
           name: perm,
-          resource: perm.split(":")[0] || "general",
+          resource: perm.split(':')[0] || 'general',
           action:
-            (perm.split(":")[1] as PermissionAction) || PermissionAction.READ,
+            (perm.split(':')[1] as PermissionAction) || PermissionAction.READ,
           description: `Permission from JWT: ${perm}`,
           created_at: new Date().toISOString(),
         }));
@@ -1569,9 +1569,9 @@ class UserManagementService {
         const jwtPermissions = jwtData.permissions.map((perm, index) => ({
           id: permissions.length + index + 1,
           name: perm,
-          resource: perm.split(":")[0] || "general",
+          resource: perm.split(':')[0] || 'general',
           action:
-            (perm.split(":")[1] as PermissionAction) || PermissionAction.READ,
+            (perm.split(':')[1] as PermissionAction) || PermissionAction.READ,
           description: `Permission from JWT: ${perm}`,
           created_at: new Date().toISOString(),
         }));
@@ -1590,9 +1590,9 @@ class UserManagementService {
           (perm, index) => ({
             id: permissions.length + index + 1,
             name: perm,
-            resource: perm.split(":")[0] || "general",
+            resource: perm.split(':')[0] || 'general',
             action:
-              (perm.split(":")[1] as PermissionAction) || PermissionAction.READ,
+              (perm.split(':')[1] as PermissionAction) || PermissionAction.READ,
             description: `Permission from JWT: ${perm}`,
             created_at: new Date().toISOString(),
           }),
@@ -1621,7 +1621,7 @@ class UserManagementService {
       console.error(`[${this.serviceName}] Error in getUserSession:`, error);
       throw error instanceof Error
         ? error
-        : new Error("Unknown error getting user session");
+        : new Error('Unknown error getting user session');
     }
   }
 
@@ -1665,7 +1665,7 @@ class UserManagementService {
           if (jwtData?.roles) {
             // Check if user has admin role in JWT
             const hasAdminRole = jwtData.roles.some((role) =>
-              ["admin", "super_admin", "administrator"].includes(
+              ['admin', 'super_admin', 'administrator'].includes(
                 role.toLowerCase(),
               ),
             );
@@ -1721,14 +1721,14 @@ class UserManagementService {
         ? { allowed: true }
         : {
             allowed: false,
-            reason: "Permission denied",
+            reason: 'Permission denied',
             required_permission: `${resource}:${action}`,
           };
     } catch (error) {
       return {
         allowed: false,
         reason:
-          error instanceof Error ? error.message : "Permission check error",
+          error instanceof Error ? error.message : 'Permission check error',
       };
     }
   }
@@ -1863,7 +1863,7 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { data, error } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .select(
           `
           permissions (
@@ -1877,7 +1877,7 @@ class UserManagementService {
           )
         `,
         )
-        .eq("role_id", roleId);
+        .eq('role_id', roleId);
 
       if (error) {
         console.error(
@@ -1913,9 +1913,9 @@ class UserManagementService {
 
       // Get unique resources from permissions table
       const { data, error } = await supabase
-        .from("permissions")
-        .select("resource")
-        .not("resource", "is", null);
+        .from('permissions')
+        .select('resource')
+        .not('resource', 'is', null);
 
       if (error) {
         console.error(
@@ -1936,53 +1936,53 @@ class UserManagementService {
       uniqueResources.forEach((resource) => {
         // Generate display name from resource
         const displayName = resource
-          .split("-")
+          .split('-')
           .map((word: string) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
+          .join(' ');
 
         // Map resource to icon (you can extend this based on your resource types)
-        let icon = "📋"; // default icon
+        let icon = '📋'; // default icon
         switch (resource) {
-          case "dashboard":
-            icon = "🏠";
+          case 'dashboard':
+            icon = '🏠';
             break;
-          case "department":
-            icon = "🏢";
+          case 'department':
+            icon = '🏢';
             break;
-          case "document":
-          case "document-department":
-          case "document-public":
-            icon = "📄";
+          case 'document':
+          case 'document-department':
+          case 'document-public':
+            icon = '📄';
             break;
-          case "user":
-            icon = "👤";
+          case 'user':
+            icon = '👤';
             break;
-          case "knowledge-base":
-            icon = "📚";
+          case 'knowledge-base':
+            icon = '📚';
             break;
-          case "project":
-            icon = "📁";
+          case 'project':
+            icon = '📁';
             break;
-          case "role":
-            icon = "🔒";
+          case 'role':
+            icon = '🔒';
             break;
-          case "permission":
-            icon = "🛡️";
+          case 'permission':
+            icon = '🛡️';
             break;
-          case "chat":
-            icon = "💬";
+          case 'chat':
+            icon = '💬';
             break;
-          case "settings":
-            icon = "⚙️";
+          case 'settings':
+            icon = '⚙️';
             break;
-          case "team":
-            icon = "👥";
+          case 'team':
+            icon = '👥';
             break;
-          case "analytics":
-            icon = "📊";
+          case 'analytics':
+            icon = '📊';
             break;
           default:
-            icon = "📋";
+            icon = '📋';
         }
 
         metadata[resource] = { icon, displayName };
@@ -2007,9 +2007,9 @@ class UserManagementService {
 
       // Get unique actions from permissions table
       const { data, error } = await supabase
-        .from("permissions")
-        .select("action")
-        .not("action", "is", null);
+        .from('permissions')
+        .select('action')
+        .not('action', 'is', null);
 
       if (error) {
         console.error(
@@ -2028,25 +2028,25 @@ class UserManagementService {
       uniqueActions.forEach((action) => {
         // Generate display mapping for action
         switch (action.toLowerCase()) {
-          case "create":
-          case "insert":
-            mappings[action] = "CREATE";
+          case 'create':
+          case 'insert':
+            mappings[action] = 'CREATE';
             break;
-          case "read":
-          case "view":
-            mappings[action] = "READ";
+          case 'read':
+          case 'view':
+            mappings[action] = 'READ';
             break;
-          case "update":
-          case "edit":
-            mappings[action] = "UPDATE";
+          case 'update':
+          case 'edit':
+            mappings[action] = 'UPDATE';
             break;
-          case "delete":
-          case "remove":
-            mappings[action] = "DELETE";
+          case 'delete':
+          case 'remove':
+            mappings[action] = 'DELETE';
             break;
-          case "admin":
-          case "manage":
-            mappings[action] = "ADMIN";
+          case 'admin':
+          case 'manage':
+            mappings[action] = 'ADMIN';
             break;
           default:
             mappings[action] = action.toUpperCase();
@@ -2079,7 +2079,7 @@ class UserManagementService {
       }));
 
       const { error } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .insert(rolePermissions);
 
       if (error) {
@@ -2109,10 +2109,10 @@ class UserManagementService {
       const supabase = createClientAuth();
 
       const { error } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .delete()
-        .eq("role_id", roleId)
-        .in("permission_id", permissionIds);
+        .eq('role_id', roleId)
+        .in('permission_id', permissionIds);
 
       if (error) {
         console.error(
@@ -2142,9 +2142,9 @@ class UserManagementService {
 
       // Remove all existing permissions
       const { error: deleteError } = await supabase
-        .from("role_permissions")
+        .from('role_permissions')
         .delete()
-        .eq("role_id", roleId);
+        .eq('role_id', roleId);
 
       if (deleteError) {
         console.error(
@@ -2164,7 +2164,7 @@ class UserManagementService {
         }));
 
         const { error: insertError } = await supabase
-          .from("role_permissions")
+          .from('role_permissions')
           .insert(rolePermissions);
 
         if (insertError) {

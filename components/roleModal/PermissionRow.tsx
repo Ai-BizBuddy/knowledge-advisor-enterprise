@@ -5,8 +5,8 @@
  * Now supports dynamic actions with disabled checkboxes for unavailable permissions.
  */
 
-import React from "react";
-import { Checkbox, Button } from "flowbite-react";
+import React from 'react';
+import { Checkbox, Button } from 'flowbite-react';
 
 // Enhanced props to include dynamic actions and validation errors
 export interface PermissionRowProps {
@@ -28,7 +28,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
   availableActions,
   resourceActions,
   onChange,
-  className = "",
+  className = '',
   validationError,
 }) => {
   // Handle individual action checkbox change
@@ -36,7 +36,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
     const newActions = { ...actions };
     if (checked) {
       const actionId =
-        resourceActions.find((value) => value.action === action)?.id ?? "";
+        resourceActions.find((value) => value.action === action)?.id ?? '';
       newActions[action] = { id: actionId, value: true };
     } else {
       delete newActions[action];
@@ -94,18 +94,18 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
   // Check if this is a custom action (not standard CRUD)
   const isCustomAction = (actionKey: string): boolean => {
-    const standardActions = ["insert", "read", "update", "delete", "admin"];
+    const standardActions = ['insert', 'read', 'update', 'delete', 'admin'];
     return !standardActions.includes(actionKey.toLowerCase());
   };
 
   // Get action display name
   const getActionDisplayName = (actionKey: string): string => {
     const standardDisplayNames: Record<string, string> = {
-      insert: "Insert",
-      read: "Read",
-      update: "Update",
-      delete: "Delete",
-      admin: "Admin",
+      insert: 'Insert',
+      read: 'Read',
+      update: 'Update',
+      delete: 'Delete',
+      admin: 'Admin',
     };
 
     return (
@@ -121,18 +121,18 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
     <>
       <tr
         className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-700 ${
-          hasError ? "bg-red-50 dark:bg-red-900/20" : ""
+          hasError ? 'bg-red-50 dark:bg-red-900/20' : ''
         } ${className}`}
       >
-        <td className="px-4 py-3 whitespace-nowrap">
-          <div className="flex items-center space-x-3">
+        <td className='px-4 py-3 whitespace-nowrap'>
+          <div className='flex items-center space-x-3'>
             {/* Resource name and toggle all button */}
-            <div className="flex items-center space-x-2">
+            <div className='flex items-center space-x-2'>
               <span
                 className={`text-sm font-medium ${
                   hasError
-                    ? "text-red-700 dark:text-red-300"
-                    : "text-gray-900 dark:text-white"
+                    ? 'text-red-700 dark:text-red-300'
+                    : 'text-gray-900 dark:text-white'
                 }`}
               >
                 {getResourceDisplayName(resource)}
@@ -140,14 +140,14 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
               {/* Validation error indicator */}
               {hasError && (
-                <span className="text-red-500" title={validationError}>
+                <span className='text-red-500' title={validationError}>
                   ⚠️
                 </span>
               )}
 
               {/* Available actions count indicator */}
               <span
-                className="text-xs text-gray-500 dark:text-gray-400"
+                className='text-xs text-gray-500 dark:text-gray-400'
                 title={`${resourceActions.length} actions available`}
               >
                 ({resourceActions.length})
@@ -155,10 +155,10 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
 
               {/* Toggle all actions button */}
               <Button
-                size="xs"
-                color={allAvailableActionsChecked ? "failure" : "success"}
+                size='xs'
+                color={allAvailableActionsChecked ? 'failure' : 'success'}
                 onClick={handleToggleAllActions}
-                className="ml-2 opacity-70 transition-opacity hover:opacity-100"
+                className='ml-2 opacity-70 transition-opacity hover:opacity-100'
                 title={
                   allAvailableActionsChecked
                     ? `Remove all ${resource} permissions`
@@ -166,7 +166,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
                 }
                 disabled={resourceActions.length === 0}
               >
-                {allAvailableActionsChecked ? "None" : "All"}
+                {allAvailableActionsChecked ? 'None' : 'All'}
               </Button>
             </div>
           </div>
@@ -178,8 +178,8 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           const isCustom = isCustomAction(action);
 
           return (
-            <td key={action} className="px-4 py-3 text-center">
-              <div className="flex justify-center">
+            <td key={action} className='px-4 py-3 text-center'>
+              <div className='flex justify-center'>
                 <Checkbox
                   id={`${resource}-${action}`}
                   checked={actions[action]?.value === true}
@@ -187,37 +187,37 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
                   onChange={(e) => handleActionChange(action, e.target.checked)}
                   className={`focus:ring-2 ${
                     hasError
-                      ? "border-red-300 focus:ring-red-500"
+                      ? 'border-red-300 focus:ring-red-500'
                       : isCustom
-                        ? "focus:ring-purple-500"
-                        : "focus:ring-indigo-500"
-                  } ${!isAvailable ? "cursor-not-allowed opacity-30" : ""}`}
+                        ? 'focus:ring-purple-500'
+                        : 'focus:ring-indigo-500'
+                  } ${!isAvailable ? 'cursor-not-allowed opacity-30' : ''}`}
                   title={
                     !isAvailable
                       ? `${getActionDisplayName(action)} is not available for ${getResourceDisplayName(resource)}`
-                      : `${actions[action] ? "Remove" : "Grant"} ${getActionDisplayName(action)} permission for ${getResourceDisplayName(resource)}`
+                      : `${actions[action] ? 'Remove' : 'Grant'} ${getActionDisplayName(action)} permission for ${getResourceDisplayName(resource)}`
                   }
                 />
-                <label htmlFor={`${resource}-${action}`} className="sr-only">
-                  {getActionDisplayName(action)} permission for{" "}
+                <label htmlFor={`${resource}-${action}`} className='sr-only'>
+                  {getActionDisplayName(action)} permission for{' '}
                   {getResourceDisplayName(resource)}
-                  {!isAvailable && " (not available)"}
+                  {!isAvailable && ' (not available)'}
                 </label>
               </div>
 
               {/* Unavailable indicator */}
               {!isAvailable && (
                 <div
-                  className="mt-1 text-xs text-gray-400"
-                  title="Not available for this resource"
+                  className='mt-1 text-xs text-gray-400'
+                  title='Not available for this resource'
                 >
                   N/A
                 </div>
               )}
               {isAvailable && (
                 <div
-                  className="mt-1 text-xs text-gray-400"
-                  title="Not available for this resource"
+                  className='mt-1 text-xs text-gray-400'
+                  title='Not available for this resource'
                 >
                   {action}
                 </div>
@@ -232,18 +232,18 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
         <tr>
           <td
             colSpan={availableActions.length + 1}
-            className="bg-red-50 px-4 py-2 dark:bg-red-900/10"
+            className='bg-red-50 px-4 py-2 dark:bg-red-900/10'
           >
-            <div className="flex items-center space-x-2 text-sm text-red-600 dark:text-red-400">
+            <div className='flex items-center space-x-2 text-sm text-red-600 dark:text-red-400'>
               <svg
-                className="h-4 w-4 flex-shrink-0"
-                fill="currentColor"
-                viewBox="0 0 20 20"
+                className='h-4 w-4 flex-shrink-0'
+                fill='currentColor'
+                viewBox='0 0 20 20'
               >
                 <path
-                  fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                  clipRule="evenodd"
+                  fillRule='evenodd'
+                  d='M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z'
+                  clipRule='evenodd'
                 />
               </svg>
               <span>{validationError}</span>

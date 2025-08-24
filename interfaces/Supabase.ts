@@ -1,6 +1,6 @@
 /**
  * Supabase Database Type Definitions
- * 
+ *
  * These interfaces define the exact structure of data returned from Supabase
  * to replace any types with proper TypeScript definitions.
  */

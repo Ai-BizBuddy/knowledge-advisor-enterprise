@@ -1,6 +1,6 @@
-import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 
-const schema = process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || "knowledge";
+const schema = process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || 'knowledge';
 
 export type KnowledgeAdvisorDatabase = {
   [key: string]: {
@@ -18,10 +18,10 @@ let supabaseClient: ReturnType<
   typeof createSupabaseClient<KnowledgeAdvisorDatabase>
 > | null = null;
 let supabaseTableClient: ReturnType<
-  ReturnType<typeof createSupabaseClient<KnowledgeAdvisorDatabase>>["schema"]
+  ReturnType<typeof createSupabaseClient<KnowledgeAdvisorDatabase>>['schema']
 > | null = null;
 let supabaseTableAuth: ReturnType<
-  ReturnType<typeof createSupabaseClient<KnowledgeAdvisorDatabase>>["schema"]
+  ReturnType<typeof createSupabaseClient<KnowledgeAdvisorDatabase>>['schema']
 > | null = null;
 
 export function createClient() {
@@ -50,7 +50,7 @@ export function createClientTable() {
 
 export function createClientAuth() {
   if (!supabaseTableAuth) {
-    supabaseTableAuth = createClient().schema("auth");
+    supabaseTableAuth = createClient().schema('auth');
   }
   return supabaseTableAuth;
 }

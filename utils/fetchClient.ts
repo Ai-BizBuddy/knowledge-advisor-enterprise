@@ -1,6 +1,6 @@
 /**
  * Enhanced Fetch Client - Base API Client
- * 
+ *
  * A replacement for Axios using native fetch API with proper TypeScript support
  * Following the project's strict TypeScript standards
  */
@@ -13,7 +13,7 @@ import type {
   RequestInterceptor,
   ResponseInterceptor,
   ErrorInterceptor,
-  FetchClient
+  FetchClient,
 } from '@/interfaces/FetchTypes';
 
 /**
@@ -34,8 +34,8 @@ class BaseFetchClient implements FetchClient {
     this.timeout = config.timeout || 30000;
     this.defaultHeaders = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json',
-      ...config.defaultHeaders
+      Accept: 'application/json',
+      ...config.defaultHeaders,
     };
     this.retryAttempts = config.retryAttempts || 0;
     this.retryDelay = config.retryDelay || 1000;
@@ -51,7 +51,9 @@ class BaseFetchClient implements FetchClient {
   /**
    * Add response interceptor
    */
-  addResponseInterceptor<T = unknown>(interceptor: ResponseInterceptor<T>): void {
+  addResponseInterceptor<T = unknown>(
+    interceptor: ResponseInterceptor<T>,
+  ): void {
     this.responseInterceptors.push(interceptor as ResponseInterceptor);
   }
 
@@ -68,27 +70,34 @@ class BaseFetchClient implements FetchClient {
   private createAbortController(timeout?: number): AbortController {
     const controller = new AbortController();
     const timeoutMs = timeout || this.timeout;
-    
+
     setTimeout(() => {
       controller.abort();
     }, timeoutMs);
-    
+
     return controller;
   }
 
   /**
    * Apply request interceptors
    */
-  private applyRequestInterceptors(config: TypedFetchConfig & { url: string }): TypedFetchConfig & { url: string } {
-    return this.requestInterceptors.reduce((acc, interceptor) => interceptor(acc), config);
+  private applyRequestInterceptors(
+    config: TypedFetchConfig & { url: string },
+  ): TypedFetchConfig & { url: string } {
+    return this.requestInterceptors.reduce(
+      (acc, interceptor) => interceptor(acc),
+      config,
+    );
   }
   /**
    * Apply response interceptors
    */
-  private applyResponseInterceptors<T>(response: TypedFetchResponse<T>): TypedFetchResponse<T> {
+  private applyResponseInterceptors<T>(
+    response: TypedFetchResponse<T>,
+  ): TypedFetchResponse<T> {
     return this.responseInterceptors.reduce(
-      (acc, interceptor) => interceptor(acc) as TypedFetchResponse<T>, 
-      response
+      (acc, interceptor) => interceptor(acc) as TypedFetchResponse<T>,
+      response,
     );
   }
   /**
@@ -111,7 +120,7 @@ class BaseFetchClient implements FetchClient {
     const fetchError: TypedFetchError = {
       message: 'An unknown error occurred',
       name: 'FetchError',
-      url
+      url,
     };
 
     if (error instanceof Error) {
@@ -137,13 +146,13 @@ class BaseFetchClient implements FetchClient {
    */
   private async parseResponse<T>(response: Response): Promise<T> {
     const contentType = response.headers.get('content-type') || '';
-    
+
     if (contentType.includes('application/json')) {
-      return await response.json() as T;
+      return (await response.json()) as T;
     } else if (contentType.includes('text/')) {
-      return await response.text() as T;
+      return (await response.text()) as T;
     } else {
-      return await response.blob() as T;
+      return (await response.blob()) as T;
     }
   }
 
@@ -152,15 +161,15 @@ class BaseFetchClient implements FetchClient {
    */
   private async makeRequest<T>(
     url: string,
-    config: TypedFetchConfig = {}
+    config: TypedFetchConfig = {},
   ): Promise<TypedFetchResponse<T>> {
     const fullUrl = url.startsWith('http') ? url : `${this.baseURL}${url}`;
-    
+
     let requestConfig: TypedFetchConfig & { url: string } = {
       method: 'GET',
       headers: { ...this.defaultHeaders },
       ...config,
-      url: fullUrl
+      url: fullUrl,
     };
 
     // Apply request interceptors
@@ -171,14 +180,14 @@ class BaseFetchClient implements FetchClient {
       method: requestConfig.method,
       headers: requestConfig.headers,
       body: requestConfig.body,
-      signal: config.signal || controller.signal
+      signal: config.signal || controller.signal,
     };
 
     let lastError: TypedFetchError | undefined;
 
     for (let attempt = 0; attempt <= this.retryAttempts; attempt++) {
       try {
-        const response = await fetch(requestConfig.url, fetchConfig);        // Handle HTTP errors
+        const response = await fetch(requestConfig.url, fetchConfig); // Handle HTTP errors
         if (!response.ok) {
           await this.parseResponse(response); // Parse to consume response body
           const httpError: TypedFetchError = {
@@ -186,35 +195,40 @@ class BaseFetchClient implements FetchClient {
             name: 'HTTPError',
             status: response.status,
             statusText: response.statusText,
-            url: requestConfig.url
+            url: requestConfig.url,
           };
           throw httpError;
         }
 
         const data = await this.parseResponse<T>(response);
-        
+
         const typedResponse: TypedFetchResponse<T> = {
           data,
           status: response.status,
           statusText: response.statusText,
           headers: response.headers,
           url: response.url,
-          ok: response.ok
+          ok: response.ok,
         };
 
         return this.applyResponseInterceptors(typedResponse);
-
       } catch (error) {
         lastError = this.handleFetchError(error, requestConfig.url);
-        
+
         // Don't retry on certain errors
-        if (lastError.status === 401 || lastError.status === 403 || lastError.status === 404) {
+        if (
+          lastError.status === 401 ||
+          lastError.status === 403 ||
+          lastError.status === 404
+        ) {
           break;
         }
-        
+
         // Wait before retry (except on last attempt)
         if (attempt < this.retryAttempts) {
-          await new Promise(resolve => setTimeout(resolve, this.retryDelay * (attempt + 1)));
+          await new Promise((resolve) =>
+            setTimeout(resolve, this.retryDelay * (attempt + 1)),
+          );
         }
       }
     }
@@ -225,14 +239,21 @@ class BaseFetchClient implements FetchClient {
   /**
    * GET request
    */
-  async get<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async get<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     return this.makeRequest<T>(url, { ...config, method: 'GET' });
   }
 
   /**
    * POST request
    */
-  async post<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const body = data ? JSON.stringify(data) : undefined;
     return this.makeRequest<T>(url, { ...config, method: 'POST', body });
   }
@@ -240,7 +261,11 @@ class BaseFetchClient implements FetchClient {
   /**
    * PUT request
    */
-  async put<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const body = data ? JSON.stringify(data) : undefined;
     return this.makeRequest<T>(url, { ...config, method: 'PUT', body });
   }
@@ -248,14 +273,21 @@ class BaseFetchClient implements FetchClient {
   /**
    * DELETE request
    */
-  async delete<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async delete<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     return this.makeRequest<T>(url, { ...config, method: 'DELETE' });
   }
 
   /**
    * PATCH request
    */
-  async patch<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>> {
+  async patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>> {
     const body = data ? JSON.stringify(data) : undefined;
     return this.makeRequest<T>(url, { ...config, method: 'PATCH', body });
   }

@@ -5,8 +5,8 @@
  * Provides structured permission resources with their available actions.
  */
 
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { usePermissionResources } from "./usePermissionResources";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { usePermissionResources } from './usePermissionResources';
 
 export interface PermissionResourceConfig {
   key: string;
@@ -43,9 +43,9 @@ export function usePermissionManagement(): UsePermissionManagementReturn {
     Object.entries(resourcesData).forEach(([resourceName, actions]) => {
       // Generate a friendly name and description from the resource name
       const name = resourceName
-        .split("_")
+        .split('_')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(" ");
+        .join(' ');
 
       const description = `Manage ${name.toLowerCase()} operations and access control`;
 
@@ -78,7 +78,7 @@ export function usePermissionManagement(): UsePermissionManagementReturn {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : "Failed to refetch permissions config";
+          : 'Failed to refetch permissions config';
       setError(errorMessage);
     }
   }, [refetchResources]);

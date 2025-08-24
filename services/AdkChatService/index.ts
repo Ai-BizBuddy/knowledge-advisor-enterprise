@@ -6,8 +6,8 @@
  * Follows the project's strict TypeScript standards.
  */
 
-import { BaseFetchClient } from "@/utils/fetchClient";
-import { getAccessToken } from "@/utils/supabase/authUtils";
+import { BaseFetchClient } from '@/utils/fetchClient';
+import { getAccessToken } from '@/utils/supabase/authUtils';
 
 /**
  * ADK Session creation response interface
@@ -41,7 +41,7 @@ export interface AdkStreamingResponse {
   data: {
     content: {
       parts: Array<{ text: string }>;
-      role: "model";
+      role: 'model';
     };
     partial: boolean;
     invocationId: string;
@@ -98,21 +98,21 @@ interface AdkChatServiceConfig {
  */
 class AdkChatService {
   private client: BaseFetchClient;
-  private readonly serviceName = "AdkChat";
+  private readonly serviceName = 'AdkChat';
   private readonly useMockData: boolean;
   private readonly baseUrl: string;
-  private readonly appName = "knowledge_agent";
+  private readonly appName = 'knowledge_agent';
 
   constructor(config: AdkChatServiceConfig = {}) {
-    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_ADK_BASE_URL || "";
+    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_ADK_BASE_URL || '';
 
     this.client = new BaseFetchClient({
       baseURL: this.baseUrl,
       timeout: config.timeout || 120000, // 2 minutes
       retryAttempts: config.retryAttempts || 2,
       defaultHeaders: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -203,7 +203,7 @@ class AdkChatService {
         return {
           success: true,
           content: `Mock response to: "${input.question}"`,
-          sessionId: "12345678-mock-session-id",
+          sessionId: '12345678-mock-session-id',
           responseTime: Date.now() - startTime,
         };
       });
@@ -228,19 +228,19 @@ class AdkChatService {
       const url = `${this.baseUrl}api/chat`;
 
       return new Promise<AdkChatResult>((resolve) => {
-        let fullContent = "";
+        let fullContent = '';
         let hasError = false;
         let responseSessionId: string | undefined;
-        let lastProcessedId = ""; // Track last processed message ID to prevent duplicates
+        let lastProcessedId = ''; // Track last processed message ID to prevent duplicates
         let hasCompleted = false; // New flag to track if completion has already been called
 
         // Use fetch with streaming response
         fetch(url, {
-          method: "POST",
+          method: 'POST',
           headers: {
-            "Content-Type": "application/json",
-            Accept: "text/event-stream",
-            "Cache-Control": "no-cache",
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream',
+            'Cache-Control': 'no-cache',
             ...authHeaders, // Include auth headers
           },
           body: JSON.stringify(request),
@@ -254,7 +254,7 @@ class AdkChatService {
 
             const reader = response.body?.getReader();
             if (!reader) {
-              throw new Error("No response body reader available");
+              throw new Error('No response body reader available');
             }
 
             const decoder = new TextDecoder();
@@ -281,10 +281,10 @@ class AdkChatService {
                 }
 
                 const chunk = decoder.decode(value, { stream: true });
-                const lines = chunk.split("\n");
+                const lines = chunk.split('\n');
 
                 for (const line of lines) {
-                  if (line.startsWith("data: ")) {
+                  if (line.startsWith('data: ')) {
                     try {
                       const data = line.slice(6).trim();
 
@@ -292,7 +292,7 @@ class AdkChatService {
                       if (!data) continue;
 
                       // Handle [DONE] signal
-                      if (data === "[DONE]") {
+                      if (data === '[DONE]') {
                         console.log(
                           `[${this.serviceName}] Received [DONE] signal`,
                         );
@@ -380,7 +380,7 @@ class AdkChatService {
                       console.warn(
                         `[${this.serviceName}] Failed to parse SSE data:`,
                         parseError,
-                        "Raw line:",
+                        'Raw line:',
                         line.slice(6).trim(),
                       );
                     }
@@ -396,11 +396,11 @@ class AdkChatService {
           .catch((error) => {
             console.error(`[${this.serviceName}] Streaming error:`, error);
             hasError = true;
-            onError(error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ");
+            onError(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
             resolve({
               success: false,
-              content: "",
-              error: error.message || "เกิดข้อผิดพลาดในการเชื่อมต่อ",
+              content: '',
+              error: error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ',
               responseTime: Date.now() - startTime,
             });
           });
@@ -413,12 +413,12 @@ class AdkChatService {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ";
+          : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
       onError(errorMessage);
 
       return {
         success: false,
-        content: "",
+        content: '',
         error: errorMessage,
         responseTime: Date.now() - startTime,
       };
@@ -434,11 +434,11 @@ class AdkChatService {
     onComplete: (fullContent: string) => void,
   ): Promise<void> {
     const mockResponse = this.generateMockResponse(question);
-    const words = mockResponse.content.split(" ");
-    let currentContent = "";
+    const words = mockResponse.content.split(' ');
+    let currentContent = '';
 
     for (let i = 0; i < words.length; i++) {
-      currentContent += (i > 0 ? " " : "") + words[i];
+      currentContent += (i > 0 ? ' ' : '') + words[i];
       onStreamData(currentContent);
       await new Promise((resolve) =>
         setTimeout(resolve, 50 + Math.random() * 100),
@@ -469,7 +469,7 @@ class AdkChatService {
         (error) => {
           resolve({
             success: false,
-            content: "",
+            content: '',
             error,
           });
         },
@@ -484,9 +484,9 @@ class AdkChatService {
     try {
       const authHeaders = await this.getAuthHeaders();
       const response = await fetch(`${this.baseUrl}/health`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Accept: "application/json",
+          Accept: 'application/json',
           ...authHeaders,
         },
       });

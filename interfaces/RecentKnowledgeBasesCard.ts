@@ -1,11 +1,11 @@
 interface IKnowledgeBase {
-    title: string
-    updatedAt: string
-    summary?: string
+  title: string;
+  updatedAt: string;
+  summary?: string;
 }
 
 interface IRecentKnowledgeBasesCardProps {
-    items: IKnowledgeBase[]
+  items: IKnowledgeBase[];
 }
 
 export type { IKnowledgeBase, IRecentKnowledgeBasesCardProps };

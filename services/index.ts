@@ -5,13 +5,13 @@
  * following the project's service architecture standards.
  */
 
-import { AdkChatService } from "./AdkChatService";
-import { DocumentIngestionService } from "./DocumentIngestionService";
-import { DocumentSearchService } from "./DocumentSearchService";
-import DocumentService from "./DocumentService";
-import { KnowledgeBaseService } from "./KnowledgeBaseService";
-import { LangflowChatService } from "./LangflowChatService";
-import { LangflowSearchService } from "./LangflowSearchService";
+import { AdkChatService } from './AdkChatService';
+import { DocumentIngestionService } from './DocumentIngestionService';
+import { DocumentSearchService } from './DocumentSearchService';
+import DocumentService from './DocumentService';
+import { KnowledgeBaseService } from './KnowledgeBaseService';
+import { LangflowChatService } from './LangflowChatService';
+import { LangflowSearchService } from './LangflowSearchService';
 
 /**
  * Service Configuration
@@ -32,7 +32,7 @@ const serviceConfig = {
  */
 export const documentIngestionService = new DocumentIngestionService({
   baseURL:
-    process.env.NEXT_PUBLIC_INGRESS_SERVICE || "https://localhost:5001/api",
+    process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001/api',
   timeout: serviceConfig.timeout,
   retryAttempts: serviceConfig.retryAttempts,
 });
@@ -116,13 +116,13 @@ export const checkAllServicesHealth = async () => {
 
   return {
     documentIngestion:
-      healthChecks[0].status === "fulfilled" ? healthChecks[0].value : false,
+      healthChecks[0].status === 'fulfilled' ? healthChecks[0].value : false,
     langflowChat:
-      healthChecks[1].status === "fulfilled" ? healthChecks[1].value : false,
+      healthChecks[1].status === 'fulfilled' ? healthChecks[1].value : false,
     langflowSearch:
-      healthChecks[2].status === "fulfilled" ? healthChecks[2].value : false,
+      healthChecks[2].status === 'fulfilled' ? healthChecks[2].value : false,
     adkChat:
-      healthChecks[3].status === "fulfilled" ? healthChecks[3].value : false,
+      healthChecks[3].status === 'fulfilled' ? healthChecks[3].value : false,
     timestamp: new Date().toISOString(),
   };
 };
@@ -146,12 +146,12 @@ export {
  *
  * Export service configuration types for TypeScript support
  */
-export type { AdkChatService as AdkChatServiceType } from "./AdkChatService";
-export type { DocumentIngestionService as DocumentIngestionServiceType } from "./DocumentIngestionService";
-export type { DocumentSearchService as DocumentSearchServiceType } from "./DocumentSearchService";
-export type { KnowledgeBaseService as KnowledgeBaseServiceType } from "./KnowledgeBaseService";
-export type { LangflowChatService as LangflowChatServiceType } from "./LangflowChatService";
-export type { LangflowSearchService as LangflowSearchServiceType } from "./LangflowSearchService";
+export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
+export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
+export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
+export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
+export type { LangflowChatService as LangflowChatServiceType } from './LangflowChatService';
+export type { LangflowSearchService as LangflowSearchServiceType } from './LangflowSearchService';
 
 /**
  * Default Exports for Clean Imports

@@ -7,7 +7,7 @@ export interface PaginationParams {
   pageSize: number;
   search?: string;
   sortBy?: string;
-  sortOrder?: "asc" | "desc";
+  sortOrder?: 'asc' | 'desc';
   // Additional filter parameters
   role?: string;
   department?: string;

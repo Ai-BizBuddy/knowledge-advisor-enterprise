@@ -75,25 +75,49 @@ export interface ApiClientConfig {
 /**
  * Request interceptor function type
  */
-export type RequestInterceptor = (config: TypedFetchConfig & { url: string }) => TypedFetchConfig & { url: string };
+export type RequestInterceptor = (
+  config: TypedFetchConfig & { url: string },
+) => TypedFetchConfig & { url: string };
 
 /**
  * Response interceptor function type
  */
-export type ResponseInterceptor<T = unknown> = (response: TypedFetchResponse<T>) => TypedFetchResponse<T>;
+export type ResponseInterceptor<T = unknown> = (
+  response: TypedFetchResponse<T>,
+) => TypedFetchResponse<T>;
 
 /**
  * Error interceptor function type
  */
-export type ErrorInterceptor = (error: TypedFetchError) => TypedFetchError | never;
+export type ErrorInterceptor = (
+  error: TypedFetchError,
+) => TypedFetchError | never;
 
 /**
  * Base fetch client with interceptors and error handling
  */
 export interface FetchClient {
-  get<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>>;
-  post<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>>;
-  put<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>>;
-  delete<T = unknown>(url: string, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>>;
-  patch<T = unknown>(url: string, data?: unknown, config?: TypedFetchConfig): Promise<TypedFetchResponse<T>>;
+  get<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>>;
+  post<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>>;
+  put<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>>;
+  delete<T = unknown>(
+    url: string,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>>;
+  patch<T = unknown>(
+    url: string,
+    data?: unknown,
+    config?: TypedFetchConfig,
+  ): Promise<TypedFetchResponse<T>>;
 }

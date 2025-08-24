@@ -1,5 +1,5 @@
-import { knowledgeBaseService } from "@/services";
-import { useCallback, useEffect, useState } from "react";
+import { knowledgeBaseService } from '@/services';
+import { useCallback, useEffect, useState } from 'react';
 
 export interface KnowledgeBaseSelection {
   id: string; // Updated to string UUID
@@ -28,7 +28,7 @@ export const useKnowledgeBaseSelection = () => {
       setKnowledgeBases(kbSelection);
       setLoading(false);
     } catch (error) {
-      console.error("Error loading knowledge bases:", error);
+      console.error('Error loading knowledge bases:', error);
       setLoading(false);
     }
   }, []);

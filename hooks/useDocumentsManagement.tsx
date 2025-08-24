@@ -1,14 +1,14 @@
-import { useState, useEffect, useCallback } from "react";
-import { documentsData } from "@/data/documentsData";
-import { sortDocuments, filterDocuments } from "@/utils/documentsUtils";
+import { useState, useEffect, useCallback } from 'react';
+import { documentsData } from '@/data/documentsData';
+import { sortDocuments, filterDocuments } from '@/utils/documentsUtils';
 
 export const useDocumentsManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("All");
-  const [sortBy, setSortBy] = useState("Date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeTab, setActiveTab] = useState('All');
+  const [sortBy, setSortBy] = useState('Date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 10;
@@ -29,17 +29,17 @@ export const useDocumentsManagement = () => {
   // Handle sort changes
   const handleSort = (column: string) => {
     if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
-      setSortOrder("asc");
+      setSortOrder('asc');
     }
     setCurrentPage(1);
   };
 
   // Handle sort order toggle
   const handleSortOrderToggle = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     setCurrentPage(1);
   };
 
@@ -60,9 +60,9 @@ export const useDocumentsManagement = () => {
 
     setTimeout(() => {
       switch (action) {
-        case "retry_failed":
+        case 'retry_failed':
           break;
-        case "refresh":
+        case 'refresh':
           setSelectedDocuments([]);
           setCurrentPage(1);
           break;
@@ -144,17 +144,17 @@ export const useDocumentsManagement = () => {
   // Keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.ctrlKey && event.key === "a") {
+      if (event.ctrlKey && event.key === 'a') {
         event.preventDefault();
         handleSelectAll();
       }
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setSelectedDocuments([]);
       }
     };
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleSelectAll]);
 
   return {

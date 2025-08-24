@@ -1,11 +1,11 @@
 interface IRecommendation {
-    title: string
-    summary: string
-    confidenceScore?: number // optional: AI confidence %
+  title: string;
+  summary: string;
+  confidenceScore?: number; // optional: AI confidence %
 }
 
 interface IProps {
-    items: IRecommendation[]
+  items: IRecommendation[];
 }
 
-export type { IRecommendation, IProps }
+export type { IRecommendation, IProps };

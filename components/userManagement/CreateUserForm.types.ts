@@ -5,9 +5,9 @@
 export interface CreateUserFormProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (user: import("@/interfaces/UserManagement").User) => void;
-  availableRoles?: import("@/interfaces/UserManagement").Role[];
-  availableDepartments?: import("@/interfaces/UserManagement").Department[];
+  onSuccess?: (user: import('@/interfaces/UserManagement').User) => void;
+  availableRoles?: import('@/interfaces/UserManagement').Role[];
+  availableDepartments?: import('@/interfaces/UserManagement').Department[];
 }
 
 export interface CreateUserFormData extends Record<string, unknown> {

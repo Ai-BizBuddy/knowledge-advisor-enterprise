@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import type {
   CreateDocumentInput,
@@ -7,10 +7,10 @@ import type {
   Document,
   PaginationOptions,
   UpdateDocumentInput,
-} from "@/interfaces/Project";
-import DocumentService from "@/services/DocumentService";
-import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+} from '@/interfaces/Project';
+import DocumentService from '@/services/DocumentService';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Debounce utility function
 function useDebounce<T>(value: T, delay: number): T {
@@ -125,9 +125,9 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const [itemsPerPage, setItemsPerPage] = useState(10);
 
   // Filter state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
 
   // Debounce search term to prevent excessive API calls
   const debouncedSearchTerm = useDebounce(searchTerm, 500);
@@ -154,13 +154,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const loadDocuments = useCallback(
     async (page = 1, forceRefresh = false) => {
       if (!knowledgeBaseId) {
-        console.warn("[useDocuments] No knowledge base ID provided");
+        console.warn('[useDocuments] No knowledge base ID provided');
         return;
       }
 
       // Prevent redundant calls when already loading (unless forced)
       if (loadingRef.current && !forceRefresh) {
-        console.log("[useDocuments] Already loading, skipping call");
+        console.log('[useDocuments] Already loading, skipping call');
         return;
       }
 
@@ -178,8 +178,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         };
 
         const filters = {
-          status: selectedStatus !== "all" ? selectedStatus : undefined,
-          type: selectedType !== "all" ? selectedType : undefined,
+          status: selectedStatus !== 'all' ? selectedStatus : undefined,
+          type: selectedType !== 'all' ? selectedType : undefined,
           searchTerm: debouncedSearchTerm.trim() || undefined,
         };
 
@@ -200,8 +200,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         );
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to load documents";
-        console.error("[useDocuments] Error loading documents:", err);
+          err instanceof Error ? err.message : 'Failed to load documents';
+        console.error('[useDocuments] Error loading documents:', err);
         setError(errorMessage);
       } finally {
         loadingRef.current = false;
@@ -251,8 +251,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setCurrentPage(1);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to search documents";
-        console.error("[useDocuments] Error searching documents:", err);
+          err instanceof Error ? err.message : 'Failed to search documents';
+        console.error('[useDocuments] Error searching documents:', err);
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -278,8 +278,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return newDocument;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to create document";
-        console.error("[useDocuments] Error creating document:", err);
+          err instanceof Error ? err.message : 'Failed to create document';
+        console.error('[useDocuments] Error creating document:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -309,8 +309,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to create multiple documents";
-        console.error("[useDocuments] Error creating multiple documents:", err);
+            : 'Failed to create multiple documents';
+        console.error('[useDocuments] Error creating multiple documents:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -340,9 +340,9 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to create documents from files";
+            : 'Failed to create documents from files';
         console.error(
-          "[useDocuments] Error creating documents from files:",
+          '[useDocuments] Error creating documents from files:',
           err,
         );
         setError(errorMessage);
@@ -376,8 +376,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return updatedDocument;
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to update document";
-        console.error("[useDocuments] Error updating document:", err);
+          err instanceof Error ? err.message : 'Failed to update document';
+        console.error('[useDocuments] Error updating document:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -404,8 +404,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setTotalItems((prev) => prev - 1);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to delete document";
-        console.error("[useDocuments] Error deleting document:", err);
+          err instanceof Error ? err.message : 'Failed to delete document';
+        console.error('[useDocuments] Error deleting document:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -424,8 +424,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return await documentService.getDocument(id, knowledgeBaseId);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to get document";
-        console.error("[useDocuments] Error getting document:", err);
+          err instanceof Error ? err.message : 'Failed to get document';
+        console.error('[useDocuments] Error getting document:', err);
         setError(errorMessage);
         return null;
       }
@@ -460,8 +460,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to batch update documents";
-        console.error("[useDocuments] Error batch updating documents:", err);
+            : 'Failed to batch update documents';
+        console.error('[useDocuments] Error batch updating documents:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -490,8 +490,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : "Failed to batch delete documents";
-        console.error("[useDocuments] Error batch deleting documents:", err);
+            : 'Failed to batch delete documents';
+        console.error('[useDocuments] Error batch deleting documents:', err);
         setError(errorMessage);
         throw err;
       } finally {
@@ -558,7 +558,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handleDocumentDelete = useCallback(
     async (id: string) => {
-      if (confirm("Are you sure you want to delete this document?")) {
+      if (confirm('Are you sure you want to delete this document?')) {
         await deleteDocument(id);
       }
     },

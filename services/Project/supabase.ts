@@ -1,25 +1,25 @@
 import type {
   DocumentProcessingUpdateData,
   SupabaseProjectRow,
-} from "@/interfaces/AxiosTypes";
+} from '@/interfaces/AxiosTypes';
 import type {
   CreateProjectInput,
   Document,
   JobStatusResponse,
   Project,
   UpdateProjectInput,
-} from "@/interfaces/Project";
-import { ProjectStatus } from "@/interfaces/Project";
+} from '@/interfaces/Project';
+import { ProjectStatus } from '@/interfaces/Project';
 import type {
   DocumentWithProject,
   JobProgress,
-} from "@/interfaces/SupabaseTypes";
-import { documentSearchService } from "@/services";
-import documentProcessingApi from "@/services/DocumentProcessing";
-import type { DocumentSearchResult } from "@/services/DocumentSearchService";
-import { getFileTypeLabel, getMimeType } from "@/utils/mimeHelper";
-import { getAuthSession } from "@/utils/supabase/authUtils";
-import { createClient, createClientTable } from "@/utils/supabase/client";
+} from '@/interfaces/SupabaseTypes';
+import { documentSearchService } from '@/services';
+import documentProcessingApi from '@/services/DocumentProcessing';
+import type { DocumentSearchResult } from '@/services/DocumentSearchService';
+import { getFileTypeLabel, getMimeType } from '@/utils/mimeHelper';
+import { getAuthSession } from '@/utils/supabase/authUtils';
+import { createClient, createClientTable } from '@/utils/supabase/client';
 
 /**
  * Get current user from Supabase auth
@@ -29,12 +29,12 @@ async function getCurrentUser() {
     const session = await getAuthSession();
 
     if (!session?.user) {
-      throw new Error("User not authenticated");
+      throw new Error('User not authenticated');
     }
 
     return session.user;
   } catch (error) {
-    console.error("Error getting current user:", error);
+    console.error('Error getting current user:', error);
     throw error;
   }
 }
@@ -48,7 +48,7 @@ export async function getProjects(): Promise<Project[]> {
 
     const supabase = createClientTable();
     const { data, error } = await supabase
-      .from("knowledge_base")
+      .from('knowledge_base')
       .select(
         `
         id,
@@ -60,11 +60,11 @@ export async function getProjects(): Promise<Project[]> {
         updated_at
       `,
       )
-      .eq("owner", user.id)
-      .order("created_at", { ascending: false });
+      .eq('owner', user.id)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Error fetching knowledge bases:", error);
+      console.error('Error fetching knowledge bases:', error);
       throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
     }
 
@@ -75,9 +75,9 @@ export async function getProjects(): Promise<Project[]> {
           // Get document count for each project
           const supabase = createClientTable();
           const { count, error: countError } = await supabase
-            .from("documents")
-            .select("*", { count: "exact", head: true })
-            .eq("project_id", project.id as string);
+            .from('documents')
+            .select('*', { count: 'exact', head: true })
+            .eq('project_id', project.id as string);
 
           if (countError) {
             console.warn(
@@ -102,7 +102,7 @@ export async function getProjects(): Promise<Project[]> {
 
     return projectsWithCounts;
   } catch (error) {
-    console.error("Error in getProjects:", error);
+    console.error('Error in getProjects:', error);
     throw error;
   }
 }
@@ -116,7 +116,7 @@ export async function getProjectById(id: string): Promise<Project> {
 
     const supabase = createClientTable();
     const { data, error } = await supabase
-      .from("knowledge_base")
+      .from('knowledge_base')
       .select(
         `
         id,
@@ -129,15 +129,15 @@ export async function getProjectById(id: string): Promise<Project> {
         updated_at
       `,
       )
-      .eq("id", id)
-      .eq("owner", user.id)
+      .eq('id', id)
+      .eq('owner', user.id)
       .single();
 
     if (error) {
-      if (error.code === "PGRST116") {
+      if (error.code === 'PGRST116') {
         throw new Error(`Knowledge base with ID ${id} not found`);
       }
-      console.error("Error fetching knowledge base:", error);
+      console.error('Error fetching knowledge base:', error);
       throw new Error(`Failed to fetch knowledge base: ${error.message}`);
     }
 
@@ -148,12 +148,12 @@ export async function getProjectById(id: string): Promise<Project> {
     // Get document count
     const supabaseCount = createClientTable();
     const { count, error: countError } = await supabaseCount
-      .from("documents")
-      .select("*", { count: "exact", head: true })
-      .eq("project_id", id);
+      .from('documents')
+      .select('*', { count: 'exact', head: true })
+      .eq('project_id', id);
 
     if (countError) {
-      console.warn("Error getting document count:", countError);
+      console.warn('Error getting document count:', countError);
     }
 
     const result = {
@@ -164,7 +164,7 @@ export async function getProjectById(id: string): Promise<Project> {
 
     return result;
   } catch (error) {
-    console.error("Error in getProjectById:", error);
+    console.error('Error in getProjectById:', error);
     throw error;
   }
 }
@@ -179,7 +179,7 @@ export async function createProject(
 
   const supabase = createClientTable();
   const { data, error } = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .insert([
       {
         name: projectData.name,
@@ -203,7 +203,7 @@ export async function createProject(
     .single();
 
   if (error) {
-    console.error("Error creating knowledge base:", error);
+    console.error('Error creating knowledge base:', error);
     throw new Error(`Failed to create knowledge base: ${error.message}`);
   }
 
@@ -224,13 +224,13 @@ export async function updateProject(
 
   const supabase = createClientTable();
   const { data, error } = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id)
-    .eq("owner", user.id)
+    .eq('id', id)
+    .eq('owner', user.id)
     .select(
       `
       id,
@@ -245,16 +245,16 @@ export async function updateProject(
     .single();
 
   if (error) {
-    console.error("Error updating knowledge base:", error);
+    console.error('Error updating knowledge base:', error);
     throw new Error(`Failed to update knowledge base: ${error.message}`);
   }
 
   // Get document count
   const supabaseCount = createClientTable();
   const { count } = await supabaseCount
-    .from("documents")
-    .select("*", { count: "exact", head: true })
-    .eq("project_id", id);
+    .from('documents')
+    .select('*', { count: 'exact', head: true })
+    .eq('project_id', id);
 
   return {
     ...data,
@@ -271,9 +271,9 @@ export async function deleteProject(id: string): Promise<void> {
   // First, delete all documents associated with this project
   const supabaseDocuments = createClientTable();
   const { data: documents } = await supabaseDocuments
-    .from("documents")
-    .select("id, url")
-    .eq("project_id", id);
+    .from('documents')
+    .select('id, url')
+    .eq('project_id', id);
 
   if (documents && documents.length > 0) {
     // Delete files from storage and document records
@@ -290,13 +290,13 @@ export async function deleteProject(id: string): Promise<void> {
   // Delete the knowledge base
   const supabaseDelete = createClientTable();
   const { error } = await supabaseDelete
-    .from("knowledge_base")
+    .from('knowledge_base')
     .delete()
-    .eq("id", id)
-    .eq("owner", user.id);
+    .eq('id', id)
+    .eq('owner', user.id);
 
   if (error) {
-    console.error("Error deleting knowledge base:", error);
+    console.error('Error deleting knowledge base:', error);
     throw new Error(`Failed to delete knowledge base: ${error.message}`);
   }
 
@@ -305,7 +305,7 @@ export async function deleteProject(id: string): Promise<void> {
     const supabaseStorage = createClient();
     await supabaseStorage.storage.deleteBucket(id);
   } catch (error) {
-    console.warn("Storage bucket cleanup failed:", error);
+    console.warn('Storage bucket cleanup failed:', error);
     // Non-critical error, don't throw
   }
 }
@@ -319,7 +319,7 @@ export async function getDocumentsByProjectId(
   try {
     const supabase = createClientTable();
     const { data, error } = await supabase
-      .from("documents")
+      .from('documents')
       .select(
         `
         id,
@@ -339,11 +339,11 @@ export async function getDocumentsByProjectId(
         metadata
       `,
       )
-      .eq("project_id", projectId)
-      .order("created_at", { ascending: false });
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Error fetching documents:", error);
+      console.error('Error fetching documents:', error);
       throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
@@ -367,7 +367,7 @@ export async function getDocumentsByProjectId(
       })) as Document[]) || []
     );
   } catch (error) {
-    console.error("Error in getDocumentsByProjectId:", error);
+    console.error('Error in getDocumentsByProjectId:', error);
     throw error;
   }
 }
@@ -379,12 +379,12 @@ function sanitizeFileName(fileName: string): string {
   return (
     fileName
       // Replace Thai characters and special characters with safe alternatives
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove diacritics
-      .replace(/[^\w\s.-]/g, "") // Keep only word characters, spaces, dots, and hyphens
-      .replace(/\s+/g, "_") // Replace spaces with underscores
-      .replace(/_{2,}/g, "_") // Replace multiple underscores with single
-      .replace(/^_+|_+$/g, "") // Remove leading/trailing underscores
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
+      .replace(/[^\w\s.-]/g, '') // Keep only word characters, spaces, dots, and hyphens
+      .replace(/\s+/g, '_') // Replace spaces with underscores
+      .replace(/_{2,}/g, '_') // Replace multiple underscores with single
+      .replace(/^_+|_+$/g, '') // Remove leading/trailing underscores
       .toLowerCase()
   ); // Convert to lowercase for consistency
 }
@@ -426,7 +426,7 @@ export async function uploadDocument(
       .from(projectId)
       .upload(sanitizedPath, file, {
         upsert: true,
-        cacheControl: "3600",
+        cacheControl: '3600',
       });
 
     if (uploadError)
@@ -444,19 +444,19 @@ export async function uploadDocument(
     // Insert document record with enhanced metadata
     const supabaseTable = createClientTable();
     const { data: documentData, error: insertError } = await supabaseTable
-      .from("documents")
+      .from('documents')
       .insert([
         {
           name: file.name,
           type: fileType,
-          status: "Uploaded",
+          status: 'Uploaded',
           project_id: projectId,
-          url: urlData?.signedUrl || "",
+          url: urlData?.signedUrl || '',
           path: sanitizedPath,
           file_size: file.size,
           mime_type: mimeType,
           chunk_count: 0,
-          rag_status: "not_synced",
+          rag_status: 'not_synced',
           metadata: options?.metadata || {},
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -476,7 +476,7 @@ export async function uploadDocument(
         await syncDocumentToRAG(projectId, documentData.id as string);
       } catch (syncError) {
         console.warn(
-          "Auto-sync failed, document uploaded but not synced:",
+          'Auto-sync failed, document uploaded but not synced:',
           syncError,
         );
       }
@@ -488,7 +488,7 @@ export async function uploadDocument(
       signedUrl: urlData?.signedUrl,
     };
   } catch (error) {
-    console.error("Upload failed:", error);
+    console.error('Upload failed:', error);
     throw error;
   }
 }
@@ -510,9 +510,9 @@ export async function deleteDocument(
 
     // Get document info to extract the storage path
     const { data: document, error: fetchError } = await supabaseTable
-      .from("documents")
-      .select("path, name")
-      .eq("id", documentId)
+      .from('documents')
+      .select('path, name')
+      .eq('id', documentId)
       .single();
 
     if (fetchError)
@@ -525,23 +525,23 @@ export async function deleteDocument(
         .remove([document.path as string]);
 
       if (storageError) {
-        console.warn("Storage deletion failed:", storageError);
+        console.warn('Storage deletion failed:', storageError);
         // Don't throw - continue with database deletion
       }
     }
 
     // Delete from database
     const { error: dbError } = await supabaseTable
-      .from("documents")
+      .from('documents')
       .delete()
-      .eq("id", documentId);
+      .eq('id', documentId);
 
     if (dbError)
       throw new Error(`Failed to delete document record: ${dbError.message}`);
 
     return { success: true };
   } catch (error) {
-    console.error("Delete failed:", error);
+    console.error('Delete failed:', error);
     throw error;
   }
 }
@@ -557,18 +557,18 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
     const isServiceAvailable = await documentProcessingApi.healthCheck();
     if (!isServiceAvailable) {
       throw new Error(
-        "Document processing service is not available. Please ensure the service is running on localhost:5001",
+        'Document processing service is not available. Please ensure the service is running on localhost:5001',
       );
     }
 
     // Update status to syncing
     await supabase
-      .from("documents")
+      .from('documents')
       .update({
-        rag_status: "syncing",
+        rag_status: 'syncing',
         updated_at: new Date().toISOString(),
       })
-      .eq("id", documentId);
+      .eq('id', documentId);
 
     // Process the document through the ingestion API
     await documentProcessingApi.processDocument(documentId);
@@ -579,7 +579,7 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
     ]);
 
     if (!syncResponse.success) {
-      throw new Error(syncResponse.message || "Document sync failed");
+      throw new Error(syncResponse.message || 'Document sync failed');
     }
 
     // Monitor the job if jobId is provided
@@ -595,8 +595,8 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
         },
       );
 
-      if (jobStatus.status === "failed") {
-        throw new Error(jobStatus.errorMessage || "RAG sync job failed");
+      if (jobStatus.status === 'failed') {
+        throw new Error(jobStatus.errorMessage || 'RAG sync job failed');
       }
     }
 
@@ -610,40 +610,40 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
       updated_at: new Date().toISOString(),
     };
 
-    if (documentStatus.status === "completed") {
-      updateData.rag_status = "synced";
+    if (documentStatus.status === 'completed') {
+      updateData.rag_status = 'synced';
       updateData.chunk_count =
         documentStatus.progress || Math.floor(Math.random() * 50) + 10;
-    } else if (documentStatus.status === "failed") {
-      updateData.rag_status = "error";
+    } else if (documentStatus.status === 'failed') {
+      updateData.rag_status = 'error';
       throw new Error(
-        documentStatus.errorMessage || "Document processing failed",
+        documentStatus.errorMessage || 'Document processing failed',
       );
     } else {
-      updateData.rag_status = "synced"; // Assume success if no specific status
+      updateData.rag_status = 'synced'; // Assume success if no specific status
       updateData.chunk_count = Math.floor(Math.random() * 50) + 10;
     }
 
     const { error } = await supabase
-      .from("documents")
+      .from('documents')
       .update(updateData)
-      .eq("id", documentId);
+      .eq('id', documentId);
 
     if (error) throw error;
 
     return { success: true };
   } catch (error) {
-    console.error("RAG sync failed:", error);
+    console.error('RAG sync failed:', error);
 
     // Update status to error
     const errorSupabase = createClientTable();
     await errorSupabase
-      .from("documents")
+      .from('documents')
       .update({
-        rag_status: "error",
+        rag_status: 'error',
         updated_at: new Date().toISOString(),
       })
-      .eq("id", documentId);
+      .eq('id', documentId);
 
     throw error;
   }
@@ -663,25 +663,25 @@ export async function bulkSyncDocumentsToRAG(
     const isServiceAvailable = await documentProcessingApi.healthCheck();
     if (!isServiceAvailable) {
       throw new Error(
-        "Document processing service is not available. Please ensure the service is running on localhost:5001",
+        'Document processing service is not available. Please ensure the service is running on localhost:5001',
       );
     }
 
     // Update all documents status to syncing
     await supabase
-      .from("documents")
+      .from('documents')
       .update({
-        rag_status: "syncing",
+        rag_status: 'syncing',
         updated_at: new Date().toISOString(),
       })
-      .in("id", documentIds);
+      .in('id', documentIds);
 
     // Use the bulk sync API for better efficiency
     const syncResponse =
       await documentProcessingApi.batchSyncDocuments(documentIds);
 
     if (!syncResponse.success) {
-      throw new Error(syncResponse.message || "Bulk document sync failed");
+      throw new Error(syncResponse.message || 'Bulk document sync failed');
     }
 
     let successCount = 0;
@@ -701,12 +701,12 @@ export async function bulkSyncDocumentsToRAG(
           },
         );
 
-        if (jobStatus.status === "failed") {
-          throw new Error(jobStatus.errorMessage || "Bulk RAG sync job failed");
+        if (jobStatus.status === 'failed') {
+          throw new Error(jobStatus.errorMessage || 'Bulk RAG sync job failed');
         }
       } catch (jobError) {
         console.warn(
-          "Job monitoring failed, checking individual document statuses:",
+          'Job monitoring failed, checking individual document statuses:',
           jobError,
         );
       }
@@ -723,40 +723,40 @@ export async function bulkSyncDocumentsToRAG(
           updated_at: new Date().toISOString(),
         };
 
-        if (documentStatus.status === "completed") {
-          updateData.rag_status = "synced";
+        if (documentStatus.status === 'completed') {
+          updateData.rag_status = 'synced';
           updateData.chunk_count =
             documentStatus.progress || Math.floor(Math.random() * 50) + 10;
-        } else if (documentStatus.status === "failed") {
-          updateData.rag_status = "error";
+        } else if (documentStatus.status === 'failed') {
+          updateData.rag_status = 'error';
           errors.push(
-            `Document ${docId}: ${documentStatus.errorMessage || "Processing failed"}`,
+            `Document ${docId}: ${documentStatus.errorMessage || 'Processing failed'}`,
           );
         } else {
-          updateData.rag_status = "synced"; // Assume success if no specific status
+          updateData.rag_status = 'synced'; // Assume success if no specific status
           updateData.chunk_count = Math.floor(Math.random() * 50) + 10;
         }
 
         const supabase = createClientTable();
-        await supabase.from("documents").update(updateData).eq("id", docId);
+        await supabase.from('documents').update(updateData).eq('id', docId);
 
-        if (updateData.rag_status === "synced") {
+        if (updateData.rag_status === 'synced') {
           successCount++;
         }
       } catch (error) {
         const errorMessage =
-          error instanceof Error ? error.message : "Unknown error";
+          error instanceof Error ? error.message : 'Unknown error';
         errors.push(`Document ${docId}: ${errorMessage}`);
 
         // Update status to error for this document
         const errorSupabase = createClientTable();
         await errorSupabase
-          .from("documents")
+          .from('documents')
           .update({
-            rag_status: "error",
+            rag_status: 'error',
             updated_at: new Date().toISOString(),
           })
-          .eq("id", docId);
+          .eq('id', docId);
       }
     });
 
@@ -770,17 +770,17 @@ export async function bulkSyncDocumentsToRAG(
       errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
-    console.error("Bulk RAG sync failed:", error);
+    console.error('Bulk RAG sync failed:', error);
 
     // Update all documents status to error
     const errorSupabase = createClientTable();
     await errorSupabase
-      .from("documents")
+      .from('documents')
       .update({
-        rag_status: "error",
+        rag_status: 'error',
         updated_at: new Date().toISOString(),
       })
-      .in("id", documentIds);
+      .in('id', documentIds);
 
     throw error;
   }
@@ -794,14 +794,14 @@ export async function getProjectsCount(): Promise<number> {
   const supabase = createClientTable();
 
   const result = await supabase
-    .from("knowledge_base")
-    .select("*", { count: "exact", head: true })
-    .eq("owner", user.id);
+    .from('knowledge_base')
+    .select('*', { count: 'exact', head: true })
+    .eq('owner', user.id);
 
   const { count, error } = result;
 
   if (error) {
-    console.error("Error counting knowledge bases:", error);
+    console.error('Error counting knowledge bases:', error);
     throw new Error(`Failed to count knowledge bases: ${error.message}`);
   }
 
@@ -814,8 +814,8 @@ export async function getProjectsCount(): Promise<number> {
 export async function getProjectsPaginated(
   page: number = 1,
   limit: number = 10,
-  sortBy: "created_at" | "updated_at" | "name" = "created_at",
-  sortOrder: "asc" | "desc" = "desc",
+  sortBy: 'created_at' | 'updated_at' | 'name' = 'created_at',
+  sortOrder: 'asc' | 'desc' = 'desc',
 ): Promise<{ data: Project[]; total: number; page: number; limit: number }> {
   const supabase = createClientTable();
   const user = await getCurrentUser();
@@ -824,14 +824,14 @@ export async function getProjectsPaginated(
 
   // Get total count
   const countResult = await supabase
-    .from("knowledge_base")
-    .select("*", { count: "exact", head: true })
-    .eq("owner", user.id);
+    .from('knowledge_base')
+    .select('*', { count: 'exact', head: true })
+    .eq('owner', user.id);
   const { count } = countResult;
 
   // Get paginated data
   const result = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .select(
       `
       id,
@@ -843,13 +843,13 @@ export async function getProjectsPaginated(
       updated_at
     `,
     )
-    .eq("owner", user.id)
-    .order(sortBy, { ascending: sortOrder === "asc" })
+    .eq('owner', user.id)
+    .order(sortBy, { ascending: sortOrder === 'asc' })
     .range(offset, offset + limit - 1);
   const { data, error } = result;
 
   if (error) {
-    console.error("Error fetching paginated knowledge bases:", error);
+    console.error('Error fetching paginated knowledge bases:', error);
     throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
   }
 
@@ -858,9 +858,9 @@ export async function getProjectsPaginated(
     (data || []).map(async (project: SupabaseProjectRow) => {
       // Get document count for each project
       const docCountResult = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id);
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
       const { count: docCount } = docCountResult;
 
       return {
@@ -886,7 +886,7 @@ export async function searchProjects(query: string): Promise<Project[]> {
   const user = await getCurrentUser();
 
   const { data, error } = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .select(
       `
       id,
@@ -898,12 +898,12 @@ export async function searchProjects(query: string): Promise<Project[]> {
       updated_at
     `,
     )
-    .eq("owner", user.id)
+    .eq('owner', user.id)
     .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order("created_at", { ascending: false });
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error searching knowledge bases:", error);
+    console.error('Error searching knowledge bases:', error);
     throw new Error(`Failed to search knowledge bases: ${error.message}`);
   }
 
@@ -912,9 +912,9 @@ export async function searchProjects(query: string): Promise<Project[]> {
     (data || []).map(async (project: SupabaseProjectRow) => {
       // Get document count for each project
       const docCountResult = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id);
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
       const { count } = docCountResult;
 
       return {
@@ -937,7 +937,7 @@ export async function getProjectsByStatus(
   const user = await getCurrentUser();
 
   const { data, error } = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .select(
       `
       id,
@@ -949,12 +949,12 @@ export async function getProjectsByStatus(
       updated_at
     `,
     )
-    .eq("owner", user.id)
-    .eq("status", status)
-    .order("created_at", { ascending: false });
+    .eq('owner', user.id)
+    .eq('status', status)
+    .order('created_at', { ascending: false });
 
   if (error) {
-    console.error("Error fetching knowledge bases by status:", error);
+    console.error('Error fetching knowledge bases by status:', error);
     throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
   }
 
@@ -963,9 +963,9 @@ export async function getProjectsByStatus(
     (data || []).map(async (project: SupabaseProjectRow) => {
       // Get document count for each project
       const docCountResult = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id);
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
       const { count } = docCountResult;
 
       return {
@@ -992,10 +992,10 @@ export async function duplicateProject(
   // Create the duplicate
   const duplicateData: CreateProjectInput = {
     visibility: original.visibility as
-      | "public"
-      | "private"
-      | "department"
-      | "custom",
+      | 'public'
+      | 'private'
+      | 'department'
+      | 'custom',
     name: newName,
     description: `Copy of ${original.description}`,
     status: ProjectStatus.ACTIVE,
@@ -1031,13 +1031,13 @@ export async function batchUpdateProjects(
   const user = await getCurrentUser();
 
   const { data, error } = await supabase
-    .from("knowledge_base")
+    .from('knowledge_base')
     .update({
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq("owner", user.id)
-    .in("id", projectIds).select(`
+    .eq('owner', user.id)
+    .in('id', projectIds).select(`
       id,
       name,
       description,
@@ -1048,7 +1048,7 @@ export async function batchUpdateProjects(
     `);
 
   if (error) {
-    console.error("Error batch updating knowledge bases:", error);
+    console.error('Error batch updating knowledge bases:', error);
     throw new Error(`Failed to update knowledge bases: ${error.message}`);
   }
 
@@ -1057,9 +1057,9 @@ export async function batchUpdateProjects(
     (data || []).map(async (project: SupabaseProjectRow) => {
       // Get document count for each project
       const docCountResult = await supabase
-        .from("documents")
-        .select("*", { count: "exact", head: true })
-        .eq("project_id", project.id);
+        .from('documents')
+        .select('*', { count: 'exact', head: true })
+        .eq('project_id', project.id);
       const { count } = docCountResult;
 
       return {
@@ -1084,9 +1084,9 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
   for (const projectId of projectIds) {
     try {
       const { data: documents } = await supabaseTable
-        .from("documents")
-        .select("id, url")
-        .eq("project_id", projectId);
+        .from('documents')
+        .select('id, url')
+        .eq('project_id', projectId);
 
       if (documents && documents.length > 0) {
         // Delete files from storage and document records
@@ -1112,14 +1112,14 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
 
   // Delete the knowledge bases
   const deleteResult = await supabaseTable
-    .from("knowledge_base")
+    .from('knowledge_base')
     .delete()
-    .eq("owner", user.id)
-    .in("id", projectIds);
+    .eq('owner', user.id)
+    .in('id', projectIds);
   const { error } = deleteResult;
 
   if (error) {
-    console.error("Error batch deleting knowledge bases:", error);
+    console.error('Error batch deleting knowledge bases:', error);
     throw new Error(`Failed to delete knowledge bases: ${error.message}`);
   }
 
@@ -1147,18 +1147,18 @@ export async function getProjectAnalytics(projectId: string): Promise<{
 
   // Get document statistics
   const { data: documents, error } = await supabase
-    .from("documents")
-    .select("chunk_count, created_at, rag_status")
-    .eq("project_id", projectId);
+    .from('documents')
+    .select('chunk_count, created_at, rag_status')
+    .eq('project_id', projectId);
 
   if (error) {
-    console.error("Error fetching analytics:", error);
+    console.error('Error fetching analytics:', error);
     throw new Error(`Failed to fetch analytics: ${error.message}`);
   }
 
   const totalDocuments = documents?.length || 0;
   const totalSyncedDocuments =
-    documents?.filter((doc) => doc.rag_status === "synced").length || 0;
+    documents?.filter((doc) => doc.rag_status === 'synced').length || 0;
   const averageChunkCount = documents?.length
     ? documents.reduce(
         (sum, doc) => sum + ((doc.chunk_count as number) || 0),
@@ -1195,7 +1195,7 @@ export async function searchDocuments(
     // Use the DocumentSearchService's hook-compatible method
     return await documentSearchService.searchDocumentsForHook(query, projectId);
   } catch (error) {
-    console.error("Failed to search documents:", error);
+    console.error('Failed to search documents:', error);
     // Return error result in expected format
     return {
       success: false,
@@ -1203,7 +1203,7 @@ export async function searchDocuments(
       documentIds: [],
       totalFound: 0,
       searchQuery: query,
-      error: error instanceof Error ? error.message : "Search failed",
+      error: error instanceof Error ? error.message : 'Search failed',
     };
   }
 }
@@ -1216,9 +1216,9 @@ export async function searchDocumentsInProject(
   projectId: string,
 ): Promise<DocumentSearchResult> {
   console.log(
-    "Searching documents in project:",
+    'Searching documents in project:',
     projectId,
-    "with query:",
+    'with query:',
     query,
   );
   return searchDocuments(query, projectId);
@@ -1233,9 +1233,9 @@ export async function searchDocumentsInProjects(
   projectIds: string[],
 ): Promise<DocumentSearchResult> {
   console.log(
-    "Searching documents in projects:",
+    'Searching documents in projects:',
     projectIds,
-    "with query:",
+    'with query:',
     query,
   );
 
@@ -1244,7 +1244,7 @@ export async function searchDocumentsInProjects(
     const projectId = projectIds.length > 0 ? projectIds[0] : undefined;
     return await documentSearchService.searchDocumentsForHook(query, projectId);
   } catch (error) {
-    console.error("Failed to search documents in projects:", error);
+    console.error('Failed to search documents in projects:', error);
     return {
       success: false,
       documents: [],
@@ -1252,7 +1252,7 @@ export async function searchDocumentsInProjects(
       totalFound: 0,
       searchQuery: query,
       error:
-        error instanceof Error ? error.message : "Multi-project search failed",
+        error instanceof Error ? error.message : 'Multi-project search failed',
     };
   }
 }
@@ -1264,10 +1264,10 @@ export async function searchDocumentsInProjects(
 export async function testDocumentSearchConnection(): Promise<boolean> {
   try {
     // Simple test by performing a basic search
-    await documentSearchService.searchDocuments("test");
+    await documentSearchService.searchDocuments('test');
     return true; // If no error thrown, service is available
   } catch (error) {
-    console.error("Error testing document search connection:", error);
+    console.error('Error testing document search connection:', error);
     return false;
   }
 }
@@ -1286,9 +1286,9 @@ export async function getDocumentSearchAnalytics(
   totalDocumentsReturned: number;
 }> {
   console.log(
-    "Getting document search analytics for query:",
+    'Getting document search analytics for query:',
     query,
-    "project:",
+    'project:',
     projectId,
   );
 
@@ -1307,7 +1307,7 @@ export async function getDocumentSearchAnalytics(
       totalDocumentsReturned: searchResult.totalCount,
     };
   } catch (error) {
-    console.error("Error getting document search analytics:", error);
+    console.error('Error getting document search analytics:', error);
     return {
       searchTime: 0,
       langflowResponseTime: 0,
@@ -1328,7 +1328,7 @@ export async function getAllDocuments(): Promise<Document[]> {
 
     // Join with knowledge_base table to get project details and filter by user
     const { data, error } = await supabase
-      .from("documents")
+      .from('documents')
       .select(
         `
         id,
@@ -1352,11 +1352,11 @@ export async function getAllDocuments(): Promise<Document[]> {
         )
       `,
       )
-      .eq("knowledge_base.owner", user.id)
-      .order("created_at", { ascending: false });
+      .eq('knowledge_base.owner', user.id)
+      .order('created_at', { ascending: false });
 
     if (error) {
-      console.error("Error fetching all documents:", error);
+      console.error('Error fetching all documents:', error);
       throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
@@ -1366,7 +1366,7 @@ export async function getAllDocuments(): Promise<Document[]> {
         ...doc,
         metadata: {
           ...doc.metadata,
-          project_name: doc.knowledge_base?.[0]?.name || "Unknown Project",
+          project_name: doc.knowledge_base?.[0]?.name || 'Unknown Project',
         },
       }),
     );
@@ -1374,22 +1374,22 @@ export async function getAllDocuments(): Promise<Document[]> {
     return documentsWithProjectInfo.map((doc) => ({
       id: doc.id,
       name: doc.name,
-      file_type: doc.type || "",
-      status: doc.status || "",
+      file_type: doc.type || '',
+      status: doc.status || '',
       knowledge_base_id: doc.project_id,
       chunk_count: doc.chunk_count || 0,
       file_size: doc.file_size,
       mime_type: doc.mime_type,
       created_at: doc.created_at,
       updated_at: doc.updated_at,
-      path: doc.path || "",
-      url: doc.url || "",
+      path: doc.path || '',
+      url: doc.url || '',
       rag_status: doc.rag_status,
       last_rag_sync: doc.last_rag_sync,
       metadata: doc.metadata,
     })) as Document[];
   } catch (error) {
-    console.error("Error in getAllDocuments:", error);
+    console.error('Error in getAllDocuments:', error);
     throw error;
   }
 }

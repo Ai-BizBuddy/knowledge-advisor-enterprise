@@ -7,8 +7,10 @@
  * @param classes - Array of class names or conditional class names
  * @returns Combined class name string
  */
-export function classNames(...classes: (string | undefined | null | false)[]): string {
-    return classes.filter(Boolean).join(' ');
+export function classNames(
+  ...classes: (string | undefined | null | false)[]
+): string {
+  return classes.filter(Boolean).join(' ');
 }
 
 /**
@@ -19,11 +21,11 @@ export function classNames(...classes: (string | undefined | null | false)[]): s
  * @returns The appropriate class name
  */
 export function conditionalClass(
-    condition: boolean,
-    trueClass: string,
-    falseClass: string = ''
+  condition: boolean,
+  trueClass: string,
+  falseClass: string = '',
 ): string {
-    return condition ? trueClass : falseClass;
+  return condition ? trueClass : falseClass;
 }
 
 /**
@@ -32,7 +34,7 @@ export function conditionalClass(
  * @returns Toggled boolean state
  */
 export function toggleState(currentState: boolean): boolean {
-    return !currentState;
+  return !currentState;
 }
 
 /**
@@ -42,8 +44,8 @@ export function toggleState(currentState: boolean): boolean {
  * @returns Truncated text with ellipsis if needed
  */
 export function truncateText(text: string, maxLength: number): string {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength).trim() + '...';
+  if (text.length <= maxLength) return text;
+  return text.substring(0, maxLength).trim() + '...';
 }
 
 /**
@@ -52,8 +54,8 @@ export function truncateText(text: string, maxLength: number): string {
  * @returns Capitalized string
  */
 export function capitalize(str: string): string {
-    if (!str) return str;
-    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+  if (!str) return str;
+  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
 }
 
 /**
@@ -62,10 +64,10 @@ export function capitalize(str: string): string {
  * @returns Kebab-cased string
  */
 export function toKebabCase(str: string): string {
-    return str
-        .replace(/([a-z])([A-Z])/g, '$1-$2')
-        .replace(/\s+/g, '-')
-        .toLowerCase();
+  return str
+    .replace(/([a-z])([A-Z])/g, '$1-$2')
+    .replace(/\s+/g, '-')
+    .toLowerCase();
 }
 
 /**
@@ -75,18 +77,18 @@ export function toKebabCase(str: string): string {
  * @returns Debounced function
  */
 export function debounce<T extends (...args: unknown[]) => unknown>(
-    func: T,
-    wait: number
+  func: T,
+  wait: number,
 ): (...args: Parameters<T>) => void {
-    let timeout: NodeJS.Timeout;
+  let timeout: NodeJS.Timeout;
 
-    return function executedFunction(...args: Parameters<T>) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
+  return function executedFunction(...args: Parameters<T>) {
+    const later = () => {
+      clearTimeout(timeout);
+      func(...args);
     };
+
+    clearTimeout(timeout);
+    timeout = setTimeout(later, wait);
+  };
 }

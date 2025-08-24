@@ -5,9 +5,9 @@
  * Following the project's strict TypeScript standards and modern React patterns
  */
 
-import { useState, useEffect, useCallback, useRef } from "react";
-import { statisticsService } from "@/services/StatisticsService";
-import type { DashboardStatistics } from "@/interfaces/Statistics";
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { statisticsService } from '@/services/StatisticsService';
+import type { DashboardStatistics } from '@/interfaces/Statistics';
 
 /**
  * Statistics hook state interface
@@ -32,7 +32,7 @@ interface UseStatisticsReturn {
     projectId: string,
     queryText: string,
     responseTimeMs: number,
-    status: "completed" | "failed" | "timeout",
+    status: 'completed' | 'failed' | 'timeout',
   ) => Promise<void>;
 }
 
@@ -101,7 +101,7 @@ export const useStatistics = (
       onSuccessRef.current?.(data);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to fetch statistics";
+        error instanceof Error ? error.message : 'Failed to fetch statistics';
 
       setState((prev) => ({
         ...prev,
@@ -110,7 +110,7 @@ export const useStatistics = (
       }));
 
       onErrorRef.current?.(errorMessage);
-      console.error("[useStatistics] Failed to fetch statistics:", error);
+      console.error('[useStatistics] Failed to fetch statistics:', error);
     }
   }, []); // No dependencies since we use refs
 
@@ -129,7 +129,7 @@ export const useStatistics = (
       projectId: string,
       queryText: string,
       responseTimeMs: number,
-      status: "completed" | "failed" | "timeout",
+      status: 'completed' | 'failed' | 'timeout',
     ): Promise<void> => {
       try {
         await statisticsService.recordQueryActivity({
@@ -141,14 +141,14 @@ export const useStatistics = (
 
         // Optionally refresh statistics after recording activity
         // You can make this configurable if needed
-        if (status === "completed") {
+        if (status === 'completed') {
           setTimeout(() => {
             fetchStatistics();
           }, 500); // Delay to allow backend processing
         }
       } catch (error) {
         console.error(
-          "[useStatistics] Failed to record query activity:",
+          '[useStatistics] Failed to record query activity:',
           error,
         );
         // Don't update the error state for this operation as it's background

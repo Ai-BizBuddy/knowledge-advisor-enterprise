@@ -1,4 +1,4 @@
-import { createClient } from "./client";
+import { createClient } from './client';
 
 /**
  * Test Supabase connection and configuration
@@ -29,11 +29,11 @@ export async function testSupabaseConnection(): Promise<{
     if (!supabaseUrl || !supabaseAnonKey) {
       return {
         success: false,
-        message: "Supabase environment variables not configured",
+        message: 'Supabase environment variables not configured',
         details: {
           hasUrl: !!supabaseUrl,
           hasAnonKey: !!supabaseAnonKey,
-          hint: "Check your .env.local file for NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY",
+          hint: 'Check your .env.local file for NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY',
         },
       };
     }
@@ -48,10 +48,10 @@ export async function testSupabaseConnection(): Promise<{
     if (sessionError) {
       return {
         success: false,
-        message: "Failed to connect to Supabase Auth",
+        message: 'Failed to connect to Supabase Auth',
         details: {
           error: sessionError.message,
-          hint: "Check your Supabase URL and anon key",
+          hint: 'Check your Supabase URL and anon key',
         },
       };
     }
@@ -59,8 +59,8 @@ export async function testSupabaseConnection(): Promise<{
     // Test database connection by checking if we can read from a basic table
     // This will fail gracefully if tables don't exist
     const { data: testData, error: dbError } = await supabase
-      .from("profiles")
-      .select("id")
+      .from('profiles')
+      .select('id')
       .limit(1);
 
     void testData; // Explicitly ignore the data, we only care if the query succeeds
@@ -68,20 +68,20 @@ export async function testSupabaseConnection(): Promise<{
     if (dbError) {
       return {
         success: false,
-        message: "Database connection failed",
+        message: 'Database connection failed',
         details: {
           error: dbError.message,
           hint:
-            dbError.code === "42P01"
+            dbError.code === '42P01'
               ? "knowledge_base table doesn't exist - run database migrations"
-              : "Check your database permissions and table setup",
+              : 'Check your database permissions and table setup',
         },
       };
     }
 
     return {
       success: true,
-      message: "Supabase connection successful",
+      message: 'Supabase connection successful',
       details: {
         hasAuth: true,
         hasDatabase: true,
@@ -92,7 +92,7 @@ export async function testSupabaseConnection(): Promise<{
   } catch (error) {
     return {
       success: false,
-      message: "Unexpected error during connection test",
+      message: 'Unexpected error during connection test',
       details: {
         error: error instanceof Error ? error.message : String(error),
       },

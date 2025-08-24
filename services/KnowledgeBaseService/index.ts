@@ -3,10 +3,10 @@ import type {
   PaginationOptions,
   Project,
   UpdateProjectInput,
-} from "@/interfaces/Project";
-import { ProjectStatus } from "@/interfaces/Project";
-import { getAuthSession } from "@/utils/supabase/authUtils";
-import { createClientTable } from "@/utils/supabase/client";
+} from '@/interfaces/Project';
+import { ProjectStatus } from '@/interfaces/Project';
+import { getAuthSession } from '@/utils/supabase/authUtils';
+import { createClientTable } from '@/utils/supabase/client';
 
 /**
  * Knowledge Base Service Class
@@ -15,7 +15,7 @@ import { createClientTable } from "@/utils/supabase/client";
  * and processing status tracking.
  */
 class KnowledgeBaseService {
-  private readonly serviceName = "KnowledgeBase";
+  private readonly serviceName = 'KnowledgeBase';
 
   constructor() {
     // Service initialization
@@ -28,7 +28,7 @@ class KnowledgeBaseService {
       const session = await getAuthSession();
 
       if (!session?.user) {
-        throw new Error("User not authenticated");
+        throw new Error('User not authenticated');
       }
 
       console.log(`[${this.serviceName}] Current user ID:`, session.user.id);
@@ -54,9 +54,9 @@ class KnowledgeBaseService {
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
-        .from("knowledge_base")
-        .select("*", { count: "exact", head: true })
-        .eq("created_by", user.id)
+        .from('knowledge_base')
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by', user.id)
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
@@ -68,11 +68,11 @@ class KnowledgeBaseService {
 
       // Get paginated search results
       const { data: projects, error } = await supabaseTable
-        .from("knowledge_base")
-        .select("*")
-        .eq("created_by", user.id)
+        .from('knowledge_base')
+        .select('*')
+        .eq('created_by', user.id)
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-        .order("created_at", { ascending: false })
+        .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
@@ -113,7 +113,7 @@ class KnowledgeBaseService {
     console.log(
       `[${this.serviceName}] Fetching knowledge bases with pagination:`,
       paginationOptions,
-      "filters:",
+      'filters:',
       filters,
     );
 
@@ -125,20 +125,20 @@ class KnowledgeBaseService {
 
       // Build base query
       let countQuery = supabaseTable
-        .from("knowledge_base")
-        .select("*", { count: "exact", head: true })
-        .eq("created_by", user.id);
+        .from('knowledge_base')
+        .select('*', { count: 'exact', head: true })
+        .eq('created_by', user.id);
 
       let dataQuery = supabaseTable
-        .from("knowledge_base")
-        .select("*")
-        .eq("created_by", user.id);
+        .from('knowledge_base')
+        .select('*')
+        .eq('created_by', user.id);
 
       // Apply filters
-      if (filters?.status && filters.status !== "all") {
-        const statusValue = filters.status === "active" ? true : false;
-        countQuery = countQuery.eq("is_active", statusValue);
-        dataQuery = dataQuery.eq("is_active", statusValue);
+      if (filters?.status && filters.status !== 'all') {
+        const statusValue = filters.status === 'active' ? true : false;
+        countQuery = countQuery.eq('is_active', statusValue);
+        dataQuery = dataQuery.eq('is_active', statusValue);
       }
 
       if (filters?.searchTerm && filters.searchTerm.trim()) {
@@ -161,9 +161,9 @@ class KnowledgeBaseService {
       // Get paginated data
       const { data: projects, error } = paginationOptions
         ? await dataQuery
-            .order("created_at", { ascending: false })
+            .order('created_at', { ascending: false })
             .range(paginationOptions.startIndex, paginationOptions.endIndex)
-        : await dataQuery.order("created_at", { ascending: false });
+        : await dataQuery.order('created_at', { ascending: false });
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -199,14 +199,14 @@ class KnowledgeBaseService {
       const supabaseTable = createClientTable();
 
       const { data: project, error } = await supabaseTable
-        .from("knowledge_base")
-        .select("*")
-        .eq("id", id)
-        .eq("created_by", user.id)
+        .from('knowledge_base')
+        .select('*')
+        .eq('id', id)
+        .eq('created_by', user.id)
         .single();
 
       if (error) {
-        if (error.code === "PGRST116") {
+        if (error.code === 'PGRST116') {
           return null;
         }
         console.error(
@@ -218,14 +218,14 @@ class KnowledgeBaseService {
 
       // Get document count for this knowledge base
       const { count: documentCount } = await supabaseTable
-        .from("document")
-        .select("*", { count: "exact", head: true })
-        .eq("knowledge_base_id", id);
+        .from('document')
+        .select('*', { count: 'exact', head: true })
+        .eq('knowledge_base_id', id);
 
       return {
         id: project.id,
         name: project.name,
-        description: project.description || "",
+        description: project.description || '',
         is_active: project.is_active,
         document_count: documentCount || 0,
         status: project.is_active ? 1 : 2,
@@ -253,7 +253,7 @@ class KnowledgeBaseService {
       // Create project data according to the database schema
       const projectData = {
         name: input.name,
-        description: input.description || "",
+        description: input.description || '',
         created_by: user.id,
         is_active: input.status === ProjectStatus.ACTIVE,
         visibility: input.visibility,
@@ -263,7 +263,7 @@ class KnowledgeBaseService {
       };
 
       const { data: project, error } = await supabaseTable
-        .from("knowledge_base")
+        .from('knowledge_base')
         .insert([projectData])
         .select()
         .single();
@@ -300,10 +300,10 @@ class KnowledgeBaseService {
       };
 
       const { data: project, error } = await supabaseTable
-        .from("knowledge_base")
+        .from('knowledge_base')
         .update(updateData)
-        .eq("id", id)
-        .eq("created_by", user.id)
+        .eq('id', id)
+        .eq('created_by', user.id)
         .select()
         .single();
 
@@ -324,7 +324,7 @@ class KnowledgeBaseService {
         id: project.id,
         name: project.name,
         is_active: project.is_active,
-        description: project.description || "",
+        description: project.description || '',
         document_count: 0, // Not available in current schema
         status: project.is_active ? 1 : 2,
         owner: project.created_by,
@@ -349,10 +349,10 @@ class KnowledgeBaseService {
       const supabaseTable = createClientTable();
 
       const { error } = await supabaseTable
-        .from("knowledge_base")
+        .from('knowledge_base')
         .delete()
-        .eq("id", id)
-        .eq("created_by", user.id);
+        .eq('id', id)
+        .eq('created_by', user.id);
 
       if (error) {
         console.error(
@@ -381,11 +381,11 @@ class KnowledgeBaseService {
     const diffDays = Math.floor(diffHours / 24);
 
     if (diffHours < 1) {
-      return "Just now";
+      return 'Just now';
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
+      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
     } else {
-      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
+      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
   }
 }

@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import React, {
   createContext,
@@ -6,9 +6,9 @@ import React, {
   useState,
   useCallback,
   ReactNode,
-} from "react";
-import { Toast } from "./Toast";
-import type { ToastMessage, ToastType, ToastContextType } from "./Toast.types";
+} from 'react';
+import { Toast } from './Toast';
+import type { ToastMessage, ToastType, ToastContextType } from './Toast.types';
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
@@ -55,7 +55,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
       {children}
 
       {/* Toast Container */}
-      <div className="fixed top-4 right-4 z-[110] max-w-xs space-y-2">
+      <div className='fixed top-4 right-4 z-[110] max-w-xs space-y-2'>
         {toasts.map((toast) => (
           <Toast key={toast.id} toast={toast} onRemove={removeToast} />
         ))}
@@ -67,7 +67,7 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 export const useToast = (): ToastContextType => {
   const context = useContext(ToastContext);
   if (!context) {
-    throw new Error("useToast must be used within a ToastProvider");
+    throw new Error('useToast must be used within a ToastProvider');
   }
   return context;
 };

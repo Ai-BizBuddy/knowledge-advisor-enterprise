@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 interface PageLayoutProps {
   children: React.ReactNode;
@@ -17,24 +17,24 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
   title,
   subtitle,
   action,
-  className = "",
+  className = '',
 }) => {
   return (
     <div className={`page-container ${className}`}>
-      <div className="content-container">
+      <div className='content-container'>
         {/* Page Header */}
-        <div className="section-spacing">
-          <div className="flex-responsive">
-            <div className="flex-1">
-              <h1 className="page-title mb-2">{title}</h1>
-              {subtitle && <p className="page-subtitle">{subtitle}</p>}
+        <div className='section-spacing'>
+          <div className='flex-responsive'>
+            <div className='flex-1'>
+              <h1 className='page-title mb-2'>{title}</h1>
+              {subtitle && <p className='page-subtitle'>{subtitle}</p>}
             </div>
-            {action && <div className="flex-shrink-0">{action}</div>}
+            {action && <div className='flex-shrink-0'>{action}</div>}
           </div>
         </div>
 
         {/* Page Content */}
-        <div className="element-spacing">{children}</div>
+        <div className='element-spacing'>{children}</div>
       </div>
     </div>
   );

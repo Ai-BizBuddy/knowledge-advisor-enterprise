@@ -1,45 +1,45 @@
 // Component exports - centralized location for all component imports
-export { default as BotTypingBubble } from "./botTypingBubble";
-export { default as ChatCard } from "./chatCard";
-export { default as ChatHistoryCard } from "./chatHistoryCard";
-export { default as ChatHistoryList } from "./chatHistoryList";
-export { default as CreateKnowledgeBaseModal } from "./createKnowledgeBaseModal";
-export { default as KnowledgeBaseCard } from "./knowledgeBaseCard";
-export { default as KnowledgeBasePagination } from "./knowledgeBasePagination";
-export { default as KnowledgeBaseSearch } from "./knowledgeBaseSearch";
-export { default as KnowledgeSelect } from "./knowledgeSelect";
-export { default as LoadingPage } from "./loadingPage";
-export { default as RecentActivityCard } from "./recentActivityCard";
-export { default as RecentKnowledgeBasesCard } from "./recentKnowledgeBasesCard";
-export { RecommendedKnowledgeBases } from "./recommendedKnowledgeBases";
-export { default as SlideBar } from "./sildeBar";
-export { default as StatusCard } from "./statusCard";
-export { default as Tabs } from "./tabs";
-export { default as SearchBar } from "./searchBar";
-export { default as UploadDocument } from "./uploadDocuments";
-export { default as NoDocuments } from "./noDocuments";
-export { default as DocumentDetail } from "./documentDetail";
-export { default as SafeDarkThemeToggle } from "./SafeDarkThemeToggle";
+export { default as BotTypingBubble } from './botTypingBubble';
+export { default as ChatCard } from './chatCard';
+export { default as ChatHistoryCard } from './chatHistoryCard';
+export { default as ChatHistoryList } from './chatHistoryList';
+export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
+export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
+export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
+export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';
+export { default as KnowledgeSelect } from './knowledgeSelect';
+export { default as LoadingPage } from './loadingPage';
+export { default as RecentActivityCard } from './recentActivityCard';
+export { default as RecentKnowledgeBasesCard } from './recentKnowledgeBasesCard';
+export { RecommendedKnowledgeBases } from './recommendedKnowledgeBases';
+export { default as SlideBar } from './sildeBar';
+export { default as StatusCard } from './statusCard';
+export { default as Tabs } from './tabs';
+export { default as SearchBar } from './searchBar';
+export { default as UploadDocument } from './uploadDocuments';
+export { default as NoDocuments } from './noDocuments';
+export { default as DocumentDetail } from './documentDetail';
+export { default as SafeDarkThemeToggle } from './SafeDarkThemeToggle';
 
 // Documents Page Components
-export * from "./documentsPage";
+export * from './documentsPage';
 
 // User Management Components
-export * from "./userManagement";
+export * from './userManagement';
 
 // Role Modal Components
-export * from "./roleModal";
+export * from './roleModal';
 
 // Toast Components
-export * from "./toast";
+export * from './toast';
 
 // Permissions Table Components
-export { PermissionsTable } from "./PermissionsTable";
-export type { PermissionsTableProps } from "./PermissionsTable";
-export * from "./rolePermissionsManager";
+export { PermissionsTable } from './PermissionsTable';
+export type { PermissionsTableProps } from './PermissionsTable';
+export * from './rolePermissionsManager';
 
 // Table Search Components
-export * from "./tableSearch";
+export * from './tableSearch';
 
 // Layout Components
-export * from "./layouts";
+export * from './layouts';

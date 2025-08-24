@@ -1,4 +1,8 @@
-import { Project, ProjectStatus, ProjectStatusDisplay } from "@/interfaces/Project";
+import {
+  Project,
+  ProjectStatus,
+  ProjectStatusDisplay,
+} from '@/interfaces/Project';
 
 export interface KnowledgeBaseData extends Project {
   queries?: number;
@@ -12,8 +16,8 @@ export interface KnowledgeBaseData extends Project {
 
 // Helper function to format status for display
 export const formatStatus = (status: boolean): string => {
-  return status ? "Active" : "Inactive";
-}
+  return status ? 'Active' : 'Inactive';
+};
 
 /**
  * Get status color for UI
@@ -21,23 +25,35 @@ export const formatStatus = (status: boolean): string => {
 /**
  * Validate project name
  */
-export function validateProjectName(name: string): { isValid: boolean; error?: string } {
+export function validateProjectName(name: string): {
+  isValid: boolean;
+  error?: string;
+} {
   if (!name || name.trim().length === 0) {
-    return { isValid: false, error: "Project name is required" };
+    return { isValid: false, error: 'Project name is required' };
   }
 
   if (name.trim().length < 3) {
-    return { isValid: false, error: "Project name must be at least 3 characters long" };
+    return {
+      isValid: false,
+      error: 'Project name must be at least 3 characters long',
+    };
   }
 
   if (name.trim().length > 100) {
-    return { isValid: false, error: "Project name cannot exceed 100 characters" };
+    return {
+      isValid: false,
+      error: 'Project name cannot exceed 100 characters',
+    };
   }
 
   // Check for invalid characters (basic validation)
   const invalidChars = /[<>:"/\\|?*]/;
   if (invalidChars.test(name)) {
-    return { isValid: false, error: "Project name contains invalid characters" };
+    return {
+      isValid: false,
+      error: 'Project name contains invalid characters',
+    };
   }
 
   return { isValid: true };
@@ -46,17 +62,26 @@ export function validateProjectName(name: string): { isValid: boolean; error?: s
 /**
  * Validate project description
  */
-export function validateProjectDescription(description: string): { isValid: boolean; error?: string } {
+export function validateProjectDescription(description: string): {
+  isValid: boolean;
+  error?: string;
+} {
   if (!description || description.trim().length === 0) {
-    return { isValid: false, error: "Project description is required" };
+    return { isValid: false, error: 'Project description is required' };
   }
 
   if (description.trim().length < 10) {
-    return { isValid: false, error: "Description must be at least 10 characters long" };
+    return {
+      isValid: false,
+      error: 'Description must be at least 10 characters long',
+    };
   }
 
   if (description.trim().length > 500) {
-    return { isValid: false, error: "Description cannot exceed 500 characters" };
+    return {
+      isValid: false,
+      error: 'Description cannot exceed 500 characters',
+    };
   }
 
   return { isValid: true };

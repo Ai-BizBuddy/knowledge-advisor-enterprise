@@ -32,37 +32,37 @@ export const UI_CONSTANTS = {
 
 // Application Strings
 export const APP_STRINGS = {
-  APP_NAME: "Knowledge Advisor",
-  DEFAULT_USER_NAME: "Neil Sims",
-  DEFAULT_USER_EMAIL: "neil.sims@flowbite.com",
+  APP_NAME: 'Knowledge Advisor',
+  DEFAULT_USER_NAME: 'Neil Sims',
+  DEFAULT_USER_EMAIL: 'neil.sims@flowbite.com',
 
   // Navigation
   NAV_ITEMS: {
-    DASHBOARD: "Dashboard",
-    AI_CHAT: "AI Chat",
-    KNOWLEDGE_BASE: "Knowledge Base",
-    DOCUMENTS: "Documents",
-    USER_MANAGEMENT: "User Management",
+    DASHBOARD: 'Dashboard',
+    AI_CHAT: 'AI Chat',
+    KNOWLEDGE_BASE: 'Knowledge Base',
+    DOCUMENTS: 'Documents',
+    USER_MANAGEMENT: 'User Management',
   },
 
   // Common Actions
   ACTIONS: {
-    SAVE: "Save",
-    CANCEL: "Cancel",
-    DELETE: "Delete",
-    EDIT: "Edit",
-    VIEW: "View",
-    SETTINGS: "Settings",
-    SIGN_OUT: "Sign out",
+    SAVE: 'Save',
+    CANCEL: 'Cancel',
+    DELETE: 'Delete',
+    EDIT: 'Edit',
+    VIEW: 'View',
+    SETTINGS: 'Settings',
+    SIGN_OUT: 'Sign out',
   },
 
   // Status Messages
   STATUS: {
-    LOADING: "Loading...",
-    SAVING: "Saving...",
-    SAVED: "Saved successfully",
-    ERROR: "An error occurred",
-    NO_DATA: "No data available",
+    LOADING: 'Loading...',
+    SAVING: 'Saving...',
+    SAVED: 'Saved successfully',
+    ERROR: 'An error occurred',
+    NO_DATA: 'No data available',
   },
 } as const;
 
@@ -78,7 +78,7 @@ export const API_CONSTANTS = {
 
   // File Upload Limits
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
-  ALLOWED_FILE_TYPES: ["pdf", "doc", "docx", "txt", "md"],
+  ALLOWED_FILE_TYPES: ['pdf', 'doc', 'docx', 'txt', 'md'],
 
   // Pagination
   DEFAULT_PAGE_SIZE: 20,
@@ -89,66 +89,66 @@ export const API_CONSTANTS = {
 export const THEME_CONSTANTS = {
   // Color Classes
   COLORS: {
-    PRIMARY: "bg-blue-600",
-    SUCCESS: "bg-green-500",
-    WARNING: "bg-yellow-400",
-    ERROR: "bg-red-500",
-    INFO: "bg-blue-500",
+    PRIMARY: 'bg-blue-600',
+    SUCCESS: 'bg-green-500',
+    WARNING: 'bg-yellow-400',
+    ERROR: 'bg-red-500',
+    INFO: 'bg-blue-500',
   },
 
   // Text Colors
   TEXT_COLORS: {
-    PRIMARY: "text-gray-900 dark:text-white",
-    SECONDARY: "text-gray-500 dark:text-gray-400",
-    MUTED: "text-gray-400 dark:text-gray-500",
+    PRIMARY: 'text-gray-900 dark:text-white',
+    SECONDARY: 'text-gray-500 dark:text-gray-400',
+    MUTED: 'text-gray-400 dark:text-gray-500',
   },
 
   // Background Colors
   BG_COLORS: {
-    PRIMARY: "bg-white dark:bg-gray-900",
-    SECONDARY: "bg-gray-100 dark:bg-gray-800",
-    HOVER: "hover:bg-gray-100 dark:hover:bg-gray-700",
+    PRIMARY: 'bg-white dark:bg-gray-900',
+    SECONDARY: 'bg-gray-100 dark:bg-gray-800',
+    HOVER: 'hover:bg-gray-100 dark:hover:bg-gray-700',
   },
 } as const;
 
 // Route Constants
 export const ROUTES = {
-  HOME: "/",
-  DASHBOARD: "/dashboard",
-  CHAT: "/chat",
-  KNOWLEDGE_BASE: "/knowledge-base",
-  DOCUMENTS: "/documents",
-  LOGIN: "/login",
-  SETTINGS: "/settings",
-  USER_MANAGEMENT: "/settings",
+  HOME: '/',
+  DASHBOARD: '/dashboard',
+  CHAT: '/chat',
+  KNOWLEDGE_BASE: '/knowledge-base',
+  DOCUMENTS: '/documents',
+  LOGIN: '/login',
+  SETTINGS: '/settings',
+  USER_MANAGEMENT: '/settings',
 } as const;
 
 // Error Messages
 export const ERROR_MESSAGES = {
   NETWORK_ERROR:
-    "Network connection failed. Please check your internet connection.",
-  TIMEOUT_ERROR: "Request timed out. Please try again.",
-  UNAUTHORIZED: "You are not authorized to perform this action.",
-  FORBIDDEN: "Access to this resource is forbidden.",
-  NOT_FOUND: "The requested resource was not found.",
-  SERVER_ERROR: "An internal server error occurred. Please try again later.",
-  VALIDATION_ERROR: "Please check your input and try again.",
+    'Network connection failed. Please check your internet connection.',
+  TIMEOUT_ERROR: 'Request timed out. Please try again.',
+  UNAUTHORIZED: 'You are not authorized to perform this action.',
+  FORBIDDEN: 'Access to this resource is forbidden.',
+  NOT_FOUND: 'The requested resource was not found.',
+  SERVER_ERROR: 'An internal server error occurred. Please try again later.',
+  VALIDATION_ERROR: 'Please check your input and try again.',
   FILE_TOO_LARGE: `File size exceeds the maximum limit of ${API_CONSTANTS.MAX_FILE_SIZE / (1024 * 1024)}MB.`,
-  INVALID_FILE_TYPE: `Invalid file type. Allowed types: ${API_CONSTANTS.ALLOWED_FILE_TYPES.join(", ")}`,
+  INVALID_FILE_TYPE: `Invalid file type. Allowed types: ${API_CONSTANTS.ALLOWED_FILE_TYPES.join(', ')}`,
 } as const;
 
 // Success Messages
 export const SUCCESS_MESSAGES = {
-  DATA_SAVED: "Data saved successfully",
-  DATA_UPDATED: "Data updated successfully",
-  DATA_DELETED: "Data deleted successfully",
-  FILE_UPLOADED: "File uploaded successfully",
-  SETTINGS_UPDATED: "Settings updated successfully",
+  DATA_SAVED: 'Data saved successfully',
+  DATA_UPDATED: 'Data updated successfully',
+  DATA_DELETED: 'Data deleted successfully',
+  FILE_UPLOADED: 'File uploaded successfully',
+  SETTINGS_UPDATED: 'Settings updated successfully',
 
   // User Management specific messages
-  USER_CREATED: "User created successfully",
-  USER_UPDATED: "User updated successfully",
-  USER_DELETED: "User deleted successfully",
-  USER_PROFILE_UPDATED: "User profile updated successfully",
-  USER_STATUS_UPDATED: "User status updated successfully",
+  USER_CREATED: 'User created successfully',
+  USER_UPDATED: 'User updated successfully',
+  USER_DELETED: 'User deleted successfully',
+  USER_PROFILE_UPDATED: 'User profile updated successfully',
+  USER_STATUS_UPDATED: 'User status updated successfully',
 } as const;

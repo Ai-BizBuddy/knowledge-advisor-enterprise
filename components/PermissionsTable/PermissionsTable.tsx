@@ -5,8 +5,8 @@
  * featuring View, Edit, Delete actions for each permission entry.
  */
 
-import React, { useMemo, useCallback, useEffect, useState } from "react";
-import { motion } from "framer-motion";
+import React, { useMemo, useCallback, useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import {
   Button,
   Badge,
@@ -16,15 +16,15 @@ import {
   Textarea,
   Card,
   Table,
-} from "flowbite-react";
-import { useToast } from "@/components/toast";
-import UserManagementService from "@/services/UserManagementService";
-import type { Permission } from "@/interfaces/UserManagement";
+} from 'flowbite-react';
+import { useToast } from '@/components/toast';
+import UserManagementService from '@/services/UserManagementService';
+import type { Permission } from '@/interfaces/UserManagement';
 import type {
   PermissionsTableProps,
   PermissionTableRow,
   PermissionModalData,
-} from "./PermissionsTable.types";
+} from './PermissionsTable.types';
 
 // Re-export types for easier consumption
 export type { PermissionsTableProps, PermissionTableRow, PermissionModalData };
@@ -35,7 +35,7 @@ export type { PermissionsTableProps, PermissionTableRow, PermissionModalData };
 export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   selectedPermissions = [],
   readonly = false,
-  className = "",
+  className = '',
 }) => {
   const { showToast } = useToast();
 
@@ -56,9 +56,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   // Modal form data
   const [modalData, setModalData] = useState<PermissionModalData>({
-    resource: "",
-    action: "",
-    description: "",
+    resource: '',
+    action: '',
+    description: '',
   });
 
   /**
@@ -69,17 +69,17 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       setLoading(true);
       setError(null);
 
-      console.log("Loading permissions from database...");
+      console.log('Loading permissions from database...');
       const permissionsData = await userManagementService.getPermissions();
 
-      console.log("Loaded permissions:", permissionsData);
+      console.log('Loaded permissions:', permissionsData);
       setPermissions(permissionsData);
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : "Failed to load permissions";
-      console.error("Error loading permissions:", err);
+        err instanceof Error ? err.message : 'Failed to load permissions';
+      console.error('Error loading permissions:', err);
       setError(errorMessage);
-      showToast("Error: " + errorMessage, "error");
+      showToast('Error: ' + errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -97,13 +97,13 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     return permissions
       .map((permission) => ({
         id: permission.id,
-        resource: permission.resource || "Unknown",
-        action: permission.action || "Unknown",
-        description: permission.description || "",
+        resource: permission.resource || 'Unknown',
+        action: permission.action || 'Unknown',
+        description: permission.description || '',
         isActive: selectedPermissions.includes(permission.id),
         createdAt: permission.created_at,
         displayName: `${permission.resource} - ${permission.action}`,
-        icon: getResourceIcon(permission.resource || ""),
+        icon: getResourceIcon(permission.resource || ''),
       }))
       .sort((a, b) => a.displayName.localeCompare(b.displayName));
   }, [permissions, selectedPermissions]);
@@ -113,23 +113,23 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
    */
   const getResourceIcon = (resource: string): string => {
     const iconMap: Record<string, string> = {
-      users: "👥",
-      roles: "🔒",
-      documents: "📄",
-      projects: "📁",
-      "knowledge-base": "🧠",
-      settings: "⚙️",
-      dashboard: "📊",
-      reports: "📈",
+      users: '👥',
+      roles: '🔒',
+      documents: '📄',
+      projects: '📁',
+      'knowledge-base': '🧠',
+      settings: '⚙️',
+      dashboard: '📊',
+      reports: '📈',
     };
-    return iconMap[resource] || "📋";
+    return iconMap[resource] || '📋';
   };
 
   /**
    * Get badge color for permission status
    */
   const getStatusBadgeColor = (isActive: boolean): string => {
-    return isActive ? "success" : "gray";
+    return isActive ? 'success' : 'gray';
   };
 
   /**
@@ -141,7 +141,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       id: permission.id,
       resource: permission.resource,
       action: permission.action,
-      description: permission.description || "",
+      description: permission.description || '',
     });
     setShowViewModal(true);
   };
@@ -152,7 +152,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       id: permission.id,
       resource: permission.resource,
       action: permission.action,
-      description: permission.description || "",
+      description: permission.description || '',
     });
     setShowEditModal(true);
   };
@@ -180,27 +180,27 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   }, [tableData]);
 
   // Log summary for debugging
-  console.log("Permissions summary:", summary);
+  console.log('Permissions summary:', summary);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500"></div>
-        <span className="ml-3 text-slate-400">Loading permissions...</span>
+      <div className='flex items-center justify-center py-12'>
+        <div className='h-8 w-8 animate-spin rounded-full border-b-2 border-indigo-500'></div>
+        <span className='ml-3 text-slate-400'>Loading permissions...</span>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="rounded-lg border border-red-500/20 bg-red-500/10 p-4">
-        <div className="font-medium text-red-400">
+      <div className='rounded-lg border border-red-500/20 bg-red-500/10 p-4'>
+        <div className='font-medium text-red-400'>
           Error loading permissions
         </div>
-        <div className="mt-1 text-sm text-red-300">{error}</div>
+        <div className='mt-1 text-sm text-red-300'>{error}</div>
         <button
           onClick={loadPermissions}
-          className="mt-3 rounded-md bg-red-500/20 px-4 py-2 text-sm text-red-300 transition-colors hover:bg-red-500/30"
+          className='mt-3 rounded-md bg-red-500/20 px-4 py-2 text-sm text-red-300 transition-colors hover:bg-red-500/30'
         >
           Retry
         </button>
@@ -210,33 +210,33 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   return (
     <Card className={className}>
-      <div className="overflow-x-auto">
+      <div className='overflow-x-auto'>
         {loading ? (
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600"></div>
+          <div className='flex h-64 items-center justify-center'>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600'></div>
           </div>
         ) : (
           <>
             <Table hoverable>
               <thead>
                 <tr>
-                  <th scope="col" className="px-6 py-3">
+                  <th scope='col' className='px-6 py-3'>
                     Permission
                   </th>
-                  <th scope="col" className="px-6 py-3">
+                  <th scope='col' className='px-6 py-3'>
                     Resource
                   </th>
-                  <th scope="col" className="px-6 py-3">
+                  <th scope='col' className='px-6 py-3'>
                     Action
                   </th>
-                  <th scope="col" className="px-6 py-3">
+                  <th scope='col' className='px-6 py-3'>
                     Status
                   </th>
-                  <th scope="col" className="hidden px-6 py-3 lg:table-cell">
+                  <th scope='col' className='hidden px-6 py-3 lg:table-cell'>
                     Created
                   </th>
-                  <th scope="col" className="px-6 py-3">
-                    <span className="sr-only">Actions</span>
+                  <th scope='col' className='px-6 py-3'>
+                    <span className='sr-only'>Actions</span>
                   </th>
                 </tr>
               </thead>
@@ -249,23 +249,23 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     transition={{ delay: index * 0.03 }}
                   >
                     {/* Permission column */}
-                    <td className="px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white">
-                      <div className="flex items-center">
-                        <div className="mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50">
+                    <td className='px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white'>
+                      <div className='flex items-center'>
+                        <div className='mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50'>
                           <span
-                            className="text-sm"
-                            role="img"
+                            className='text-sm'
+                            role='img'
                             aria-label={permission.resource}
                           >
                             {permission.icon}
                           </span>
                         </div>
                         <div>
-                          <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          <div className='text-sm font-medium text-gray-900 dark:text-white'>
                             {permission.displayName}
                           </div>
                           {permission.description && (
-                            <div className="text-sm text-gray-500 dark:text-gray-400">
+                            <div className='text-sm text-gray-500 dark:text-gray-400'>
                               {permission.description}
                             </div>
                           )}
@@ -274,65 +274,65 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     </td>
 
                     {/* Resource column */}
-                    <td className="px-6 py-4">
-                      <Badge color="purple" className="justify-center">
+                    <td className='px-6 py-4'>
+                      <Badge color='purple' className='justify-center'>
                         {permission.resource}
                       </Badge>
                     </td>
 
                     {/* Action column */}
-                    <td className="px-6 py-4">
-                      <span className="text-sm text-gray-900 dark:text-white">
+                    <td className='px-6 py-4'>
+                      <span className='text-sm text-gray-900 dark:text-white'>
                         {permission.action}
                       </span>
                     </td>
 
                     {/* Status column */}
-                    <td className="px-6 py-4">
+                    <td className='px-6 py-4'>
                       <Badge
-                        className="justify-center"
+                        className='justify-center'
                         color={getStatusBadgeColor(permission.isActive)}
                       >
-                        {permission.isActive ? "Active" : "Inactive"}
+                        {permission.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </td>
 
                     {/* Created column */}
-                    <td className="hidden px-6 py-4 lg:table-cell">
-                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                    <td className='hidden px-6 py-4 lg:table-cell'>
+                      <span className='text-sm text-gray-500 dark:text-gray-400'>
                         {new Date(permission.createdAt).toLocaleDateString()}
                       </span>
                     </td>
 
                     {/* Actions column */}
-                    <td className="px-6 py-4">
-                      <div className="flex items-center space-x-1">
+                    <td className='px-6 py-4'>
+                      <div className='flex items-center space-x-1'>
                         <Button
-                          size="xs"
-                          color="blue"
+                          size='xs'
+                          color='blue'
                           onClick={() => openViewModal(permission)}
-                          className="flex items-center justify-center"
-                          title="View permission"
+                          className='flex items-center justify-center'
+                          title='View permission'
                         >
                           View
                         </Button>
                         {!readonly && (
                           <>
                             <Button
-                              size="xs"
-                              color="gray"
+                              size='xs'
+                              color='gray'
                               onClick={() => openEditModal(permission)}
-                              className="flex items-center justify-center"
-                              title="Edit permission"
+                              className='flex items-center justify-center'
+                              title='Edit permission'
                             >
                               Edit
                             </Button>
                             <Button
-                              size="xs"
-                              color="alternative"
+                              size='xs'
+                              color='alternative'
                               onClick={() => openDeleteModal(permission)}
-                              className="flex items-center justify-center"
-                              title="Delete permission"
+                              className='flex items-center justify-center'
+                              title='Delete permission'
                             >
                               Delete
                             </Button>
@@ -350,9 +350,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
       {/* Empty state */}
       {tableData.length === 0 && (
-        <div className="px-6 py-12 text-center">
-          <div className="text-lg text-slate-400">No permissions available</div>
-          <div className="mt-1 text-sm text-slate-500">
+        <div className='px-6 py-12 text-center'>
+          <div className='text-lg text-slate-400'>No permissions available</div>
+          <div className='mt-1 text-sm text-slate-500'>
             Permissions will appear here once they are configured in the system.
           </div>
         </div>
@@ -362,40 +362,40 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       <Modal
         show={showViewModal}
         onClose={() => setShowViewModal(false)}
-        size="lg"
+        size='lg'
       >
-        <div className="p-6">
-          <h3 className="mb-6 text-lg font-bold text-gray-900 dark:text-white">
+        <div className='p-6'>
+          <h3 className='mb-6 text-lg font-bold text-gray-900 dark:text-white'>
             Permission Details
           </h3>
           {selectedPermission && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className='space-y-4'>
+              <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
                 <div>
                   <Label>Resource</Label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <p className='mt-1 text-sm text-gray-900 dark:text-white'>
                     {selectedPermission.resource}
                   </p>
                 </div>
                 <div>
                   <Label>Action</Label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <p className='mt-1 text-sm text-gray-900 dark:text-white'>
                     {selectedPermission.action}
                   </p>
                 </div>
                 <div>
                   <Label>Status</Label>
-                  <div className="mt-1">
+                  <div className='mt-1'>
                     <Badge
                       color={getStatusBadgeColor(selectedPermission.isActive)}
                     >
-                      {selectedPermission.isActive ? "Active" : "Inactive"}
+                      {selectedPermission.isActive ? 'Active' : 'Inactive'}
                     </Badge>
                   </div>
                 </div>
                 <div>
                   <Label>Created</Label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <p className='mt-1 text-sm text-gray-900 dark:text-white'>
                     {new Date(
                       selectedPermission.createdAt,
                     ).toLocaleDateString()}
@@ -405,13 +405,13 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               {selectedPermission.description && (
                 <div>
                   <Label>Description</Label>
-                  <p className="mt-1 text-sm text-gray-900 dark:text-white">
+                  <p className='mt-1 text-sm text-gray-900 dark:text-white'>
                     {selectedPermission.description}
                   </p>
                 </div>
               )}
-              <div className="flex justify-end space-x-2">
-                <Button color="gray" onClick={() => setShowViewModal(false)}>
+              <div className='flex justify-end space-x-2'>
+                <Button color='gray' onClick={() => setShowViewModal(false)}>
                   Close
                 </Button>
                 {!readonly && (
@@ -432,15 +432,15 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
       {/* Edit Permission Modal */}
       <Modal show={showEditModal} onClose={() => setShowEditModal(false)}>
-        <div className="p-6">
-          <h3 className="mb-4 text-lg font-bold text-gray-900 dark:text-white">
+        <div className='p-6'>
+          <h3 className='mb-4 text-lg font-bold text-gray-900 dark:text-white'>
             Edit Permission
           </h3>
-          <form className="space-y-4">
+          <form className='space-y-4'>
             <div>
-              <Label htmlFor="edit_resource">Resource *</Label>
+              <Label htmlFor='edit_resource'>Resource *</Label>
               <TextInput
-                id="edit_resource"
+                id='edit_resource'
                 value={modalData.resource}
                 onChange={(e) =>
                   setModalData((prev) => ({
@@ -452,9 +452,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="edit_action">Action *</Label>
+              <Label htmlFor='edit_action'>Action *</Label>
               <TextInput
-                id="edit_action"
+                id='edit_action'
                 value={modalData.action}
                 onChange={(e) =>
                   setModalData((prev) => ({ ...prev, action: e.target.value }))
@@ -463,9 +463,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               />
             </div>
             <div>
-              <Label htmlFor="edit_description">Description</Label>
+              <Label htmlFor='edit_description'>Description</Label>
               <Textarea
-                id="edit_description"
+                id='edit_description'
                 value={modalData.description}
                 onChange={(e) =>
                   setModalData((prev) => ({
@@ -476,11 +476,11 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                 rows={3}
               />
             </div>
-            <div className="flex justify-end space-x-2">
-              <Button color="gray" onClick={() => setShowEditModal(false)}>
+            <div className='flex justify-end space-x-2'>
+              <Button color='gray' onClick={() => setShowEditModal(false)}>
                 Cancel
               </Button>
-              <Button type="submit">Update Permission</Button>
+              <Button type='submit'>Update Permission</Button>
             </div>
           </form>
         </div>
@@ -490,38 +490,38 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       <Modal
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        size="md"
+        size='md'
       >
-        <div className="p-6">
-          <div className="text-center">
+        <div className='p-6'>
+          <div className='text-center'>
             <svg
-              className="mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
+              className='mx-auto mb-4 h-14 w-14 text-gray-400 dark:text-gray-200'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
             >
               <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
+                strokeLinecap='round'
+                strokeLinejoin='round'
                 strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                d='M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
               />
             </svg>
-            <h3 className="mb-5 text-lg font-normal text-gray-500 dark:text-gray-400">
+            <h3 className='mb-5 text-lg font-normal text-gray-500 dark:text-gray-400'>
               Are you sure you want to delete this permission?
             </h3>
             {selectedPermission && (
-              <p className="mb-5 text-sm text-gray-400 dark:text-gray-500">
-                <span className="font-semibold">
+              <p className='mb-5 text-sm text-gray-400 dark:text-gray-500'>
+                <span className='font-semibold'>
                   {selectedPermission.displayName}
                 </span>
                 <br />
                 This action cannot be undone.
               </p>
             )}
-            <div className="flex justify-center gap-4">
-              <Button color="failure">Yes, delete</Button>
-              <Button color="gray" onClick={() => setShowDeleteModal(false)}>
+            <div className='flex justify-center gap-4'>
+              <Button color='failure'>Yes, delete</Button>
+              <Button color='gray' onClick={() => setShowDeleteModal(false)}>
                 Cancel
               </Button>
             </div>

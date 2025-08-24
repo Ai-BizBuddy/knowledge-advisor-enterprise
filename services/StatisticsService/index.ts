@@ -4,12 +4,12 @@
  */
 
 import { BaseFetchClient } from '@/utils/fetchClient';
-import type { 
-  DashboardStatistics, 
-  AllStatistics, 
+import type {
+  DashboardStatistics,
+  AllStatistics,
   IndividualStatistic,
   QueryActivityRequest,
-  ManualStatisticUpdate
+  ManualStatisticUpdate,
 } from '@/interfaces/Statistics';
 import type { TypedFetchResponse } from '@/interfaces/FetchTypes';
 
@@ -18,12 +18,13 @@ class StatisticsService {
   private serviceName = 'StatisticsService';
 
   constructor() {
-    const baseURL = process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:5000';
+    const baseURL =
+      process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:5000';
     this.client = new BaseFetchClient({
       baseURL,
       timeout: 10000,
       retryAttempts: 2,
-      retryDelay: 1000
+      retryDelay: 1000,
     });
   }
 
@@ -33,12 +34,14 @@ class StatisticsService {
    */
   async getDashboardStatistics(): Promise<DashboardStatistics> {
     try {
-      const response: TypedFetchResponse<DashboardStatistics> = await this.client.get(
-        '/api/statistics/dashboard'
-      );
+      const response: TypedFetchResponse<DashboardStatistics> =
+        await this.client.get('/api/statistics/dashboard');
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get dashboard statistics failed:`, error);
+      console.error(
+        `[${this.serviceName}] Get dashboard statistics failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -48,9 +51,8 @@ class StatisticsService {
    */
   async getAllStatistics(): Promise<AllStatistics> {
     try {
-      const response: TypedFetchResponse<AllStatistics> = await this.client.get(
-        '/api/statistics'
-      );
+      const response: TypedFetchResponse<AllStatistics> =
+        await this.client.get('/api/statistics');
       return response.data;
     } catch (error) {
       console.error(`[${this.serviceName}] Get all statistics failed:`, error);
@@ -63,12 +65,14 @@ class StatisticsService {
    */
   async getTotalKnowledgeBases(): Promise<IndividualStatistic> {
     try {
-      const response: TypedFetchResponse<IndividualStatistic> = await this.client.get(
-        '/api/statistics/total_knowledge_bases'
-      );
+      const response: TypedFetchResponse<IndividualStatistic> =
+        await this.client.get('/api/statistics/total_knowledge_bases');
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get total knowledge bases failed:`, error);
+      console.error(
+        `[${this.serviceName}] Get total knowledge bases failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -78,12 +82,14 @@ class StatisticsService {
    */
   async getActiveDocuments(): Promise<IndividualStatistic> {
     try {
-      const response: TypedFetchResponse<IndividualStatistic> = await this.client.get(
-        '/api/statistics/active_documents'
-      );
+      const response: TypedFetchResponse<IndividualStatistic> =
+        await this.client.get('/api/statistics/active_documents');
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get active documents failed:`, error);
+      console.error(
+        `[${this.serviceName}] Get active documents failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -93,9 +99,8 @@ class StatisticsService {
    */
   async getTotalQueries(): Promise<IndividualStatistic> {
     try {
-      const response: TypedFetchResponse<IndividualStatistic> = await this.client.get(
-        '/api/statistics/total_queries'
-      );
+      const response: TypedFetchResponse<IndividualStatistic> =
+        await this.client.get('/api/statistics/total_queries');
       return response.data;
     } catch (error) {
       console.error(`[${this.serviceName}] Get total queries failed:`, error);
@@ -108,12 +113,14 @@ class StatisticsService {
    */
   async getAverageResponseTime(): Promise<IndividualStatistic> {
     try {
-      const response: TypedFetchResponse<IndividualStatistic> = await this.client.get(
-        '/api/statistics/avg_response_time_ms'
-      );
+      const response: TypedFetchResponse<IndividualStatistic> =
+        await this.client.get('/api/statistics/avg_response_time_ms');
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get average response time failed:`, error);
+      console.error(
+        `[${this.serviceName}] Get average response time failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -125,7 +132,10 @@ class StatisticsService {
     try {
       await this.client.post('/api/statistics/query-activity', data);
     } catch (error) {
-      console.error(`[${this.serviceName}] Record query activity failed:`, error);
+      console.error(
+        `[${this.serviceName}] Record query activity failed:`,
+        error,
+      );
       throw error;
     }
   }
@@ -146,8 +156,12 @@ class StatisticsService {
    * Manually update a specific statistic (Admin operation)
    */
   async updateStatistic(
-    statisticType: 'total_knowledge_bases' | 'active_documents' | 'total_queries' | 'avg_response_time_ms',
-    data: ManualStatisticUpdate
+    statisticType:
+      | 'total_knowledge_bases'
+      | 'active_documents'
+      | 'total_queries'
+      | 'avg_response_time_ms',
+    data: ManualStatisticUpdate,
   ): Promise<void> {
     try {
       await this.client.put(`/api/statistics/${statisticType}`, data);

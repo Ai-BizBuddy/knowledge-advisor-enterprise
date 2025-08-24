@@ -1,11 +1,11 @@
 interface IActivity {
-    title: string
-    timestamp: string
-    description?: string
+  title: string;
+  timestamp: string;
+  description?: string;
 }
 
 interface IRecentActivityCardProps {
-    activities: IActivity[]
+  activities: IActivity[];
 }
 
 export type { IActivity, IRecentActivityCardProps };

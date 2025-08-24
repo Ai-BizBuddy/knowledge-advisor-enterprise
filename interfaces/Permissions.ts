@@ -4,19 +4,19 @@
  * Type definitions for the role permissions table component
  */
 
-import { Permission } from "./UserManagement";
+import { Permission } from './UserManagement';
 
 /**
  * Action types for permissions matrix
  */
 export enum PermissionActions {
-  INSERT = "insert",
-  UPDATE = "update",
-  DELETE = "delete",
-  CREATE = "create", // Alias for INSERT
-  READ = "read",
-  ADMIN = "admin",
-  MANAGE = "manage", // Alias for ADMIN
+  INSERT = 'insert',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  CREATE = 'create', // Alias for INSERT
+  READ = 'read',
+  ADMIN = 'admin',
+  MANAGE = 'manage', // Alias for ADMIN
 }
 
 /**
@@ -94,4 +94,4 @@ export interface PermissionsTableProps {
 /**
  * Standard action columns for the table
  */
-export const STANDARD_ACTIONS = ["INSERT", "UPDATE", "DELETE"];
+export const STANDARD_ACTIONS = ['INSERT', 'UPDATE', 'DELETE'];

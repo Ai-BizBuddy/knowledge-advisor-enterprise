@@ -1,7 +1,6 @@
-
 export interface IStatusCardProps {
-    name: string
-    value: string
-    icon: React.ReactNode
-    color: string
+  name: string;
+  value: string;
+  icon: React.ReactNode;
+  color: string;
 }

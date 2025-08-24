@@ -6,17 +6,17 @@
  * Follows the project's strict TypeScript standards.
  */
 
-import type { Document } from "@/interfaces/Project";
-import { BaseFetchClient } from "@/utils/fetchClient";
-import { createClientTable } from "@/utils/supabase/client";
+import type { Document } from '@/interfaces/Project';
+import { BaseFetchClient } from '@/utils/fetchClient';
+import { createClientTable } from '@/utils/supabase/client';
 
 /**
  * Langflow search request interface
  */
 export interface LangflowDocumentSearchRequest {
   input_value: string;
-  output_type?: "chat";
-  input_type?: "chat";
+  output_type?: 'chat';
+  input_type?: 'chat';
 }
 
 /**
@@ -170,25 +170,25 @@ interface DocumentSearchServiceConfig {
  */
 class DocumentSearchService {
   private client: BaseFetchClient;
-  private readonly serviceName = "DocumentSearch";
+  private readonly serviceName = 'DocumentSearch';
   private readonly useMockData: boolean;
 
   constructor(config: DocumentSearchServiceConfig = {}) {
     const langflowUrl =
       config.langflowUrl ||
       process.env.NEXT_PUBLIC_LANGFLOW_URL ||
-      "https://kann.zapto.org";
+      'https://kann.zapto.org';
     const langflowSearchPath =
       config.langflowSearchPath ||
       process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH ||
-      "/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431";
+      '/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431';
 
     this.client = new BaseFetchClient({
       baseURL: `${langflowUrl}${langflowSearchPath}`,
       timeout: config.timeout || 30000,
       defaultHeaders: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
     });
 
@@ -219,47 +219,47 @@ class DocumentSearchService {
   private getMockSearchResults(query: string): DocumentSearchResultItem[] {
     return [
       {
-        id: "doc-1",
-        title: "Getting Started Guide",
+        id: 'doc-1',
+        title: 'Getting Started Guide',
         content: `This document covers the basics of getting started with our platform. It includes ${query} and related concepts...`,
         relevanceScore: 0.95,
-        documentType: "PDF",
-        lastModified: "2024-03-15T10:30:00Z",
-        projectId: "1",
-        projectName: "Enterprise Documentation",
+        documentType: 'PDF',
+        lastModified: '2024-03-15T10:30:00Z',
+        projectId: '1',
+        projectName: 'Enterprise Documentation',
         matchedChunks: [
           `Introduction to ${query}`,
           `Advanced ${query} techniques`,
         ],
         metadata: {
-          author: "Documentation Team",
-          version: "2.1",
+          author: 'Documentation Team',
+          version: '2.1',
         },
       },
       {
-        id: "doc-2",
-        title: "API Reference Manual",
+        id: 'doc-2',
+        title: 'API Reference Manual',
         content: `Complete API reference documentation including endpoints related to ${query}...`,
         relevanceScore: 0.87,
-        documentType: "Markdown",
-        lastModified: "2024-03-14T16:45:00Z",
-        projectId: "3",
-        projectName: "Product Documentation",
+        documentType: 'Markdown',
+        lastModified: '2024-03-14T16:45:00Z',
+        projectId: '3',
+        projectName: 'Product Documentation',
         matchedChunks: [`${query} API endpoints`, `${query} authentication`],
         metadata: {
-          version: "1.5",
-          apiVersion: "v2",
+          version: '1.5',
+          apiVersion: 'v2',
         },
       },
       {
-        id: "doc-3",
-        title: "FAQ Collection",
+        id: 'doc-3',
+        title: 'FAQ Collection',
         content: `Frequently asked questions about ${query} and troubleshooting common issues...`,
         relevanceScore: 0.76,
-        documentType: "HTML",
-        lastModified: "2024-03-13T09:20:00Z",
-        projectId: "2",
-        projectName: "Customer Support Hub",
+        documentType: 'HTML',
+        lastModified: '2024-03-13T09:20:00Z',
+        projectId: '2',
+        projectName: 'Customer Support Hub',
         matchedChunks: [`Common ${query} issues`, `${query} best practices`],
       },
     ];
@@ -273,19 +273,19 @@ class DocumentSearchService {
   ): Promise<LangflowDocumentSearchResponse> {
     const request: LangflowDocumentSearchRequest = {
       input_value: query,
-      output_type: "chat",
-      input_type: "chat",
+      output_type: 'chat',
+      input_type: 'chat',
     };
 
     try {
       const response = await this.client.post<LangflowDocumentSearchResponse>(
-        "?stream=false",
+        '?stream=false',
         request,
       );
       return response.data;
     } catch (error) {
       console.error(`[${this.serviceName}] Langflow search failed:`, error);
-      throw new Error("Failed to perform AI search");
+      throw new Error('Failed to perform AI search');
     }
   }
 
@@ -297,10 +297,10 @@ class DocumentSearchService {
   ): Promise<Document[]> {
     try {
       const supabaseTable = createClientTable();
-      let query = supabaseTable.from("documents").select("*");
+      let query = supabaseTable.from('documents').select('*');
 
       if (projectIds && projectIds.length > 0) {
-        query = query.in("project_id", projectIds);
+        query = query.in('project_id', projectIds);
       }
 
       const { data: documents, error } = await query;
@@ -342,7 +342,7 @@ class DocumentSearchService {
         return [];
       }
 
-      const responseText = output.results?.message?.text || "";
+      const responseText = output.results?.message?.text || '';
 
       // For now, create a single result based on the AI response
       // In a real implementation, you would parse the response to match specific documents
@@ -357,8 +357,8 @@ class DocumentSearchService {
           documentType: matchedDocument.file_type,
           lastModified: matchedDocument.updated_at,
           projectId: matchedDocument.knowledge_base_id,
-          projectName: "Project", // Would need to join with projects table
-          matchedChunks: [responseText.substring(0, 200) + "..."],
+          projectName: 'Project', // Would need to join with projects table
+          matchedChunks: [responseText.substring(0, 200) + '...'],
           metadata: {
             aiGenerated: true,
             sessionId: langflowResponse.session_id,
@@ -483,9 +483,9 @@ class DocumentSearchService {
   async getRecentSearches(): Promise<string[]> {
     // This would typically be stored in localStorage or user preferences
     const recentSearches = [
-      "API documentation",
-      "user authentication",
-      "data export",
+      'API documentation',
+      'user authentication',
+      'data export',
     ];
     return recentSearches;
   }
@@ -512,7 +512,7 @@ class DocumentSearchService {
     } catch (error) {
       console.error(`[${this.serviceName}] Search failed:`, error);
       const errorMessage =
-        error instanceof Error ? error.message : "Search failed";
+        error instanceof Error ? error.message : 'Search failed';
 
       return {
         success: false,

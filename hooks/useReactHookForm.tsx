@@ -5,7 +5,7 @@
  * and consistent configuration across the application.
  */
 
-import { useForm, UseFormProps, UseFormReturn } from "react-hook-form";
+import { useForm, UseFormProps, UseFormReturn } from 'react-hook-form';
 
 /**
  * Custom React Hook Form hook with standard configuration
@@ -17,8 +17,8 @@ export function useReactHookForm<TFormValues extends Record<string, unknown>>(
   options?: UseFormProps<TFormValues>,
 ): UseFormReturn<TFormValues> {
   return useForm<TFormValues>({
-    mode: "onChange",
-    reValidateMode: "onChange",
+    mode: 'onChange',
+    reValidateMode: 'onChange',
     shouldFocusError: true,
     ...options,
   });
