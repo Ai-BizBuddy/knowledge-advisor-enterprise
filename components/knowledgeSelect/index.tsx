@@ -1,6 +1,6 @@
 'use client';
 import { KnowledgeBaseSelection } from '@/hooks/useKnowledgeBaseSelection';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 interface Props {
   options: KnowledgeBaseSelection[];
@@ -15,6 +15,27 @@ export default function KnowledgeSelect({
 }: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   const toggleSelect = (value: string) => {
     const newSelected = selected.includes(value)
@@ -33,7 +54,10 @@ export default function KnowledgeSelect({
   };
 
   return (
-    <div className='relative w-full sm:w-1/2 lg:w-full xl:w-1/3'>
+    <div
+      ref={dropdownRef}
+      className='relative w-full sm:w-1/2 lg:w-full xl:w-1/3'
+    >
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className='w-full rounded-md border border-gray-300 bg-white px-4 py-2 text-left text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-100'
