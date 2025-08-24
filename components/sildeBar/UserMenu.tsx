@@ -64,15 +64,6 @@ export const UserMenu = ({ isOpen, onToggle, handleLogout }: UserMenuProps) => {
           </div>
           <ul className='py-1' role='none'>
             <li>
-              <a
-                href='#'
-                className='block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white'
-                role='menuitem'
-              >
-                {APP_STRINGS.ACTIONS.SETTINGS}
-              </a>
-            </li>
-            <li>
               <button
                 onClick={handleLogout}
                 className='block w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-600 dark:hover:text-white'
