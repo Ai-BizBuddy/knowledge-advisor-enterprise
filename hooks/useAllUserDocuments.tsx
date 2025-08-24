@@ -331,6 +331,12 @@ export function useAllUserDocuments(
     // This can be extended for navigation or state changes
   }, []);
 
+  //   const handleDeleteDocument = useCallback((id: string) => {
+  //     console.log("[useAllUserDocuments] Document delete clicked:", id);
+  //     setDocumentToDelete(id);
+  //     setIsDeleteModalOpen(true);
+  //   }, []);
+
   // Utility functions
   const refresh = useCallback(() => {
     return loadDocuments(currentPage, true);

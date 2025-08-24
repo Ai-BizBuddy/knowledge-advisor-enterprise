@@ -26,6 +26,7 @@ interface DocumentsTableProps {
   sortOrder: "asc" | "desc";
   onSort: (column: string) => void;
   onSelectAll: () => void;
+  onDeleteDocument: (index: number) => void;
   onSelectDocument: (
     index: number,
     event: React.ChangeEvent<HTMLInputElement>,
@@ -90,6 +91,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onSelectAll,
   onSelectDocument,
   onDocumentClick,
+  onDeleteDocument,
   isAllSelected,
   isIndeterminate,
 }) => {
@@ -260,7 +262,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className="px-3 py-4 whitespace-nowrap sm:px-6">
+                      <td className="max-w-xs truncate px-3 py-4 sm:px-6">
                         <div className="flex items-center">
                           <div className="mr-3 text-xl sm:text-2xl">
                             {getFileIcon(doc.type)}
@@ -295,8 +297,11 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       <td className="px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6">
                         <button
-                          className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                          onClick={(e) => e.stopPropagation()}
+                          className="cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteDocument(pageIndex);
+                          }}
                         >
                           <svg
                             className="h-5 w-5"

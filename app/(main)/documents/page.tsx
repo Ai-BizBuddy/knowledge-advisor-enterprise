@@ -1,6 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { DocumentDetail, NoDocuments, UploadDocument } from "@/components";
+import {
+  DeleteConfirmModal,
+  DocumentDetail,
+  NoDocuments,
+  UploadDocument,
+} from "@/components";
 import { useLoading } from "@/contexts/LoadingContext";
 import { useAllUserDocuments, useDocumentsManagement } from "@/hooks";
 import {
@@ -12,6 +17,7 @@ import {
   DocumentsPagination,
 } from "@/components";
 import { Document } from "@/interfaces/Project";
+import DocumentService from "@/services/DocumentService";
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -40,7 +46,7 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   type: doc.file_type,
   date: new Date(doc.created_at).toLocaleDateString(),
   rag_status: doc.rag_status || "not_synced",
-  status: doc.status || "",
+  status: doc.rag_status || "",
   uploadedBy: "User", // This field doesn't exist in new interface
   avatar: "/avatars/default.png", // Default avatar
   project: [], // This field doesn't exist in new interface
@@ -54,6 +60,13 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
 export default function DocumentsPage() {
   const { setLoading } = useLoading();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [optionBulkDelete, setOptionBulkDelete] = useState(false);
+  const [documentToDelete, setDocumentToDelete] =
+    useState<DocumentTableItem | null>(null);
+
+  // Document service instance
+  const [documentService] = useState(() => new DocumentService());
 
   // User documents from hook - auto-load enabled for all user documents
   const {
@@ -62,6 +75,7 @@ export default function DocumentsPage() {
     endIndex,
     documents,
     filteredDocuments: userFilteredDocuments,
+    refresh,
   } = useAllUserDocuments({
     autoLoad: true,
   });
@@ -87,7 +101,6 @@ export default function DocumentsPage() {
     handlePageChange,
     handleSelectAll,
     handleSelectDocument,
-    handleDeleteDocuments,
     handleClearSelection,
   } = useDocumentsManagement();
 
@@ -95,9 +108,76 @@ export default function DocumentsPage() {
     adaptDocumentToTableFormat(doc),
   );
 
+  // Delete functions
+  const handleSingleDocumentDelete = async (
+    documentItem: DocumentTableItem,
+  ) => {
+    try {
+      setLoading(true);
+      // Find the original document by name to get the ID
+      const originalDoc = documents.find(
+        (doc) => doc.name === documentItem.name,
+      );
+      if (!originalDoc) {
+        throw new Error("Document not found");
+      }
+
+      await documentService.deleteDocument(originalDoc.id);
+
+      // Close modal and refresh data
+      setIsDeleteModalOpen(false);
+      setDocumentToDelete(null);
+
+      // Refresh documents using hook's refresh function
+      await refresh();
+    } catch (error) {
+      console.error("[DocumentsPage] Error deleting document:", error);
+      alert("Failed to delete document. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkDocumentDelete = async (selectedIndices: number[]) => {
+    try {
+      setLoading(true);
+
+      // selectedIndices are absolute indices from the filteredDocuments
+      // But we need to map them to the actual documents array
+      const documentIds: string[] = [];
+      selectedIndices.forEach((absoluteIndex) => {
+        // Find the document from userFilteredDocuments
+        const documentAtIndex = userFilteredDocuments[absoluteIndex];
+        if (documentAtIndex?.id) {
+          documentIds.push(documentAtIndex.id);
+        }
+      });
+
+      if (documentIds.length === 0) {
+        throw new Error("No valid documents selected for deletion");
+      }
+
+      // Delete each document
+      for (const id of documentIds) {
+        await documentService.deleteDocument(id);
+      }
+
+      // Clear selection and refresh
+      handleClearSelection();
+
+      // Refresh documents using hook's refresh function
+      await refresh();
+    } catch (error) {
+      console.error("[DocumentsPage] Error deleting documents:", error);
+      alert("Failed to delete documents. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     setLoading(false);
-  }, []);
+  }, [setLoading]);
   return (
     <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
@@ -160,7 +240,11 @@ export default function DocumentsPage() {
             <BulkActions
               selectedDocuments={selectedDocuments}
               totalPages={totalPages}
-              onDelete={handleDeleteDocuments}
+              onDelete={() => {
+                setIsDeleteModalOpen(true);
+                setOptionBulkDelete(true);
+                handleBulkDocumentDelete(selectedDocuments);
+              }}
               onClear={handleClearSelection}
             />
 
@@ -179,6 +263,16 @@ export default function DocumentsPage() {
                   selectedDocuments={selectedDocuments}
                   selectedDocument={selectedDocument}
                   startIndex={startIndex}
+                  onDeleteDocument={(dataIndex: number) => {
+                    const document = adaptedDocuments[dataIndex];
+                    console.log(
+                      "[DocumentsPage] Delete document clicked:",
+                      document,
+                    );
+
+                    setDocumentToDelete(document);
+                    setIsDeleteModalOpen(true);
+                  }}
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onSort={handleSort}
@@ -215,6 +309,27 @@ export default function DocumentsPage() {
           )}
         </div>
       </div>
+
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setOptionBulkDelete(false);
+        }}
+        onConfirm={async () => {
+          if (documentToDelete) {
+            console.log(
+              "[DocumentsPage] Confirm delete document:",
+              documentToDelete,
+            );
+            if (optionBulkDelete) {
+              await handleBulkDocumentDelete(selectedDocuments);
+            } else {
+              await handleSingleDocumentDelete(documentToDelete);
+            }
+          }
+        }}
+      />
 
       {/* Upload Modal */}
       <UploadDocument

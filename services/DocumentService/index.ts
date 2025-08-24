@@ -482,7 +482,7 @@ class DocumentService {
                 .from('document')
                 .delete()
                 .eq('id', id)
-                .eq('knowledge_base.uploaded_by', user.id);
+            // .eq('knowledge_base.uploaded_by', user.id);
 
             if (error) {
                 console.error(`[${this.serviceName}] Error deleting document:`, error);

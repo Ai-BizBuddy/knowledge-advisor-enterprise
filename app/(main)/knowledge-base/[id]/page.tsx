@@ -519,6 +519,7 @@ export default function KnowledgeBaseDetail() {
               onSelectAll={handleSelectAll}
               onSelectDocument={handleSelectDocument}
               onDocumentClick={handleDocumentTableClick}
+              onDeleteDocument={() => alert("Delete")}
               isAllSelected={isAllSelected}
               isIndeterminate={isIndeterminate}
             />

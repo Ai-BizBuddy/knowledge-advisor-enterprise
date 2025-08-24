@@ -20,6 +20,7 @@ export { default as UploadDocument } from "./uploadDocuments";
 export { default as NoDocuments } from "./noDocuments";
 export { default as DocumentDetail } from "./documentDetail";
 export { default as SafeDarkThemeToggle } from "./SafeDarkThemeToggle";
+export { default as DeleteConfirmModal } from "./deleteConfirmModal";
 
 // Documents Page Components
 export * from "./documentsPage";
