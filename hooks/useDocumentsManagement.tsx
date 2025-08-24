@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { documentsData } from "@/data/documentsData";
-import type { Document } from "@/interfaces/Project";
+import { documentsData, type Document } from "@/data/documentsData";
 import { filterDocuments } from "@/utils/documentsUtils";
-import { useSorting } from "@/hooks/useSorting";
 
 export const useDocumentsManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState<number | null>(null);
@@ -11,22 +9,76 @@ export const useDocumentsManagement = () => {
   const [activeTab, setActiveTab] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<keyof Document>("date");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const itemsPerPage = 10;
 
-  // Use the sorting hook
-  const {
-    sortBy,
-    sortOrder,
-    handleSort,
-    handleSortOrderToggle,
-    sortDocuments,
-  } = useSorting({
-    initialSortField: "date",
-    initialSortOrder: "desc",
-  });
+  // Local sorting function for mock data
+  const sortDocuments = useCallback(
+    (documents: Document[]) => {
+      return [...documents].sort((a, b) => {
+        let aValue: string | number;
+        let bValue: string | number;
+
+        switch (sortBy) {
+          case "name":
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+            break;
+          case "date":
+            aValue = new Date(a.date).getTime();
+            bValue = new Date(b.date).getTime();
+            break;
+          case "size":
+            // Convert size string to number for comparison (e.g., "2.5 MB" -> 2.5)
+            aValue = parseFloat(a.size.replace(/[^\d.]/g, ""));
+            bValue = parseFloat(b.size.replace(/[^\d.]/g, ""));
+            break;
+          case "type":
+            aValue = a.type.toLowerCase();
+            bValue = b.type.toLowerCase();
+            break;
+          case "uploadedBy":
+            aValue = a.uploadedBy.toLowerCase();
+            bValue = b.uploadedBy.toLowerCase();
+            break;
+          case "status":
+            aValue = a.status.toLowerCase();
+            bValue = b.status.toLowerCase();
+            break;
+          case "lastUpdated":
+            aValue = new Date(a.lastUpdated || a.date).getTime();
+            bValue = new Date(b.lastUpdated || b.date).getTime();
+            break;
+          default:
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+        }
+
+        if (aValue < bValue) return sortOrder === "asc" ? -1 : 1;
+        if (aValue > bValue) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+    },
+    [sortBy, sortOrder],
+  );
+
+  // Sorting handlers
+  const handleSort = (field: keyof Document) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortBy(field);
+      setSortOrder("asc");
+    }
+  };
+
+  const handleSortOrderToggle = () => {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  };
   // Get filtered and sorted documents
   const filteredDocuments = sortDocuments(
-    filterDocuments(documentsData as Document[], searchTerm, activeTab),
+    filterDocuments(documentsData, searchTerm, activeTab),
   );
 
   // Pagination logic
@@ -79,11 +131,13 @@ export const useDocumentsManagement = () => {
   // Multi-select functions
   const handleSelectAll = useCallback(() => {
     const currentPageIndices = paginatedDocuments.map(
-      (_, index) => startIndex + index,
+      (_: Document, index: number) => startIndex + index,
     );
     if (
       selectedDocuments.length === currentPageIndices.length &&
-      currentPageIndices.every((index) => selectedDocuments.includes(index))
+      currentPageIndices.every((index: number) =>
+        selectedDocuments.includes(index),
+      )
     ) {
       setSelectedDocuments((prev) =>
         prev.filter((index) => !currentPageIndices.includes(index)),
@@ -125,7 +179,7 @@ export const useDocumentsManagement = () => {
 
   // Calculate selection states
   const currentPageIndices = paginatedDocuments.map(
-    (_, index) => startIndex + index,
+    (_: Document, index: number) => startIndex + index,
   );
   const selectedInCurrentPage = selectedDocuments.filter((index) =>
     currentPageIndices.includes(index),
