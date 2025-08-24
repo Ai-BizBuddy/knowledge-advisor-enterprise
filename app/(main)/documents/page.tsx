@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import {
   DeleteConfirmModal,
   DocumentDetail,
@@ -7,7 +7,11 @@ import {
   UploadDocument,
 } from "@/components";
 import { useLoading } from "@/contexts/LoadingContext";
-import { useAllUserDocuments, useDocumentsManagement } from "@/hooks";
+import {
+  useAllUserDocuments,
+  useDocumentsManagement,
+  useSorting,
+} from "@/hooks";
 import {
   DocumentsHeader,
   DocumentsControls,
@@ -68,6 +72,18 @@ export default function DocumentsPage() {
   // Document service instance
   const [documentService] = useState(() => new DocumentService());
 
+  // Use sorting hook for enhanced sorting functionality
+  const {
+    sortBy: sortField,
+    sortOrder,
+    handleSort: handleSortChange,
+    handleSortOrderToggle,
+    sortDocuments,
+  } = useSorting({
+    initialSortField: "date",
+    initialSortOrder: "desc",
+  });
+
   // User documents from hook - auto-load enabled for all user documents
   const {
     totalPages,
@@ -77,7 +93,7 @@ export default function DocumentsPage() {
     totalItems,
     itemsPerPage,
     loading,
-    documents,
+    documents: rawDocuments,
     filteredDocuments: userFilteredDocuments,
     refresh,
     searchTerm,
@@ -87,6 +103,26 @@ export default function DocumentsPage() {
   } = useAllUserDocuments({
     autoLoad: true,
   });
+
+  // Sort the documents using the SortingService
+  const documents = useMemo(() => {
+    return sortDocuments(rawDocuments);
+  }, [rawDocuments, sortDocuments]);
+
+  // Wrapper function to handle string to SortField conversion
+  const handleSortByString = (sortBy: string) => {
+    handleSortChange(
+      sortBy as
+        | "name"
+        | "date"
+        | "size"
+        | "type"
+        | "uploadedBy"
+        | "status"
+        | "chunk"
+        | "lastUpdated",
+    );
+  };
 
   // Create a wrapper for page change that also resets selected document
   const handlePageChangeWithReset = (page: number) => {
@@ -100,14 +136,10 @@ export default function DocumentsPage() {
     selectedDocument,
     selectedDocuments,
     activeTab,
-    sortBy,
-    sortOrder,
 
     // Handlers
     setSelectedDocument,
     setSelectedDocuments,
-    handleSort,
-    handleSortOrderToggle,
     handleClearSelection,
   } = useDocumentsManagement();
 
@@ -290,9 +322,9 @@ export default function DocumentsPage() {
         {/* Controls Section */}
         <div className="mb-6">
           <DocumentsControls
-            sortBy={sortBy}
+            sortBy={sortField}
             sortOrder={sortOrder}
-            onSortChange={handleSort}
+            onSortChange={handleSortByString}
             onSortOrderToggle={handleSortOrderToggle}
           />
         </div>
@@ -349,9 +381,9 @@ export default function DocumentsPage() {
                     setDocumentToDelete(document);
                     setIsDeleteModalOpen(true);
                   }}
-                  sortBy={sortBy}
+                  sortBy={sortField}
                   sortOrder={sortOrder}
-                  onSort={handleSort}
+                  onSort={handleSortByString}
                   onSelectAll={handleSelectAllWithCorrectIndex}
                   onSelectDocument={handleSelectDocumentWithCorrectIndex}
                   onDocumentClick={handleDocumentClick}

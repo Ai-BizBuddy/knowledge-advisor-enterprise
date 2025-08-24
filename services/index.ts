@@ -12,6 +12,7 @@ import { DocumentSearchService } from './DocumentSearchService';
 import { LangflowChatService } from './LangflowChatService';
 import { LangflowSearchService } from './LangflowSearchService';
 import { AdkChatService } from './AdkChatService';
+import SortingService from './SortingService';
 
 /**
  * Service Configuration
@@ -100,6 +101,13 @@ export const adkChatService = new AdkChatService({
 });
 
 /**
+ * Sorting Service Instance
+ * 
+ * Handles all sorting operations for documents and other data
+ */
+export const sortingService = new SortingService();
+
+/**
  * Service Health Check
  * 
  * Utility function to check the health of all services
@@ -159,6 +167,7 @@ const services = {
   langflowChat: langflowChatService,
   langflowSearch: langflowSearchService,
   adkChat: adkChatService,
+  sorting: sortingService,
   checkHealth: checkAllServicesHealth
 };
 

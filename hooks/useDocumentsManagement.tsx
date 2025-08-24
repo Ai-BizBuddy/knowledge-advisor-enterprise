@@ -1,23 +1,32 @@
 import { useState, useEffect, useCallback } from "react";
 import { documentsData } from "@/data/documentsData";
-import { sortDocuments, filterDocuments } from "@/utils/documentsUtils";
+import type { Document } from "@/interfaces/Project";
+import { filterDocuments } from "@/utils/documentsUtils";
+import { useSorting } from "@/hooks/useSorting";
 
 export const useDocumentsManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState<number | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
-  const [sortBy, setSortBy] = useState("Date");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 10;
 
-  // Get filtered and sorted documents
-  const filteredDocuments = sortDocuments(
-    filterDocuments(documentsData, searchTerm, activeTab),
+  // Use the sorting hook
+  const {
     sortBy,
     sortOrder,
+    handleSort,
+    handleSortOrderToggle,
+    sortDocuments,
+  } = useSorting({
+    initialSortField: "date",
+    initialSortOrder: "desc",
+  });
+  // Get filtered and sorted documents
+  const filteredDocuments = sortDocuments(
+    filterDocuments(documentsData as Document[], searchTerm, activeTab),
   );
 
   // Pagination logic
@@ -25,23 +34,6 @@ export const useDocumentsManagement = () => {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
-
-  // Handle sort changes
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    } else {
-      setSortBy(column);
-      setSortOrder("asc");
-    }
-    setCurrentPage(1);
-  };
-
-  // Handle sort order toggle
-  const handleSortOrderToggle = () => {
-    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
-    setCurrentPage(1);
-  };
 
   // Handle page changes
   const handlePageChange = (page: number) => {
