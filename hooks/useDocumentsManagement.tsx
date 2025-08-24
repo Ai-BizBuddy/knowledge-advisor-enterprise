@@ -188,6 +188,7 @@ export const useDocumentsManagement = () => {
 
     // Handlers
     setSelectedDocument,
+    setSelectedDocuments,
     setSearchTerm,
     handleSort,
     handleSortOrderToggle,

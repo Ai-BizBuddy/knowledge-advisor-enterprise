@@ -88,6 +88,13 @@ export default function DocumentsPage() {
     autoLoad: true,
   });
 
+  // Create a wrapper for page change that also resets selected document
+  const handlePageChangeWithReset = (page: number) => {
+    setSelectedDocument(null); // Reset selected document when page changes
+    setSelectedDocuments([]); // Reset selected documents when page changes
+    handlePageChange(page);
+  };
+
   const {
     // State
     selectedDocument,
@@ -96,24 +103,74 @@ export default function DocumentsPage() {
     sortBy,
     sortOrder,
 
-    // Selection states
-    isAllSelected,
-    isIndeterminate,
-
     // Handlers
     setSelectedDocument,
+    setSelectedDocuments,
     handleSort,
     handleSortOrderToggle,
-    handleSelectAll,
-    handleSelectDocument,
     handleClearSelection,
   } = useDocumentsManagement();
 
+  // Create wrapper functions for selection that use correct startIndex (0-based)
+  const handleSelectAllWithCorrectIndex = () => {
+    const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
+    const currentPageIndices = documents.map(
+      (_, index) => correctStartIndex + index,
+    );
+
+    if (
+      selectedDocuments.length === currentPageIndices.length &&
+      currentPageIndices.every((index) => selectedDocuments.includes(index))
+    ) {
+      const filteredSelection = selectedDocuments.filter(
+        (index) => !currentPageIndices.includes(index),
+      );
+      setSelectedDocuments(filteredSelection);
+    } else {
+      const newSelection = [
+        ...new Set([...selectedDocuments, ...currentPageIndices]),
+      ];
+      setSelectedDocuments(newSelection);
+    }
+  };
+
+  const handleSelectDocumentWithCorrectIndex = (
+    pageIndex: number,
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    event.stopPropagation();
+    const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
+    const actualIndex = correctStartIndex + pageIndex;
+
+    if (selectedDocuments.includes(actualIndex)) {
+      setSelectedDocuments(selectedDocuments.filter((i) => i !== actualIndex));
+    } else {
+      setSelectedDocuments([...selectedDocuments, actualIndex]);
+    }
+  };
+
+  // Calculate selection states for current page
+  const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
+  const currentPageIndices = documents.map(
+    (_, index) => correctStartIndex + index,
+  );
+  const selectedInCurrentPage = selectedDocuments.filter((index) =>
+    currentPageIndices.includes(index),
+  );
+
+  const isAllSelectedCorrected =
+    currentPageIndices.length > 0 &&
+    selectedInCurrentPage.length === currentPageIndices.length;
+  const isIndeterminateCorrected =
+    selectedInCurrentPage.length > 0 &&
+    selectedInCurrentPage.length < currentPageIndices.length;
+
   // Handle document click for detail view
   const handleDocumentClick = (absoluteIndex: number) => {
-    // Convert absolute index to relative index within current filtered documents
-    const relativeIndex = absoluteIndex - startIndex;
-    setSelectedDocument(relativeIndex);
+    // Convert absolute index to page-relative index for display
+    // Note: startIndex from hook is 1-based, absoluteIndex is 0-based
+    const pageRelativeIndex = absoluteIndex - (startIndex - 1);
+    setSelectedDocument(pageRelativeIndex);
   };
 
   const adaptedDocuments = documents.map((doc: Document) =>
@@ -191,6 +248,13 @@ export default function DocumentsPage() {
     // Use loading from useAllUserDocuments instead of setting it manually
     setLoading(loading);
   }, [loading, setLoading]);
+
+  // Reset selected document when search term changes
+  useEffect(() => {
+    setSelectedDocument(null);
+    setSelectedDocuments([]); // Reset selected documents when search changes
+  }, [searchTerm, setSelectedDocument, setSelectedDocuments]);
+
   return (
     <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
@@ -256,7 +320,6 @@ export default function DocumentsPage() {
               onDelete={() => {
                 setIsDeleteModalOpen(true);
                 setOptionBulkDelete(true);
-                handleBulkDocumentDelete(selectedDocuments);
               }}
               onClear={handleClearSelection}
             />
@@ -289,11 +352,11 @@ export default function DocumentsPage() {
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                   onSort={handleSort}
-                  onSelectAll={handleSelectAll}
-                  onSelectDocument={handleSelectDocument}
+                  onSelectAll={handleSelectAllWithCorrectIndex}
+                  onSelectDocument={handleSelectDocumentWithCorrectIndex}
                   onDocumentClick={handleDocumentClick}
-                  isAllSelected={isAllSelected}
-                  isIndeterminate={isIndeterminate}
+                  isAllSelected={isAllSelectedCorrected}
+                  isIndeterminate={isIndeterminateCorrected}
                 />
 
                 <DocumentsPagination
@@ -304,7 +367,7 @@ export default function DocumentsPage() {
                   totalDocuments={totalItems}
                   itemsPerPage={itemsPerPage}
                   loading={loading}
-                  onPageChange={handlePageChange}
+                  onPageChange={handlePageChangeWithReset}
                   onItemsPerPageChange={setItemsPerPage}
                 />
               </div>
@@ -312,18 +375,18 @@ export default function DocumentsPage() {
           </div>
 
           {/* Document Detail Panel - Responsive sidebar */}
-          {selectedDocument !== null && 
-           selectedDocument >= 0 && 
-           selectedDocument < adaptedDocuments.length && 
-           totalItems > 0 && (
-            <div className="xl:col-span-1">
-              <div className="sticky top-4">
-                <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
-                  <DocumentDetail {...adaptedDocuments[selectedDocument]} />
+          {selectedDocument !== null &&
+            selectedDocument >= 0 &&
+            selectedDocument < adaptedDocuments.length &&
+            adaptedDocuments.length > 0 && (
+              <div className="xl:col-span-1">
+                <div className="sticky top-4">
+                  <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
+                    <DocumentDetail {...adaptedDocuments[selectedDocument]} />
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
 
@@ -344,6 +407,9 @@ export default function DocumentsPage() {
             } else {
               await handleSingleDocumentDelete(documentToDelete);
             }
+
+            setIsDeleteModalOpen(false);
+            setOptionBulkDelete(false);
           }
         }}
       />

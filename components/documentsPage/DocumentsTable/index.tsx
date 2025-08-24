@@ -147,7 +147,8 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
       <div className="block lg:hidden">
         <div className="divide-y divide-gray-200 dark:divide-gray-700">
           {documents.map((doc, pageIndex) => {
-            const actualIndex = startIndex + pageIndex;
+            // startIndex from hook is 1-based, so convert to 0-based for calculation
+            const actualIndex = startIndex - 1 + pageIndex;
             const isSelected = selectedDocuments.includes(actualIndex);
             const isCurrentDocument = selectedDocument === pageIndex;
 
@@ -245,7 +246,8 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
             <tbody className="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800">
               {documents.length > 0 &&
                 documents.map((doc, pageIndex) => {
-                  const actualIndex = startIndex + pageIndex;
+                  // startIndex from hook is 1-based, so convert to 0-based for calculation
+                  const actualIndex = startIndex - 1 + pageIndex;
                   const isSelected = selectedDocuments.includes(actualIndex);
                   const isCurrentDocument = selectedDocument === pageIndex;
 
