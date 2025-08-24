@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "flowbite-react/plugin/tailwindcss";
 @source "../.flowbite-react/class-list.json";
+@import "../styles/chat.css";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
@@ -22,6 +23,7 @@
 
 /* Custom utility classes for consistent UI */
 @layer utilities {
+
   /* Page Container */
   .page-container {
     @apply min-h-screen bg-gray-50 dark:bg-gray-900;
@@ -167,6 +169,7 @@
 
 /* Mobile optimization for better touch targets */
 @media (max-width: 767px) {
+
   .btn-primary,
   .btn-secondary {
     @apply min-h-[44px] min-w-[44px];

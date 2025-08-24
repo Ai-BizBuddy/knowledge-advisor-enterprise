@@ -1,4 +1,19 @@
-import { Document } from "@/data/documentsData";
+// Document interface for detail component
+interface Document {
+  name: string;
+  size: string;
+  type: string;
+  date: string;
+  status: string;
+  uploadedBy: string;
+  avatar: string;
+  project: string[];
+  source: string;
+  uploadDate: string;
+  chunk?: number;
+  syncStatus?: string;
+  lastUpdated?: string;
+}
 
 const DocumentDetail: React.FC<Document> = ({
   name,

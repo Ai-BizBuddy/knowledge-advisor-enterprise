@@ -1,12 +1,18 @@
 "use client";
+import { KnowledgeBaseSelection } from "@/hooks/useKnowledgeBaseSelection";
 import { useState } from "react";
 
 interface Props {
-  options: string[];
-  onChange: (selected: string[]) => void;
+  options: KnowledgeBaseSelection[];
+  onChange: (selected: string) => void;
+  onChangeAll: (selected: string[]) => void;
 }
 
-export default function KnowledgeSelect({ options, onChange }: Props) {
+export default function KnowledgeSelect({
+  options,
+  onChange,
+  onChangeAll,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   const [selected, setSelected] = useState<string[]>([]);
 
@@ -16,13 +22,14 @@ export default function KnowledgeSelect({ options, onChange }: Props) {
       : [...selected, value];
 
     setSelected(newSelected);
-    onChange(newSelected);
+    onChange(value);
   };
 
   const toggleAll = () => {
-    const newSelected = selected.length === options.length ? [] : options;
+    const newSelected =
+      selected.length === options.length ? [] : options.map((o) => o.id);
     setSelected(newSelected);
-    onChange(newSelected);
+    onChangeAll(newSelected);
   };
 
   return (
@@ -53,17 +60,17 @@ export default function KnowledgeSelect({ options, onChange }: Props) {
           {/* default is not checked */}
           {options.map((option) => (
             <label
-              key={option}
+              key={option.id}
               className="flex items-center px-4 py-2 text-gray-900 hover:bg-gray-100 dark:text-white dark:hover:bg-gray-700"
             >
               <input
                 type="checkbox"
-                checked={selected.includes(option)}
+                checked={selected.includes(option.id)}
                 // onClick={() => toggleSelect(option)}
-                onChange={() => toggleSelect(option)}
+                onChange={() => toggleSelect(option.id)}
                 className="mr-2"
               />
-              {option}
+              {option.name}
             </label>
           ))}
         </div>

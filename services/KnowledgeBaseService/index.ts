@@ -1,12 +1,12 @@
-import { createClientTable } from "@/utils/supabase/client";
-import { getAuthSession } from "@/utils/supabase/authUtils";
 import type {
-  Project,
   CreateProjectInput,
-  UpdateProjectInput,
   PaginationOptions,
+  Project,
+  UpdateProjectInput,
 } from "@/interfaces/Project";
 import { ProjectStatus } from "@/interfaces/Project";
+import { getAuthSession } from "@/utils/supabase/authUtils";
+import { createClientTable } from "@/utils/supabase/client";
 
 /**
  * Knowledge Base Service Class
@@ -107,7 +107,7 @@ class KnowledgeBaseService {
    * Fetch all knowledge bases for the current user with proper pagination
    */
   async getProjects(
-    paginationOptions: PaginationOptions,
+    paginationOptions?: PaginationOptions,
     filters?: { status?: string; searchTerm?: string },
   ): Promise<{ data: Project[]; count: number }> {
     console.log(
@@ -159,9 +159,11 @@ class KnowledgeBaseService {
       }
 
       // Get paginated data
-      const { data: projects, error } = await dataQuery
-        .order("created_at", { ascending: false })
-        .range(paginationOptions.startIndex, paginationOptions.endIndex);
+      const { data: projects, error } = paginationOptions
+        ? await dataQuery
+            .order("created_at", { ascending: false })
+            .range(paginationOptions.startIndex, paginationOptions.endIndex)
+        : await dataQuery.order("created_at", { ascending: false });
 
       if (error) {
         console.error(`[${this.serviceName}] Supabase query error:`, error);
@@ -216,18 +218,19 @@ class KnowledgeBaseService {
 
       // Get document count for this knowledge base
       const { count: documentCount } = await supabaseTable
-        .from("documents")
+        .from("document")
         .select("*", { count: "exact", head: true })
-        .eq("project_id", id);
+        .eq("knowledge_base_id", id);
 
       return {
         id: project.id,
         name: project.name,
         description: project.description || "",
+        is_active: project.is_active,
         document_count: documentCount || 0,
-        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        status: project.is_active ? 1 : 2,
         owner: project.created_by,
-        is_active: project.is_active || false,
+        is_active: (project.is_active as boolean) || false,
         created_at: project.created_at,
         updated_at: project.updated_at || project.created_at,
       } as Project;
@@ -321,9 +324,10 @@ class KnowledgeBaseService {
       return {
         id: project.id,
         name: project.name,
+        is_active: project.is_active,
         description: project.description || "",
         document_count: 0, // Not available in current schema
-        status: project.is_active ? ProjectStatus.ACTIVE : ProjectStatus.PAUSED,
+        status: project.is_active ? 1 : 2,
         owner: project.created_by,
         is_active: project.is_active || false,
         created_at: project.created_at,

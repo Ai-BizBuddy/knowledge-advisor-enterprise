@@ -9,30 +9,100 @@ import {
   BotTypingBubble,
 } from "@/components";
 import { useLoading } from "@/contexts/LoadingContext";
-
-const knowledgeBases = ["General AI", "Medical KB", "Finance KB", "Custom KB"];
+import { useAdkChat, useKnowledgeBaseSelection } from "@/hooks";
+import { ChatSession } from "@/hooks/useChatHistory";
 
 export default function ChatPage() {
   const [selectedKB, setSelectedKB] = useState<string[]>();
   const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
   const [message, setMessage] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
+  const [toasts, setToasts] = useState<
+    Array<{ id: string; message: string; type: "success" | "error" | "info" }>
+  >([]);
   const { setLoading } = useLoading();
-  const handleSelectKB = (value: string[]) => {
-    setSelectedKB(value);
-  };
+
+  const {
+    messages,
+    isTyping,
+    connectionStatus,
+    addWelcomeMessage,
+    sendMessage,
+    createNewChat,
+    setMessages,
+  } = useAdkChat();
+
+  const {
+    knowledgeBases,
+    loading,
+    selectAllKB,
+    handleSelectKnowledgeBase,
+    handleSelectAllKB,
+    getSelectedKnowledgeBases,
+    getSelectedCount,
+    getTotalDocuments,
+  } = useKnowledgeBaseSelection();
+
+  useEffect(() => {
+    // Add welcome message when component mounts
+    if (messages.length === 0) {
+      addWelcomeMessage();
+    }
+  }, [messages.length, addWelcomeMessage]);
 
   useEffect(() => {
     setLoading(false);
   }, [setLoading]);
 
+  const handleLoadChatSession = (session: ChatSession) => {
+    setMessages(session.messages);
+    setOpenHistory(false);
+  };
+
   const handleCloseHistory = () => {
     setOpenHistory(false);
   };
 
+  const handleSendMessage = async () => {
+    if (!message.trim()) return;
+
+    const selectedKBs = getSelectedKnowledgeBases();
+    const cloneValue = message;
+    setMessage("");
+    await sendMessage(cloneValue, selectedKBs, isOnline);
+  };
+
+  useEffect(() => {
+    if (connectionStatus === "timeout") {
+      const toastId = Date.now().toString();
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: toastId,
+          message: "การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ",
+          type: "error",
+        },
+      ]);
+    } else if (connectionStatus === "error") {
+      const toastId = Date.now().toString();
+      setToasts((prev) => [
+        ...prev,
+        {
+          id: toastId,
+          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่",
+          type: "error",
+        },
+      ]);
+    }
+  }, [connectionStatus]);
+
   return (
     <>
-      {openHistory && <ChatHistoryList onClose={handleCloseHistory} />}
+      <ChatHistoryList
+        isOpen={openHistory}
+        onClose={handleCloseHistory}
+        onLoadSession={handleLoadChatSession}
+      />
 
       <div className="min-h-full">
         {/* Main Container with consistent responsive padding */}
@@ -46,8 +116,8 @@ export default function ChatPage() {
                 </h1>
               </div>
               <p className="text-sm font-medium text-gray-600 sm:text-base dark:text-gray-400">
-                {selectedKB && selectedKB.length !== 0
-                  ? `กำลังค้นหาข้อมูลจาก ${selectedKB.length} Knowledge Base`
+                {getSelectedCount() !== 0
+                  ? `กำลังค้นหาข้อมูลจาก ${getSelectedCount()} Knowledge Base`
                   : "กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา"}
               </p>
             </div>
@@ -66,7 +136,8 @@ export default function ChatPage() {
                   <div className="w-full flex-1">
                     <KnowledgeSelect
                       options={knowledgeBases}
-                      onChange={handleSelectKB}
+                      onChange={(data) => handleSelectKnowledgeBase(data)}
+                      onChangeAll={handleSelectAllKB}
                     />
                   </div>
                 </div>
@@ -76,7 +147,7 @@ export default function ChatPage() {
                   <Button
                     type="button"
                     color="light"
-                    onClick={() => alert("Start new chat!")}
+                    onClick={() => createNewChat()}
                     className="flex w-1/2 items-center justify-center gap-2 sm:w-auto"
                   >
                     <svg
@@ -120,28 +191,35 @@ export default function ChatPage() {
               </div>
               {/* Chat Messages Area */}
               <div className="h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6">
-                <div>
-                  <ChatCard
-                    avatar="/assets/logo-ka.svg"
-                    name="Bonnie Green"
-                    time="11:46"
-                    message="That's awesome. I think our users will really appreciate the improvements."
-                    status=""
-                  />
-                </div>
-                <div className="flex justify-end">
-                  <ChatCard
-                    avatar="https://kolhapur-police.s3.amazonaws.com/a8f0c667-0c14-4894-a36d-5441b4c6e677.jpg"
-                    name="Chris Brown"
-                    time="11:59"
-                    isUser
-                    message="Umm, I'm sorry to hear that. Can you provide any more details about the issue?"
-                    status=""
-                  />
-                </div>
-                <div>
-                  <BotTypingBubble />
-                </div>
+                {messages.map((message, index) => {
+                  if (message.type === "user") {
+                    return (
+                      <ChatCard
+                        key={index}
+                        avatar=""
+                        name="User"
+                        time=""
+                        isUser
+                        message={message.content}
+                        status=""
+                      />
+                    );
+                  }
+                  if (message.type === "assistant") {
+                    return (
+                      <ChatCard
+                        key={index}
+                        avatar="/assets/logo-ka.svg"
+                        name="Knowledge Assistant"
+                        time=""
+                        message={message.content}
+                        status=""
+                      />
+                    );
+                  }
+                })}
+
+                {isTyping && <BotTypingBubble />}
               </div>
 
               {/* Message Input */}
@@ -149,11 +227,10 @@ export default function ChatPage() {
                 {/* Mobile Layout */}
                 <div className="block sm:hidden">
                   <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
                       if (!message.trim()) return;
-                      alert(`ส่งข้อความ: ${message}`);
-                      setMessage("");
+                      await handleSendMessage();
                     }}
                     className="space-y-3"
                   >
@@ -215,28 +292,75 @@ export default function ChatPage() {
                           </svg>
                         )}
                       </div>
-                      <input
-                        type="text"
-                        placeholder="Type your message..."
-                        className="flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2.5 text-sm text-gray-900 transition-colors duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                        value={message}
-                        onChange={(e) => setMessage(e.target.value)}
-                      />
+                      <div className="flex-1">
+                        <textarea
+                          ref={(textarea) => {
+                            if (textarea) {
+                              textarea.style.height = "auto";
+                              textarea.style.height =
+                                Math.min(textarea.scrollHeight, 120) + "px";
+                            }
+                          }}
+                          placeholder="พิมพ์ข้อความของคุณที่นี่..."
+                          className="auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                          value={message}
+                          onChange={(e) => {
+                            setMessage(e.target.value);
+                            // Auto-resize textarea
+                            e.target.style.height = "auto";
+                            e.target.style.height =
+                              Math.min(e.target.scrollHeight, 120) + "px";
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" && !e.shiftKey) {
+                              e.preventDefault();
+                              if (message.trim()) {
+                                handleSendMessage();
+                              }
+                            }
+                          }}
+                          rows={1}
+                          style={{
+                            minHeight: "44px",
+                            maxHeight: "120px",
+                          }}
+                        />
+                      </div>
                       <button
                         type="submit"
-                        className="flex-shrink-0 rounded-lg bg-blue-600 p-2.5 text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-                        disabled={!message.trim()}
+                        className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+                        disabled={!message.trim() || isTyping}
+                        aria-label="ส่งข้อความ"
                       >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          className="h-4 w-4"
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                        >
-                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                        </svg>
+                        {isTyping ? (
+                          <svg
+                            className="h-5 w-5 animate-spin"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                        ) : (
+                          <svg
+                            className="h-5 w-5"
+                            fill="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                          </svg>
+                        )}
                       </button>
                     </div>
                     {/* Status Text */}
@@ -256,11 +380,10 @@ export default function ChatPage() {
                 {/* Desktop Layout */}
                 <div className="hidden sm:block">
                   <form
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
                       if (!message.trim()) return;
-                      alert(`ส่งข้อความ: ${message}`);
-                      setMessage("");
+                      await handleSendMessage();
                     }}
                     className="flex items-center gap-3"
                   >
@@ -336,28 +459,75 @@ export default function ChatPage() {
                         </span>
                       </div>
                     </div>
-                    <input
-                      type="text"
-                      placeholder="Type your message..."
-                      className="flex-1 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-gray-900 transition-colors duration-200 focus:border-transparent focus:ring-2 focus:ring-blue-500 focus:outline-none sm:py-3 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                    />
+                    <div className="flex-1">
+                      <textarea
+                        ref={(textarea) => {
+                          if (textarea) {
+                            textarea.style.height = "auto";
+                            textarea.style.height =
+                              Math.min(textarea.scrollHeight, 120) + "px";
+                          }
+                        }}
+                        placeholder="พิมพ์ข้อความของคุณที่นี่..."
+                        className="auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400"
+                        value={message}
+                        onChange={(e) => {
+                          setMessage(e.target.value);
+                          // Auto-resize textarea
+                          e.target.style.height = "auto";
+                          e.target.style.height =
+                            Math.min(e.target.scrollHeight, 120) + "px";
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            if (message.trim()) {
+                              handleSendMessage();
+                            }
+                          }
+                        }}
+                        rows={1}
+                        style={{
+                          minHeight: "44px",
+                          maxHeight: "120px",
+                        }}
+                      />
+                    </div>
                     <button
                       type="submit"
-                      className="flex-shrink-0 rounded-lg bg-blue-600 p-2.5 text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:p-3"
-                      disabled={!message.trim()}
+                      className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+                      disabled={!message.trim() || isTyping}
+                      aria-label="ส่งข้อความ"
                     >
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        className="h-4 w-4 sm:h-5 sm:w-5"
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                      >
-                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
-                      </svg>
+                      {isTyping ? (
+                        <svg
+                          className="h-5 w-5 animate-spin"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                      ) : (
+                        <svg
+                          className="h-5 w-5"
+                          fill="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                      )}
                     </button>
                   </form>
                 </div>

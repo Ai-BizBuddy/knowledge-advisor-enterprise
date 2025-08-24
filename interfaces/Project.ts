@@ -5,7 +5,7 @@ export interface Project {
   description: string;
   visibility: string;
   document_count?: number; // Computed field
-  status: ProjectStatus; // Use enum instead of raw numbers
+  status: 1 | 2; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
   owner: string; // UUID foreign key to auth.users
   is_active: boolean; // Boolean for active status
   created_at: string;
@@ -15,19 +15,18 @@ export interface Project {
 // Status enum for better type safety
 export enum ProjectStatus {
   ACTIVE = 1,
-  PAUSED = 2,
-  DRAFT = 3,
+  INACTIVE = 2,
 }
 
 // Helper type for status display
-export type ProjectStatusDisplay = "Active" | "Paused" | "Draft";
+export type ProjectStatusDisplay = "Active" | "Inactive";
 
 // Create project input interface
 export interface CreateProjectInput {
   name: string;
   description: string;
   status: ProjectStatus;
-  visibility: string; // 1=Public, 2=Private (optional, defaults to 2)
+  visibility: "public" | "private" | "department" | "custom"; // 1=Public, 2=Private (optional, defaults to 2)
 }
 
 // Update project input interface
@@ -41,9 +40,9 @@ export interface UpdateProjectInput {
 export interface Document {
   id: string; // UUID in Supabase
   name: string;
-  type: string; // File type (pdf, docx, txt, etc.)
+  file_type: string; // File type (pdf, docx, txt, etc.)
   status: string; // Upload status (Uploaded, Processing, Error, etc.)
-  project_id: string; // UUID foreign key
+  knowledge_base_id: string; // UUID foreign key
   chunk_count: number;
   file_size?: number; // File size in bytes
   mime_type?: string; // MIME type of the file
@@ -70,11 +69,25 @@ export interface KnowledgeBase extends Project {
 export interface CreateDocumentInput {
   name: string;
   type: string;
-  project_id: string;
+  knowledge_base_id: string;
+  status?: string;
   file_size?: number;
   mime_type?: string;
   path: string;
   url: string;
+  metadata?: Record<string, unknown>;
+}
+
+// Multiple documents creation input interface
+export interface CreateMultipleDocumentsInput {
+  knowledge_base_id: string;
+  documents: Omit<CreateDocumentInput, "knowledge_base_id">[];
+}
+
+// Enhanced interface for file-based document creation
+export interface CreateDocumentsFromFilesInput {
+  knowledge_base_id: string;
+  files: File[];
   metadata?: Record<string, unknown>;
 }
 

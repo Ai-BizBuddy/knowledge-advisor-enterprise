@@ -1,0 +1,84 @@
+/* Chat animations and enhancements */
+
+.chat-message {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+.chat-message-user {
+  animation: fadeInRight 0.3s ease-out;
+}
+
+.chat-message-assistant {
+  animation: fadeInLeft 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Smooth scrolling for chat container */
+.chat-scroll-container {
+  scroll-behavior: smooth;
+}
+
+/* Typing indicator enhancement */
+.typing-indicator {
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+/* Auto-resize textarea */
+.auto-resize-textarea {
+  transition: height 0.2s ease;
+  field-sizing: content;
+  overflow-y: hidden;
+}
+
+/* Message bubble hover effects */
+.message-bubble:hover {
+  transform: translateY(-1px);
+  transition: transform 0.2s ease;
+}
+
+/* Smooth border radius transitions */
+.message-bubble {
+  transition: all 0.2s ease;
+}

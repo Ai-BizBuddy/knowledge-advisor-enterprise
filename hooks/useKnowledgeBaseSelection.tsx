@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from "react";
 import { knowledgeBaseService } from "@/services";
+import { useCallback, useEffect, useState } from "react";
 
 export interface KnowledgeBaseSelection {
   id: string; // Updated to string UUID
@@ -16,17 +16,8 @@ export const useKnowledgeBaseSelection = () => {
   const [selectAllKB, setSelectAllKB] = useState(false);
   const loadKnowledgeBases = useCallback(async () => {
     try {
-      // Provide required pagination options - fetch all knowledge bases for selection
-      const paginationOptions = {
-        currentPage: 1,
-        totalPages: 1,
-        startIndex: 0,
-        endIndex: 999, // Large number to get all knowledge bases
-        totalItems: 0,
-      };
-
-      const result = await knowledgeBaseService.getProjects(paginationOptions);
-      const kbSelection: KnowledgeBaseSelection[] = result.data.map(
+      const projects = await knowledgeBaseService.getProjects();
+      const kbSelection: KnowledgeBaseSelection[] = projects.data.map(
         (project) => ({
           id: project.id,
           name: project.name,

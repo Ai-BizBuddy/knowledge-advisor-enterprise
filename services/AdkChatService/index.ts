@@ -104,10 +104,7 @@ class AdkChatService {
   private readonly appName = "knowledge_agent";
 
   constructor(config: AdkChatServiceConfig = {}) {
-    this.baseUrl =
-      config.baseUrl ||
-      process.env.NEXT_PUBLIC_ADK_BASE_URL ||
-      "https://matters-fed-layout-mice.trycloudflare.com";
+    this.baseUrl = config.baseUrl || process.env.NEXT_PUBLIC_ADK_BASE_URL || "";
 
     this.client = new BaseFetchClient({
       baseURL: this.baseUrl,
@@ -228,7 +225,7 @@ class AdkChatService {
       const authHeaders = await this.getAuthHeaders();
 
       // Use EventSource for SSE streaming
-      const url = `${this.baseUrl}/api/chat`;
+      const url = `${this.baseUrl}api/chat`;
 
       return new Promise<AdkChatResult>((resolve) => {
         let fullContent = "";
@@ -269,6 +266,9 @@ class AdkChatService {
                   // and if we didn't receive a final non-partial chunk
                   if (!hasError && !hasCompleted) {
                     hasCompleted = true;
+                    console.log(
+                      `[${this.serviceName}] Stream done (EOF), completing with final content length: ${fullContent.length}`,
+                    );
                     onComplete(fullContent);
                     resolve({
                       success: true,
@@ -293,6 +293,9 @@ class AdkChatService {
 
                       // Handle [DONE] signal
                       if (data === "[DONE]") {
+                        console.log(
+                          `[${this.serviceName}] Received [DONE] signal`,
+                        );
                         if (!hasCompleted) {
                           hasCompleted = true;
                           onComplete(fullContent);
@@ -324,15 +327,21 @@ class AdkChatService {
                         const isPartial = parsed.data.partial;
 
                         // Debug logging for tracking
-                        console.log("Processing chunk:", {
-                          messageId,
-                          newText,
-                          partial: isPartial,
-                          currentLength: fullContent.length,
-                        });
+                        console.log(
+                          `[${this.serviceName}] Processing streaming chunk:`,
+                          {
+                            messageId,
+                            newText,
+                            partial: isPartial,
+                            currentLength: fullContent.length,
+                          },
+                        );
 
                         // Skip if we already processed this message ID to prevent duplicates
                         if (messageId === lastProcessedId) {
+                          console.log(
+                            `[${this.serviceName}] Skipping duplicate message ID: ${messageId}`,
+                          );
                           continue;
                         }
 
@@ -342,6 +351,9 @@ class AdkChatService {
                         // If this is the final chunk (partial=false), mark as complete
                         if (!isPartial && !hasCompleted) {
                           hasCompleted = true;
+                          console.log(
+                            `[${this.serviceName}] Final chunk received, completing with total content length: ${newText.length}`,
+                          );
                           onComplete(newText);
                           resolve({
                             success: true,
@@ -356,6 +368,9 @@ class AdkChatService {
                         // Append new text chunk to full content (accumulate all chunks)
                         if (newText) {
                           fullContent += newText;
+                          console.log(
+                            `[${this.serviceName}] Added chunk: "${newText}", Total length: ${fullContent.length}`,
+                          );
 
                           // Update UI with current accumulated content after each chunk
                           onStreamData(fullContent);

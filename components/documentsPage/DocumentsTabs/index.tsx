@@ -1,5 +1,21 @@
 import { getTabCounts } from "@/utils/documentsUtils";
-import { Document } from "@/data/documentsData";
+
+// Document interface for tabs component
+interface Document {
+  name: string;
+  size: string;
+  type: string;
+  date: string;
+  status: string;
+  uploadedBy: string;
+  avatar: string;
+  project: string[];
+  source: string;
+  uploadDate: string;
+  chunk?: number;
+  syncStatus?: string;
+  lastUpdated?: string;
+}
 
 interface DocumentsTabsProps {
   activeTab: string;

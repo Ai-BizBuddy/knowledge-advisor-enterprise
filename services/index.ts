@@ -5,12 +5,13 @@
  * following the project's service architecture standards.
  */
 
+import { AdkChatService } from "./AdkChatService";
 import { DocumentIngestionService } from "./DocumentIngestionService";
-import { KnowledgeBaseService } from "./KnowledgeBaseService";
 import { DocumentSearchService } from "./DocumentSearchService";
+import DocumentService from "./DocumentService";
+import { KnowledgeBaseService } from "./KnowledgeBaseService";
 import { LangflowChatService } from "./LangflowChatService";
 import { LangflowSearchService } from "./LangflowSearchService";
-import { AdkChatService } from "./AdkChatService";
 
 /**
  * Service Configuration
@@ -42,6 +43,13 @@ export const documentIngestionService = new DocumentIngestionService({
  * Manages knowledge base CRUD operations using Supabase
  */
 export const knowledgeBaseService = new KnowledgeBaseService();
+
+/**
+ * Document Service Instance
+ *
+ * Manages document CRUD operations using Supabase with pagination support
+ */
+export const documentService = new DocumentService();
 
 /**
  * Document Search Service Instance
@@ -125,12 +133,12 @@ export const checkAllServicesHealth = async () => {
  * Export individual service classes for backwards compatibility
  */
 export {
+  AdkChatService,
   DocumentIngestionService,
-  KnowledgeBaseService,
   DocumentSearchService,
+  KnowledgeBaseService,
   LangflowChatService,
   LangflowSearchService,
-  AdkChatService,
 };
 
 /**
@@ -138,12 +146,12 @@ export {
  *
  * Export service configuration types for TypeScript support
  */
+export type { AdkChatService as AdkChatServiceType } from "./AdkChatService";
 export type { DocumentIngestionService as DocumentIngestionServiceType } from "./DocumentIngestionService";
-export type { KnowledgeBaseService as KnowledgeBaseServiceType } from "./KnowledgeBaseService";
 export type { DocumentSearchService as DocumentSearchServiceType } from "./DocumentSearchService";
+export type { KnowledgeBaseService as KnowledgeBaseServiceType } from "./KnowledgeBaseService";
 export type { LangflowChatService as LangflowChatServiceType } from "./LangflowChatService";
 export type { LangflowSearchService as LangflowSearchServiceType } from "./LangflowSearchService";
-export type { AdkChatService as AdkChatServiceType } from "./AdkChatService";
 
 /**
  * Default Exports for Clean Imports
