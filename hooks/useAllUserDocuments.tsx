@@ -322,9 +322,13 @@ export function useAllUserDocuments(
     setCurrentPage(1);
   }, []);
 
-  const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      loadDocuments(page);
+    },
+    [loadDocuments],
+  );
 
   const handleDocumentClick = useCallback((id: string) => {
     console.log("[useAllUserDocuments] Document clicked:", id);
@@ -370,6 +374,13 @@ export function useAllUserDocuments(
       loadDocuments(1, true);
     }
   }, [itemsPerPage, documents.length, loadDocuments]);
+
+  // Reload when currentPage changes
+  useEffect(() => {
+    if (autoLoad && currentPage > 1) {
+      loadDocuments(currentPage);
+    }
+  }, [currentPage, autoLoad, loadDocuments]);
 
   return {
     // State

@@ -36,7 +36,11 @@ interface DocumentsTableProps {
   isIndeterminate: boolean;
 }
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string | null | undefined) => {
+  if (!status) {
+    return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+  }
+
   const statusConfig = {
     Completed:
       "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
@@ -44,6 +48,12 @@ const getStatusBadge = (status: string) => {
     OcrinProgress:
       "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
     Processing: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
+    Synced: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
+    "Not Synced":
+      "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300",
+    Syncing:
+      "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
+    Error: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
   };
 
   return (
@@ -167,7 +177,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       {doc.name}
                     </div>
                     <div className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                      {doc.size} • {doc.type.toLocaleLowerCase()}
+                      {doc.size} • {(doc.type || "Unknown").toLowerCase()}
                     </div>
                     <div className="mt-2 flex items-center justify-between">
                       <div className="text-xs text-gray-500 dark:text-gray-400">
@@ -175,9 +185,9 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </div>
                       <div className="flex items-center space-x-2">
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || "")}`}
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || "Unknown")}`}
                         >
-                          {doc.syncStatus}
+                          {doc.syncStatus || doc.status || "Unknown"}
                         </span>
                         {getSyncButton(doc.syncStatus)}
                       </div>
@@ -276,14 +286,17 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400">
                         <span className="font-medium">
-                          {doc.type.toLocaleLowerCase()} Document
+                          {doc.type
+                            ? doc.type.toLocaleLowerCase()
+                            : "Unknown Type"}{" "}
+                          Document
                         </span>
                       </td>
                       <td className="px-3 py-4 whitespace-nowrap sm:px-6">
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || "Unknown")}`}
                         >
-                          {doc.status}
+                          {doc.status || "Unknown"}
                         </span>
                       </td>
                       <td className="px-3 py-4 text-sm whitespace-nowrap text-gray-900 sm:px-6 dark:text-white">

@@ -73,9 +73,17 @@ export default function DocumentsPage() {
     totalPages,
     startIndex,
     endIndex,
+    currentPage,
+    totalItems,
+    itemsPerPage,
+    loading,
     documents,
     filteredDocuments: userFilteredDocuments,
     refresh,
+    searchTerm,
+    setSearchTerm,
+    setItemsPerPage,
+    handlePageChange,
   } = useAllUserDocuments({
     autoLoad: true,
   });
@@ -84,7 +92,6 @@ export default function DocumentsPage() {
     // State
     selectedDocument,
     selectedDocuments,
-    searchTerm,
     activeTab,
     sortBy,
     sortOrder,
@@ -95,10 +102,8 @@ export default function DocumentsPage() {
 
     // Handlers
     setSelectedDocument,
-    setSearchTerm,
     handleSort,
     handleSortOrderToggle,
-    handlePageChange,
     handleSelectAll,
     handleSelectDocument,
     handleClearSelection,
@@ -176,8 +181,9 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
+    // Use loading from useAllUserDocuments instead of setting it manually
+    setLoading(loading);
+  }, [loading, setLoading]);
   return (
     <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
@@ -249,7 +255,7 @@ export default function DocumentsPage() {
             />
 
             {/* Documents List or Empty State */}
-            {userFilteredDocuments.length === 0 ? (
+            {totalItems === 0 ? (
               <div className="mt-8 flex justify-center">
                 <NoDocuments
                   activeTab={activeTab}
@@ -284,19 +290,22 @@ export default function DocumentsPage() {
                 />
 
                 <DocumentsPagination
-                  currentPage={Math.floor(startIndex / 10) + 1}
+                  currentPage={currentPage}
                   totalPages={totalPages}
                   startIndex={startIndex}
                   endIndex={endIndex}
-                  totalDocuments={userFilteredDocuments.length}
+                  totalDocuments={totalItems}
+                  itemsPerPage={itemsPerPage}
+                  loading={loading}
                   onPageChange={handlePageChange}
+                  onItemsPerPageChange={setItemsPerPage}
                 />
               </div>
             )}
           </div>
 
           {/* Document Detail Panel - Responsive sidebar */}
-          {selectedDocument !== null && userFilteredDocuments.length > 0 && (
+          {selectedDocument !== null && totalItems > 0 && (
             <div className="xl:col-span-1">
               <div className="sticky top-4">
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">

@@ -1,10 +1,15 @@
+import React, { useState } from "react";
+
 interface DocumentsPaginationProps {
   currentPage: number;
   totalPages: number;
   startIndex: number;
   endIndex: number;
   totalDocuments: number;
+  itemsPerPage?: number;
+  loading?: boolean;
   onPageChange: (page: number) => void;
+  onItemsPerPageChange?: (itemsPerPage: number) => void;
 }
 
 export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
@@ -13,8 +18,12 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
   startIndex,
   endIndex,
   totalDocuments,
+  itemsPerPage = 10,
+  loading = false,
   onPageChange,
+  onItemsPerPageChange,
 }) => {
+  const [goToPage, setGoToPage] = useState("");
   const generatePageNumbers = () => {
     const pages = [];
 
@@ -41,10 +50,11 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
         <button
           key={i}
           onClick={() => onPageChange(i)}
+          disabled={loading}
           className={`rounded-lg px-2 py-1.5 text-sm transition-colors sm:px-3 sm:py-2 ${
             currentPage === i
               ? "bg-blue-600 text-white"
-              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
+              : "border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           }`}
         >
           {i}
@@ -55,7 +65,7 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
     return pages;
   };
 
-  if (totalPages <= 1) {
+  if (totalPages <= 1 || totalDocuments === 0) {
     return null;
   }
 
@@ -65,8 +75,9 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
       <div className="block sm:hidden">
         <div className="mb-3 text-center text-sm text-gray-700 dark:text-gray-300">
           <div className="font-medium">
-            {startIndex + 1}-{Math.min(endIndex, totalDocuments)} of{" "}
-            {totalDocuments}
+            {totalDocuments === 0
+              ? "No documents"
+              : `${startIndex + 1}-${Math.min(endIndex + 1, totalDocuments)} of ${totalDocuments}`}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
             Page {currentPage} of {totalPages}
@@ -75,7 +86,7 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
         <div className="flex items-center justify-between">
           <button
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || loading}
             className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <svg
@@ -151,20 +162,73 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
       <div className="hidden items-center justify-between sm:flex">
         <div className="flex items-center gap-4">
           <div className="text-sm text-gray-700 dark:text-gray-300">
-            Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
-            <span className="font-medium">
-              {Math.min(endIndex, totalDocuments)}
-            </span>{" "}
-            of <span className="font-medium">{totalDocuments}</span> results
+            {totalDocuments === 0 ? (
+              "No documents found"
+            ) : (
+              <>
+                Showing <span className="font-medium">{startIndex + 1}</span> to{" "}
+                <span className="font-medium">
+                  {Math.min(endIndex + 1, totalDocuments)}
+                </span>{" "}
+                of <span className="font-medium">{totalDocuments}</span> results
+              </>
+            )}
           </div>
           <div className="text-xs text-gray-500 dark:text-gray-400">
             Page {currentPage} of {totalPages}
           </div>
+          {onItemsPerPageChange && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700 dark:text-gray-300">
+                Show:
+              </label>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
+                className="rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+              <span className="text-sm text-gray-700 dark:text-gray-300">
+                per page
+              </span>
+            </div>
+          )}
+
+          {/* Go to page input */}
+          {totalPages > 5 && (
+            <div className="flex items-center gap-2">
+              <label className="text-sm text-gray-700 dark:text-gray-300">
+                Go to:
+              </label>
+              <input
+                type="number"
+                min={1}
+                max={totalPages}
+                value={goToPage}
+                onChange={(e) => setGoToPage(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    const page = parseInt(goToPage);
+                    if (page >= 1 && page <= totalPages) {
+                      onPageChange(page);
+                      setGoToPage("");
+                    }
+                  }
+                }}
+                placeholder={`1-${totalPages}`}
+                className="w-20 rounded border border-gray-300 bg-white px-2 py-1 text-sm text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
+              />
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <button
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
+            disabled={currentPage === 1 || loading}
             className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <svg
@@ -187,7 +251,7 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
 
           <button
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
+            disabled={currentPage === totalPages || loading}
             className="flex items-center gap-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
           >
             <span className="hidden lg:inline">Next</span>
