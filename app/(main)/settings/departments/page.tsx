@@ -515,12 +515,6 @@ export default function DepartmentsPage() {
                       </th>
                       <th
                         scope="col"
-                        className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:table-cell dark:text-gray-400"
-                      >
-                        Status
-                      </th>
-                      <th
-                        scope="col"
                         className="hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase lg:table-cell dark:text-gray-400"
                       >
                         Created
@@ -628,39 +622,6 @@ export default function DepartmentsPage() {
                           <td className="hidden max-w-xs px-6 py-4 text-sm text-gray-500 md:table-cell dark:text-gray-400">
                             <div className="truncate">
                               {department.description || "No description"}
-                            </div>
-                          </td>
-                          <td className="hidden px-6 py-4 whitespace-nowrap sm:table-cell">
-                            <div className="flex items-center space-x-2">
-                              <Badge
-                                color={
-                                  department.is_active ? "success" : "failure"
-                                }
-                                className="text-xs"
-                              >
-                                {department.is_active ? "Active" : "Inactive"}
-                              </Badge>
-                              <button
-                                onClick={() =>
-                                  toggleDepartmentStatus(department)
-                                }
-                                className="text-gray-400 transition-colors hover:text-gray-600 dark:hover:text-gray-300"
-                                title={`${department.is_active ? "Deactivate" : "Activate"} department`}
-                              >
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                                  />
-                                </svg>
-                              </button>
                             </div>
                           </td>
                           <td className="hidden px-6 py-4 text-sm whitespace-nowrap text-gray-500 lg:table-cell dark:text-gray-400">
