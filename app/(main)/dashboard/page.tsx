@@ -25,7 +25,7 @@ export default function Dashboard() {
   // Set loading state when data is being fetched
   useEffect(() => {
     setLoading(false);
-  }, []);
+  }, [setLoading]);
   // Mock data for recent activities (this should come from a service in real app)
   const recentActivities = [
     {

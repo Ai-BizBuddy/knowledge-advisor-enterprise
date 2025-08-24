@@ -13,13 +13,9 @@ import { useAdkChat, useKnowledgeBaseSelection } from "@/hooks";
 import { ChatSession } from "@/hooks/useChatHistory";
 
 export default function ChatPage() {
-  const [selectedKB, setSelectedKB] = useState<string[]>();
   const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
   const [message, setMessage] = useState("");
   const [openHistory, setOpenHistory] = useState(false);
-  const [toasts, setToasts] = useState<
-    Array<{ id: string; message: string; type: "success" | "error" | "info" }>
-  >([]);
   const { setLoading } = useLoading();
 
   const {
@@ -34,13 +30,10 @@ export default function ChatPage() {
 
   const {
     knowledgeBases,
-    loading,
-    selectAllKB,
     handleSelectKnowledgeBase,
     handleSelectAllKB,
     getSelectedKnowledgeBases,
     getSelectedCount,
-    getTotalDocuments,
   } = useKnowledgeBaseSelection();
 
   useEffect(() => {
@@ -52,7 +45,7 @@ export default function ChatPage() {
 
   useEffect(() => {
     setLoading(false);
-  }, []);
+  }, [setLoading]);
 
   const handleLoadChatSession = (session: ChatSession) => {
     setMessages(session.messages);
@@ -74,25 +67,11 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (connectionStatus === "timeout") {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: "การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ",
-          type: "error",
-        },
-      ]);
+      console.warn("การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ");
+      // TODO: Add toast notification component
     } else if (connectionStatus === "error") {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่",
-          type: "error",
-        },
-      ]);
+      console.error("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่");
+      // TODO: Add toast notification component
     }
   }, [connectionStatus]);
 

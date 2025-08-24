@@ -2,20 +2,69 @@
 import { useEffect, useState } from "react";
 import { DocumentDetail, NoDocuments, UploadDocument } from "@/components";
 import { useLoading } from "@/contexts/LoadingContext";
-import { useDocumentsManagement } from "@/hooks";
+import { useAllUserDocuments, useDocumentsManagement } from "@/hooks";
 import {
   DocumentsHeader,
   DocumentsControls,
-  DocumentsTabs,
   DocumentsSearch,
   BulkActions,
   DocumentsTable,
   DocumentsPagination,
 } from "@/components";
+import { Document } from "@/interfaces/Project";
+
+// Interface that matches what DocumentsTable expects (temporarily for compatibility)
+interface DocumentTableItem {
+  name: string;
+  size: string;
+  type: string;
+  date: string;
+  rag_status?: string;
+  status: string;
+  uploadedBy: string;
+  avatar: string;
+  project: string[];
+  source: string;
+  uploadDate: string;
+  chunk?: number;
+  syncStatus?: string;
+  lastUpdated?: string;
+}
+
+// Adapter function to convert new Document interface to DocumentsTable-compatible format
+const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
+  name: doc.name,
+  size: doc.file_size
+    ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
+    : "Unknown",
+  type: doc.file_type,
+  date: new Date(doc.created_at).toLocaleDateString(),
+  rag_status: doc.rag_status || "not_synced",
+  status: doc.status || "",
+  uploadedBy: "User", // This field doesn't exist in new interface
+  avatar: "/avatars/default.png", // Default avatar
+  project: [], // This field doesn't exist in new interface
+  source: doc.rag_status || "not_synced",
+  uploadDate: new Date(doc.created_at).toLocaleDateString(),
+  chunk: doc.chunk_count,
+  syncStatus: doc.rag_status === "synced" ? "Synced" : "Not Synced",
+  lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
+});
 
 export default function DocumentsPage() {
   const { setLoading } = useLoading();
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+
+  // User documents from hook - auto-load enabled for all user documents
+  const {
+    totalPages,
+    startIndex,
+    endIndex,
+    documents,
+    filteredDocuments: userFilteredDocuments,
+  } = useAllUserDocuments({
+    autoLoad: true,
+  });
 
   const {
     // State
@@ -25,15 +74,6 @@ export default function DocumentsPage() {
     activeTab,
     sortBy,
     sortOrder,
-    loading,
-
-    // Data
-    documents,
-    filteredDocuments,
-    paginatedDocuments,
-    totalPages,
-    startIndex,
-    endIndex,
 
     // Selection states
     isAllSelected,
@@ -45,18 +85,19 @@ export default function DocumentsPage() {
     handleSort,
     handleSortOrderToggle,
     handlePageChange,
-    handleTabChange,
-    handleTabAction,
     handleSelectAll,
     handleSelectDocument,
     handleDeleteDocuments,
     handleClearSelection,
   } = useDocumentsManagement();
 
+  const adaptedDocuments = documents.map((doc: Document) =>
+    adaptDocumentToTableFormat(doc),
+  );
+
   useEffect(() => {
     setLoading(false);
   }, []);
-
   return (
     <div className="min-h-screen">
       {/* Main Container with consistent responsive padding */}
@@ -103,13 +144,13 @@ export default function DocumentsPage() {
         <div className="grid grid-cols-1 gap-6 xl:grid-cols-4">
           {/* Main Content Area */}
           <div className="space-y-6 xl:col-span-3">
-            <DocumentsTabs
+            {/* <DocumentsTabs
               activeTab={activeTab}
               onTabChange={handleTabChange}
-              documents={documents}
+              documents={adaptedDocuments}
               onTabAction={handleTabAction}
               loading={loading}
-            />
+            /> */}
 
             <DocumentsSearch
               searchTerm={searchTerm}
@@ -124,7 +165,7 @@ export default function DocumentsPage() {
             />
 
             {/* Documents List or Empty State */}
-            {filteredDocuments.length === 0 ? (
+            {userFilteredDocuments.length === 0 ? (
               <div className="mt-8 flex justify-center">
                 <NoDocuments
                   activeTab={activeTab}
@@ -134,7 +175,7 @@ export default function DocumentsPage() {
             ) : (
               <div className="space-y-6">
                 <DocumentsTable
-                  documents={paginatedDocuments}
+                  documents={adaptedDocuments}
                   selectedDocuments={selectedDocuments}
                   selectedDocument={selectedDocument}
                   startIndex={startIndex}
@@ -153,7 +194,7 @@ export default function DocumentsPage() {
                   totalPages={totalPages}
                   startIndex={startIndex}
                   endIndex={endIndex}
-                  totalDocuments={filteredDocuments.length}
+                  totalDocuments={userFilteredDocuments.length}
                   onPageChange={handlePageChange}
                 />
               </div>
@@ -161,12 +202,12 @@ export default function DocumentsPage() {
           </div>
 
           {/* Document Detail Panel - Responsive sidebar */}
-          {selectedDocument !== null && filteredDocuments.length > 0 && (
+          {selectedDocument !== null && userFilteredDocuments.length > 0 && (
             <div className="xl:col-span-1">
               <div className="sticky top-4">
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
-                  {filteredDocuments[selectedDocument] && (
-                    <DocumentDetail {...filteredDocuments[selectedDocument]} />
+                  {adaptedDocuments[selectedDocument] && (
+                    <DocumentDetail {...adaptedDocuments[selectedDocument]} />
                   )}
                 </div>
               </div>

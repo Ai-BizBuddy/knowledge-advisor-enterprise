@@ -30,7 +30,7 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 export interface UseDocumentsOptions {
-  knowledgeBaseId: string;
+  knowledgeBaseId?: string;
   autoLoad?: boolean;
 }
 

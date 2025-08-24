@@ -19,11 +19,11 @@ export interface DocumentDisplayItem {
  */
 export function formatFileSize(bytes: number): string {
   if (bytes === 0) return '0 B';
-  
+
   const k = 1024;
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  
+
   return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
 }
 
@@ -34,31 +34,31 @@ export function formatRelativeTime(dateString: string): string {
   const date = new Date(dateString);
   const now = new Date();
   const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  
+
   if (diffInSeconds < 60) {
     return 'Just now';
   }
-  
+
   const diffInMinutes = Math.floor(diffInSeconds / 60);
   if (diffInMinutes < 60) {
     return `${diffInMinutes} minute${diffInMinutes === 1 ? '' : 's'} ago`;
   }
-  
+
   const diffInHours = Math.floor(diffInMinutes / 60);
   if (diffInHours < 24) {
     return `${diffInHours} hour${diffInHours === 1 ? '' : 's'} ago`;
   }
-  
+
   const diffInDays = Math.floor(diffInHours / 24);
   if (diffInDays < 30) {
     return `${diffInDays} day${diffInDays === 1 ? '' : 's'} ago`;
   }
-  
+
   const diffInMonths = Math.floor(diffInDays / 30);
   if (diffInMonths < 12) {
     return `${diffInMonths} month${diffInMonths === 1 ? '' : 's'} ago`;
   }
-  
+
   const diffInYears = Math.floor(diffInMonths / 12);
   return `${diffInYears} year${diffInYears === 1 ? '' : 's'} ago`;
 }
@@ -70,7 +70,7 @@ export function transformDocumentForDisplay(doc: Document): DocumentDisplayItem 
   return {
     id: doc.id,
     name: doc.name,
-    type: doc.type || 'Unknown',
+    type: doc.file_type || 'Unknown',
     size: formatFileSize(doc.file_size || 0),
     project: (typeof doc.metadata?.project_name === 'string' ? doc.metadata.project_name : 'Unknown Project'),
     uploadedBy: (typeof doc.metadata?.uploaded_by === 'string' ? doc.metadata.uploaded_by : 'Unknown User'),
@@ -104,22 +104,22 @@ export function getStatusColor(status: string): string {
  */
 export function getFileTypeIcon(type: string, mimeType?: string): string {
   const normalizedType = type.toLowerCase();
-  
+
   if (normalizedType === 'pdf' || mimeType?.includes('pdf')) {
     return '/assets/icons/pdf.svg';
   }
-  
+
   if (normalizedType === 'docx' || normalizedType === 'doc' || mimeType?.includes('word')) {
     return '/assets/icons/doc.svg';
   }
-  
+
   if (normalizedType === 'xlsx' || normalizedType === 'xls' || mimeType?.includes('sheet')) {
     return '/assets/icons/xlsx.svg';
   }
-  
+
   if (normalizedType === 'markdown' || normalizedType === 'md' || mimeType?.includes('markdown')) {
     return '/assets/icons/markdown.svg';
   }
-  
+
   return '/assets/icons/file.svg';
 }

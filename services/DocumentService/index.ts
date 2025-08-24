@@ -390,7 +390,7 @@ class DocumentService {
                     // status: 'uploading',
                     file_size: file.size,
                     mime_type: file.type,
-                    // file_path: filePath,
+                    file_path: filePath,
                     url: fileUrl,
                     chunk_count: 0,
                     // rag_status: 'not_synced' as const,
@@ -498,10 +498,195 @@ class DocumentService {
     }
 
     /**
+     * Get all documents for the current user without requiring knowledgeBaseId
+     */
+    async getAllUserDocuments(
+        paginationOptions: PaginationOptions,
+        filters?: { status?: string; searchTerm?: string; type?: string }
+    ): Promise<{ data: Document[], count: number }> {
+        console.log(`[${this.serviceName}] Fetching all user documents with pagination:`, paginationOptions);
+
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            // Build base query for count - join with knowledge_base to ensure user owns the data
+            let countQuery = supabaseTable
+                .from('document')
+                .select(`
+                    *,
+                    knowledge_base!inner(
+                        id,
+                        created_by
+                    )
+                `, { count: 'exact', head: true })
+                .eq('knowledge_base.created_by', user.id);
+
+            // Build base query for data - join with knowledge_base to ensure user owns the data
+            let dataQuery = supabaseTable
+                .from('document')
+                .select(`
+                    *,
+                    knowledge_base!inner(
+                        id,
+                        name,
+                        created_by
+                    )
+                `)
+                .eq('knowledge_base.created_by', user.id);
+
+            // Apply filters
+            if (filters?.status && filters.status !== 'all') {
+                countQuery = countQuery.eq('status', filters.status);
+                dataQuery = dataQuery.eq('status', filters.status);
+            }
+
+            if (filters?.type && filters.type !== 'all') {
+                countQuery = countQuery.eq('type', filters.type);
+                dataQuery = dataQuery.eq('type', filters.type);
+            }
+
+            if (filters?.searchTerm && filters.searchTerm.trim()) {
+                const searchTerm = filters.searchTerm.trim();
+                countQuery = countQuery.ilike('name', `%${searchTerm}%`);
+                dataQuery = dataQuery.ilike('name', `%${searchTerm}%`);
+            }
+
+            // Get total count first
+            const { count, error: countError } = await countQuery;
+
+            if (countError) {
+                console.error(`[${this.serviceName}] Error getting count:`, countError);
+            }
+
+            // Get paginated data
+            const { data: documents, error } = await dataQuery
+                .order('created_at', { ascending: false })
+                .range(paginationOptions.startIndex, paginationOptions.endIndex);
+
+            if (error) {
+                console.error(`[${this.serviceName}] Supabase query error:`, error);
+                throw new Error(`Failed to fetch user documents: ${error.message}`);
+            }
+
+            console.log(`[${this.serviceName}] Found ${documents?.length || 0} user documents (Total: ${count})`);
+
+            return { data: documents || [], count: count || 0 };
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error fetching user documents:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Search all user documents without requiring knowledgeBaseId
+     */
+    async searchAllUserDocuments(
+        query: string,
+        paginationOptions: PaginationOptions
+    ): Promise<{ data: Document[], count: number }> {
+        console.log(`[${this.serviceName}] Searching all user documents with query:`, query);
+
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            // Get total count for search results
+            const { count, error: countError } = await supabaseTable
+                .from('document')
+                .select(`
+                    *,
+                    knowledge_base!inner(
+                        id,
+                        created_by
+                    )
+                `, { count: 'exact', head: true })
+                .eq('knowledge_base.created_by', user.id)
+                .or(`name.ilike.%${query}%,content.ilike.%${query}%`);
+
+            if (countError) {
+                console.error(`[${this.serviceName}] Error getting search count:`, countError);
+            }
+
+            // Get paginated search results
+            const { data: documents, error } = await supabaseTable
+                .from('document')
+                .select(`
+                    *,
+                    knowledge_base!inner(
+                        id,
+                        name,
+                        created_by
+                    )
+                `)
+                .eq('knowledge_base.created_by', user.id)
+                .or(`name.ilike.%${query}%,content.ilike.%${query}%`)
+                .order('created_at', { ascending: false })
+                .range(paginationOptions.startIndex, paginationOptions.endIndex);
+
+            if (error) {
+                console.error(`[${this.serviceName}] Supabase search error:`, error);
+                throw new Error(`Failed to search user documents: ${error.message}`);
+            }
+
+            console.log(`[${this.serviceName}] Found ${documents?.length || 0} search results (Total: ${count})`);
+
+            return { data: documents || [], count: count || 0 };
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error searching user documents:`, error);
+            throw error;
+        }
+    }
+
+    /**
+     * Get document by ID (user must own the document through knowledge base)
+     */
+    async getUserDocument(documentId: string): Promise<Document | null> {
+        console.log(`[${this.serviceName}] Fetching user document:`, documentId);
+
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            const { data: document, error } = await supabaseTable
+                .from('document')
+                .select(`
+                    *,
+                    knowledge_base!inner(
+                        id,
+                        name,
+                        created_by
+                    )
+                `)
+                .eq('id', documentId)
+                .eq('knowledge_base.created_by', user.id)
+                .single();
+
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    // No rows returned
+                    return null;
+                }
+                console.error(`[${this.serviceName}] Error fetching user document:`, error);
+                throw new Error(`Failed to fetch document: ${error.message}`);
+            }
+
+            console.log(`[${this.serviceName}] Successfully fetched user document:`, document?.name);
+            return document;
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error fetching user document:`, error);
+            throw error;
+        }
+    }
+
+    /**
      * Legacy methods for backward compatibility
      */
     async getAllDocuments() {
-        console.warn(`[${this.serviceName}] getAllDocuments is deprecated. Use getDocumentsByKnowledgeBase instead.`);
+        console.warn(`[${this.serviceName}] getAllDocuments is deprecated. Use getDocumentsByKnowledgeBase or getAllUserDocuments instead.`);
         const { data, error } = await createClientTable().from('document').select('*');
         if (error) {
             console.error(`[${this.serviceName}] Error fetching all documents:`, error);

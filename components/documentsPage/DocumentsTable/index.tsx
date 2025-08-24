@@ -1,5 +1,4 @@
 import { getFileIcon } from "@/utils/documentsUtils";
-import { Document } from "@/interfaces/Project";
 // Interface that matches the expected document structure for the table
 
 interface DocumentTableItem {

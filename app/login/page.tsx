@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { useLoading } from '@/contexts/LoadingContext';
-import { useAuth } from '@/hooks';
-import { Label, TextInput, Button, Checkbox } from 'flowbite-react'
-import { useEffect, useState } from 'react'
+import { useLoading } from "@/contexts/LoadingContext";
+import { useAuth } from "@/hooks";
+import { Label, TextInput, Button, Checkbox } from "flowbite-react";
+import { useEffect, useState } from "react";
 
 export default function LoginPage() {
-  const { login, getSession, loading, error } = useAuth();
+  const { login, getSession, error } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
   const { setLoading } = useLoading();
 
@@ -23,7 +23,7 @@ export default function LoginPage() {
       }
     };
     checkSession();
-  }, [getSession]);
+  }, [getSession, setLoading]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
@@ -40,12 +40,11 @@ export default function LoginPage() {
     }
   };
 
-
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 px-4">
-      <div className="w-full max-w-md p-6 bg-white rounded-xl shadow-lg dark:bg-gray-800">
+    <div className="flex min-h-screen items-center justify-center bg-gray-100 px-4 dark:bg-gray-900">
+      <div className="w-full max-w-md rounded-xl bg-white p-6 shadow-lg dark:bg-gray-800">
         {/* Logo or Title */}
-        <div className="text-center mb-6">
+        <div className="mb-6 text-center">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
             Knowledge Advisor
           </h1>
@@ -56,8 +55,10 @@ export default function LoginPage() {
 
         {/* Error message */}
         {error && (
-          <div className="mb-4 text-center text-sm text-red-600 bg-red-100 dark:bg-red-900 dark:text-red-300 rounded-lg py-2 px-3">
-            {typeof error === 'string' ? error : 'Login failed. Please try again.'}
+          <div className="mb-4 rounded-lg bg-red-100 px-3 py-2 text-center text-sm text-red-600 dark:bg-red-900 dark:text-red-300">
+            {typeof error === "string"
+              ? error
+              : "Login failed. Please try again."}
           </div>
         )}
 
@@ -93,16 +94,19 @@ export default function LoginPage() {
               <Checkbox id="remember" />
               <Label htmlFor="remember">Remember me</Label>
             </div>
-            <a href="#" className="text-sm text-blue-600 hover:underline dark:text-blue-400">
+            <a
+              href="#"
+              className="text-sm text-blue-600 hover:underline dark:text-blue-400"
+            >
               Forgot password?
             </a>
           </div>
 
-          <Button type="submit" className="w-full" >
+          <Button type="submit" className="w-full">
             Sign in
           </Button>
         </form>
       </div>
     </div>
-  )
+  );
 }

@@ -70,7 +70,7 @@ export default function KnowledgeBase() {
 
   useEffect(() => {
     loadKnowledgeBases(1);
-  }, []);
+  }, [loadKnowledgeBases]);
 
   return (
     <div className="min-h-screen">

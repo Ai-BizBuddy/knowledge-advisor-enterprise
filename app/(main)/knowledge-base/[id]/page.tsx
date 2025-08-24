@@ -9,7 +9,7 @@ import {
   ChatHistoryList,
 } from "@/components";
 import { Breadcrumb, BreadcrumbItem, Button } from "flowbite-react";
-import { useState, useEffect, useRef, use } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAdkChat, useDocuments, useKnowledgeBase } from "@/hooks";
 import { useRouter, useParams } from "next/navigation";
 import { useLoading } from "@/contexts/LoadingContext";
@@ -77,9 +77,6 @@ export default function KnowledgeBaseDetail() {
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [toasts, setToasts] = useState<
-    Array<{ id: string; message: string; type: "success" | "error" | "info" }>
-  >([]);
 
   // Chat scroll ref
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -136,25 +133,11 @@ export default function KnowledgeBaseDetail() {
 
   useEffect(() => {
     if (connectionStatus === "timeout") {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: "การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ",
-          type: "error",
-        },
-      ]);
+      console.warn("การเชื่อมต่อหมดเวลา ระบบจะลองใหม่อัตโนมัติ");
+      // TODO: Add toast notification component
     } else if (connectionStatus === "error") {
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: "เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่",
-          type: "error",
-        },
-      ]);
+      console.error("เกิดข้อผิดพลาดในการเชื่อมต่อ กรุณาลองใหม่");
+      // TODO: Add toast notification component
     }
   }, [connectionStatus]);
 
@@ -283,21 +266,8 @@ export default function KnowledgeBaseDetail() {
       }, 100);
     } catch (err) {
       console.error("[KnowledgeBaseDetail] Chat error:", err);
-      // Show error toast
-      const toastId = Date.now().toString();
-      setToasts((prev) => [
-        ...prev,
-        {
-          id: toastId,
-          message: "ไม่สามารถส่งข้อความได้ กรุณาลองใหม่",
-          type: "error",
-        },
-      ]);
-
-      // Auto remove toast after 5 seconds
-      setTimeout(() => {
-        setToasts((prev) => prev.filter((t) => t.id !== toastId));
-      }, 5000);
+      console.error("ไม่สามารถส่งข้อความได้ กรุณาลองใหม่");
+      // TODO: Add toast notification component
     }
   };
 

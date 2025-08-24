@@ -8,6 +8,7 @@ export { useKnowledgeBase } from './useKnowledgeBase';
 export { useDocumentIngestion } from './useDocumentIngestion';
 export { useDocumentSearch } from './useDocumentSearch';
 export { useDocuments } from './useDocuments';
+export { useAllUserDocuments } from './useAllUserDocuments';
 export { useStatistics } from './useStatistics';
 export { useRecentActivity } from './useRecentActivity';
 export { useUserManagement } from './useUserManagement';

@@ -216,7 +216,9 @@ export default function DocumentsPage({ knowledgeBaseId }: DocumentsPageProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold">{document.name}</h3>
-                  <p className="text-sm text-gray-600">Type: {document.type}</p>
+                  <p className="text-sm text-gray-600">
+                    Type: {document.file_type}
+                  </p>
                   <p className="text-sm text-gray-600">
                     Status: {document.status}
                   </p>
