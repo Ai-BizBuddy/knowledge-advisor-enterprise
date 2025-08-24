@@ -1,44 +1,44 @@
 /**
  * useDocumentSearch Hook
- * 
+ *
  * Custom React hook for document search functionality using Langflow AI and Supabase
  */
 
-import { useState, useCallback } from 'react';
-import { 
-  searchDocuments, 
+import type { Document } from "@/interfaces/Project";
+import type { DocumentSearchResult } from "@/services/DocumentSearchService";
+import {
+  getDocumentSearchAnalytics,
+  searchDocuments,
   searchDocumentsInProjects,
   testDocumentSearchConnection,
-  getDocumentSearchAnalytics
-} from '@/services/Project/supabase';
-import type { DocumentSearchResult } from '@/services/DocumentSearchService';
-import type { Document } from '@/interfaces/Project';
+} from "@/services/Project/supabase";
+import { useCallback, useState } from "react";
 
 // Helper function to convert search result item to Document format
-const convertSearchResultToDocument = (searchResult: { 
-  id: string; 
-  title: string; 
-  documentType: string; 
-  projectId: string; 
-  lastModified: string; 
-  metadata?: Record<string, unknown> 
+const convertSearchResultToDocument = (searchResult: {
+  id: string;
+  title: string;
+  documentType: string;
+  projectId: string;
+  lastModified: string;
+  metadata?: Record<string, unknown>;
 }): Document => {
   return {
     id: searchResult.id,
     name: searchResult.title,
-    type: searchResult.documentType,
-    status: 'synced',
-    project_id: searchResult.projectId,
+    file_type: searchResult.documentType,
+    status: "synced",
+    knowledge_base_id: searchResult.projectId,
     chunk_count: 0,
     file_size: 0,
-    mime_type: '',
+    mime_type: "",
     updated_at: searchResult.lastModified,
     created_at: searchResult.lastModified,
-    path: '',
-    url: '',
-    rag_status: 'synced' as const,
+    path: "",
+    url: "",
+    rag_status: "synced" as const,
     last_rag_sync: searchResult.lastModified,
-    metadata: searchResult.metadata
+    metadata: searchResult.metadata,
   };
 };
 
@@ -80,7 +80,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
   const {
     enableHistory = true,
     enableAnalytics = false,
-    maxHistoryItems = 50
+    maxHistoryItems = 50,
   } = options;
 
   const [state, setState] = useState<UseDocumentSearchState>({
@@ -88,183 +88,210 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     searchResults: null,
     searchError: null,
     searchHistory: [],
-    analytics: null
+    analytics: null,
   });
 
   /**
    * Add item to search history
    */
-  const addToHistory = useCallback((
-    query: string, 
-    resultCount: number, 
-    projectId?: string,
-    sessionId?: string
-  ) => {
-    if (!enableHistory) return;
+  const addToHistory = useCallback(
+    (
+      query: string,
+      resultCount: number,
+      projectId?: string,
+      sessionId?: string,
+    ) => {
+      if (!enableHistory) return;
 
-    const historyItem: SearchHistoryItem = {
-      id: `search-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      query,
-      timestamp: new Date().toISOString(),
-      resultCount,
-      projectId,
-      sessionId
-    };
+      const historyItem: SearchHistoryItem = {
+        id: `search-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        query,
+        timestamp: new Date().toISOString(),
+        resultCount,
+        projectId,
+        sessionId,
+      };
 
-    setState(prev => ({
-      ...prev,
-      searchHistory: [historyItem, ...prev.searchHistory].slice(0, maxHistoryItems)
-    }));
-  }, [enableHistory, maxHistoryItems]);
+      setState((prev) => ({
+        ...prev,
+        searchHistory: [historyItem, ...prev.searchHistory].slice(
+          0,
+          maxHistoryItems,
+        ),
+      }));
+    },
+    [enableHistory, maxHistoryItems],
+  );
 
   /**
    * Search documents globally or within a specific project
    */
-  const search = useCallback(async (query: string, projectId?: string): Promise<DocumentSearchResult> => {
-    if (!query.trim()) {
-      const emptyResult: DocumentSearchResult = {
-        success: false,
-        documents: [],
-        documentIds: [],
-        totalFound: 0,
-        searchQuery: query,
-        error: 'Search query cannot be empty'
-      };
-      return emptyResult;
-    }
+  const search = useCallback(
+    async (
+      query: string,
+      projectId?: string,
+    ): Promise<DocumentSearchResult> => {
+      if (!query.trim()) {
+        const emptyResult: DocumentSearchResult = {
+          success: false,
+          documents: [],
+          documentIds: [],
+          totalFound: 0,
+          searchQuery: query,
+          error: "Search query cannot be empty",
+        };
+        return emptyResult;
+      }
 
-    setState(prev => ({
-      ...prev,
-      isSearching: true,
-      searchError: null,
-      analytics: null
-    }));
+      setState((prev) => ({
+        ...prev,
+        isSearching: true,
+        searchError: null,
+        analytics: null,
+      }));
 
-    try {
-      // Perform the search
-      const result = await searchDocuments(query, projectId);
-      
-      // Get analytics if enabled
-      let analytics: SearchAnalytics | null = null;
-      if (enableAnalytics) {
-        try {
-          analytics = await getDocumentSearchAnalytics(query, projectId);
-        } catch (analyticsError) {
-          console.warn('Failed to get search analytics:', analyticsError);
+      try {
+        // Perform the search
+        const result = await searchDocuments(query, projectId);
+
+        // Get analytics if enabled
+        let analytics: SearchAnalytics | null = null;
+        if (enableAnalytics) {
+          try {
+            analytics = await getDocumentSearchAnalytics(query, projectId);
+          } catch (analyticsError) {
+            console.warn("Failed to get search analytics:", analyticsError);
+          }
         }
+
+        setState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchResults: result,
+          searchError: result.success ? null : result.error || "Search failed",
+          analytics,
+        }));
+
+        // Add to history if successful
+        if (result.success) {
+          addToHistory(query, result.totalFound, projectId, result.sessionId);
+        }
+
+        return result;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred";
+
+        setState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchError: errorMessage,
+          searchResults: null,
+        }));
+
+        return {
+          success: false,
+          documents: [],
+          documentIds: [],
+          totalFound: 0,
+          searchQuery: query,
+          error: errorMessage,
+        };
       }
-
-      setState(prev => ({
-        ...prev,
-        isSearching: false,
-        searchResults: result,
-        searchError: result.success ? null : result.error || 'Search failed',
-        analytics
-      }));
-
-      // Add to history if successful
-      if (result.success) {
-        addToHistory(query, result.totalFound, projectId, result.sessionId);
-      }
-
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      
-      setState(prev => ({
-        ...prev,
-        isSearching: false,
-        searchError: errorMessage,
-        searchResults: null
-      }));
-
-      return {
-        success: false,
-        documents: [],
-        documentIds: [],
-        totalFound: 0,
-        searchQuery: query,
-        error: errorMessage
-      };
-    }
-  }, [enableAnalytics, addToHistory]);
+    },
+    [enableAnalytics, addToHistory],
+  );
 
   /**
    * Search documents within a specific project
    */
-  const searchInProject = useCallback(async (query: string, projectId: string): Promise<DocumentSearchResult> => {
-    return search(query, projectId);
-  }, [search]);
+  const searchInProject = useCallback(
+    async (query: string, projectId: string): Promise<DocumentSearchResult> => {
+      return search(query, projectId);
+    },
+    [search],
+  );
 
   /**
    * Search documents across multiple projects
    */
-  const searchInProjects = useCallback(async (query: string, projectIds: string[]): Promise<DocumentSearchResult> => {
-    if (!query.trim()) {
-      const emptyResult: DocumentSearchResult = {
-        success: false,
-        documents: [],
-        documentIds: [],
-        totalFound: 0,
-        searchQuery: query,
-        error: 'Search query cannot be empty'
-      };
-      return emptyResult;
-    }
-
-    setState(prev => ({
-      ...prev,
-      isSearching: true,
-      searchError: null,
-      analytics: null
-    }));
-
-    try {
-      const result = await searchDocumentsInProjects(query, projectIds);
-      
-      setState(prev => ({
-        ...prev,
-        isSearching: false,
-        searchResults: result,
-        searchError: result.success ? null : result.error || 'Search failed'
-      }));
-
-      // Add to history if successful
-      if (result.success) {
-        addToHistory(query, result.totalFound, undefined, result.sessionId);
+  const searchInProjects = useCallback(
+    async (
+      query: string,
+      projectIds: string[],
+    ): Promise<DocumentSearchResult> => {
+      if (!query.trim()) {
+        const emptyResult: DocumentSearchResult = {
+          success: false,
+          documents: [],
+          documentIds: [],
+          totalFound: 0,
+          searchQuery: query,
+          error: "Search query cannot be empty",
+        };
+        return emptyResult;
       }
 
-      return result;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
-        isSearching: false,
-        searchError: errorMessage,
-        searchResults: null
+        isSearching: true,
+        searchError: null,
+        analytics: null,
       }));
 
-      return {
-        success: false,
-        documents: [],
-        documentIds: [],
-        totalFound: 0,
-        searchQuery: query,
-        error: errorMessage
-      };
-    }
-  }, [addToHistory]);
+      try {
+        const result = await searchDocumentsInProjects(query, projectIds);
+
+        setState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchResults: result,
+          searchError: result.success ? null : result.error || "Search failed",
+        }));
+
+        // Add to history if successful
+        if (result.success) {
+          addToHistory(query, result.totalFound, undefined, result.sessionId);
+        }
+
+        return result;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "An unexpected error occurred";
+
+        setState((prev) => ({
+          ...prev,
+          isSearching: false,
+          searchError: errorMessage,
+          searchResults: null,
+        }));
+
+        return {
+          success: false,
+          documents: [],
+          documentIds: [],
+          totalFound: 0,
+          searchQuery: query,
+          error: errorMessage,
+        };
+      }
+    },
+    [addToHistory],
+  );
 
   /**
    * Clear search results and error state
    */
   const clearSearch = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       searchResults: null,
       searchError: null,
-      analytics: null
+      analytics: null,
     }));
   }, []);
 
@@ -272,9 +299,9 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
    * Clear search history
    */
   const clearHistory = useCallback(() => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      searchHistory: []
+      searchHistory: [],
     }));
   }, []);
 
@@ -282,9 +309,9 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
    * Remove specific item from search history
    */
   const removeFromHistory = useCallback((id: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
-      searchHistory: prev.searchHistory.filter(item => item.id !== id)
+      searchHistory: prev.searchHistory.filter((item) => item.id !== id),
     }));
   }, []);
 
@@ -295,7 +322,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     try {
       return await testDocumentSearchConnection();
     } catch (error) {
-      console.error('Failed to test search connection:', error);
+      console.error("Failed to test search connection:", error);
       return false;
     }
   }, []);
@@ -304,7 +331,9 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
    * Get documents from current search results
    */
   const getDocuments = useCallback((): Document[] => {
-    return state.searchResults?.documents.map(convertSearchResultToDocument) || [];
+    return (
+      state.searchResults?.documents.map(convertSearchResultToDocument) || []
+    );
   }, [state.searchResults]);
 
   /**
@@ -312,15 +341,17 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
    */
   const getSearchStats = useCallback(() => {
     const { searchHistory, searchResults } = state;
-    
+
     return {
       totalSearches: searchHistory.length,
-      averageResultCount: searchHistory.length > 0 
-        ? searchHistory.reduce((sum, item) => sum + item.resultCount, 0) / searchHistory.length
-        : 0,
+      averageResultCount:
+        searchHistory.length > 0
+          ? searchHistory.reduce((sum, item) => sum + item.resultCount, 0) /
+            searchHistory.length
+          : 0,
       lastSearchTime: searchHistory[0]?.timestamp,
       currentResultCount: searchResults?.totalFound || 0,
-      currentSessionId: searchResults?.sessionId
+      currentSessionId: searchResults?.sessionId,
     };
   }, [state]);
 
@@ -331,7 +362,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     searchError: state.searchError,
     searchHistory: state.searchHistory,
     analytics: state.analytics,
-    
+
     // Actions
     search,
     searchInProject,
@@ -340,10 +371,10 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     clearHistory,
     removeFromHistory,
     testConnection,
-    
+
     // Getters
     getDocuments,
-    getSearchStats
+    getSearchStats,
   };
 }
 

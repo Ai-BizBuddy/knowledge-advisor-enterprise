@@ -1,14 +1,14 @@
 /**
  * Document Search Service
- * 
+ *
  * This service integrates Langflow AI search with Supabase document retrieval
  * to provide intelligent document search functionality using fetch API.
  * Follows the project's strict TypeScript standards.
  */
 
-import { createClientTable } from "@/utils/supabase/client";
-import { BaseFetchClient } from '@/utils/fetchClient';
 import type { Document } from "@/interfaces/Project";
+import { BaseFetchClient } from "@/utils/fetchClient";
+import { createClientTable } from "@/utils/supabase/client";
 
 /**
  * Langflow search request interface
@@ -164,26 +164,32 @@ interface DocumentSearchServiceConfig {
 
 /**
  * Document Search Service Class
- * 
+ *
  * Provides intelligent document search functionality by combining
  * Langflow AI search capabilities with Supabase document storage.
  */
 class DocumentSearchService {
   private client: BaseFetchClient;
-  private readonly serviceName = 'DocumentSearch';
+  private readonly serviceName = "DocumentSearch";
   private readonly useMockData: boolean;
 
   constructor(config: DocumentSearchServiceConfig = {}) {
-    const langflowUrl = config.langflowUrl || process.env.NEXT_PUBLIC_LANGFLOW_URL || 'https://kann.zapto.org';
-    const langflowSearchPath = config.langflowSearchPath || process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH || '/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431';
-    
+    const langflowUrl =
+      config.langflowUrl ||
+      process.env.NEXT_PUBLIC_LANGFLOW_URL ||
+      "https://kann.zapto.org";
+    const langflowSearchPath =
+      config.langflowSearchPath ||
+      process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH ||
+      "/api/v1/run/30cee7c1-7393-47b9-8b09-cdbfec3f8431";
+
     this.client = new BaseFetchClient({
       baseURL: `${langflowUrl}${langflowSearchPath}`,
       timeout: config.timeout || 30000,
       defaultHeaders: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
     });
 
     this.useMockData = config.useMockData || false;
@@ -223,12 +229,12 @@ class DocumentSearchService {
         projectName: "Enterprise Documentation",
         matchedChunks: [
           `Introduction to ${query}`,
-          `Advanced ${query} techniques`
+          `Advanced ${query} techniques`,
         ],
         metadata: {
           author: "Documentation Team",
-          version: "2.1"
-        }
+          version: "2.1",
+        },
       },
       {
         id: "doc-2",
@@ -239,14 +245,11 @@ class DocumentSearchService {
         lastModified: "2024-03-14T16:45:00Z",
         projectId: "3",
         projectName: "Product Documentation",
-        matchedChunks: [
-          `${query} API endpoints`,
-          `${query} authentication`
-        ],
+        matchedChunks: [`${query} API endpoints`, `${query} authentication`],
         metadata: {
           version: "1.5",
-          apiVersion: "v2"
-        }
+          apiVersion: "v2",
+        },
       },
       {
         id: "doc-3",
@@ -257,57 +260,65 @@ class DocumentSearchService {
         lastModified: "2024-03-13T09:20:00Z",
         projectId: "2",
         projectName: "Customer Support Hub",
-        matchedChunks: [
-          `Common ${query} issues`,
-          `${query} best practices`
-        ]
-      }
+        matchedChunks: [`Common ${query} issues`, `${query} best practices`],
+      },
     ];
   }
 
   /**
    * Perform semantic search using Langflow
    */
-  private async performLangflowSearch(query: string): Promise<LangflowDocumentSearchResponse> {
+  private async performLangflowSearch(
+    query: string,
+  ): Promise<LangflowDocumentSearchResponse> {
     const request: LangflowDocumentSearchRequest = {
       input_value: query,
       output_type: "chat",
-      input_type: "chat"
+      input_type: "chat",
     };
 
     try {
-      const response = await this.client.post<LangflowDocumentSearchResponse>('?stream=false', request);
+      const response = await this.client.post<LangflowDocumentSearchResponse>(
+        "?stream=false",
+        request,
+      );
       return response.data;
     } catch (error) {
       console.error(`[${this.serviceName}] Langflow search failed:`, error);
-      throw new Error('Failed to perform AI search');
+      throw new Error("Failed to perform AI search");
     }
   }
 
   /**
    * Get documents from Supabase for context
    */
-  private async getDocumentsFromSupabase(projectIds?: string[]): Promise<Document[]> {
+  private async getDocumentsFromSupabase(
+    projectIds?: string[],
+  ): Promise<Document[]> {
     try {
       const supabaseTable = createClientTable();
-      let query = supabaseTable
-        .from('documents')
-        .select('*');
+      let query = supabaseTable.from("documents").select("*");
 
       if (projectIds && projectIds.length > 0) {
-        query = query.in('project_id', projectIds);
+        query = query.in("project_id", projectIds);
       }
 
       const { data: documents, error } = await query;
 
       if (error) {
-        console.error(`[${this.serviceName}] Supabase documents query error:`, error);
+        console.error(
+          `[${this.serviceName}] Supabase documents query error:`,
+          error,
+        );
         throw new Error(`Failed to fetch documents: ${error.message}`);
       }
 
       return documents || [];
     } catch (error) {
-      console.error(`[${this.serviceName}] Error fetching documents from Supabase:`, error);
+      console.error(
+        `[${this.serviceName}] Error fetching documents from Supabase:`,
+        error,
+      );
       throw error;
     }
   }
@@ -317,7 +328,7 @@ class DocumentSearchService {
   private transformLangflowResponse(
     langflowResponse: LangflowDocumentSearchResponse,
     query: string,
-    documents: Document[]
+    documents: Document[],
   ): DocumentSearchResultItem[] {
     const results: DocumentSearchResultItem[] = [];
 
@@ -325,37 +336,42 @@ class DocumentSearchService {
       // Extract the main response text
       const output = langflowResponse.outputs?.[0]?.outputs?.[0];
       if (!output) {
-        console.warn(`[${this.serviceName}] No valid output in Langflow response`);
+        console.warn(
+          `[${this.serviceName}] No valid output in Langflow response`,
+        );
         return [];
       }
 
-      const responseText = output.results?.message?.text || '';
-      
+      const responseText = output.results?.message?.text || "";
+
       // For now, create a single result based on the AI response
       // In a real implementation, you would parse the response to match specific documents
       if (responseText && documents.length > 0) {
         const matchedDocument = documents[0]; // Simplified matching
-        
+
         results.push({
           id: matchedDocument.id,
           title: matchedDocument.name,
           content: responseText,
           relevanceScore: 0.9, // This would be calculated based on the AI response
-          documentType: matchedDocument.type,
+          documentType: matchedDocument.file_type,
           lastModified: matchedDocument.updated_at,
-          projectId: matchedDocument.project_id,
+          projectId: matchedDocument.knowledge_base_id,
           projectName: "Project", // Would need to join with projects table
-          matchedChunks: [responseText.substring(0, 200) + '...'],
+          matchedChunks: [responseText.substring(0, 200) + "..."],
           metadata: {
             aiGenerated: true,
-            sessionId: langflowResponse.session_id
-          }
+            sessionId: langflowResponse.session_id,
+          },
         });
       }
 
       return results;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error transforming Langflow response:`, error);
+      console.error(
+        `[${this.serviceName}] Error transforming Langflow response:`,
+        error,
+      );
       return [];
     }
   }
@@ -365,14 +381,14 @@ class DocumentSearchService {
    */
   async searchDocuments(
     query: string,
-    filters?: DocumentSearchFilters
+    filters?: DocumentSearchFilters,
   ): Promise<DocumentSearchResponse> {
     const startTime = Date.now();
 
     if (this.useMockData) {
       const mockResults = this.getMockSearchResults(query);
-      const filteredResults = filters?.projectId 
-        ? mockResults.filter(r => r.projectId === filters.projectId)
+      const filteredResults = filters?.projectId
+        ? mockResults.filter((r) => r.projectId === filters.projectId)
         : mockResults;
 
       return {
@@ -380,7 +396,7 @@ class DocumentSearchService {
         totalCount: filteredResults.length,
         searchTime: Date.now() - startTime,
         query,
-        filters
+        filters,
       };
     }
 
@@ -395,7 +411,7 @@ class DocumentSearchService {
           totalCount: 0,
           searchTime: Date.now() - startTime,
           query,
-          filters
+          filters,
         };
       }
 
@@ -403,12 +419,18 @@ class DocumentSearchService {
       const langflowResponse = await this.performLangflowSearch(query);
 
       // Transform and combine results
-      const results = this.transformLangflowResponse(langflowResponse, query, documents);
+      const results = this.transformLangflowResponse(
+        langflowResponse,
+        query,
+        documents,
+      );
 
       // Apply additional filters
       let filteredResults = results;
       if (filters?.minRelevanceScore) {
-        filteredResults = results.filter(r => r.relevanceScore >= filters.minRelevanceScore!);
+        filteredResults = results.filter(
+          (r) => r.relevanceScore >= filters.minRelevanceScore!,
+        );
       }
 
       return {
@@ -416,9 +438,8 @@ class DocumentSearchService {
         totalCount: filteredResults.length,
         searchTime: Date.now() - startTime,
         query,
-        filters
+        filters,
       };
-
     } catch (error) {
       console.error(`[${this.serviceName}] Search failed:`, error);
       throw error;
@@ -429,14 +450,13 @@ class DocumentSearchService {
    * Get search suggestions based on partial query
    */
   async getSearchSuggestions(partialQuery: string): Promise<string[]> {
-
     if (this.useMockData) {
       return [
         `${partialQuery} getting started`,
         `${partialQuery} best practices`,
         `${partialQuery} troubleshooting`,
         `${partialQuery} API reference`,
-        `${partialQuery} examples`
+        `${partialQuery} examples`,
       ];
     }
 
@@ -445,8 +465,10 @@ class DocumentSearchService {
     try {
       const documents = await this.getDocumentsFromSupabase();
       const suggestions = documents
-        .filter(doc => doc.name.toLowerCase().includes(partialQuery.toLowerCase()))
-        .map(doc => doc.name)
+        .filter((doc) =>
+          doc.name.toLowerCase().includes(partialQuery.toLowerCase()),
+        )
+        .map((doc) => doc.name)
         .slice(0, 5);
 
       return suggestions;
@@ -460,7 +482,11 @@ class DocumentSearchService {
    */
   async getRecentSearches(): Promise<string[]> {
     // This would typically be stored in localStorage or user preferences
-    const recentSearches = ['API documentation', 'user authentication', 'data export'];
+    const recentSearches = [
+      "API documentation",
+      "user authentication",
+      "data export",
+    ];
     return recentSearches;
   }
 
@@ -469,31 +495,32 @@ class DocumentSearchService {
    */
   async searchDocumentsForHook(
     query: string,
-    projectId?: string
+    projectId?: string,
   ): Promise<DocumentSearchResult> {
     try {
       const filters: DocumentSearchFilters = projectId ? { projectId } : {};
       const response = await this.searchDocuments(query, filters);
-      
+
       return {
         success: true,
         documents: response.results,
-        documentIds: response.results.map(r => r.id),
+        documentIds: response.results.map((r) => r.id),
         totalFound: response.totalCount,
         searchQuery: query,
-        sessionId: `search-${Date.now()}` // Generate a session ID
+        sessionId: `search-${Date.now()}`, // Generate a session ID
       };
     } catch (error) {
       console.error(`[${this.serviceName}] Search failed:`, error);
-      const errorMessage = error instanceof Error ? error.message : 'Search failed';
-      
+      const errorMessage =
+        error instanceof Error ? error.message : "Search failed";
+
       return {
         success: false,
         documents: [],
         documentIds: [],
         totalFound: 0,
         searchQuery: query,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }

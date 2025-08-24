@@ -1,25 +1,25 @@
-import { createClient, createClientTable } from "@/utils/supabase/client";
-import { getAuthSession } from "@/utils/supabase/authUtils";
 import type {
-  Project,
-  Document,
+  DocumentProcessingUpdateData,
+  SupabaseProjectRow,
+} from "@/interfaces/AxiosTypes";
+import type {
   CreateProjectInput,
-  UpdateProjectInput,
+  Document,
   JobStatusResponse,
+  Project,
+  UpdateProjectInput,
 } from "@/interfaces/Project";
 import { ProjectStatus } from "@/interfaces/Project";
 import type {
-  SupabaseProjectRow,
-  DocumentProcessingUpdateData,
-} from "@/interfaces/AxiosTypes";
-import type {
-  JobProgress,
   DocumentWithProject,
+  JobProgress,
 } from "@/interfaces/SupabaseTypes";
-import { getMimeType, getFileTypeLabel } from "@/utils/mimeHelper";
-import documentProcessingApi from "@/services/DocumentProcessing";
 import { documentSearchService } from "@/services";
+import documentProcessingApi from "@/services/DocumentProcessing";
 import type { DocumentSearchResult } from "@/services/DocumentSearchService";
+import { getFileTypeLabel, getMimeType } from "@/utils/mimeHelper";
+import { getAuthSession } from "@/utils/supabase/authUtils";
+import { createClient, createClientTable } from "@/utils/supabase/client";
 
 /**
  * Get current user from Supabase auth
@@ -347,7 +347,25 @@ export async function getDocumentsByProjectId(
       throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
-    return (data as Document[]) || [];
+    return (
+      (data?.map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        file_type: doc.type,
+        status: doc.status,
+        knowledge_base_id: doc.project_id,
+        chunk_count: doc.chunk_count,
+        file_size: doc.file_size,
+        mime_type: doc.mime_type,
+        created_at: doc.created_at,
+        updated_at: doc.updated_at,
+        path: doc.path,
+        url: doc.url,
+        rag_status: doc.rag_status,
+        last_rag_sync: doc.last_rag_sync,
+        metadata: doc.metadata,
+      })) as Document[]) || []
+    );
   } catch (error) {
     console.error("Error in getDocumentsByProjectId:", error);
     throw error;
@@ -973,10 +991,14 @@ export async function duplicateProject(
 
   // Create the duplicate
   const duplicateData: CreateProjectInput = {
-    visibility: original.visibility,
+    visibility: original.visibility as
+      | "public"
+      | "private"
+      | "department"
+      | "custom",
     name: newName,
     description: `Copy of ${original.description}`,
-    status: ProjectStatus.DRAFT,
+    status: ProjectStatus.ACTIVE,
   };
 
   const newProject = await createProject(duplicateData);
@@ -1349,7 +1371,23 @@ export async function getAllDocuments(): Promise<Document[]> {
       }),
     );
 
-    return documentsWithProjectInfo as Document[];
+    return documentsWithProjectInfo.map((doc) => ({
+      id: doc.id,
+      name: doc.name,
+      file_type: doc.type || "",
+      status: doc.status || "",
+      knowledge_base_id: doc.project_id,
+      chunk_count: doc.chunk_count || 0,
+      file_size: doc.file_size,
+      mime_type: doc.mime_type,
+      created_at: doc.created_at,
+      updated_at: doc.updated_at,
+      path: doc.path || "",
+      url: doc.url || "",
+      rag_status: doc.rag_status,
+      last_rag_sync: doc.last_rag_sync,
+      metadata: doc.metadata,
+    })) as Document[];
   } catch (error) {
     console.error("Error in getAllDocuments:", error);
     throw error;

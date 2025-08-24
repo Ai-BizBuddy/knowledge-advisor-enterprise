@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
-import { useKnowledgeBase } from './useKnowledgeBase';
-import { Document } from '@/interfaces/Project';
-import { getAllDocuments } from '@/services/Project/supabase';
+import { Document } from "@/interfaces/Project";
+import { getAllDocuments } from "@/services/Project/supabase";
+import { useCallback, useEffect, useState } from "react";
+import { useKnowledgeBase } from "./useKnowledgeBase";
 
 export interface ActivityItem {
   id: string;
@@ -28,7 +28,9 @@ export interface UseRecentActivityReturn {
   refresh: () => Promise<void>;
 }
 
-export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRecentActivityReturn => {
+export const useRecentActivity = (
+  options: UseRecentActivityOptions = {},
+): UseRecentActivityReturn => {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -48,36 +50,39 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
     if (diffMinutes < 1) {
       return "Just now";
     } else if (diffMinutes < 60) {
-      return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+      return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
     } else if (diffHours < 24) {
-      return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+      return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
     } else {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+      return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
     }
   };
 
   // Function to get project name by project ID
-  const getProjectName = useCallback((projectId: string): string => {
-    const project = projects?.find(p => p.id === projectId);
-    return project?.name || "Unknown Project";
-  }, [projects]);
+  const getProjectName = useCallback(
+    (projectId: string): string => {
+      const project = projects?.find((p) => p.id === projectId);
+      return project?.name || "Unknown Project";
+    },
+    [projects],
+  );
 
   // Load recent activities
   const loadActivities = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       // Fetch all documents (which have timestamps we can use for activity)
       let documents: Document[] = [];
       try {
         documents = await getAllDocuments();
       } catch (err) {
-        console.error('Error fetching documents for activity:', err);
+        console.error("Error fetching documents for activity:", err);
       }
-      
+
       // Process documents into activity items
-      const documentActivities: ActivityItem[] = documents.map(doc => {
+      const documentActivities: ActivityItem[] = documents.map((doc) => {
         // Determine activity type based on document status
         let activityType: "upload" | "processing" | "error";
         let status: "success" | "error" | "info";
@@ -96,7 +101,8 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
           status = "info";
         }
 
-        const projectName = doc.metadata?.project_name || getProjectName(doc.project_id);
+        const projectName =
+          doc.metadata?.project_name || getProjectName(doc.knowledge_base_id);
 
         // Create message based on activity type
         let message = "";
@@ -114,52 +120,53 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
           message,
           time: formatRelativeTime(doc.updated_at || doc.created_at),
           status,
-          projectId: doc.project_id,
-          documentId: doc.id
+          projectId: doc.knowledge_base_id,
+          documentId: doc.id,
         };
       });
 
       // Add activities for knowledge base creation or updates
-      const kbActivities: ActivityItem[] = projects?.map(project => ({
-        id: `kb-${project.id}`,
-        type: "knowledgebase",
-        message: `Knowledge base "${project.name}" ${project.updated_at ? 'updated' : 'created'}`,
-        time: formatRelativeTime(project.updated_at || project.created_at),
-        status: "info",
-        projectId: project.id
-      })) || [];
+      const kbActivities: ActivityItem[] =
+        projects?.map((project) => ({
+          id: `kb-${project.id}`,
+          type: "knowledgebase",
+          message: `Knowledge base "${project.name}" ${project.updated_at ? "updated" : "created"}`,
+          time: formatRelativeTime(project.updated_at || project.created_at),
+          status: "info",
+          projectId: project.id,
+        })) || [];
 
       // Combine all activities
       const allActivities = [...documentActivities, ...kbActivities];
-      
+
       // Sort by time (most recent first)
       allActivities.sort((a, b) => {
         // Extract time information from strings like "2 hours ago"
         const getTimeValue = (timeStr: string) => {
           if (timeStr === "Just now") return 0;
-          
+
           const match = timeStr.match(/(\d+)\s+(minute|hour|day)s?\s+ago/);
           if (!match) return Number.MAX_SAFE_INTEGER;
-          
+
           const [, value, unit] = match;
           const numValue = parseInt(value, 10);
-          
+
           if (unit === "minute") return numValue;
           if (unit === "hour") return numValue * 60; // Convert hours to minutes
           return numValue * 60 * 24; // Convert days to minutes
         };
-        
+
         return getTimeValue(a.time) - getTimeValue(b.time);
       });
-      
+
       // Apply limit
       const limitedActivities = allActivities.slice(0, limit);
       setActivities(limitedActivities);
-
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load recent activity';
+      const errorMsg =
+        err instanceof Error ? err.message : "Failed to load recent activity";
       setError(errorMsg);
-      console.error('Error loading recent activity:', err);
+      console.error("Error loading recent activity:", err);
     } finally {
       setLoading(false);
     }
@@ -170,7 +177,7 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
     if (!projectsLoading) {
       loadActivities();
     }
-    
+
     // Set up auto-refresh if enabled
     let refreshTimer: NodeJS.Timeout | null = null;
     if (autoRefresh) {
@@ -178,7 +185,7 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
         loadActivities();
       }, refreshInterval);
     }
-    
+
     return () => {
       if (refreshTimer) {
         clearInterval(refreshTimer);
@@ -190,7 +197,7 @@ export const useRecentActivity = (options: UseRecentActivityOptions = {}): UseRe
     activities,
     loading,
     error,
-    refresh: loadActivities
+    refresh: loadActivities,
   };
 };
 

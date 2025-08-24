@@ -6,9 +6,9 @@
  * Uses fetch API instead of Axios following project standards.
  */
 
+import type { Document } from "@/interfaces/Project";
 import { BaseFetchClient } from "@/utils/fetchClient";
 import { createClient } from "@/utils/supabase/client";
-import type { Document } from "@/interfaces/Project";
 
 /**
  * Langflow search request interface
@@ -399,7 +399,17 @@ class LangflowSearchService {
         if (doc) {
           // Convert Supabase document to our Document interface
           const fullDoc: Document = {
-            ...doc,
+            id: doc.id,
+            name: doc.name,
+            file_type: doc.type,
+            status: doc.status,
+            knowledge_base_id: doc.project_id,
+            chunk_count: doc.chunk_count,
+            file_size: doc.file_size,
+            mime_type: doc.mime_type,
+            metadata: doc.metadata,
+            created_at: doc.created_at,
+            updated_at: doc.updated_at,
             path: "",
             url: "",
             rag_status: "synced" as const,
@@ -441,8 +451,8 @@ class LangflowSearchService {
             metadata: {
               ...result.metadata,
               documentName: document.name,
-              documentType: document.type,
-              projectId: document.project_id,
+              documentType: document.file_type,
+              projectId: document.knowledge_base_id,
               projectName:
                 (document.metadata?.project_name as string) ||
                 "Unknown Project",

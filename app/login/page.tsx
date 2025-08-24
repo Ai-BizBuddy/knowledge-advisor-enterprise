@@ -2,7 +2,7 @@
 
 import { useLoading } from "@/contexts/LoadingContext";
 import { useAuth } from "@/hooks";
-import { Label, TextInput, Button, Checkbox } from "flowbite-react";
+import { Button, Checkbox, Label, TextInput } from "flowbite-react";
 import { useEffect, useState } from "react";
 
 export default function LoginPage() {
