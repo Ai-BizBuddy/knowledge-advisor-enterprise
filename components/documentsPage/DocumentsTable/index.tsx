@@ -20,7 +20,7 @@ interface DocumentTableItem {
 interface DocumentsTableProps {
   documents: DocumentTableItem[];
   selectedDocuments: number[];
-  selectedDocument: number;
+  selectedDocument: number | null;
   startIndex: number;
   sortBy: string;
   sortOrder: "asc" | "desc";
@@ -149,7 +149,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
           {documents.map((doc, pageIndex) => {
             const actualIndex = startIndex + pageIndex;
             const isSelected = selectedDocuments.includes(actualIndex);
-            const isCurrentDocument = selectedDocument === actualIndex;
+            const isCurrentDocument = selectedDocument === pageIndex;
 
             return (
               <div
@@ -247,7 +247,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                 documents.map((doc, pageIndex) => {
                   const actualIndex = startIndex + pageIndex;
                   const isSelected = selectedDocuments.includes(actualIndex);
-                  const isCurrentDocument = selectedDocument === actualIndex;
+                  const isCurrentDocument = selectedDocument === pageIndex;
 
                   return (
                     <tr

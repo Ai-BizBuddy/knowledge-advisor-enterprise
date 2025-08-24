@@ -109,6 +109,13 @@ export default function DocumentsPage() {
     handleClearSelection,
   } = useDocumentsManagement();
 
+  // Handle document click for detail view
+  const handleDocumentClick = (absoluteIndex: number) => {
+    // Convert absolute index to relative index within current filtered documents
+    const relativeIndex = absoluteIndex - startIndex;
+    setSelectedDocument(relativeIndex);
+  };
+
   const adaptedDocuments = documents.map((doc: Document) =>
     adaptDocumentToTableFormat(doc),
   );
@@ -284,7 +291,7 @@ export default function DocumentsPage() {
                   onSort={handleSort}
                   onSelectAll={handleSelectAll}
                   onSelectDocument={handleSelectDocument}
-                  onDocumentClick={setSelectedDocument}
+                  onDocumentClick={handleDocumentClick}
                   isAllSelected={isAllSelected}
                   isIndeterminate={isIndeterminate}
                 />
@@ -305,13 +312,14 @@ export default function DocumentsPage() {
           </div>
 
           {/* Document Detail Panel - Responsive sidebar */}
-          {selectedDocument !== null && totalItems > 0 && (
+          {selectedDocument !== null && 
+           selectedDocument >= 0 && 
+           selectedDocument < adaptedDocuments.length && 
+           totalItems > 0 && (
             <div className="xl:col-span-1">
               <div className="sticky top-4">
                 <div className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800">
-                  {adaptedDocuments[selectedDocument] && (
-                    <DocumentDetail {...adaptedDocuments[selectedDocument]} />
-                  )}
+                  <DocumentDetail {...adaptedDocuments[selectedDocument]} />
                 </div>
               </div>
             </div>

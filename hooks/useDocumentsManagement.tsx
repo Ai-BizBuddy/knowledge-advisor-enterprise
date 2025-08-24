@@ -3,7 +3,7 @@ import { documentsData } from "@/data/documentsData";
 import { sortDocuments, filterDocuments } from "@/utils/documentsUtils";
 
 export const useDocumentsManagement = () => {
-  const [selectedDocument, setSelectedDocument] = useState(0);
+  const [selectedDocument, setSelectedDocument] = useState<number | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("All");
@@ -47,11 +47,13 @@ export const useDocumentsManagement = () => {
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     setSelectedDocuments([]);
+    setSelectedDocument(null); // Reset selected document when page changes
   };
 
   // Handle tab changes
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    setSelectedDocument(null); // Reset selected document when tab changes
   };
 
   // Handle tab actions
@@ -79,6 +81,7 @@ export const useDocumentsManagement = () => {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedDocuments([]);
+    setSelectedDocument(null); // Reset selected document when search or filter changes
   }, [searchTerm, activeTab]);
 
   // Multi-select functions
