@@ -1,15 +1,15 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import { knowledgeBaseService } from '@/services';
 import type {
-  Project,
   CreateProjectInput,
-  UpdateProjectInput,
-  ProjectStatus,
+  Project,
   ProjectAnalytics,
+  ProjectStatus,
+  UpdateProjectInput,
 } from '@/interfaces/Project';
+import { knowledgeBaseService } from '@/services';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface UseKnowledgeBaseReturn {
   // State
@@ -34,6 +34,7 @@ export interface UseKnowledgeBaseReturn {
   };
 
   loadKnowledgeBases: (page?: number, forceRefresh?: boolean) => Promise<void>;
+  initialLoad: () => void;
 
   // CRUD Operations
   createKnowledgeBase: (data: CreateProjectInput) => Promise<Project>;
@@ -71,6 +72,17 @@ export interface UseKnowledgeBaseReturn {
   clearError: () => void;
 }
 
+interface KnowledgeBaseState {
+  currentPage: number;
+  totalPages: number;
+  totalItems: number;
+  itemsPerPage: number;
+  searchTerm: string;
+  selectedTab: string;
+  startIndex: number;
+  endIndex: number;
+}
+
 export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
@@ -78,27 +90,44 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(10); // 3x3 grid for cards
+  // Combined state object
+  const [state, setState] = useState<KnowledgeBaseState>({
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10, // 3x3 grid for cards
+    searchTerm: '',
+    selectedTab: 'All',
+    startIndex: 1,
+    endIndex: 0,
+  });
 
-  // Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedTab, setSelectedTab] = useState('All');
+  // Use ref to store latest state values
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
-  // Calculate pagination indices
-  const startIndex = (currentPage - 1) * itemsPerPage + 1;
-  const endIndex = Math.min(currentPage * itemsPerPage, totalItems);
+  // Calculate pagination indices when state changes
+  useEffect(() => {
+    const startIndex = (state.currentPage - 1) * state.itemsPerPage + 1;
+    const endIndex = Math.min(
+      state.currentPage * state.itemsPerPage,
+      state.totalItems,
+    );
+
+    setState((prev) => ({
+      ...prev,
+      startIndex,
+      endIndex,
+    }));
+  }, [state.currentPage, state.itemsPerPage, state.totalItems]);
 
   // Calculate tab counts from all projects (not filtered)
   // For now, we'll use totalItems for 'all' and estimate others
   // TODO: Get accurate counts from API for each tab
   const tabCountsData = {
-    all: totalItems, // Use totalItems from API instead of projects.length
-    active: Math.floor(totalItems * 0.7), // Estimate - should be from API
-    inactive: Math.floor(totalItems * 0.3), // Estimate - should be from API
+    all: state.totalItems, // Use totalItems from API instead of projects.length
+    active: Math.floor(state.totalItems * 0.7), // Estimate - should be from API
+    inactive: Math.floor(state.totalItems * 0.3), // Estimate - should be from API
   };
 
   // Update filtered projects when filters change
@@ -111,7 +140,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   // Load all knowledge bases
   const loadKnowledgeBases = useCallback(
     async (
-      page: number = currentPage,
+      page?: number,
       forceRefresh = false,
       tab?: string,
       search?: string,
@@ -120,12 +149,19 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setLoading(true);
         setError(null);
 
+        // Use ref to get the latest state values
+        const currentState = stateRef.current;
+        const currentPageToUse = page ?? currentState.currentPage;
+        const currentItemsPerPage = currentState.itemsPerPage;
+        const currentSelectedTab = tab || currentState.selectedTab;
+        const currentSearchTerm = search ?? currentState.searchTerm;
+
         // Calculate correct pagination for API
-        const startIndex = (page - 1) * itemsPerPage;
-        const endIndex = startIndex + itemsPerPage - 1;
+        const startIndex = (currentPageToUse - 1) * currentItemsPerPage;
+        const endIndex = startIndex + currentItemsPerPage - 1;
 
         const paginationOptions = {
-          currentPage: page,
+          currentPage: currentPageToUse,
           totalPages: 0, // Will be calculated from API response
           startIndex,
           endIndex,
@@ -134,8 +170,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
         // Prepare filters for API
         const filters = {
-          status: tab?.toLowerCase() || selectedTab.toLowerCase(),
-          searchTerm: search,
+          status: currentSelectedTab.toLowerCase(),
+          searchTerm: currentSearchTerm,
         };
 
         console.log('Sending pagination to API:', paginationOptions);
@@ -146,22 +182,22 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
           filters,
         );
 
-        console.log('API response:', {
-          dataLength: results.data.length,
-          totalCount: results.count,
-          startIndex,
-          endIndex,
-        });
-
         setProjects(results.data);
-        setTotalItems(results.count);
-        setTotalPages(Math.ceil(results.count / itemsPerPage));
+        setState((prev) => ({
+          ...prev,
+          totalItems: results.count,
+          totalPages: Math.ceil(results.count / currentItemsPerPage),
+          currentPage: currentPageToUse,
+        }));
 
         if (forceRefresh) {
           // When force refreshing, reset filters
-          setSearchTerm('');
-          setSelectedTab('All');
-          setCurrentPage(1);
+          setState((prev) => ({
+            ...prev,
+            searchTerm: '',
+            selectedTab: 'All',
+            currentPage: 1,
+          }));
         }
       } catch (err) {
         const errorMessage =
@@ -169,16 +205,18 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setError(errorMessage);
         console.error('Error loading knowledge bases:', err);
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 500);
       }
     },
-    [currentPage, itemsPerPage, selectedTab, searchTerm],
+    [], // Empty dependencies to prevent recreation on state changes
   );
 
-  // Initial load
-  // useEffect(() => {
-  //   loadKnowledgeBases(1);
-  // }, [loadKnowledgeBases]);
+  // Initial load function
+  const initialLoad = useCallback(() => {
+    loadKnowledgeBases(1);
+  }, [loadKnowledgeBases]);
 
   // Create knowledge base
   const createKnowledgeBase = useCallback(
@@ -307,20 +345,14 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Search knowledge bases
   const searchKnowledgeBases = useCallback(
-    async (query: string): Promise<void> => {
-      try {
-        console.log('Searching knowledge bases with query:', query);
-        setSearchTerm(query);
-        setCurrentPage(1); // Reset to first page for search results
-        await loadKnowledgeBases(1, false, undefined, query);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to search knowledge bases';
-        setError(errorMessage);
-        throw err;
-      }
+    (query: string): Promise<void> => {
+      console.log('Searching knowledge bases with query:', query);
+      setState((prev) => ({
+        ...prev,
+        searchTerm: query,
+        currentPage: 1, // Reset to first page for search results
+      }));
+      return loadKnowledgeBases(1, false, undefined, query);
     },
     [loadKnowledgeBases],
   );
@@ -346,20 +378,28 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Tab change handler
   const handleTabChange = useCallback(
-    async (tab: string) => {
-      setSelectedTab(tab);
-      setCurrentPage(1);
-      await loadKnowledgeBases(1, false, tab);
+    (tab: string) => {
+      setState((prev) => ({
+        ...prev,
+        selectedTab: tab,
+        currentPage: 1,
+      }));
+      loadKnowledgeBases(1, false, tab);
     },
     [loadKnowledgeBases],
   );
 
   // Page change handler
   const handlePageChange = useCallback(
-    async (page: number) => {
+    (page: number) => {
       console.log('Page changed to:', page);
-      setCurrentPage(page);
-      await loadKnowledgeBases(page);
+      // Update state immediately without triggering additional effects
+      setState((prev) => ({
+        ...prev,
+        currentPage: page,
+      }));
+      // Call API with the new page
+      loadKnowledgeBases(page);
     },
     [loadKnowledgeBases],
   );
@@ -425,25 +465,35 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     setError(null);
   }, []);
 
+  // Helper functions for updating state
+  const setSearchTerm = useCallback((term: string) => {
+    setState((prev) => ({ ...prev, searchTerm: term }));
+  }, []);
+
+  const setItemsPerPage = useCallback((items: number) => {
+    setState((prev) => ({ ...prev, itemsPerPage: items }));
+  }, []);
+
   return {
     // State - ใช้ projects โดยตรงจาก API (แทนที่จะ slice อีกรอบ)
     projects: projects,
     filteredProjects,
     loading,
     error,
-    currentPage,
-    totalPages,
-    startIndex,
-    endIndex,
-    totalItems,
-    itemsPerPage,
-    searchTerm,
-    selectedTab,
+    currentPage: state.currentPage,
+    totalPages: state.totalPages,
+    startIndex: state.startIndex,
+    endIndex: state.endIndex,
+    totalItems: state.totalItems,
+    itemsPerPage: state.itemsPerPage,
+    searchTerm: state.searchTerm,
+    selectedTab: state.selectedTab,
 
     // Tab counts
     tabCounts: tabCountsData,
 
     loadKnowledgeBases,
+    initialLoad,
 
     // CRUD Operations
     createKnowledgeBase,

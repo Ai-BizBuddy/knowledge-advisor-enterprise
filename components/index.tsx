@@ -24,6 +24,9 @@ export { default as UploadDocument } from './uploadDocuments';
 // App Loading Components
 export * from './AppLoading';
 
+// Loading Card Components
+export * from './LoadingCard';
+
 // Documents Page Components
 export * from './documentsPage';
 

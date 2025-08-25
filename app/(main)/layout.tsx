@@ -1,10 +1,10 @@
 'use client';
-import { LoadingPage, SlideBar } from '@/components';
+import { SlideBar } from '@/components';
 import { useAuthContext } from '@/contexts/AuthContext';
+import { useLoading } from '@/contexts/LoadingContext';
 import { useAuth } from '@/hooks';
 import { usePathname } from 'next/navigation';
 import { useEffect } from 'react';
-import { useLoading } from '@/contexts/LoadingContext';
 
 export default function MainLayout({
   children,
@@ -45,7 +45,6 @@ export default function MainLayout({
 
   return (
     <>
-      <LoadingPage />
       <SlideBar
         onNavigate={() => {
           setLoading(true);

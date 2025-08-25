@@ -1,17 +1,17 @@
 'use client';
-import { useEffect } from 'react';
 import {
   RecentActivityCard,
+  RecentKnowledgeBasesCard,
   RecommendedKnowledgeBases,
   StatusCard,
-  RecentKnowledgeBasesCard,
 } from '@/components';
+import { useLoading } from '@/contexts/LoadingContext';
+import { useEffect } from 'react';
 import { getStatusCards } from './constants';
 import {
   getRecentKnowledgeBasesData,
   getRecommendedKnowledgeBasesData,
 } from './mockData';
-import { useLoading } from '@/contexts/LoadingContext';
 
 /**
  * Dashboard page component displaying key metrics and recent activity

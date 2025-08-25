@@ -2,17 +2,16 @@
 import {
   CreateKnowledgeBaseModal,
   KnowledgeBaseCard,
+  LoadingCard,
   Tabs,
 } from '@/components';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
-import { useLoading } from '@/contexts/LoadingContext';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
 import { useEffect, useState } from 'react';
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
-  const { setLoading } = useLoading();
 
   const {
     // State
@@ -29,7 +28,7 @@ export default function KnowledgeBase() {
     endIndex,
     totalItems,
 
-    loadKnowledgeBases,
+    initialLoad,
 
     // Handlers
     handleTabChange,
@@ -64,13 +63,10 @@ export default function KnowledgeBase() {
     await searchKnowledgeBases(query);
   };
 
+  // Initialize data on component mount
   useEffect(() => {
-    setLoading(loading);
-  }, [loading, setLoading]);
-
-  useEffect(() => {
-    loadKnowledgeBases(1);
-  }, [loadKnowledgeBases]);
+    initialLoad();
+  }, [initialLoad]);
 
   return (
     <div className='min-h-screen'>
@@ -148,7 +144,17 @@ export default function KnowledgeBase() {
         </div>
 
         {/* Content Area */}
-        {projects.length > 0 ? (
+        {loading ? (
+          /* Loading State with LoadingCard */
+          <div className='space-y-6'>
+            <LoadingCard
+              count={10}
+              variant='grid'
+              message='Loading knowledge bases...'
+              className=''
+            />
+          </div>
+        ) : projects.length > 0 ? (
           <div className='space-y-6'>
             {/* Knowledge Base Cards Grid */}
             <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
@@ -162,7 +168,6 @@ export default function KnowledgeBase() {
                   onDelete={() => handleKnowledgeBaseDelete(kb.id)}
                   onDetail={() => {
                     handleKnowledgeBaseClick(kb.id);
-                    setLoading(true);
                   }}
                 />
               ))}
