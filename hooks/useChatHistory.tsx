@@ -1,5 +1,7 @@
-import { useCallback } from 'react';
+'use client';
+
 import { ChatMessage } from '@/hooks/useChat';
+import { useCallback } from 'react';
 
 export interface ChatSession {
   id: string;

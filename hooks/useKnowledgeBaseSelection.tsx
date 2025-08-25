@@ -1,3 +1,4 @@
+'use client';
 import { knowledgeBaseService } from '@/services';
 import { useCallback, useEffect, useState } from 'react';
 

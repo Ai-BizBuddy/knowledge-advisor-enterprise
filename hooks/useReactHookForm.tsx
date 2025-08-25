@@ -1,3 +1,4 @@
+'use client';
 /**
  * React Hook Form Utility
  *

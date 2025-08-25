@@ -1,3 +1,4 @@
+'use client';
 import { IRecentActivityCardProps } from '@/interfaces/RecentActivityCard';
 import { Card } from 'flowbite-react';
 import { useEffect, useState } from 'react';

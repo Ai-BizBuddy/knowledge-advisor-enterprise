@@ -1,3 +1,4 @@
+'use client';
 /**
  * usePermissionManagement Hook
  *
@@ -5,7 +6,7 @@
  * Provides structured permission resources with their available actions.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePermissionResources } from './usePermissionResources';
 
 export interface PermissionResourceConfig {

@@ -1,3 +1,4 @@
+'use client';
 /**
  * useStatistics Hook - Dashboard Statistics Management
  *
@@ -5,9 +6,9 @@
  * Following the project's strict TypeScript standards and modern React patterns
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { statisticsService } from '@/services/StatisticsService';
 import type { DashboardStatistics } from '@/interfaces/Statistics';
+import { statisticsService } from '@/services/StatisticsService';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 /**
  * Statistics hook state interface

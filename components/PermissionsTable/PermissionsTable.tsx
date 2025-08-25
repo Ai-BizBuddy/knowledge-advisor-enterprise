@@ -1,3 +1,4 @@
+'use client';
 /**
  * Role Permissions Table Component
  *
@@ -5,29 +6,29 @@
  * featuring View, Edit, Delete actions for each permission entry.
  */
 
-import React, { useMemo, useCallback, useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import {
-  Button,
-  Badge,
-  Modal,
-  Label,
-  TextInput,
-  Textarea,
-  Card,
-  Table,
-} from 'flowbite-react';
 import { useToast } from '@/components/toast';
-import UserManagementService from '@/services/UserManagementService';
 import type { Permission } from '@/interfaces/UserManagement';
+import UserManagementService from '@/services/UserManagementService';
+import {
+  Badge,
+  Button,
+  Card,
+  Label,
+  Modal,
+  Table,
+  Textarea,
+  TextInput,
+} from 'flowbite-react';
+import { motion } from 'framer-motion';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
+  PermissionModalData,
   PermissionsTableProps,
   PermissionTableRow,
-  PermissionModalData,
 } from './PermissionsTable.types';
 
 // Re-export types for easier consumption
-export type { PermissionsTableProps, PermissionTableRow, PermissionModalData };
+export type { PermissionModalData, PermissionsTableProps, PermissionTableRow };
 
 /**
  * PermissionsTable Component
@@ -249,7 +250,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     transition={{ delay: index * 0.03 }}
                   >
                     {/* Permission column */}
-                    <td className='px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white'>
+                    <td className='whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white'>
                       <div className='flex items-center'>
                         <div className='mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50'>
                           <span

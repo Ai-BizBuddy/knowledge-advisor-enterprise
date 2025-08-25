@@ -1,28 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Modal,
-  Label,
-  TextInput,
-  Select,
-  Textarea,
-  Button,
-  Spinner,
-} from 'flowbite-react';
-import { Controller } from 'react-hook-form';
-import { motion } from 'framer-motion';
-import { useReactHookForm } from '@/hooks/useReactHookForm';
+'use client';
 import { useToast } from '@/components/toast';
 import { usePermissionResources } from '@/hooks/usePermissionResources';
-import { PermissionsTable } from './PermissionsTable';
+import { useReactHookForm } from '@/hooks/useReactHookForm';
 import {
-  RoleModalProps,
+  ACCESS_LEVELS,
+  AccessLevel,
   CreateRoleFormData,
   CreateRolePayload,
-  AccessLevel,
   PermissionRow,
-  ACCESS_LEVELS,
+  RoleModalProps,
   VALIDATION_RULES,
 } from '@/interfaces/RoleModal';
+import {
+  Button,
+  Label,
+  Modal,
+  Select,
+  Spinner,
+  Textarea,
+  TextInput,
+} from 'flowbite-react';
+import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
+import { Controller } from 'react-hook-form';
+import { PermissionsTable } from './PermissionsTable';
 
 export const RoleModal: React.FC<RoleModalProps> = ({
   isOpen,
@@ -587,7 +588,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 <Button
                   type='submit'
                   disabled={!canSubmit}
-                  className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+                  className='bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
                 >
                   {isSubmitting || isLoading ? (
                     <div className='flex items-center space-x-2'>

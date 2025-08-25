@@ -1,6 +1,7 @@
-import { useState, useCallback } from 'react';
+'use client';
 import { adkChatService } from '@/services';
 import { createClient } from '@/utils/supabase/client';
+import { useCallback, useState } from 'react';
 
 export interface ChatMessage {
   id: string;

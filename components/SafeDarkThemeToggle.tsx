@@ -1,3 +1,4 @@
+'use client';
 import { DarkThemeToggle } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 

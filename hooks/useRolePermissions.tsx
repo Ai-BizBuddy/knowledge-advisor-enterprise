@@ -1,3 +1,4 @@
+'use client';
 /**
  * Role Permissions Management Hook
  *
@@ -5,10 +6,10 @@
  * and integration with the PermissionsTable component.
  */
 
-import { useState, useCallback, useMemo } from 'react';
-import UserManagementService from '@/services/UserManagementService';
 import { useToast } from '@/components/toast';
 import type { Permission } from '@/interfaces/UserManagement';
+import UserManagementService from '@/services/UserManagementService';
+import { useCallback, useMemo, useState } from 'react';
 
 interface UseRolePermissionsState {
   permissions: Permission[];

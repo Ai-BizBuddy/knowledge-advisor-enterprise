@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+'use client';
 import { createClientAuth } from '@/utils/supabase/client';
+import { useEffect, useState } from 'react';
 
 interface SystemStatus {
   totalUsers: number;

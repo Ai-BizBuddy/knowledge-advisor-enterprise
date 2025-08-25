@@ -1,3 +1,4 @@
+'use client';
 /**
  * usePermissionData Hook
  *
@@ -5,9 +6,9 @@
  * Now includes full resource+action data structure for enhanced permissions table.
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import UserManagementService from '@/services/UserManagementService';
 import type { Permission } from '@/interfaces/UserManagement';
+import UserManagementService from '@/services/UserManagementService';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePermissionResources } from './usePermissionResources';
 
 export interface DynamicPermissionData {

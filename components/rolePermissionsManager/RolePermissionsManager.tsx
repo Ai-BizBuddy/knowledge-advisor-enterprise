@@ -1,3 +1,4 @@
+'use client';
 /**
  * Role Permissions Management Component
  *
@@ -5,11 +6,11 @@
  * for managing role permissions with save functionality.
  */
 
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
 import { PermissionsTable } from '@/components/PermissionsTable';
-import { useRolePermissions } from '@/hooks/useRolePermissions';
 import { useToast } from '@/components/toast';
+import { useRolePermissions } from '@/hooks/useRolePermissions';
+import { motion } from 'framer-motion';
+import React, { useEffect, useState } from 'react';
 
 interface RolePermissionsManagerProps {
   roleId: number;

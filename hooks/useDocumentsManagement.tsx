@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback } from 'react';
+'use client';
 import { documentsData } from '@/data/documentsData';
-import { sortDocuments, filterDocuments } from '@/utils/documentsUtils';
+import { filterDocuments, sortDocuments } from '@/utils/documentsUtils';
+import { useCallback, useEffect, useState } from 'react';
 
 export const useDocumentsManagement = () => {
   const [selectedDocument, setSelectedDocument] = useState(0);

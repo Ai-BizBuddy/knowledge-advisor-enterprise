@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
+'use client';
 import { langflowChatService } from '@/services';
+import { useCallback, useState } from 'react';
 
 export interface ChatMessage {
   id: string;

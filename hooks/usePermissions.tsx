@@ -1,3 +1,4 @@
+'use client';
 /**
  * Permissions Hook
  *
@@ -5,15 +6,15 @@
  * feature access throughout the application.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@/utils/supabase/client';
-import UserManagementService from '@/services/UserManagementService';
 import type {
-  User,
-  Permission,
   FeatureAccess,
+  Permission,
+  User,
   UserSession,
 } from '@/interfaces/UserManagement';
+import UserManagementService from '@/services/UserManagementService';
+import { createClient } from '@/utils/supabase/client';
+import { useCallback, useEffect, useState } from 'react';
 
 interface UsePermissionsState {
   currentUser: User | null;

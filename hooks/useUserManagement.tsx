@@ -1,3 +1,4 @@
+'use client';
 /**
  * User Management Hook
  *
@@ -5,20 +6,20 @@
  * with proper state management and error handling.
  */
 
-import { useState, useCallback } from 'react';
-import UserManagementService from '@/services/UserManagementService';
 import type {
-  User,
-  Role,
-  Permission,
-  Department,
   CreateUserInput,
-  UpdateUserInput,
-  UserFilter,
-  PermissionCheckResult,
-  UserSession,
+  Department,
+  Permission,
   PermissionAction,
+  PermissionCheckResult,
+  Role,
+  UpdateUserInput,
+  User,
+  UserFilter,
+  UserSession,
 } from '@/interfaces/UserManagement';
+import UserManagementService from '@/services/UserManagementService';
+import { useCallback, useState } from 'react';
 
 interface UseUserManagementState {
   users: User[];

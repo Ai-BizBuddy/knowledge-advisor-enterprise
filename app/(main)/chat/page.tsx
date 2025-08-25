@@ -42,10 +42,6 @@ export default function ChatPage() {
     }
   }, [messages.length, addWelcomeMessage]);
 
-  useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
-
   const handleLoadChatSession = (session: ChatSession) => {
     setMessages(session.messages);
     setOpenHistory(false);

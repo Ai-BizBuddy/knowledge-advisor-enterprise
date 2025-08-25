@@ -1,16 +1,18 @@
+'use client';
+
 /**
  * useApiClient Hook - Provides authenticated API client instances
  *
  * Hook for accessing authenticated API clients with automatic token refresh
  */
 
-import { useMemo } from 'react';
 import {
   apiClient,
+  createAuthenticatedClient,
   ingressServiceClient,
   langflowClient,
-  createAuthenticatedClient,
 } from '@/utils/authenticatedFetch';
+import { useMemo } from 'react';
 
 interface UseApiClient {
   apiClient: typeof apiClient;

@@ -1,3 +1,4 @@
+'use client';
 /**
  * usePermissionResources Hook
  *
@@ -5,8 +6,8 @@
  * Returns structured data: { [resource]: [{ action, id }] }
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
 import UserManagementService from '@/services/UserManagementService';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 export interface PermissionResourceData {
   [resource: string]: { action: string; id: string }[];

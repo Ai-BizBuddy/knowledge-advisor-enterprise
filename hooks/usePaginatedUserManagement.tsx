@@ -1,23 +1,25 @@
-import { useState, useCallback } from 'react';
-import PaginatedUserManagementService from '@/services/UserManagementService/PaginatedUserManagementService';
+'use client';
+
 import type {
-  User,
-  Role,
-  Permission,
-  Department,
-  CreateUserInput,
-  UpdateUserInput,
-  CreateRoleInput,
-  UpdateRoleInput,
-  CreateDepartmentInput,
-  UpdateDepartmentInput,
-  UserFilter,
-} from '@/interfaces/UserManagement';
-import type {
-  PaginationParams,
   PaginatedResponse,
+  PaginationParams,
 } from '@/interfaces/Pagination';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import type {
+  CreateDepartmentInput,
+  CreateRoleInput,
+  CreateUserInput,
+  Department,
+  Permission,
+  Role,
+  UpdateDepartmentInput,
+  UpdateRoleInput,
+  UpdateUserInput,
+  User,
+  UserFilter,
+} from '@/interfaces/UserManagement';
+import PaginatedUserManagementService from '@/services/UserManagementService/PaginatedUserManagementService';
+import { useCallback, useState } from 'react';
 
 interface UsePaginatedUserManagementState {
   // Paginated data
