@@ -4,13 +4,13 @@
  * Automatically handles token refresh and includes auth headers for all requests
  */
 
-import { BaseFetchClient } from '@/utils/fetchClient';
-import { createClient } from '@/utils/supabase/client';
 import type {
+  ApiClientConfig,
   TypedFetchConfig,
   TypedFetchResponse,
-  ApiClientConfig,
 } from '@/interfaces/FetchTypes';
+import { BaseFetchClient } from '@/utils/fetchClient';
+import { createClient } from '@/utils/supabase/client';
 
 /**
  * Authenticated fetch client that automatically includes auth tokens

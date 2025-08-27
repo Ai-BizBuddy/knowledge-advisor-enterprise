@@ -1,8 +1,4 @@
-import {
-  Project,
-  ProjectStatus,
-  ProjectStatusDisplay,
-} from '@/interfaces/Project';
+import { Project } from '@/interfaces/Project';
 
 export interface KnowledgeBaseData extends Project {
   queries?: number;

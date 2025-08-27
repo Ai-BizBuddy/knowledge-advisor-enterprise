@@ -1,6 +1,6 @@
 /**
  * Secure Storage Utilities
- * 
+ *
  * Provides secure alternatives to localStorage for sensitive data
  */
 
@@ -40,8 +40,8 @@ class SimpleEncryption {
     const fingerprint = [
       navigator.userAgent || '',
       navigator.language || '',
-      (typeof screen !== 'undefined' ? screen.width : 0),
-      (typeof screen !== 'undefined' ? screen.height : 0),
+      typeof screen !== 'undefined' ? screen.width : 0,
+      typeof screen !== 'undefined' ? screen.height : 0,
       new Date().getTimezoneOffset(),
     ].join('|');
 
@@ -49,39 +49,39 @@ class SimpleEncryption {
     let hash = 0;
     for (let i = 0; i < fingerprint.length; i++) {
       const char = fingerprint.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
-    
+
     return Math.abs(hash).toString(36);
   }
 
   encrypt(data: string): string {
     if (!data) return data;
-    
+
     let result = '';
     for (let i = 0; i < data.length; i++) {
       const char = data.charCodeAt(i);
       const keyChar = this.key.charCodeAt(i % this.key.length);
       result += String.fromCharCode(char ^ keyChar);
     }
-    
+
     return btoa(result);
   }
 
   decrypt(encryptedData: string): string {
     if (!encryptedData) return encryptedData;
-    
+
     try {
       const data = atob(encryptedData);
       let result = '';
-      
+
       for (let i = 0; i < data.length; i++) {
         const char = data.charCodeAt(i);
         const keyChar = this.key.charCodeAt(i % this.key.length);
         result += String.fromCharCode(char ^ keyChar);
       }
-      
+
       return result;
     } catch {
       return '';
@@ -107,11 +107,7 @@ class SecureStorage {
   setItem<T>(key: string, value: T, options: StorageOptions = {}): void {
     if (!environmentChecks.isClient()) return;
 
-    const {
-      encrypt = true,
-      expiration,
-      prefix = this.prefix,
-    } = options;
+    const { encrypt = true, expiration, prefix = this.prefix } = options;
 
     const item: StorageItem<T> = {
       data: value,
@@ -122,7 +118,7 @@ class SecureStorage {
 
     try {
       let serialized = JSON.stringify(item);
-      
+
       if (encrypt) {
         serialized = this.encryption.encrypt(serialized);
       }
@@ -191,10 +187,11 @@ class SecureStorage {
     const { prefix = this.prefix } = options;
 
     try {
-      const keys = Object.keys(sessionStorage)
-        .filter(key => key.startsWith(prefix));
-      
-      keys.forEach(key => sessionStorage.removeItem(key));
+      const keys = Object.keys(sessionStorage).filter((key) =>
+        key.startsWith(prefix),
+      );
+
+      keys.forEach((key) => sessionStorage.removeItem(key));
     } catch (error) {
       console.error('SecureStorage: Failed to clear storage', error);
     }
@@ -210,8 +207,8 @@ class SecureStorage {
 
     try {
       return Object.keys(sessionStorage)
-        .filter(key => key.startsWith(prefix))
-        .map(key => key.replace(prefix, ''));
+        .filter((key) => key.startsWith(prefix))
+        .map((key) => key.replace(prefix, ''));
     } catch (error) {
       console.error('SecureStorage: Failed to get keys', error);
       return [];
@@ -315,7 +312,7 @@ export const secureStorage = new SecureStorage();
 export const safeLocalStorage = new SafeLocalStorage();
 
 // Export for custom configurations
-export { SecureStorage, SafeLocalStorage };
+export { SafeLocalStorage, SecureStorage };
 
 // Export types
-export type { StorageOptions, StorageItem };
+export type { StorageItem, StorageOptions };

@@ -1,6 +1,6 @@
 /**
  * Environment Validation Utilities
- * 
+ *
  * Validates and sanitizes environment variables for security
  */
 
@@ -66,10 +66,9 @@ function isValidUrl(urlString: string): boolean {
   try {
     const url = new URL(urlString);
     // Only allow HTTPS in production, allow HTTP for development
-    const allowedProtocols = process.env.NODE_ENV === 'production' 
-      ? ['https:'] 
-      : ['http:', 'https:'];
-    
+    const allowedProtocols =
+      process.env.NODE_ENV === 'production' ? ['https:'] : ['http:', 'https:'];
+
     return allowedProtocols.includes(url.protocol);
   } catch {
     return false;
@@ -81,7 +80,7 @@ function isValidUrl(urlString: string): boolean {
  */
 export function sanitizeEnvVar(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  
+
   // Remove potentially dangerous characters
   return value
     .replace(/[<>\"'&]/g, '') // Remove HTML/XML special chars
@@ -98,17 +97,20 @@ export function getEnvironmentConfig(): EnvironmentConfig {
     return validateEnvironment();
   } catch (error) {
     console.error('Environment validation failed:', error);
-    
+
     // In development, provide fallbacks
     if (process.env.NODE_ENV === 'development') {
-      console.warn('Using development fallbacks for missing environment variables');
+      console.warn(
+        'Using development fallbacks for missing environment variables',
+      );
       return {
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://localhost:54321',
+        supabaseUrl:
+          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://localhost:54321',
         supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dev-key',
         schema: 'knowledge',
       };
     }
-    
+
     throw error;
   }
 }
@@ -121,7 +123,7 @@ export const environmentChecks = {
   isDevelopment: () => process.env.NODE_ENV === 'development',
   isServer: () => typeof window === 'undefined',
   isClient: () => typeof window !== 'undefined',
-  
+
   /**
    * Checks if we're running in a secure context
    */
@@ -129,13 +131,15 @@ export const environmentChecks = {
     if (typeof window === 'undefined') return true; // Server-side
     return window.isSecureContext;
   },
-  
+
   /**
    * Validates runtime security requirements
    */
   validateRuntimeSecurity: () => {
     const checks = {
-      httpsInProduction: !environmentChecks.isProduction() || environmentChecks.isSecureContext(),
+      httpsInProduction:
+        !environmentChecks.isProduction() ||
+        environmentChecks.isSecureContext(),
       environmentVariables: true,
     };
 
