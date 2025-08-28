@@ -27,3 +27,6 @@ export * from "./documentsPage";
 
 // Layout Components
 export * from "./layouts";
+
+// Deep Search Components
+export * from "./deepSearch";
