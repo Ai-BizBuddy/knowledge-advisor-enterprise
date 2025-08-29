@@ -60,6 +60,22 @@ class KnowledgeBaseService {
     }
   }
 
+  async getKBIDs(): Promise<string[]> {
+    const user = await this.getCurrentUser();
+    const supabaseTable = createClientTable();
+
+    const { data, error } = await supabaseTable
+      .from('knowledge_base')
+      .select('id')
+
+    if (error) {
+      console.error(`[${this.serviceName}] Error fetching KB IDs:`, error);
+      throw new Error(`Failed to fetch KB IDs: ${error.message}`);
+    }
+
+    return data.map((row: { id: string }) => row.id);
+  }
+
   async searchProject(query: string, paginationOptions: PaginationOptions): Promise<{ data: Project[], count: number }> {
     console.log(`[${this.serviceName}] Searching knowledge bases with query:`, query);
 

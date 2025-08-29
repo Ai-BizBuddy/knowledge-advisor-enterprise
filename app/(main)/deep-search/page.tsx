@@ -2,6 +2,10 @@
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layouts";
 import { useLoading } from "@/contexts/LoadingContext";
+import { DeepSearchService } from "@/services/DeepSearch";
+import { knowledgeBaseService } from "@/services";
+import { useKnowledgeBase } from "@/hooks";
+import { useDeepSearch } from "@/hooks/useDeepSarch";
 
 interface DocumentSearchResult {
   id: string;
@@ -25,9 +29,12 @@ const DeepSearchPage = () => {
     "relevance",
   );
 
+  const { getKnowledgeBaseIDs } = useKnowledgeBase();
+  const { executeSearch } = useDeepSearch();
+
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -35,6 +42,13 @@ const DeepSearchPage = () => {
     setIsSearching(true);
     try {
       console.log("Searching for:", searchQuery);
+      const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
+      const results = await executeSearch({
+        query: searchQuery,
+        // knowledge_ids: kbId,
+      });
+
+      console.log("Raw search results:", results);
       // Filter by search query
       // Sort results
       //   setSearchResults(sortedResults);

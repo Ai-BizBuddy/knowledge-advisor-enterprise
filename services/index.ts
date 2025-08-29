@@ -13,6 +13,7 @@ import { LangflowChatService } from './LangflowChatService';
 import { LangflowSearchService } from './LangflowSearchService';
 import { AdkChatService } from './AdkChatService';
 import SortingService from './SortingService';
+import { DeepSearchService } from './DeepSearch';
 
 /**
  * Service Configuration
@@ -107,6 +108,8 @@ export const adkChatService = new AdkChatService({
  */
 export const sortingService = new SortingService();
 
+export const deepSearchService = new DeepSearchService();
+
 /**
  * Service Health Check
  * 
@@ -128,6 +131,7 @@ export const checkAllServicesHealth = async () => {
     timestamp: new Date().toISOString()
   };
 };
+
 
 /**
  * Legacy Export Compatibility
@@ -154,6 +158,7 @@ export type { DocumentSearchService as DocumentSearchServiceType } from './Docum
 export type { LangflowChatService as LangflowChatServiceType } from './LangflowChatService';
 export type { LangflowSearchService as LangflowSearchServiceType } from './LangflowSearchService';
 export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
+export type { DeepSearchService as DeepSearchServiceType } from './DeepSearch';
 
 /**
  * Default Exports for Clean Imports
@@ -168,7 +173,8 @@ const services = {
   langflowSearch: langflowSearchService,
   adkChat: adkChatService,
   sorting: sortingService,
-  checkHealth: checkAllServicesHealth
+  checkHealth: checkAllServicesHealth,
+  deepSearch: deepSearchService
 };
 
 export default services;
