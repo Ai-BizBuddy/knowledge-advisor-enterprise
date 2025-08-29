@@ -571,27 +571,40 @@ class DocumentService {
       // Build base query for documents from knowledge bases owned by user
       let countQuery = supabaseTable
         .from('document')
-        .select('*, knowledge_base!inner(created_by)', { count: 'exact', head: true })
+        .select('*, knowledge_base!inner(created_by)', {
+          count: 'exact',
+          head: true,
+        })
         .eq('knowledge_base.created_by', user.id);
 
       let dataQuery = supabaseTable
         .from('document')
-        .select(`
+        .select(
+          `
           *,
           knowledge_base!inner(id, name, created_by)
-        `)
+        `,
+        )
         .eq('knowledge_base.created_by', user.id);
 
       // Apply status filters
       if (filters?.status && filters.status !== 'all') {
         const statusFilter = filters.status;
-        
+
         if (statusFilter === 'uploaded') {
-          countQuery = countQuery.or('status.eq.uploaded,rag_status.eq.not_synced');
-          dataQuery = dataQuery.or('status.eq.uploaded,rag_status.eq.not_synced');
+          countQuery = countQuery.or(
+            'status.eq.uploaded,rag_status.eq.not_synced',
+          );
+          dataQuery = dataQuery.or(
+            'status.eq.uploaded,rag_status.eq.not_synced',
+          );
         } else if (statusFilter === 'processing') {
-          countQuery = countQuery.or('status.eq.processing,rag_status.eq.syncing');
-          dataQuery = dataQuery.or('status.eq.processing,rag_status.eq.syncing');
+          countQuery = countQuery.or(
+            'status.eq.processing,rag_status.eq.syncing',
+          );
+          dataQuery = dataQuery.or(
+            'status.eq.processing,rag_status.eq.syncing',
+          );
         } else if (statusFilter === 'synced') {
           countQuery = countQuery.eq('rag_status', 'synced');
           dataQuery = dataQuery.eq('rag_status', 'synced');
@@ -640,7 +653,10 @@ class DocumentService {
 
       return { data: documents || [], count: count || 0 };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error fetching user documents:`, error);
+      console.error(
+        `[${this.serviceName}] Error fetching user documents:`,
+        error,
+      );
       throw error;
     }
   }
@@ -669,7 +685,10 @@ class DocumentService {
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
         .from('document')
-        .select('*, knowledge_base!inner(created_by)', { count: 'exact', head: true })
+        .select('*, knowledge_base!inner(created_by)', {
+          count: 'exact',
+          head: true,
+        })
         .eq('knowledge_base.created_by', user.id)
         .ilike('name', `%${searchTerm}%`);
 
@@ -683,10 +702,12 @@ class DocumentService {
       // Get paginated search results
       const { data: documents, error } = await supabaseTable
         .from('document')
-        .select(`
+        .select(
+          `
           *,
           knowledge_base!inner(id, name, created_by)
-        `)
+        `,
+        )
         .eq('knowledge_base.created_by', user.id)
         .ilike('name', `%${searchTerm}%`)
         .order('created_at', { ascending: false })
@@ -703,7 +724,10 @@ class DocumentService {
 
       return { data: documents || [], count: count || 0 };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error searching user documents:`, error);
+      console.error(
+        `[${this.serviceName}] Error searching user documents:`,
+        error,
+      );
       throw error;
     }
   }
@@ -720,10 +744,12 @@ class DocumentService {
 
       const { data: document, error } = await supabaseTable
         .from('document')
-        .select(`
+        .select(
+          `
           *,
           knowledge_base!inner(id, name, created_by)
-        `)
+        `,
+        )
         .eq('id', id)
         .eq('knowledge_base.created_by', user.id)
         .single();
@@ -733,13 +759,19 @@ class DocumentService {
           console.log(`[${this.serviceName}] User document not found:`, id);
           return null;
         }
-        console.error(`[${this.serviceName}] Error fetching user document:`, error);
+        console.error(
+          `[${this.serviceName}] Error fetching user document:`,
+          error,
+        );
         throw new Error(`Failed to fetch user document: ${error.message}`);
       }
 
       return document;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error fetching user document:`, error);
+      console.error(
+        `[${this.serviceName}] Error fetching user document:`,
+        error,
+      );
       throw error;
     }
   }
