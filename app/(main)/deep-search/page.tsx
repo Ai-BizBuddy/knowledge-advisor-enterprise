@@ -2,10 +2,16 @@
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layouts";
 import { useLoading } from "@/contexts/LoadingContext";
-import { DeepSearchService } from "@/services/DeepSearch";
+import { DeepSearchResult, DeepSearchService } from "@/services/DeepSearch";
 import { knowledgeBaseService } from "@/services";
-import { useKnowledgeBase } from "@/hooks";
+import {
+  useAllUserDocuments,
+  useDocuments,
+  useDocumentsManagement,
+  useKnowledgeBase,
+} from "@/hooks";
 import { useDeepSearch } from "@/hooks/useDeepSarch";
+import { DeepSearchRes } from "@/interfaces/DocumentIngestion";
 
 interface DocumentSearchResult {
   id: string;
@@ -28,9 +34,13 @@ const DeepSearchPage = () => {
   const [sortBy, setSortBy] = useState<"relevance" | "date" | "name">(
     "relevance",
   );
+  const [deepSearchData, setDeepSearchData] = useState([]);
+  const [isNoResults, setIsNoResults] = useState(false);
+  const [loading, setLoadingState] = useState(false);
 
-  const { getKnowledgeBaseIDs } = useKnowledgeBase();
+  const { getKnowledgeBaseIDs, getKnowledgeBaseByIDs } = useKnowledgeBase();
   const { executeSearch } = useDeepSearch();
+  const { getDocumentById } = useAllUserDocuments();
 
   useEffect(() => {
     setLoading(false);
@@ -38,24 +48,37 @@ const DeepSearchPage = () => {
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
-
+    setLoadingState(true);
     setIsSearching(true);
     try {
       console.log("Searching for:", searchQuery);
       const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
-      const results = await executeSearch({
+      const results: DeepSearchRes[] = await executeSearch({
         query: searchQuery,
         // knowledge_ids: kbId,
       });
 
-      console.log("Raw search results:", results);
-      // Filter by search query
-      // Sort results
-      //   setSearchResults(sortedResults);
+      if (!results || results.length === 0) {
+        console.log("No results found");
+        return;
+      }
+
+      const documentIds = await Promise.all(
+        results.map(async (res: DeepSearchRes) => res.metadata.document_id),
+      );
+      const KBIds = await Promise.all(
+        results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
+      );
+      const docRes = await getDocumentById(documentIds);
+      const kbRes = await getKnowledgeBaseByIDs(KBIds);
+
+      console.log("Raw search results:", docRes);
+      console.log("Knowledge Base results:", kbRes);
     } catch (error) {
       console.error("Search error:", error);
     } finally {
       setIsSearching(false);
+      setLoadingState(false);
     }
   };
 
@@ -201,11 +224,11 @@ const DeepSearchPage = () => {
       {/* Search Results */}
       {searchQuery && (
         <div className="space-y-4">
-          {isSearching ? (
+          {loading ? (
             // Loading State
             <div className="space-y-4">
               {[...Array(3)].map((_, index) => (
-                <div key={index} className="card animate-pulse">
+                <div key={index} className="card animate-pulse p-4">
                   <div className="flex items-start gap-4">
                     <div className="h-6 w-6 rounded bg-gray-300 dark:bg-gray-600"></div>
                     <div className="flex-1 space-y-3">
@@ -313,34 +336,36 @@ const DeepSearchPage = () => {
               </div>
             </>
           ) : (
-            // No Results
-            <div className="card py-12 text-center">
-              <svg
-                className="mx-auto h-12 w-12 text-gray-400"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
-                No documents found
-              </h3>
-              <p className="mt-2 text-gray-500 dark:text-gray-400">
-                Try adjusting your search terms or upload more documents
-              </p>
-            </div>
+            isNoResults && (
+              // No Results
+              <div className="card py-12 text-center">
+                <svg
+                  className="mx-auto h-12 w-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                <h3 className="mt-4 text-lg font-medium text-gray-900 dark:text-gray-100">
+                  No documents found
+                </h3>
+                <p className="mt-2 text-gray-500 dark:text-gray-400">
+                  Try adjusting your search terms or upload more documents
+                </p>
+              </div>
+            )
           )}
         </div>
       )}
 
       {/* Initial State */}
-      {!searchQuery && (
+      {!isSearching && (
         <div className="card py-16 text-center">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900">
             <svg

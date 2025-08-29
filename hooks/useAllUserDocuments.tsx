@@ -68,6 +68,8 @@ export interface UseAllUserDocumentsReturn {
   setSearchTerm: (term: string) => void;
   setItemsPerPage: (items: number) => void;
 
+  getDocumentById: (id: string[]) => Promise<Document | null>;
+
   // Utility Functions
   refresh: () => Promise<void>;
   clearError: () => void;
@@ -264,6 +266,22 @@ export function useAllUserDocuments(
     [itemsPerPage, documentService],
   );
 
+  const getDocumentById = useCallback(
+    async (id: string[]) => {
+      try {
+        const document = await documentService.getDocumentById(id);
+        return document;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to get document";
+        console.error("[useAllUserDocuments] Error getting document:", err);
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [documentService],
+  );
+
   /**
    * Get a single document by ID
    */
@@ -399,6 +417,7 @@ export function useAllUserDocuments(
     handleDocumentClick,
     setSearchTerm,
     setItemsPerPage,
+    getDocumentById,
 
     // Utility Functions
     refresh,

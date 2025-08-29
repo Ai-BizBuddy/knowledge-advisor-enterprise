@@ -1,42 +1,32 @@
+import { DeepSearchRes } from "@/interfaces/DocumentIngestion";
 import { deepSearchService } from "@/services";
 import { DeepSearchResult } from "@/services/DeepSearch";
 import { useState } from "react";
 
 export interface useDeepSearchReturn {
-  results: DeepSearchResult[];
+  results: DeepSearchRes[];
   loading: boolean;
   error: Error | null;
-  executeSearch: (query: DeepSearchResult) => Promise<void>;
+  executeSearch: (query: DeepSearchResult) => Promise<DeepSearchRes[]>;
 }
 
 export const useDeepSearch = (): useDeepSearchReturn => {
-  const [results, setResults] = useState<DeepSearchResult[]>([]);
+  const [results, setResults] = useState<DeepSearchRes[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const executeSearch = async (query: DeepSearchResult) => {
+  const executeSearch = async (
+    query: DeepSearchResult,
+  ): Promise<DeepSearchRes[]> => {
     try {
       setLoading(true);
       setError(null);
-      //   const token = JSON.parse(
-      //     localStorage.getItem("sb-api-auth-token") || "{}",
-      //   );
       const response = await deepSearchService.DeepSearch(query);
-      //   fetch(
-      //     process.env.NEXT_PUBLIC_INGRESS_SERVICE + "deep-search",
-      //     {
-      //       method: "POST",
-      //       headers: {
-      //         "Content-Type": "application/json",
-      //         Authorization: `Bearer ${token.access_token}`,
-      //       },
-      //       body: JSON.stringify(query),
-      //     },
-      //   );
-      console.log("Deep search response:", response);
       setResults(response);
+      return response;
     } catch (error) {
       setError(error as Error);
+      return [];
     } finally {
       setLoading(false);
     }

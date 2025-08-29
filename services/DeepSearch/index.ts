@@ -1,4 +1,5 @@
 import { DeepSearchRequest } from "@/interfaces/DeepSearch";
+import { DeepSearchRes } from "@/interfaces/DocumentIngestion";
 import { createClient } from "@/utils/supabase/client";
 import axios, { Axios, AxiosInstance, AxiosResponse } from "axios";
 
@@ -84,7 +85,7 @@ export class DeepSearchService {
         return new Error(error.message || 'Unknown API error');
     }
 
-    async DeepSearch(query: DeepSearchRequest): Promise<DeepSearchResult[]> {
+    async DeepSearch(query: DeepSearchRequest): Promise<DeepSearchRes[]> {
         try {
 
             await this.initializeAuth();

@@ -182,6 +182,36 @@ class DocumentService {
         }
     }
 
+    async getDocumentById(id: string[]): Promise<Document | null> {
+        try {
+            const user = await this.getCurrentUser();
+            const supabaseTable = createClientTable();
+
+            const { data: document, error } = await supabaseTable
+                .from('document')
+                .select('*')
+                .in('id', id)
+                .single();
+
+
+
+            if (error) {
+                if (error.code === 'PGRST116') {
+                    console.log(`[${this.serviceName}] Document not found:`, id);
+                    return null;
+                }
+                console.error(`[${this.serviceName}] Error fetching document:`, error);
+                throw new Error(`Failed to fetch document: ${error.message}`);
+            }
+
+            return document;
+
+        } catch (error) {
+            console.error(`[${this.serviceName}] Error fetching document:`, error);
+            throw error;
+        }
+    }
+
     /**
      * Get a specific document by ID
      */

@@ -46,6 +46,8 @@ export interface UseKnowledgeBaseReturn {
 
   getKnowledgeBaseIDs: () => Promise<string[]>;
 
+  getKnowledgeBaseByIDs: (ids: string[]) => Promise<Project[]>;
+
   // Batch Operations
   batchUpdate: (
     ids: string[],
@@ -200,6 +202,21 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         throw err;
       } finally {
         setLoading(false);
+      }
+    },
+    [],
+  );
+
+  const getKnowledgeBaseByIDs = useCallback(
+    async (ids: string[]): Promise<Project[]> => {
+      try {
+        const kbProjects = await knowledgeBaseService.getProjectsByIDs(ids);
+        return kbProjects;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : "Failed to get knowledge bases";
+        setError(errorMessage);
+        throw err;
       }
     },
     [],
@@ -459,6 +476,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
     loadKnowledgeBases,
     getKnowledgeBaseIDs,
+    getKnowledgeBaseByIDs,
 
     // CRUD Operations
     createKnowledgeBase,

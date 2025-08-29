@@ -60,6 +60,26 @@ class KnowledgeBaseService {
     }
   }
 
+  async getProjectsByIDs(ids: string[]): Promise<Project[]> {
+    try {
+      const supabaseTable = createClientTable();
+      const { data, error } = await supabaseTable
+        .from('knowledge_base')
+        .select('*')
+        .in('id', ids);
+
+      if (error) {
+        console.error(`[${this.serviceName}] Error fetching projects by IDs:`, error);
+        throw new Error(`Failed to fetch projects by IDs: ${error.message}`);
+      }
+
+      return data as Project[];
+    } catch (error) {
+      console.error(`[${this.serviceName}] Error getting projects by IDs:`, error);
+      throw error;
+    }
+  }
+
   async getKBIDs(): Promise<string[]> {
     const user = await this.getCurrentUser();
     const supabaseTable = createClientTable();
