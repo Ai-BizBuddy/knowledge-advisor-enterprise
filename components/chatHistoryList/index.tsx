@@ -10,7 +10,11 @@ interface Props {
   onLoadSession?: (session: ChatSession) => void; // Made optional since not used
 }
 
-export default function ChatHistoryList({ isOpen, onClose, onLoadSession }: Props) {
+export default function ChatHistoryList({
+  isOpen,
+  onClose,
+  onLoadSession,
+}: Props) {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const { getChatSessions, deleteChatSession, exportChatSession } =
     useChatHistory();
