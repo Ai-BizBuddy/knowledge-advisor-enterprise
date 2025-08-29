@@ -20,12 +20,13 @@ interface DocumentTableItem {
 interface DocumentsTableProps {
   documents: DocumentTableItem[];
   selectedDocuments: number[];
-  selectedDocument: number;
+  selectedDocument: number | null;
   startIndex: number;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onSort: (column: string) => void;
   onSelectAll: () => void;
+  onDeleteDocument: (index: number) => void;
   onSelectDocument: (
     index: number,
     event: React.ChangeEvent<HTMLInputElement>,
@@ -35,7 +36,11 @@ interface DocumentsTableProps {
   isIndeterminate: boolean;
 }
 
-const getStatusBadge = (status: string) => {
+const getStatusBadge = (status: string | null | undefined) => {
+  if (!status) {
+    return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300';
+  }
+
   const statusConfig = {
     Completed:
       'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
@@ -43,6 +48,12 @@ const getStatusBadge = (status: string) => {
     OcrinProgress:
       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     Processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    Synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    'Not Synced':
+      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    Syncing:
+      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
   };
 
   return (
@@ -90,6 +101,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onSelectAll,
   onSelectDocument,
   onDocumentClick,
+  onDeleteDocument,
   isAllSelected,
   isIndeterminate,
 }) => {
@@ -135,9 +147,10 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
       <div className='block lg:hidden'>
         <div className='divide-y divide-gray-200 dark:divide-gray-700'>
           {documents.map((doc, pageIndex) => {
-            const actualIndex = startIndex + pageIndex;
+            // startIndex from hook is 1-based, so convert to 0-based for calculation
+            const actualIndex = startIndex - 1 + pageIndex;
             const isSelected = selectedDocuments.includes(actualIndex);
-            const isCurrentDocument = selectedDocument === actualIndex;
+            const isCurrentDocument = selectedDocument === pageIndex;
 
             return (
               <div
@@ -165,7 +178,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       {doc.name}
                     </div>
                     <div className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
-                      {doc.size} • {doc.type.toLocaleLowerCase()}
+                      {doc.size} • {(doc.type || 'Unknown').toLowerCase()}
                     </div>
                     <div className='mt-2 flex items-center justify-between'>
                       <div className='text-xs text-gray-500 dark:text-gray-400'>
@@ -173,9 +186,9 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </div>
                       <div className='flex items-center space-x-2'>
                         <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || '')}`}
+                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
                         >
-                          {doc.syncStatus}
+                          {doc.syncStatus || doc.status || 'Unknown'}
                         </span>
                         {getSyncButton(doc.syncStatus)}
                       </div>
@@ -233,9 +246,10 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
             <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
               {documents.length > 0 &&
                 documents.map((doc, pageIndex) => {
-                  const actualIndex = startIndex + pageIndex;
+                  // startIndex from hook is 1-based, so convert to 0-based for calculation
+                  const actualIndex = startIndex - 1 + pageIndex;
                   const isSelected = selectedDocuments.includes(actualIndex);
-                  const isCurrentDocument = selectedDocument === actualIndex;
+                  const isCurrentDocument = selectedDocument === pageIndex;
 
                   return (
                     <tr
@@ -260,7 +274,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                      <td className='max-w-xs truncate px-3 py-4 sm:px-6'>
                         <div className='flex items-center'>
                           <div className='mr-3 text-xl sm:text-2xl'>
                             {getFileIcon(doc.type)}
@@ -274,14 +288,17 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         <span className='font-medium'>
-                          {doc.type.toLocaleLowerCase()} Document
+                          {doc.type
+                            ? doc.type.toLocaleLowerCase()
+                            : 'Unknown Type'}{' '}
+                          Document
                         </span>
                       </td>
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                         <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status)}`}
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || 'Unknown')}`}
                         >
-                          {doc.status}
+                          {doc.status || 'Unknown'}
                         </span>
                       </td>
                       <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-900 sm:px-6 dark:text-white'>
@@ -295,9 +312,11 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
                         <button
-                          className='inline-flex items-center rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
-                          onClick={(e) => e.stopPropagation()}
-                          title='Delete document'
+                          className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDeleteDocument(pageIndex);
+                          }}
                         >
                           Delete
                         </button>

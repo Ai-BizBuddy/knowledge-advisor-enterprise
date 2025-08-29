@@ -1,24 +1,86 @@
 'use client';
-import { documentsData } from '@/data/documentsData';
-import { filterDocuments, sortDocuments } from '@/utils/documentsUtils';
+
+import { documentsData, type Document } from '@/data/documentsData';
+import { filterDocuments } from '@/utils/documentsUtils';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useDocumentsManagement = () => {
-  const [selectedDocument, setSelectedDocument] = useState(0);
+  const [selectedDocument, setSelectedDocument] = useState<number | null>(null);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('All');
-  const [sortBy, setSortBy] = useState('Date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [sortBy, setSortBy] = useState<keyof Document>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const itemsPerPage = 10;
 
+  // Local sorting function for mock data
+  const sortDocuments = useCallback(
+    (documents: Document[]) => {
+      return [...documents].sort((a, b) => {
+        let aValue: string | number;
+        let bValue: string | number;
+
+        switch (sortBy) {
+          case 'name':
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+            break;
+          case 'date':
+            aValue = new Date(a.date).getTime();
+            bValue = new Date(b.date).getTime();
+            break;
+          case 'size':
+            // Convert size string to number for comparison (e.g., "2.5 MB" -> 2.5)
+            aValue = parseFloat(a.size.replace(/[^\d.]/g, ''));
+            bValue = parseFloat(b.size.replace(/[^\d.]/g, ''));
+            break;
+          case 'type':
+            aValue = a.type.toLowerCase();
+            bValue = b.type.toLowerCase();
+            break;
+          case 'uploadedBy':
+            aValue = a.uploadedBy.toLowerCase();
+            bValue = b.uploadedBy.toLowerCase();
+            break;
+          case 'status':
+            aValue = a.status.toLowerCase();
+            bValue = b.status.toLowerCase();
+            break;
+          case 'lastUpdated':
+            aValue = new Date(a.lastUpdated || a.date).getTime();
+            bValue = new Date(b.lastUpdated || b.date).getTime();
+            break;
+          default:
+            aValue = a.name.toLowerCase();
+            bValue = b.name.toLowerCase();
+        }
+
+        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
+        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+        return 0;
+      });
+    },
+    [sortBy, sortOrder],
+  );
+
+  // Sorting handlers
+  const handleSort = (field: keyof Document) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
+    }
+  };
+
+  const handleSortOrderToggle = () => {
+    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+  };
   // Get filtered and sorted documents
   const filteredDocuments = sortDocuments(
     filterDocuments(documentsData, searchTerm, activeTab),
-    sortBy,
-    sortOrder,
   );
 
   // Pagination logic
@@ -27,32 +89,17 @@ export const useDocumentsManagement = () => {
   const endIndex = startIndex + itemsPerPage;
   const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
 
-  // Handle sort changes
-  const handleSort = (column: string) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('asc');
-    }
-    setCurrentPage(1);
-  };
-
-  // Handle sort order toggle
-  const handleSortOrderToggle = () => {
-    setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    setCurrentPage(1);
-  };
-
   // Handle page changes
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     setSelectedDocuments([]);
+    setSelectedDocument(null); // Reset selected document when page changes
   };
 
   // Handle tab changes
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
+    setSelectedDocument(null); // Reset selected document when tab changes
   };
 
   // Handle tab actions
@@ -78,16 +125,19 @@ export const useDocumentsManagement = () => {
   useEffect(() => {
     setCurrentPage(1);
     setSelectedDocuments([]);
+    setSelectedDocument(null); // Reset selected document when search or filter changes
   }, [searchTerm, activeTab]);
 
   // Multi-select functions
   const handleSelectAll = useCallback(() => {
     const currentPageIndices = paginatedDocuments.map(
-      (_, index) => startIndex + index,
+      (_: Document, index: number) => startIndex + index,
     );
     if (
       selectedDocuments.length === currentPageIndices.length &&
-      currentPageIndices.every((index) => selectedDocuments.includes(index))
+      currentPageIndices.every((index: number) =>
+        selectedDocuments.includes(index),
+      )
     ) {
       setSelectedDocuments((prev) =>
         prev.filter((index) => !currentPageIndices.includes(index)),
@@ -129,7 +179,7 @@ export const useDocumentsManagement = () => {
 
   // Calculate selection states
   const currentPageIndices = paginatedDocuments.map(
-    (_, index) => startIndex + index,
+    (_: Document, index: number) => startIndex + index,
   );
   const selectedInCurrentPage = selectedDocuments.filter((index) =>
     currentPageIndices.includes(index),
@@ -184,6 +234,7 @@ export const useDocumentsManagement = () => {
 
     // Handlers
     setSelectedDocument,
+    setSelectedDocuments,
     setSearchTerm,
     handleSort,
     handleSortOrderToggle,

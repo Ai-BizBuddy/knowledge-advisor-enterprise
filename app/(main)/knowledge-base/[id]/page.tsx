@@ -255,6 +255,8 @@ export default function KnowledgeBaseDetail() {
       }, 100);
     } catch (err) {
       console.error('[KnowledgeBaseDetail] Chat error:', err);
+      console.error('ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
+      // TODO: Add toast notification component
     }
   };
 
@@ -506,6 +508,7 @@ export default function KnowledgeBaseDetail() {
               onSelectAll={handleSelectAll}
               onSelectDocument={handleSelectDocument}
               onDocumentClick={handleDocumentTableClick}
+              onDeleteDocument={() => alert('Delete')}
               isAllSelected={isAllSelected}
               isIndeterminate={isIndeterminate}
             />

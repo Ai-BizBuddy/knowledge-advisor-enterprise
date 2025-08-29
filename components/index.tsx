@@ -4,6 +4,7 @@ export { default as ChatCard } from './chatCard';
 export { default as ChatHistoryCard } from './chatHistoryCard';
 export { default as ChatHistoryList } from './chatHistoryList';
 export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
+export { default as DeleteConfirmModal } from './deleteConfirmModal';
 export { default as DocumentDetail } from './documentDetail';
 export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
@@ -20,12 +21,6 @@ export { default as SlideBar } from './sildeBar';
 export { default as StatusCard } from './statusCard';
 export { default as Tabs } from './tabs';
 export { default as UploadDocument } from './uploadDocuments';
-
-// App Loading Components
-export * from './AppLoading';
-
-// Loading Card Components
-export * from './LoadingCard';
 
 // Documents Page Components
 export * from './documentsPage';

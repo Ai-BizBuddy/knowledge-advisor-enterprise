@@ -1,5 +1,6 @@
 // Export all custom hooks
 export { useAdkChat } from './useAdkChat';
+export { useAllUserDocuments } from './useAllUserDocuments';
 export { useApiClient } from './useApiClient';
 export { useAuth } from './useAuth';
 export { useChat } from './useChat';
@@ -17,6 +18,7 @@ export { usePermissions } from './usePermissions';
 export { useReactHookForm } from './useReactHookForm';
 export { useRecentActivity } from './useRecentActivity';
 export { useRolePermissions } from './useRolePermissions';
+export { useSorting } from './useSorting';
 export { useStatistics } from './useStatistics';
 export { useSystemStatus } from './useSystemStatus';
 export { useUserManagement } from './useUserManagement';

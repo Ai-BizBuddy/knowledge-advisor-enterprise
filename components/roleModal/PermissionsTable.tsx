@@ -1,3 +1,5 @@
+'use client';
+
 import React from 'react';
 import { Card } from 'flowbite-react';
 import { usePermissionDataWithFallback } from '@/hooks';

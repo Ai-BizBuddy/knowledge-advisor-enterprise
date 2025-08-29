@@ -5,16 +5,16 @@
  * with fetch API instead of Axios. Follows the project's strict TypeScript standards.
  */
 
-import { createClientTable } from '@/utils/supabase/client';
-import { getAuthSession } from '@/utils/supabase/authUtils';
 import type {
-  Document,
   CreateDocumentInput,
-  CreateMultipleDocumentsInput,
   CreateDocumentsFromFilesInput,
-  UpdateDocumentInput,
+  CreateMultipleDocumentsInput,
+  Document,
   PaginationOptions,
+  UpdateDocumentInput,
 } from '@/interfaces/Project';
+import { getAuthSession } from '@/utils/supabase/authUtils';
+import { createClientTable } from '@/utils/supabase/client';
 
 class DocumentService {
   private readonly serviceName = 'Document';

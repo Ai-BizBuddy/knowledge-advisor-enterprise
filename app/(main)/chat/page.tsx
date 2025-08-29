@@ -13,7 +13,7 @@ import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function ChatPage() {
-  const [isOnline, setIsOnline] = useState(true);
+  const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
   const { setLoading } = useLoading();
@@ -41,6 +41,10 @@ export default function ChatPage() {
       addWelcomeMessage();
     }
   }, [messages.length, addWelcomeMessage]);
+
+  useEffect(() => {
+    setLoading(false);
+  }, [setLoading]);
 
   const handleLoadChatSession = (session: ChatSession) => {
     setMessages(session.messages);
