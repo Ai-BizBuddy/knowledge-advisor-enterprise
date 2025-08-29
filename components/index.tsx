@@ -1,4 +1,5 @@
 // Component exports - centralized location for all component imports
+export { default as AppLoading } from './AppLoading';
 export { default as BotTypingBubble } from './botTypingBubble';
 export { default as ChatCard } from './chatCard';
 export { default as ChatHistoryCard } from './chatHistoryCard';
@@ -10,6 +11,7 @@ export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
 export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';
 export { default as KnowledgeSelect } from './knowledgeSelect';
+export { LoadingCard } from './LoadingCard';
 export { default as LoadingPage } from './loadingPage';
 export { default as NoDocuments } from './noDocuments';
 export { default as RecentActivityCard } from './recentActivityCard';

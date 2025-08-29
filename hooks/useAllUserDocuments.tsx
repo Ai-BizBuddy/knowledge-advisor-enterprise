@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import DocumentService from "@/services/DocumentService";
-import type { Document, PaginationOptions } from "@/interfaces/Project";
+import type { Document, PaginationOptions } from '@/interfaces/Project';
+import DocumentService from '@/services/DocumentService';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Debounce utility function
 function useDebounce<T>(value: T, delay: number): T {
@@ -93,9 +93,9 @@ export function useAllUserDocuments(
   const [itemsPerPage, setItemsPerPage] = useState(initialItemsPerPage);
 
   // Filter state
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedStatus, setSelectedStatus] = useState("all");
-  const [selectedType, setSelectedType] = useState("all");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedType, setSelectedType] = useState('all');
 
   // Refs
   const loadingRef = useRef(false);
@@ -111,24 +111,24 @@ export function useAllUserDocuments(
   const filteredDocuments = useMemo(() => {
     let filtered = documents;
 
-    if (selectedStatus !== "all") {
+    if (selectedStatus !== 'all') {
       filtered = filtered.filter((doc) => {
         switch (selectedStatus) {
-          case "uploaded":
-            return doc.status === "uploaded" || doc.rag_status === "not_synced";
-          case "processing":
-            return doc.status === "processing" || doc.rag_status === "syncing";
-          case "synced":
-            return doc.rag_status === "synced";
-          case "error":
-            return doc.status === "error" || doc.rag_status === "error";
+          case 'uploaded':
+            return doc.status === 'uploaded' || doc.rag_status === 'not_synced';
+          case 'processing':
+            return doc.status === 'processing' || doc.rag_status === 'syncing';
+          case 'synced':
+            return doc.rag_status === 'synced';
+          case 'error':
+            return doc.status === 'error' || doc.rag_status === 'error';
           default:
             return true;
         }
       });
     }
 
-    if (selectedType !== "all") {
+    if (selectedType !== 'all') {
       filtered = filtered.filter((doc) => doc.file_type === selectedType);
     }
 
@@ -146,16 +146,16 @@ export function useAllUserDocuments(
     };
 
     documents.forEach((doc) => {
-      if (doc.status === "uploaded" || doc.rag_status === "not_synced") {
+      if (doc.status === 'uploaded' || doc.rag_status === 'not_synced') {
         counts.uploaded++;
       }
-      if (doc.status === "processing" || doc.rag_status === "syncing") {
+      if (doc.status === 'processing' || doc.rag_status === 'syncing') {
         counts.processing++;
       }
-      if (doc.rag_status === "synced") {
+      if (doc.rag_status === 'synced') {
         counts.synced++;
       }
-      if (doc.status === "error" || doc.rag_status === "error") {
+      if (doc.status === 'error' || doc.rag_status === 'error') {
         counts.error++;
       }
     });
@@ -170,7 +170,7 @@ export function useAllUserDocuments(
     async (page = 1, forceRefresh = false) => {
       // Prevent redundant calls when already loading (unless forced)
       if (loadingRef.current && !forceRefresh) {
-        console.log("[useAllUserDocuments] Already loading, skipping call");
+        console.log('[useAllUserDocuments] Already loading, skipping call');
         return;
       }
 
@@ -188,8 +188,8 @@ export function useAllUserDocuments(
         };
 
         const filters = {
-          status: selectedStatus !== "all" ? selectedStatus : undefined,
-          type: selectedType !== "all" ? selectedType : undefined,
+          status: selectedStatus !== 'all' ? selectedStatus : undefined,
+          type: selectedType !== 'all' ? selectedType : undefined,
           searchTerm: debouncedSearchTerm.trim() || undefined,
         };
 
@@ -208,8 +208,8 @@ export function useAllUserDocuments(
         );
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to load documents";
-        console.error("[useAllUserDocuments] Error loading documents:", err);
+          err instanceof Error ? err.message : 'Failed to load documents';
+        console.error('[useAllUserDocuments] Error loading documents:', err);
         setError(errorMessage);
       } finally {
         loadingRef.current = false;
@@ -254,8 +254,8 @@ export function useAllUserDocuments(
         setCurrentPage(1);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to search documents";
-        console.error("[useAllUserDocuments] Error searching documents:", err);
+          err instanceof Error ? err.message : 'Failed to search documents';
+        console.error('[useAllUserDocuments] Error searching documents:', err);
         setError(errorMessage);
       } finally {
         setLoading(false);
@@ -273,8 +273,8 @@ export function useAllUserDocuments(
         return await documentService.getUserDocument(id);
       } catch (err) {
         const errorMessage =
-          err instanceof Error ? err.message : "Failed to get document";
-        console.error("[useAllUserDocuments] Error getting document:", err);
+          err instanceof Error ? err.message : 'Failed to get document';
+        console.error('[useAllUserDocuments] Error getting document:', err);
         setError(errorMessage);
         return null;
       }
@@ -331,7 +331,7 @@ export function useAllUserDocuments(
   );
 
   const handleDocumentClick = useCallback((id: string) => {
-    console.log("[useAllUserDocuments] Document clicked:", id);
+    console.log('[useAllUserDocuments] Document clicked:', id);
     // This can be extended for navigation or state changes
   }, []);
 
