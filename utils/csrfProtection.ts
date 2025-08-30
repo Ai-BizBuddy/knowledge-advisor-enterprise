@@ -1,6 +1,6 @@
 /**
  * CSRF Protection Utilities
- * 
+ *
  * Provides Cross-Site Request Forgery protection for the application
  */
 
@@ -108,7 +108,7 @@ class CSRFProtection {
    */
   private cleanupExpiredTokens(): void {
     const now = Date.now();
-    
+
     for (const [key, tokenData] of this.tokenStorage.entries()) {
       if (now > tokenData.expiry) {
         this.tokenStorage.delete(key);
@@ -159,7 +159,9 @@ export class ClientCSRF {
   static getToken(): string | null {
     // Try to get from meta tag first (server-side rendered)
     if (typeof document !== 'undefined') {
-      const metaTag = document.querySelector(`meta[name="${this.META_TAG_NAME}"]`);
+      const metaTag = document.querySelector(
+        `meta[name="${this.META_TAG_NAME}"]`,
+      );
       if (metaTag) {
         return metaTag.getAttribute('content');
       }
@@ -192,9 +194,11 @@ export class ClientCSRF {
   /**
    * Adds CSRF token to request headers
    */
-  static addToHeaders(headers: Record<string, string> = {}): Record<string, string> {
+  static addToHeaders(
+    headers: Record<string, string> = {},
+  ): Record<string, string> {
     const token = this.getToken();
-    
+
     if (token) {
       return {
         ...headers,
@@ -210,7 +214,7 @@ export class ClientCSRF {
    */
   static addToFormData(formData: FormData): void {
     const token = this.getToken();
-    
+
     if (token) {
       formData.append('_csrf_token', token);
     }
@@ -232,7 +236,9 @@ export function useCSRF() {
     return ClientCSRF.getToken();
   };
 
-  const addToHeaders = (headers: Record<string, string> = {}): Record<string, string> => {
+  const addToHeaders = (
+    headers: Record<string, string> = {},
+  ): Record<string, string> => {
     return ClientCSRF.addToHeaders(headers);
   };
 
@@ -276,7 +282,16 @@ export function createCSRFMiddleware() {
     /**
      * Middleware function for Next.js API routes
      */
-    middleware: (req: Request & { session?: { id?: string }; body?: { _csrf_token?: string } }, res: Response & { status: (code: number) => { json: (data: object) => void } }, next: () => void) => {
+    middleware: (
+      req: Request & {
+        session?: { id?: string };
+        body?: { _csrf_token?: string };
+      },
+      res: Response & {
+        status: (code: number) => { json: (data: object) => void };
+      },
+      next: () => void,
+    ) => {
       // Skip GET, HEAD, OPTIONS requests
       if (['GET', 'HEAD', 'OPTIONS'].includes(req.method || '')) {
         return next();
@@ -302,8 +317,10 @@ export function createCSRFMiddleware() {
 export const csrfProtection = CSRFProtection.getInstance();
 
 // Export utility functions
-export const generateCSRFToken = (sessionId?: string) => csrfProtection.generateToken(sessionId);
-export const validateCSRFToken = (token: string, sessionId?: string) => csrfProtection.validateToken(token, sessionId);
+export const generateCSRFToken = (sessionId?: string) =>
+  csrfProtection.generateToken(sessionId);
+export const validateCSRFToken = (token: string, sessionId?: string) =>
+  csrfProtection.validateToken(token, sessionId);
 
 const csrfUtils = {
   CSRFProtection,

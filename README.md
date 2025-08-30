@@ -1,45 +1,125 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with
-[`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## Knowledge Advisor Enterprise
 
-## Getting Started
+AI-powered knowledge base ingestion and RAG project manager built with Next.js App Router
+(CSR-only), TypeScript, Tailwind CSS v4, Supabase, and Flowbite React.
 
-First, run the development server:
+### Tech stack
+
+- Next.js 15.x (App Router, output=standalone)
+- React 19, TypeScript 5 (strict)
+- Tailwind CSS v4 via @tailwindcss/postcss, Flowbite React
+- Supabase JS v2 (Auth, Storage, DB)
+- Framer Motion, React Hook Form, React Toastify
+
+### Project structure (high level)
+
+```
+app/                 # Routes (CSR), layouts, loading/not-found
+components/          # Reusable UI + feature components (per-folder)
+contexts/            # React contexts (Auth, Loading)
+hooks/               # Typed hooks (data fetching, forms, state)
+interfaces/          # Shared TypeScript interfaces/types
+constants/           # App constants
+services/            # API/Supabase client & service helpers
+utils/               # Utilities (formatters, helpers)
+public/              # Static assets
+styles/              # Global styles (Tailwind v4 via PostCSS)
+```
+
+Note: Path alias is configured as `@/*` → project root (see `tsconfig.json`).
+
+## Getting started
+
+1. Prerequisites
+
+- Node.js 18.18+ or 20+
+- npm
+
+2. Install deps
+
+```bash
+npm ci
+```
+
+3. Configure environment Create `.env.local` from the example and fill values:
+
+```bash
+copy .env.local.example .env.local
+```
+
+Required (CSR-friendly):
+
+```
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+```
+
+4. Run in development
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open http://localhost:3000 and check console for errors.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the
-file.
+5. Verify production build
 
-This project uses
-[`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to
-automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run build
+```
 
-## Learn More
+Wait for completion and ensure there are no TypeScript/build errors.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm run dev          # Start dev server (Turbo)
+npm run build        # Production build (standalone)
+npm run start        # Start production server
+npm run lint         # ESLint (Next.js config)
+npm run lint:fix     # ESLint with --fix
+npm run format       # Prettier write
+npm run format:check # Prettier check
+npm run quotes:check # ESLint check for quotes & general rules
+npm run quotes:fix   # ESLint fix + Prettier write
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback
-and contributions are welcome!
+## Development workflow
 
-## Deploy on Vercel
+1. Implement changes (TypeScript strict, no `any`)
+2. Run dev and test UI flows in browser
+3. Run build to catch type and bundling issues
+4. Lint/format before committing
 
-The easiest way to deploy your Next.js app is to use the
-[Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme)
-from the creators of Next.js.
+Tailwind CSS v4 is enabled via PostCSS plugin (`postcss.config.mjs`). No explicit `tailwind.config`
+is required unless you need customization.
 
-Check out our
-[Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying)
-for more details.
+## Environment variables
+
+CSR-only usage requires public keys:
+
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+Add other configuration as needed. Never commit secrets.
+
+## Conventions
+
+- Folder names: prefer kebab-case; React components PascalCase files
+- Component-per-folder; export via local `index.tsx` when helpful
+- Types in `interfaces/`; avoid `any` (prefer unions, generics, unknown)
+- Hooks are pure and typed; side-effects isolated in services
+
+## Deployment
+
+- `next.config.ts` uses `output: 'standalone'` and Flowbite React plugin
+- Image optimization allows whitelisted remote hosts (Flowbite, Supabase storage)
+- Optional redirect to force HTTPS in production is configured
+
+Deploy to Vercel or any Node runtime that runs `npm run start` after build.
+
+## Troubleshooting
+
+- Clear `.next/` and rerun build if you see stale module errors
+- Verify env variables are present in browser (`NEXT_PUBLIC_*`)
+- Check terminal and browser console for runtime errors

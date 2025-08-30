@@ -4,7 +4,7 @@
     "source.organizeImports": "explicit"
   },
   "editor.defaultFormatter": "esbenp.prettier-vscode",
-  "editor.formatOnSave": true,
+  "editor.formatOnSave": false,
   "prettier.configPath": "./prettier.config.mjs",
   "prettier.requireConfig": true,
   "files.associations": {

@@ -10,21 +10,46 @@ import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
-import { LangflowChatService } from './LangflowChatService';
-import { LangflowSearchService } from './LangflowSearchService';
-import SortingService from './SortingService';
 
 /**
  * Service Configuration
  *
  * Central configuration for all services with environment-based settings
  */
-const serviceConfig = {
+interface ServiceConfig {
+  useMockData: boolean;
+  timeout: number;
+  retryAttempts: number;
+}
+
+const serviceConfig: Readonly<ServiceConfig> = {
   // Force mock data disabled globally
   useMockData: false,
   timeout: 30000,
   retryAttempts: 2,
 };
+
+// Simple dev-time hints if important envs are missing
+if (process.env.NODE_ENV !== 'production') {
+  if (!process.env.NEXT_PUBLIC_INGRESS_SERVICE) {
+    console.warn(
+      '[services] NEXT_PUBLIC_INGRESS_SERVICE is not set. Using http://localhost:8000',
+    );
+  }
+  if (
+    !process.env.NEXT_PUBLIC_LANGFLOW_URL ||
+    !process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH
+  ) {
+    console.warn(
+      '[services] Langflow env vars are not fully set. Document search may be limited.',
+    );
+  }
+  if (!process.env.NEXT_PUBLIC_ADK_BASE_URL) {
+    console.warn(
+      '[services] NEXT_PUBLIC_ADK_BASE_URL is not set. ADK chat may not function.',
+    );
+  }
+}
 
 /**
  * Document Ingestion Service Instance
@@ -32,8 +57,7 @@ const serviceConfig = {
  * Handles document processing and ingestion operations
  */
 export const documentIngestionService = new DocumentIngestionService({
-  baseURL:
-    process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001/api',
+  baseURL: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:8000',
   timeout: serviceConfig.timeout,
   retryAttempts: serviceConfig.retryAttempts,
 });
@@ -65,32 +89,6 @@ export const documentSearchService = new DocumentSearchService({
 });
 
 /**
- * Langflow Chat Service Instance
- *
- * Handles conversational AI interactions
- */
-export const langflowChatService = new LangflowChatService({
-  baseUrl: process.env.NEXT_PUBLIC_LANGFLOW_URL,
-  chatPath: process.env.NEXT_PUBLIC_LANGFLOW_CHAT_PATH,
-  timeout: 120000, // 2 minutes for chat responses
-  retryAttempts: serviceConfig.retryAttempts,
-  useMockData: serviceConfig.useMockData,
-});
-
-/**
- * Langflow Search Service Instance
- *
- * Provides semantic search functionality
- */
-export const langflowSearchService = new LangflowSearchService({
-  baseUrl: process.env.NEXT_PUBLIC_LANGFLOW_URL,
-  searchPath: process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH,
-  timeout: serviceConfig.timeout,
-  retryAttempts: serviceConfig.retryAttempts,
-  useMockData: serviceConfig.useMockData,
-});
-
-/**
  * ADK Chat Service Instance
  *
  * Handles conversational AI interactions using ADK with session management and SSE streaming
@@ -105,48 +103,26 @@ export const adkChatService = new AdkChatService({
 /**
  * Sorting Service Instance
  *
- * Handles all sorting operations for documents and other data
+ * Centralized sorting utilities for documents
  */
-export const sortingService = new SortingService();
 
 /**
- * Service Health Check
- *
- * Utility function to check the health of all services
+ * Compatibility alias: some hooks import `langflowChatService` from services.
+ * Route those calls to the ADK chat service for now.
  */
-export const checkAllServicesHealth = async () => {
-  const healthChecks = await Promise.allSettled([
-    documentIngestionService.checkHealth(),
-    langflowChatService.checkHealth(),
-    langflowSearchService.checkHealth(),
-    adkChatService.checkHealth(),
-  ]);
-
-  return {
-    documentIngestion:
-      healthChecks[0].status === 'fulfilled' ? healthChecks[0].value : false,
-    langflowChat:
-      healthChecks[1].status === 'fulfilled' ? healthChecks[1].value : false,
-    langflowSearch:
-      healthChecks[2].status === 'fulfilled' ? healthChecks[2].value : false,
-    adkChat:
-      healthChecks[3].status === 'fulfilled' ? healthChecks[3].value : false,
-    timestamp: new Date().toISOString(),
-  };
-};
+export const langflowChatService = adkChatService;
 
 /**
  * Legacy Export Compatibility
  *
  * Export individual service classes for backwards compatibility
  */
+export { default as DocumentService } from './DocumentService';
 export {
   AdkChatService,
   DocumentIngestionService,
   DocumentSearchService,
   KnowledgeBaseService,
-  LangflowChatService,
-  LangflowSearchService,
 };
 
 /**
@@ -158,23 +134,26 @@ export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
 export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
 export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
 export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
-export type { LangflowChatService as LangflowChatServiceType } from './LangflowChatService';
-export type { LangflowSearchService as LangflowSearchServiceType } from './LangflowSearchService';
-
+export type DocumentServiceType = InstanceType<typeof DocumentService>;
 /**
  * Default Exports for Clean Imports
  *
  * Aliases for the most commonly used services
  */
-const services = {
+export interface ServicesMap {
+  documentIngestion: DocumentIngestionService;
+  knowledgeBase: KnowledgeBaseService;
+  documentSearch: DocumentSearchService;
+  adkChat: AdkChatService;
+  document: DocumentService;
+}
+
+const services: ServicesMap = {
   documentIngestion: documentIngestionService,
   knowledgeBase: knowledgeBaseService,
   documentSearch: documentSearchService,
-  langflowChat: langflowChatService,
-  langflowSearch: langflowSearchService,
   adkChat: adkChatService,
-  checkHealth: checkAllServicesHealth,
-  sorting: sortingService,
+  document: documentService,
 };
 
 export default services;

@@ -1,6 +1,6 @@
 /**
  * Input Validation and Sanitization Utilities
- * 
+ *
  * Provides comprehensive input validation to prevent XSS, injection attacks,
  * and ensure data integrity across the application.
  */
@@ -29,7 +29,10 @@ class InputValidator {
   /**
    * Validates and sanitizes text input
    */
-  validateText(input: string, options: ValidationOptions = {}): ValidationResult {
+  validateText(
+    input: string,
+    options: ValidationOptions = {},
+  ): ValidationResult {
     const {
       maxLength = 10000,
       minLength = 0,
@@ -122,7 +125,10 @@ class InputValidator {
   /**
    * Validates URLs
    */
-  validateURL(url: string, options: { allowedProtocols?: string[] } = {}): ValidationResult {
+  validateURL(
+    url: string,
+    options: { allowedProtocols?: string[] } = {},
+  ): ValidationResult {
     const { allowedProtocols = ['http:', 'https:'] } = options;
     const errors: string[] = [];
 
@@ -135,7 +141,7 @@ class InputValidator {
 
     try {
       const urlObj = new URL(sanitized);
-      
+
       if (!allowedProtocols.includes(urlObj.protocol)) {
         errors.push(`Protocol ${urlObj.protocol} is not allowed`);
       }
@@ -160,11 +166,14 @@ class InputValidator {
   /**
    * Validates file uploads
    */
-  validateFile(file: File, options: {
-    maxSize?: number;
-    allowedTypes?: string[];
-    allowedExtensions?: string[];
-  } = {}): ValidationResult {
+  validateFile(
+    file: File,
+    options: {
+      maxSize?: number;
+      allowedTypes?: string[];
+      allowedExtensions?: string[];
+    } = {},
+  ): ValidationResult {
     const {
       maxSize = 10 * 1024 * 1024, // 10MB default
       allowedTypes = [],
@@ -180,7 +189,9 @@ class InputValidator {
 
     // Size validation
     if (file.size > maxSize) {
-      errors.push(`File size must not exceed ${Math.round(maxSize / 1024 / 1024)}MB`);
+      errors.push(
+        `File size must not exceed ${Math.round(maxSize / 1024 / 1024)}MB`,
+      );
     }
 
     // Type validation
@@ -231,7 +242,7 @@ class InputValidator {
     // Check for potentially dangerous keys
     const dangerousKeys = ['__proto__', 'constructor', 'prototype'];
     const hasDangerousKeys = this.checkForDangerousKeys(parsed, dangerousKeys);
-    
+
     if (hasDangerousKeys) {
       errors.push('JSON contains potentially dangerous properties');
     }
@@ -273,14 +284,23 @@ class InputValidator {
   /**
    * Checks for dangerous keys in objects
    */
-  private checkForDangerousKeys(obj: Record<string, unknown>, dangerousKeys: string[]): boolean {
+  private checkForDangerousKeys(
+    obj: Record<string, unknown>,
+    dangerousKeys: string[],
+  ): boolean {
     if (typeof obj !== 'object' || obj === null) return false;
 
     for (const key of Object.keys(obj)) {
       if (dangerousKeys.includes(key)) return true;
-      
+
       if (typeof obj[key] === 'object' && obj[key] !== null) {
-        if (this.checkForDangerousKeys(obj[key] as Record<string, unknown>, dangerousKeys)) return true;
+        if (
+          this.checkForDangerousKeys(
+            obj[key] as Record<string, unknown>,
+            dangerousKeys,
+          )
+        )
+          return true;
       }
     }
 

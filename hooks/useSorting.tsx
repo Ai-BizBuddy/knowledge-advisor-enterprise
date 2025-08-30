@@ -8,13 +8,59 @@
  */
 
 import type { Document } from '@/interfaces/Project';
-import { sortingService } from '@/services';
-import type {
-  SortConfig,
-  SortField,
-  SortOrder,
-} from '@/services/SortingService';
 import { useCallback, useMemo, useState } from 'react';
+// Local sorting types and utilities (refactored from services/SortingService)
+export type SortOrder = 'asc' | 'desc';
+export type SortField =
+  | 'name'
+  | 'date'
+  | 'file_size'
+  | 'file_type'
+  | 'updated_at';
+export interface SortConfig {
+  sortBy: SortField;
+  sortOrder: SortOrder;
+}
+const createSortConfig = (
+  sortBy: SortField,
+  sortOrder: SortOrder,
+): SortConfig => ({ sortBy, sortOrder });
+const toggleSortOrder = (current: SortOrder): SortOrder =>
+  current === 'asc' ? 'desc' : 'asc';
+const getAvailableSortFields = (): { value: SortField; label: string }[] => [
+  { value: 'date', label: 'Date' },
+  { value: 'name', label: 'Name' },
+  { value: 'file_size', label: 'Size' },
+  { value: 'file_type', label: 'Type' },
+];
+const sortDocumentsWithConfig = (
+  documents: Document[],
+  config: SortConfig,
+): Document[] => {
+  const { sortBy, sortOrder } = config;
+  const toComparable = (doc: Document): string | number => {
+    switch (sortBy) {
+      case 'name':
+        return (doc.name || '').toLowerCase();
+      case 'file_size':
+        return doc.file_size || 0;
+      case 'file_type':
+        return (doc.file_type || '').toLowerCase();
+      case 'updated_at':
+        return new Date(doc.updated_at || doc.created_at).getTime();
+      case 'date':
+      default:
+        return new Date(doc.updated_at || doc.created_at).getTime();
+    }
+  };
+  return [...documents].sort((a, b) => {
+    const av = toComparable(a);
+    const bv = toComparable(b);
+    if (av < bv) return sortOrder === 'asc' ? -1 : 1;
+    if (av > bv) return sortOrder === 'asc' ? 1 : -1;
+    return 0;
+  });
+};
 
 export interface UseSortingProps {
   initialSortField?: SortField;
@@ -49,15 +95,12 @@ export const useSorting = ({
 
   // Memoized sort configuration
   const sortConfig = useMemo(
-    () => sortingService.createSortConfig(sortBy, sortOrder),
+    () => createSortConfig(sortBy, sortOrder),
     [sortBy, sortOrder],
   );
 
   // Available sort fields
-  const availableSortFields = useMemo(
-    () => sortingService.getAvailableSortFields(),
-    [],
-  );
+  const availableSortFields = useMemo(() => getAvailableSortFields(), []);
 
   // Set sort field and reset to ascending order if different field
   const setSortBy = useCallback((field: SortField) => {
@@ -76,7 +119,7 @@ export const useSorting = ({
     (field: SortField) => {
       if (sortBy === field) {
         // Same field, toggle order
-        setSortOrderState((current) => sortingService.toggleSortOrder(current));
+        setSortOrderState((current) => toggleSortOrder(current));
       } else {
         // Different field, set new field and reset to ascending
         setSortByState(field);
@@ -88,7 +131,7 @@ export const useSorting = ({
 
   // Toggle sort order
   const handleSortOrderToggle = useCallback(() => {
-    setSortOrderState((current) => sortingService.toggleSortOrder(current));
+    setSortOrderState((current) => toggleSortOrder(current));
   }, []);
 
   // Reset to initial values
@@ -100,7 +143,7 @@ export const useSorting = ({
   // Sort documents using the service
   const sortDocuments = useCallback(
     (documents: Document[]): Document[] => {
-      return sortingService.sortDocuments(documents, sortConfig);
+      return sortDocumentsWithConfig(documents, sortConfig);
     },
     [sortConfig],
   );

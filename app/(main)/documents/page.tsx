@@ -107,19 +107,33 @@ export default function DocumentsPage() {
     return sortDocuments(rawDocuments);
   }, [rawDocuments, sortDocuments]);
 
-  // Wrapper function to handle string to SortField conversion
+  // Wrapper: map legacy/UI keys to SortingService SortField
   const handleSortByString = (sortBy: string) => {
-    handleSortChange(
-      sortBy as
-        | 'name'
-        | 'date'
-        | 'size'
-        | 'type'
-        | 'uploadedBy'
-        | 'status'
-        | 'chunk'
-        | 'lastUpdated',
-    );
+    type SortFieldUI =
+      | 'name'
+      | 'date'
+      | 'file_size'
+      | 'file_type'
+      | 'updated_at';
+    const mapped: SortFieldUI = (() => {
+      switch (sortBy) {
+        case 'size':
+          return 'file_size';
+        case 'type':
+          return 'file_type';
+        case 'lastUpdated':
+          return 'updated_at';
+        case 'name':
+        case 'date':
+        case 'file_size':
+        case 'file_type':
+        case 'updated_at':
+          return sortBy as SortFieldUI;
+        default:
+          return 'date';
+      }
+    })();
+    handleSortChange(mapped);
   };
 
   // Create a wrapper for page change that also resets selected document

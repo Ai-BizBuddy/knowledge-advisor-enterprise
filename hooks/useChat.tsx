@@ -1,4 +1,5 @@
 'use client';
+import { useAuthContext } from '@/contexts/AuthContext';
 import { langflowChatService } from '@/services';
 import { useCallback, useState } from 'react';
 
@@ -20,6 +21,7 @@ export interface KnowledgeBaseSelection {
 }
 
 export const useChat = () => {
+  const { user } = useAuthContext();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isTyping, setIsTyping] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<
@@ -82,8 +84,9 @@ export const useChat = () => {
         // Send message to Langflow Chat API
         const chatResult = await langflowChatService.sendMessage({
           question: content,
+          userId: user?.id || 'anonymous',
           filters: {
-            project_id: selectedKBs.map((kb) => kb.id).join(','),
+            project_id: selectedKBs.map((kb) => kb.id),
           },
         });
 
@@ -111,7 +114,7 @@ export const useChat = () => {
             hour: '2-digit',
             minute: '2-digit',
           }),
-          sessionId: chatResult.sessionId,
+          sessionId: chatResult.sessionId ?? undefined,
           responseTime: chatResult.responseTime,
         };
 
@@ -139,7 +142,7 @@ export const useChat = () => {
         }, 5000);
       }
     },
-    [addMessage],
+    [addMessage, user?.id],
   );
   return {
     messages,

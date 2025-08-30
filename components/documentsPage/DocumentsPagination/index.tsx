@@ -20,10 +20,8 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
   startIndex,
   endIndex,
   totalDocuments,
-  itemsPerPage = 10,
   loading = false,
   onPageChange,
-  onItemsPerPageChange,
 }) => {
   const [goToPage, setGoToPage] = useState('');
   const generatePageNumbers = () => {

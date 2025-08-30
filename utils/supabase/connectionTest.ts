@@ -1,8 +1,5 @@
 import { createClient } from './client';
 
-/**
- * Test Supabase connection and configuration
- */
 export async function testSupabaseConnection(): Promise<{
   success: boolean;
   message: string;
@@ -22,7 +19,6 @@ export async function testSupabaseConnection(): Promise<{
   };
 }> {
   try {
-    // Check environment variables
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -56,14 +52,12 @@ export async function testSupabaseConnection(): Promise<{
       };
     }
 
-    // Test database connection by checking if we can read from a basic table
-    // This will fail gracefully if tables don't exist
     const { data: testData, error: dbError } = await supabase
       .from('profiles')
       .select('id')
       .limit(1);
 
-    void testData; // Explicitly ignore the data, we only care if the query succeeds
+    void testData;
 
     if (dbError) {
       return {
@@ -100,9 +94,6 @@ export async function testSupabaseConnection(): Promise<{
   }
 }
 
-/**
- * Test authentication status
- */
 export async function testAuthentication(): Promise<{
   isAuthenticated: boolean;
   user?: {
