@@ -136,6 +136,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       switch (event) {
         case "SIGNED_IN":
           console.log("User signed in");
+          // Redirect to dashboard after hydration
+          setTimeout(() => {
+            if (window.location.pathname !== "/dashboard") {
+              window.location.href = "/dashboard";
+            }
+          }, 0);
           break;
         case "SIGNED_OUT":
           console.log("User signed out");

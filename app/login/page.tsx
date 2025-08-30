@@ -4,10 +4,16 @@ import { useLoading } from "@/contexts/LoadingContext";
 import { useAuth } from "@/hooks";
 import { Label, TextInput, Button, Checkbox } from "flowbite-react";
 import { useEffect, useState } from "react";
+import {
+  getRememberedCredentials,
+  saveRememberedCredentials,
+  clearRememberedCredentials,
+} from "@/utils/authHelpers";
 
 export default function LoginPage() {
   const { login, getSession, error } = useAuth();
   const [form, setForm] = useState({ email: "", password: "" });
+  const [rememberMe, setRememberMe] = useState(false);
   const { setLoading } = useLoading();
 
   useEffect(() => {
@@ -20,8 +26,17 @@ export default function LoginPage() {
         setLoading(false);
       } catch (err) {
         console.error("Error checking session:", err);
+        setLoading(false);
       }
     };
+
+    // Check for saved credentials
+    const rememberedCredentials = getRememberedCredentials();
+    if (rememberedCredentials) {
+      setForm({ email: rememberedCredentials.email, password: "" });
+      setRememberMe(rememberedCredentials.rememberMe);
+    }
+
     checkSession();
   }, [getSession, setLoading]);
 
@@ -33,7 +48,10 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       setLoading(true);
-      await login(form.email, form.password);
+      await login(form.email, form.password, rememberMe);
+
+      // Handle remember me functionality
+      saveRememberedCredentials(form.email, rememberMe);
     } catch (err) {
       setLoading(false);
       console.error("Login failed:", err);
@@ -91,7 +109,11 @@ export default function LoginPage() {
 
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Checkbox id="remember" />
+              <Checkbox
+                id="remember"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               <Label htmlFor="remember">Remember me</Label>
             </div>
             <a
