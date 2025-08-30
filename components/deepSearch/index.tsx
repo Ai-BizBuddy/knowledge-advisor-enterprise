@@ -7,3 +7,6 @@ export { LoadingStateCard } from "./LoadingStateCard";
 export { DocumentCard } from "./DocumentCard";
 export { EmptyState } from "./EmptyState";
 export { DeepSearchLayout } from "./DeepSearchLayout";
+export { DocumentPreview } from "./DocumentPreview";
+export { MiniDocumentPreview } from "./MiniDocumentPreview";
+export { DocumentCardWithPreview } from "./DocumentCardWithPreview";

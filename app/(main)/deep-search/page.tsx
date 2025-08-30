@@ -127,29 +127,6 @@ const DeepSearchPage = () => {
               )}
             </button>
           </div>
-
-          {/* Search Options */}
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200 pt-2 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                Sort by:
-              </span>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                className="rounded border border-gray-300 bg-white px-3 py-1.5 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300"
-              >
-                <option value="relevance">Relevance</option>
-                <option value="date">Upload Date</option>
-                <option value="name">File Name</option>
-              </select>
-            </div>
-            {searchQuery && (
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Searching in documents only
-              </div>
-            )}
-          </div>
         </div>
       </div>
 

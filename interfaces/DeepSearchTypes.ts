@@ -2,12 +2,11 @@ export interface DocumentSearchResult {
     id: string;
     title: string;
     content: string;
-    // relevanceScore: number;
     fileType: string;
     fileSize: string;
     uploadDate: string;
-    // tags?: string[];
     knowledgeName?: string;
+    fileUrl?: string; // Add fileUrl to support preview
 }
 
 export interface DeepSearchData {

@@ -1,6 +1,6 @@
 "use client";
 import { LoadingStateCard } from "../LoadingStateCard";
-import { DocumentCard } from "../DocumentCard";
+import { DocumentCardWithPreview } from "../DocumentCardWithPreview";
 import { EmptyState } from "../EmptyState";
 import { DocumentSearchResult } from "@/interfaces/DeepSearchTypes";
 
@@ -38,21 +38,17 @@ export const DeepSearchLayout = ({
           </h2>
         </div>
         <div className="flex flex-col space-y-4">
-          {searchResults.map((result) => (
-            <DocumentCard
-              key={result.id}
-              id={result.id}
-              title={result.title}
-              content={result.content}
-              //   relevanceScore={result.relevanceScore}
-              fileType={result.fileType}
-              fileSize={result.fileSize}
-              uploadDate={result.uploadDate}
-              //   tags={result.tags}
-              knowledgeName={result.knowledgeName}
-              onClick={onResultClick}
-            />
-          ))}
+          <div>
+            {searchResults.map((result) => (
+              <DocumentCardWithPreview
+                key={result.id}
+                document={result}
+                onClick={onResultClick}
+              />
+            ))}
+          </div>
+          {/* DocumentPreview use Iframe */}
+          <div></div>
         </div>
       </div>
     );
@@ -70,24 +66,8 @@ export const DeepSearchLayout = ({
   }
 
   // Show initial state when no search has been performed
-  if (!isSearching) {
-    return (
-      <>
-        {" "}
-        <DocumentCard
-          id="as"
-          title="Document Title"
-          content="Document content goes here."
-          //   relevanceScore={0.8}
-          fileType="pdf"
-          fileSize="1.2MB"
-          uploadDate={new Date().toISOString()}
-          //   tags={["tag1", "tag2"]}
-          knowledgeName="Rak department Base"
-        />
-        <EmptyState type="initial" className={className} />
-      </>
-    );
+  if (!searchQuery && !isSearching) {
+    return <EmptyState type="initial" className={className} />;
   }
 
   // Default to empty div

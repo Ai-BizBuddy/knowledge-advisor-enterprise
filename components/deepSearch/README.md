@@ -40,11 +40,9 @@ import { DocumentCard } from "@/components/deepSearch";
   id="doc-1"
   title="Document Title"
   content="Document preview content..."
-  relevanceScore={0.95}
   fileType="pdf"
   fileSize="2.5 MB"
   uploadDate="2024-01-15"
-  tags={["AI", "Guidelines"]}
   knowledgeName="Technical Docs"
   onClick={handleDocumentClick}
 />;
@@ -110,12 +108,11 @@ interface DocumentSearchResult {
   id: string;
   title: string;
   content: string;
-  relevanceScore: number;
   fileType: string;
   fileSize: string;
   uploadDate: string;
-  tags?: string[];
   knowledgeName?: string;
+  fileUrl?: string;
 }
 ```
 
@@ -126,9 +123,31 @@ interface DocumentSearchResult {
 - **Accessibility**: Proper ARIA labels and keyboard navigation support
 - **File Type Icons**: Automatic file type detection with appropriate icons (PDF, DOCX, PPTX)
 - **Loading States**: Smooth skeleton animations during loading
-- **Relevance Scoring**: Visual representation of search relevance percentages
-- **Tag Support**: Display and styling for document tags
 - **Knowledge Base Integration**: Shows which knowledge base contains each document
+- **Document Preview**: Iframe-based preview for PDFs and Office documents
+- **Mini Preview**: Quick document preview with expand option
+- **Full-Scale Preview**: Complete document viewer with download options
+
+## Preview Features
+
+### Document Preview System
+
+The Deep Search components now include a comprehensive document preview system:
+
+1. **Preview Button**: Each DocumentCard shows a preview button (eye icon) when `fileUrl` is available
+2. **Mini Preview**: Clicking the preview button opens a smaller preview modal
+3. **Full-Scale Preview**: Clicking the mini preview expands to full-scale view
+4. **File Type Support**:
+   - PDF files: Direct iframe preview
+   - Office documents (DOCX, PPTX): Microsoft Office Online viewer
+   - Unsupported files: Download option with file info
+
+### Supported File Types
+
+- **PDF**: Native browser PDF viewer with zoom controls
+- **Word Documents (.docx, .doc)**: Microsoft Office Online viewer
+- **PowerPoint (.pptx, .ppt)**: Microsoft Office Online viewer
+- **Other files**: Download option with file type indicator
 
 ## Implementation Example
 

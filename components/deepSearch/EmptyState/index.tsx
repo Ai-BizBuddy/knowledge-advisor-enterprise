@@ -71,20 +71,6 @@ export const EmptyState = ({
         Use AI-powered search to find information across all your uploaded
         documents quickly and accurately
       </p>
-      <div className="mt-6 text-sm text-gray-400 dark:text-gray-500">
-        <p className="font-medium">Try searching for:</p>
-        <div className="mt-2 flex flex-wrap justify-center gap-2">
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-800">
-            &quot;AI guidelines&quot;
-          </span>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-800">
-            &quot;implementation&quot;
-          </span>
-          <span className="rounded-full bg-gray-100 px-3 py-1 text-xs dark:bg-gray-800">
-            &quot;best practices&quot;
-          </span>
-        </div>
-      </div>
     </div>
   );
 };
