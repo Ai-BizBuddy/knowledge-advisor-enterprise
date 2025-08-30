@@ -2,6 +2,7 @@
 import { LoadingStateCard } from "../LoadingStateCard";
 import { DocumentCardWithPreview } from "../DocumentCardWithPreview";
 import { EmptyState } from "../EmptyState";
+import { SearchPagination } from "../SearchPagination";
 import { DocumentSearchResult } from "@/interfaces/DeepSearchTypes";
 
 interface DeepSearchLayoutProps {
@@ -11,6 +12,12 @@ interface DeepSearchLayoutProps {
   isSearching: boolean;
   isNoResults: boolean;
   onResultClick: (result: DocumentSearchResult) => void;
+  // Pagination props
+  currentPage: number;
+  totalPages: number;
+  resultsPerPage: number;
+  totalResults: number;
+  onPageChange: (page: number) => void;
   className?: string;
 }
 
@@ -21,6 +28,11 @@ export const DeepSearchLayout = ({
   isSearching,
   isNoResults,
   onResultClick,
+  currentPage,
+  totalPages,
+  resultsPerPage,
+  totalResults,
+  onPageChange,
   className = "",
 }: DeepSearchLayoutProps) => {
   // Show loading state while searching
@@ -34,7 +46,7 @@ export const DeepSearchLayout = ({
       <div className={`space-y-4 ${className}`}>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Search Results ({searchResults.length})
+            Search Results ({totalResults})
           </h2>
         </div>
         <div className="flex flex-col space-y-4">
@@ -47,6 +59,15 @@ export const DeepSearchLayout = ({
             />
           ))}
         </div>
+        {/* Pagination */}
+        <SearchPagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalResults={totalResults}
+          resultsPerPage={resultsPerPage}
+          onPageChange={onPageChange}
+          loading={isSearching}
+        />
       </div>
     );
   }

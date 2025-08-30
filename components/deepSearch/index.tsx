@@ -10,3 +10,4 @@ export { DeepSearchLayout } from "./DeepSearchLayout";
 export { DocumentPreview } from "./DocumentPreview";
 export { MiniDocumentPreview } from "./MiniDocumentPreview";
 export { DocumentCardWithPreview } from "./DocumentCardWithPreview";
+export { SearchPagination } from "./SearchPagination";
