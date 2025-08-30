@@ -190,6 +190,13 @@ const DeepSearchPage = () => {
     }
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery("");
+    setSearchResults([]);
+    setIsNoResults(false);
+    setIsSearching(false);
+  };
+
   const handleResultClick = (result: DocumentSearchResult) => {
     console.log("Document clicked:", result);
     // In real implementation, this would open the document or navigate to document detail
@@ -227,19 +234,31 @@ const DeepSearchPage = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyPress={(e) => e.key === "Enter" && handleSearch()}
               placeholder="Search through documents... (e.g., 'AI guidelines', 'implementation', 'best practices')"
-              className="w-full rounded-lg border border-gray-300 bg-white py-3 pr-20 pl-12 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400"
+              className="w-full rounded-lg border border-gray-300 bg-white py-3 pr-32 pl-12 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400"
             />
-            <button
-              onClick={handleSearch}
-              disabled={!searchQuery.trim() || isSearching}
-              className="absolute inset-y-0 right-0 flex items-center rounded-r-lg bg-blue-600 px-4 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
-            >
-              {isSearching ? (
-                <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
-              ) : (
-                "Search"
+            <div className="absolute inset-y-0 right-0 flex">
+              {isNoResults && (
+                <button
+                  onClick={handleClearSearch}
+                  disabled={isSearching}
+                  className="flex items-center px-3 text-gray-500 transition-colors hover:text-gray-700 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-200"
+                  title="Clear search"
+                >
+                  Clear
+                </button>
               )}
-            </button>
+              <button
+                onClick={handleSearch}
+                disabled={!searchQuery.trim() || isSearching}
+                className="flex items-center rounded-r-lg bg-blue-600 px-4 text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-400"
+              >
+                {isSearching ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                ) : (
+                  "Search"
+                )}
+              </button>
+            </div>
           </div>
         </div>
       </div>

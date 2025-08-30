@@ -62,7 +62,7 @@ export const DeepSearchLayout = ({
   }
 
   // Show initial state when no search has been performed
-  if (!searchQuery && !isSearching) {
+  if (searchQuery || !searchQuery) {
     return <EmptyState type="initial" className={className} />;
   }
 
