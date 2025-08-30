@@ -38,17 +38,13 @@ export const DeepSearchLayout = ({
           </h2>
         </div>
         <div className="flex flex-col space-y-4">
-          <div>
-            {searchResults.map((result) => (
-              <DocumentCardWithPreview
-                key={result.id}
-                document={result}
-                onClick={onResultClick}
-              />
-            ))}
-          </div>
-          {/* DocumentPreview use Iframe */}
-          <div></div>
+          {searchResults.map((result) => (
+            <DocumentCardWithPreview
+              key={result.id}
+              document={result}
+              onClick={onResultClick}
+            />
+          ))}
         </div>
       </div>
     );

@@ -158,7 +158,7 @@ export const DocumentPreview = ({
           ) : document.fileType.toLowerCase().includes("doc") ? (
             /* Office Documents Viewer */
             <iframe
-              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
+              src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
               className="h-full w-full border-0"
               title={`Preview of ${document.name}`}
               style={{

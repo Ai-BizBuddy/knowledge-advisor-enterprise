@@ -110,7 +110,7 @@ export const MiniDocumentPreview = ({
               document.fileType.toLowerCase().includes("ppt") ? (
               /* Office Documents Mini Viewer */
               <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}&wdStartOn=1`}
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
                 className="pointer-events-none h-full w-full border-0"
                 title={`Mini preview of ${document.name}`}
                 style={{ height: "calc(50vh - 60px)" }}
