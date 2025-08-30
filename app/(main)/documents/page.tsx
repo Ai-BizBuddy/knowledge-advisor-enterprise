@@ -22,6 +22,7 @@ import {
 } from "@/components";
 import { Document } from "@/interfaces/Project";
 import DocumentService from "@/services/DocumentService";
+import Link from "next/link";
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -279,7 +280,7 @@ export default function DocumentsPage() {
   useEffect(() => {
     // Use loading from useAllUserDocuments instead of setting it manually
     setLoading(loading);
-  }, [loading, setLoading]);
+  }, []);
 
   // Reset selected document when search term changes
   useEffect(() => {
@@ -316,6 +317,8 @@ export default function DocumentsPage() {
               </svg>
               <span className="text-sm font-medium">Upload Documents</span>
             </button> */}
+
+            {/* Deep Search Button */}
           </div>
         </div>
 

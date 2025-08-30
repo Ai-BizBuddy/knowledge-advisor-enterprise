@@ -107,7 +107,7 @@ const DeepSearchPage = () => {
 
   useEffect(() => {
     setLoading(false);
-  }, [setLoading]);
+  }, []);
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) return;
@@ -134,7 +134,7 @@ const DeepSearchPage = () => {
 
       console.log("Search results:", filteredResults);
 
-      // Original API code (commented out for testing)
+      // Original API code (commented out for testing) ห้ามลบ
 
       // const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
       // const results: DeepSearchRes[] = await executeSearch({
@@ -237,7 +237,7 @@ const DeepSearchPage = () => {
               className="w-full rounded-lg border border-gray-300 bg-white py-3 pr-32 pl-12 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400"
             />
             <div className="absolute inset-y-0 right-0 flex">
-              {isNoResults && (
+              {searchQuery && (
                 <button
                   onClick={handleClearSearch}
                   disabled={isSearching}
