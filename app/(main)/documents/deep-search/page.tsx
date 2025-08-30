@@ -22,7 +22,7 @@ const DeepSearchPage = () => {
       uploadDate: "2024-08-15T10:30:00Z",
       knowledgeName: "AI Technology Base",
       fileUrl:
-        "https://person.tu.ac.th/hrtuweb/uploads/form/form_17_02_2023_09_52_39.pdf",
+        "http://www.thapra.lib.su.ac.th/m-talk/attachments/article/75/ebook.pdf",
     },
     {
       id: "doc-2",

@@ -43,6 +43,7 @@ export const DeepSearchLayout = ({
               key={result.id}
               document={result}
               onClick={onResultClick}
+              searchQuery={searchQuery}
             />
           ))}
         </div>

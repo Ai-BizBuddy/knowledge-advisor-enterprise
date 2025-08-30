@@ -1,16 +1,19 @@
 "use client";
 import { DocumentSearchResult } from "@/interfaces/DeepSearchTypes";
+import { highlightText } from "@/utils/textHighlight";
 
 interface DocumentCardProps extends DocumentSearchResult {
   onClick?: (document: DocumentSearchResult) => void;
   onPreview?: (document: DocumentSearchResult) => void;
   className?: string;
+  searchQuery?: string;
 }
 
 export const DocumentCard = ({
   onClick,
   onPreview,
   className = "",
+  searchQuery = "",
   ...result
 }: DocumentCardProps) => {
   const {
@@ -157,7 +160,7 @@ export const DocumentCard = ({
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0 flex-1">
               <h3 className="line-clamp-1 text-lg font-medium text-gray-900 dark:text-gray-100">
-                {title}
+                {highlightText(title, searchQuery)}
               </h3>
               <div className="mt-1 flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
                 <span className="flex items-center gap-1">
@@ -224,7 +227,7 @@ export const DocumentCard = ({
 
           {/* Content Preview */}
           <p className="mt-2 line-clamp-2 text-gray-600 dark:text-gray-400">
-            {content}
+            {highlightText(content, searchQuery)}
           </p>
         </div>
       </div>

@@ -12,12 +12,14 @@ interface DocumentCardWithPreviewProps {
   document: DocumentSearchResult;
   onClick?: (document: DocumentSearchResult) => void;
   className?: string;
+  searchQuery?: string;
 }
 
 export const DocumentCardWithPreview = ({
   document,
   onClick,
   className = "",
+  searchQuery = "",
 }: DocumentCardWithPreviewProps) => {
   const [showMiniPreview, setShowMiniPreview] = useState(false);
   const [showFullPreview, setShowFullPreview] = useState(false);
@@ -73,6 +75,7 @@ export const DocumentCardWithPreview = ({
         onPreview={handlePreview}
         onClick={onClick}
         className={className}
+        searchQuery={searchQuery}
       />
 
       {/* Mini Preview Modal */}
