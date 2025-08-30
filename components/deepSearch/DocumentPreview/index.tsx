@@ -34,7 +34,7 @@ export const DocumentPreview = ({
 
   return (
     <div
-      className={`bg-opacity-50 fixed inset-0 z-50 flex items-center justify-center bg-black backdrop-blur-sm ${className}`}
+      className={`bg-opacity-50 fixed inset-0 z-50 flex h-screen w-screen items-center justify-center backdrop-blur-sm ${className}`}
       onClick={handleBackdropClick}
     >
       <div
@@ -155,8 +155,8 @@ export const DocumentPreview = ({
                 height: isFullScale ? "calc(95vh - 80px)" : "calc(70vh - 80px)",
               }}
             />
-          ) : document.fileType.toLowerCase().includes("doc") ? (
-            /* Office Documents Viewer */
+          ) : ["doc", "docx"].includes(document.fileType.toLowerCase()) ? (
+            /* Word Documents Viewer */
             <iframe
               src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
               className="h-full w-full border-0"
@@ -165,6 +165,25 @@ export const DocumentPreview = ({
                 height: isFullScale ? "calc(95vh - 80px)" : "calc(70vh - 80px)",
               }}
             />
+          ) : ["xlsx", "xls"].includes(document.fileType.toLowerCase()) ? (
+            /* Excel Documents Viewer */
+            <iframe
+              src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
+              className="h-full w-full border-0"
+              title={`Preview of ${document.name}`}
+              style={{
+                height: isFullScale ? "calc(95vh - 80px)" : "calc(70vh - 80px)",
+              }}
+            />
+          ) : ["txt", "md"].includes(document.fileType.toLowerCase()) ? (
+            /* Text and Markdown Files */
+            <div className="h-full overflow-auto p-4">
+              <div className="rounded-lg bg-gray-50 p-4 dark:bg-gray-700">
+                <pre className="font-mono text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200">
+                  {document.content || "Content not available for preview"}
+                </pre>
+              </div>
+            </div>
           ) : document.fileType.toLowerCase().includes("ppt") ? (
             /* PowerPoint Viewer */
             <iframe

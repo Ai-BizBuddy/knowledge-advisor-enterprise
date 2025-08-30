@@ -36,8 +36,14 @@ export const DocumentCardWithPreview = ({
     fileUrl: doc.fileUrl,
   });
 
+  // Check if file type is supported for preview
+  const isSupportedFileType = (fileType: string): boolean => {
+    const supportedTypes = ["pdf", "doc", "docx", "txt", "md", "xlsx", "xls"];
+    return supportedTypes.includes(fileType.toLowerCase());
+  };
+
   const handlePreview = () => {
-    if (document.fileUrl) {
+    if (document.fileUrl && isSupportedFileType(document.fileType)) {
       setShowMiniPreview(true);
     }
   };
@@ -57,6 +63,7 @@ export const DocumentCardWithPreview = ({
 
   const handleToggleFullScale = () => {
     setShowFullPreview(!showFullPreview);
+    setShowMiniPreview(showFullPreview);
   };
 
   return (
@@ -69,25 +76,29 @@ export const DocumentCardWithPreview = ({
       />
 
       {/* Mini Preview Modal */}
-      {showMiniPreview && document.fileUrl && (
-        <MiniDocumentPreview
-          document={convertToDeepSearchData(document)}
-          isOpen={showMiniPreview}
-          onClose={handleCloseMiniPreview}
-          onExpandToFullScale={handleExpandToFullScale}
-        />
-      )}
+      {showMiniPreview &&
+        document.fileUrl &&
+        isSupportedFileType(document.fileType) && (
+          <MiniDocumentPreview
+            document={convertToDeepSearchData(document)}
+            isOpen={showMiniPreview}
+            onClose={handleCloseMiniPreview}
+            onExpandToFullScale={handleExpandToFullScale}
+          />
+        )}
 
       {/* Full Scale Preview Modal */}
-      {showFullPreview && document.fileUrl && (
-        <DocumentPreview
-          document={convertToDeepSearchData(document)}
-          isOpen={showFullPreview}
-          onClose={handleCloseFullPreview}
-          isFullScale={true}
-          onToggleFullScale={handleToggleFullScale}
-        />
-      )}
+      {showFullPreview &&
+        document.fileUrl &&
+        isSupportedFileType(document.fileType) && (
+          <DocumentPreview
+            document={convertToDeepSearchData(document)}
+            isOpen={showFullPreview}
+            onClose={handleCloseFullPreview}
+            isFullScale={true}
+            onToggleFullScale={handleToggleFullScale}
+          />
+        )}
     </>
   );
 };

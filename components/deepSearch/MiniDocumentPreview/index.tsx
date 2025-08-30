@@ -26,7 +26,7 @@ export const MiniDocumentPreview = ({
 
   return (
     <div
-      className={`bg-opacity-30 fixed inset-0 z-40 flex items-center justify-center bg-black backdrop-blur-sm ${className}`}
+      className={`bg-opacity-30 fixed inset-0 z-40 flex h-screen w-screen items-center justify-center backdrop-blur-sm ${className}`}
       onClick={handleBackdropClick}
     >
       <div
@@ -106,11 +106,37 @@ export const MiniDocumentPreview = ({
                 title={`Mini preview of ${document.name}`}
                 style={{ height: "calc(50vh - 60px)" }}
               />
-            ) : document.fileType.toLowerCase().includes("doc") ||
-              document.fileType.toLowerCase().includes("ppt") ? (
-              /* Office Documents Mini Viewer */
+            ) : ["doc", "docx"].includes(document.fileType.toLowerCase()) ? (
+              /* Word Documents Mini Viewer */
               <iframe
                 src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
+                className="pointer-events-none h-full w-full border-0"
+                title={`Mini preview of ${document.name}`}
+                style={{ height: "calc(50vh - 60px)" }}
+              />
+            ) : ["xlsx", "xls"].includes(document.fileType.toLowerCase()) ? (
+              /* Excel Documents Mini Viewer */
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
+                className="pointer-events-none h-full w-full border-0"
+                title={`Mini preview of ${document.name}`}
+                style={{ height: "calc(50vh - 60px)" }}
+              />
+            ) : ["txt", "md"].includes(document.fileType.toLowerCase()) ? (
+              /* Text and Markdown Files Mini Viewer */
+              <div className="h-full overflow-hidden p-3">
+                <div className="h-full overflow-hidden rounded bg-gray-50 p-3 dark:bg-gray-700">
+                  <pre className="overflow-hidden font-mono text-xs text-ellipsis whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                    {document.content?.substring(0, 300) ||
+                      "Content not available for preview"}
+                    {document.content && document.content.length > 300 && "..."}
+                  </pre>
+                </div>
+              </div>
+            ) : document.fileType.toLowerCase().includes("ppt") ? (
+              /* PowerPoint Mini Viewer */
+              <iframe
+                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
                 className="pointer-events-none h-full w-full border-0"
                 title={`Mini preview of ${document.name}`}
                 style={{ height: "calc(50vh - 60px)" }}
