@@ -4,9 +4,9 @@
  */
 
 import { BaseFetchClient } from '@/utils/fetchClient';
-import type { 
-  DashboardStatistics, 
-  AllStatistics, 
+import type {
+  DashboardStatistics,
+  AllStatistics,
   IndividualStatistic,
   QueryActivityRequest,
   ManualStatisticUpdate
@@ -18,7 +18,8 @@ class StatisticsService {
   private serviceName = 'StatisticsService';
 
   constructor() {
-    const baseURL = process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:5000';
+    // set base url is this url get main url is not env
+    const baseURL = window.location.href || 'http://localhost:5000';
     this.client = new BaseFetchClient({
       baseURL,
       timeout: 10000,

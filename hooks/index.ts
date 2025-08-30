@@ -16,3 +16,4 @@ export { usePermissions } from './usePermissions';
 export { useApiClient } from './useApiClient';
 export { useDocumentsManagement } from './useDocumentsManagement';
 export { useSorting } from './useSorting';
+export { useDashboard } from './useDashboard';
