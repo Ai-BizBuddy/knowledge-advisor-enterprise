@@ -4,6 +4,7 @@ import { PageLayout } from "@/components/layouts";
 import { useLoading } from "@/contexts/LoadingContext";
 import { DocumentSearchResult } from "@/interfaces/DeepSearchTypes";
 import { DeepSearchLayout } from "@/components/deepSearch";
+import type { Document, Project } from "@/interfaces/Project";
 
 const DeepSearchPage = () => {
   const { setLoading } = useLoading();
@@ -134,31 +135,52 @@ const DeepSearchPage = () => {
       console.log("Search results:", filteredResults);
 
       // Original API code (commented out for testing)
-      /*
-      const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
-      const results: DeepSearchRes[] = await executeSearch({
-        query: searchQuery,
-        // knowledge_ids: kbId,
-      });
 
-      if (!results || results.length === 0) {
-        console.log("No results found");
-        setIsNoResults(true);
-        return;
-      }
+      // const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
+      // const results: DeepSearchRes[] = await executeSearch({
+      //   query: searchQuery,
+      //   // knowledge_ids: kbId,
+      // });
 
-      const documentIds = await Promise.all(
-        results.map(async (res: DeepSearchRes) => res.metadata.document_id),
-      );
-      const KBIds = await Promise.all(
-        results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
-      );
-      const docRes = await getDocumentById(documentIds);
-      const kbRes = await getKnowledgeBaseByIDs(KBIds);
+      // if (!results || results.length === 0) {
+      //   console.log("No results found");
+      //   setIsNoResults(true);
+      //   return;
+      // }
 
-      console.log("Raw search results:", docRes);
-      console.log("Knowledge Base results:", kbRes);
-      */
+      // const documentIds = await Promise.all(
+      //   results.map(async (res: DeepSearchRes) => res.metadata.document_id),
+      // );
+      // const KBIds = await Promise.all(
+      //   results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
+      // );
+      // const docRes = await getDocumentById(documentIds);
+      // const kbRes = await getKnowledgeBaseByIDs(KBIds);
+
+      // console.log("Raw search results:", docRes);
+      // console.log("Knowledge Base results:", kbRes);
+
+      // // Map document and knowledge base results to search results
+      // const mappedResults: DocumentSearchResult[] = docRes.map(
+      //   (doc: Document) => {
+      //     const knowledge = kbRes.find(
+      //       (kb: Project) => kb.id === doc.knowledge_base_id,
+      //     );
+      //     return {
+      //       id: doc.id,
+      //       title: doc.name,
+      //       content: doc.content,
+      //       fileType: doc.file_type,
+      //       fileSize: doc.file_size,
+      //       uploadDate: doc.updated_at,
+      //       knowledgeName: knowledge ? knowledge.name : null,
+      //       document: doc,
+      //       // knowledgeBase: knowledge || null,
+      //     };
+      //   },
+      // );
+
+      // setSearchResults(mappedResults);
     } catch (error) {
       console.error("Search error:", error);
       setIsNoResults(true);

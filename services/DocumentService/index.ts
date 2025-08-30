@@ -182,7 +182,7 @@ class DocumentService {
         }
     }
 
-    async getDocumentById(id: string[]): Promise<Document | null> {
+    async getDocumentById(id: string[]): Promise<Document[] | null> {
         try {
             const user = await this.getCurrentUser();
             const supabaseTable = createClientTable();
@@ -191,7 +191,6 @@ class DocumentService {
                 .from('document')
                 .select('*')
                 .in('id', id)
-                .single();
 
 
 
