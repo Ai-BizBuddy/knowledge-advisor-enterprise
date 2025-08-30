@@ -183,11 +183,10 @@ class DashboardService {
             const { data, error } = await supabaseTable
                 .from('knowledge_base')
                 .select('*')
-                .neq('created_by', user.id)
                 .eq('is_active', true)
                 .eq('visibility', 'public')
                 .order('created_at', { ascending: false })
-                .limit(5);
+                .limit(20);
 
             if (error) {
                 console.error(`[${this.serviceName}] Error fetching recommended knowledge bases:`, error);
@@ -330,7 +329,7 @@ class DashboardService {
 
             // Get recent documents from user's knowledge bases
             const { data, error } = await supabaseTable
-                .from('documents')
+                .from('document')
                 .select(`
           id, 
           name, 
