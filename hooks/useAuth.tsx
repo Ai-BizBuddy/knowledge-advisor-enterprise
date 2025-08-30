@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuthContext } from '@/contexts/AuthContext';
+import { clearRememberedCredentials } from '@/utils/authHelpers';
 import { Session } from '@supabase/supabase-js';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { createClient } from '../utils/supabase/client';
 
 interface AuthState {
@@ -12,7 +13,11 @@ interface AuthState {
 }
 
 interface UseAuth {
-  login: (email: string, password: string) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    rememberMe?: boolean,
+  ) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
   getSession: () => Promise<Session | null>;
@@ -34,12 +39,24 @@ export function useAuth(): UseAuth {
   const supabase = createClient();
   const { user, session, refreshToken, signOut } = useAuthContext();
 
-  const login = async (email: string, password: string) => {
+  const login = async (
+    email: string,
+    password: string,
+    rememberMe: boolean = false,
+  ) => {
     setState({ loading: true, error: null, success: false });
+
+    // If remember me is false, we'll clear any existing session storage after login
     const { error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+
+    if (!error && !rememberMe) {
+      // If login successful but user doesn't want to be remembered,
+      // we'll handle session cleanup in the component
+    }
+
     setState({
       loading: false,
       error: error ? error.message : null,
@@ -50,6 +67,10 @@ export function useAuth(): UseAuth {
   const logout = async () => {
     setState({ loading: true, error: null, success: false });
     await signOut();
+
+    // Clear remember me data on logout
+    clearRememberedCredentials();
+
     setState({
       loading: false,
       error: null,
@@ -67,14 +88,14 @@ export function useAuth(): UseAuth {
     });
   };
 
-  const getSession = async () => {
+  const getSession = useCallback(async () => {
     const { data, error } = await supabase.auth.getSession();
     if (error) {
       setState({ loading: false, error: error.message, success: false });
       return null;
     }
     return data.session;
-  };
+  }, [supabase]);
 
   return {
     login,

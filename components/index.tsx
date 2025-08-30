@@ -46,3 +46,7 @@ export * from './tableSearch';
 
 // Layout Components
 export * from './layouts';
+
+// Deep Search Components
+export * from './deepSearch';
+

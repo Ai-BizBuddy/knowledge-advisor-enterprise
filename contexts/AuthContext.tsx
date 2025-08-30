@@ -1,14 +1,14 @@
 'use client';
 
+import { createClient } from '@/utils/supabase/client';
+import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
 } from 'react';
-import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -136,6 +136,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       switch (event) {
         case 'SIGNED_IN':
           console.log('User signed in');
+          // Redirect to dashboard after hydration
+          setTimeout(() => {
+            if (window.location.pathname !== '/dashboard') {
+              window.location.href = '/dashboard';
+            }
+          }, 0);
           break;
         case 'SIGNED_OUT':
           console.log('User signed out');

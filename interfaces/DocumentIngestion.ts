@@ -74,3 +74,21 @@ export interface ApiError {
   details?: Record<string, unknown>;
   timestamp: string;
 }
+
+// เนื้อหาหลัก + เมตาดาทั้งหมด
+export interface DeepSearchRes {
+  content: string;
+  metadata: ChunkMetadata;
+  similarity: number;
+}
+
+// เมตาดาตาตามที่เห็นในตัวอย่าง
+export interface ChunkMetadata {
+  chunk_index: number;
+  chunk_total: number;
+  document_id: string;
+  file_name: string;
+  knowledge_id: string;
+  page: number;
+  // หมายเหตุ: [[Prototype]] ในตัวอย่างเป็นอาร์ติแฟกต์จากคอนโซล ไม่ต้องใส่ใน type
+}

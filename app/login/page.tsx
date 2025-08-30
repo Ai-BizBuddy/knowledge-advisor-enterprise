@@ -2,12 +2,18 @@
 
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAuth, useReactHookForm } from '@/hooks';
-import type { LoginFormData } from '@/interfaces/LoginForm';
+import { LoginFormData } from '@/interfaces/LoginForm';
+import {
+  getRememberedCredentials,
+  saveRememberedCredentials
+} from '@/utils/authHelpers';
 import { Button, Checkbox, Label, TextInput } from 'flowbite-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 export default function LoginPage() {
   const { login, getSession, error } = useAuth();
+  const [formState, setFormState] = useState({ email: '', password: '' });
+  const [rememberMe, setRememberMe] = useState(false);
   const { setLoading } = useLoading();
 
   const form = useReactHookForm<LoginFormData>({
@@ -33,19 +39,28 @@ export default function LoginPage() {
         setLoading(false);
       }
     };
+
+    // Check for saved credentials
+    const rememberedCredentials = getRememberedCredentials();
+    if (rememberedCredentials) {
+      setFormState({ email: rememberedCredentials.email, password: '' });
+      setRememberMe(rememberedCredentials.rememberMe);
+    }
+
     checkSession();
   }, [getSession, setLoading]);
 
-  const onSubmit = async (data: LoginFormData) => {
-    try {
-      await login(data.email, data.password);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFormState({ ...formState, [e.target.name]: e.target.value });
+  };
 
-      // Check if login was successful
-      const session = await getSession();
-      if (session) {
-        // Keep loading state while redirecting
-        window.location.href = '/dashboard';
-      }
+  const handleSubmit = async (data: LoginFormData) => {
+    try {
+      setLoading(true);
+      await login(data.email, data.password, data.rememberMe);
+
+      // Handle remember me functionality
+      saveRememberedCredentials(data.email, data.rememberMe ?? false);
     } catch (err) {
       console.error('Login failed:', err);
       // Set form error for display
@@ -86,8 +101,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-5'>
-          {/* Show validation status */}
+        <form onSubmit={form.handleSubmit(handleSubmit)} className='space-y-5'>
           {form.formState.isValidating && (
             <div className='text-center text-sm text-yellow-600 dark:text-yellow-400'>
               <span className='inline-flex items-center gap-2'>
@@ -167,16 +181,11 @@ export default function LoginPage() {
           <div className='flex items-center justify-between'>
             <div className='flex items-center gap-2'>
               <Checkbox
-                id='rememberMe'
-                disabled={form.formState.isSubmitting}
-                {...form.register('rememberMe')}
+                id='remember'
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
               />
-              <Label
-                htmlFor='rememberMe'
-                className={form.formState.isSubmitting ? 'opacity-50' : ''}
-              >
-                Remember me
-              </Label>
+              <Label htmlFor='remember'>Remember me</Label>
             </div>
             <a
               href='#'

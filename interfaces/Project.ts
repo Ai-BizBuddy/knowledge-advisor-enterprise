@@ -43,6 +43,7 @@ export interface Document {
   file_type: string; // File type (pdf, docx, txt, etc.)
   status: string; // Upload status (Uploaded, Processing, Error, etc.)
   knowledge_base_id: string; // UUID foreign key
+  content?: string; // Extracted text content
   chunk_count: number;
   file_size?: number; // File size in bytes
   mime_type?: string; // MIME type of the file

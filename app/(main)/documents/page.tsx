@@ -159,12 +159,12 @@ export default function DocumentsPage() {
   const handleSelectAllWithCorrectIndex = () => {
     const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
     const currentPageIndices = documents.map(
-      (_, index) => correctStartIndex + index,
+      (_: Document, index: number) => correctStartIndex + index,
     );
 
     if (
       selectedDocuments.length === currentPageIndices.length &&
-      currentPageIndices.every((index) => selectedDocuments.includes(index))
+      currentPageIndices.every((index: number) => selectedDocuments.includes(index))
     ) {
       const filteredSelection = selectedDocuments.filter(
         (index) => !currentPageIndices.includes(index),
@@ -291,7 +291,7 @@ export default function DocumentsPage() {
   useEffect(() => {
     // Use loading from useAllUserDocuments instead of setting it manually
     setLoading(loading);
-  }, [loading, setLoading]);
+  }, []);
 
   // Reset selected document when search term changes
   useEffect(() => {
@@ -326,8 +326,10 @@ export default function DocumentsPage() {
                   d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
                 />
               </svg>
-              <span className="text-sm font-medium">Upload Documents</span>
+              <span className='text-sm font-medium'>Upload Documents</span>
             </button> */}
+
+            {/* Deep Search Button */}
           </div>
         </div>
 

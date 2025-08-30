@@ -6,10 +6,13 @@
  */
 
 import { AdkChatService } from './AdkChatService';
+import { dashboardService } from './DashboardService';
 import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
+// import SortingService from './SortingService';
+import { statisticsService } from './StatisticsService';
 
 /**
  * Service Configuration
@@ -105,6 +108,21 @@ export const adkChatService = new AdkChatService({
  *
  * Centralized sorting utilities for documents
  */
+// export const sortingService = new SortingService();
+
+/**
+ * Dashboard Service Instance
+ * 
+ * Provides centralized dashboard data aggregation
+ */
+export { dashboardService };
+
+/**
+ * Statistics Service Instance
+ * 
+ * Handles dashboard statistics and metrics
+ */
+  export { statisticsService };
 
 /**
  * Compatibility alias: some hooks import `langflowChatService` from services.
@@ -122,7 +140,7 @@ export {
   AdkChatService,
   DocumentIngestionService,
   DocumentSearchService,
-  KnowledgeBaseService,
+  KnowledgeBaseService
 };
 
 /**
@@ -130,11 +148,12 @@ export {
  *
  * Export service configuration types for TypeScript support
  */
-export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
-export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
-export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
-export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
+  export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
+  export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
+  export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
+  export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
 export type DocumentServiceType = InstanceType<typeof DocumentService>;
+
 /**
  * Default Exports for Clean Imports
  *
@@ -145,7 +164,9 @@ export interface ServicesMap {
   knowledgeBase: KnowledgeBaseService;
   documentSearch: DocumentSearchService;
   adkChat: AdkChatService;
-  document: DocumentService;
+  // document: DocumentService;
+  dashboard: DocumentServiceType;
+  statistics: typeof statisticsService;
 }
 
 const services: ServicesMap = {
@@ -153,7 +174,10 @@ const services: ServicesMap = {
   knowledgeBase: knowledgeBaseService,
   documentSearch: documentSearchService,
   adkChat: adkChatService,
-  document: documentService,
+  // sorting: sortingService,
+  dashboard: documentService,
+  statistics: statisticsService,
+  // checkHealth: checkAllServicesHealth
 };
 
 export default services;

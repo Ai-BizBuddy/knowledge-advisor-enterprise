@@ -32,10 +32,10 @@ export function createClient() {
       {
         auth: {
           persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      },
+          storageKey: 'supabase.auth.token',
+          storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        }
+      }
     );
   }
   return supabaseClient;

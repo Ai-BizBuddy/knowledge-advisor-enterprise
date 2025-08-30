@@ -5,6 +5,7 @@ export { useApiClient } from './useApiClient';
 export { useAuth } from './useAuth';
 export { useChat } from './useChat';
 export { useChatHistory } from './useChatHistory';
+export { useDashboard } from './useDashboard';
 export { useDocumentIngestion } from './useDocumentIngestion';
 export { useDocuments } from './useDocuments';
 export { useDocumentSearch } from './useDocumentSearch';
@@ -22,4 +23,4 @@ export { useSorting } from './useSorting';
 export { useStatistics } from './useStatistics';
 export { useSystemStatus } from './useSystemStatus';
 export { useUserManagement } from './useUserManagement';
-export { useUserProfile } from './useUserProfile';
+
