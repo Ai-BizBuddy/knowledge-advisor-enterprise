@@ -1,7 +1,7 @@
 import { DeepSearchRequest } from '@/interfaces/DeepSearch';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { createClient } from '@/utils/supabase/client';
-import axios, { Axios, AxiosInstance, AxiosResponse } from 'axios';
+import axios, { AxiosResponse } from 'axios';
 
 
 export interface DeepSearchResult {

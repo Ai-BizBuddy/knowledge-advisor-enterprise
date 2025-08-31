@@ -127,8 +127,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
-      console.log('Auth state changed:', event, session);
-
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
