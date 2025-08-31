@@ -2,22 +2,23 @@
  * useDashboard Hook - Comprehensive Dashboard Data Management
  *
  * Custom React hook for fetching and managing all dashboard-related data
- * including statistics, recent activities, chat sessions, and knowledge base information
+ * including statistics, recent activities, chat sessions, and knowledge base information.
+ * Features intelligent refresh interval that only runs when the page/tab is visible.
  */
 
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import type { Project } from '@/interfaces/Project';
+import type { DashboardStatistics } from '@/interfaces/Statistics';
 import {
   dashboardService,
-  type DashboardOverview,
   type ActivityItem,
-  type ChatSession,
   type ChatMessage,
+  type ChatSession,
+  type DashboardOverview,
 } from '@/services/DashboardService';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useStatistics } from './useStatistics';
-import type { DashboardStatistics } from '@/interfaces/Statistics';
-import type { Project } from '@/interfaces/Project';
 
 /**
  * Dashboard hook state interface
@@ -46,6 +47,7 @@ interface UseDashboardReturn {
   isLoading: boolean;
   error: string | null;
   lastUpdated: Date | null;
+  isPageVisible: boolean; // New: Track page visibility
 
   // Actions
   refreshDashboard: () => Promise<void>;
@@ -65,6 +67,13 @@ interface UseDashboardOptions {
 
 /**
  * Custom hook for managing complete dashboard data
+ * 
+ * Features:
+ * - Automatic data refresh only when page/tab is visible
+ * - Pauses refresh interval when user switches tabs or minimizes window
+ * - Resumes refresh when user returns to the dashboard
+ * - Real-time statistics updates
+ * - Comprehensive error handling
  *
  * @param options - Configuration options for the hook
  * @returns Dashboard data, loading state, error state, and utility functions
@@ -101,10 +110,9 @@ export const useDashboard = (
     lastUpdated: null,
   });
 
-  // Use the statistics hook for real-time statistics updates
+  // Use the statistics hook without auto-refresh
   const { statistics, refreshStatistics: refreshStatsOnly } = useStatistics({
-    autoRefresh: true,
-    refreshInterval: 60000, // Refresh stats every minute
+    autoRefresh: false,
     onError: (error) => {
       console.warn('Statistics update failed:', error);
       // Don't fail the entire dashboard if stats fail
@@ -163,9 +171,29 @@ export const useDashboard = (
     fetchDashboardOverview();
   }, [fetchDashboardOverview]);
 
-  // Auto-refresh setup
+  // Page visibility tracking
+  const [isPageVisible, setIsPageVisible] = useState(true);
+
+  // Track page visibility for auto-refresh
   useEffect(() => {
-    if (autoRefresh && refreshInterval > 0) {
+    const handleVisibilityChange = () => {
+      setIsPageVisible(!document.hidden);
+    };
+
+    // Set initial visibility state
+    setIsPageVisible(!document.hidden);
+
+    // Listen for visibility changes
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Auto-refresh setup - only when page is visible
+  useEffect(() => {
+    if (autoRefresh && refreshInterval > 0 && isPageVisible) {
       refreshIntervalRef.current = setInterval(() => {
         fetchDashboardOverview();
       }, refreshInterval);
@@ -175,8 +203,12 @@ export const useDashboard = (
           clearInterval(refreshIntervalRef.current);
         }
       };
+    } else if (refreshIntervalRef.current) {
+      // Clear interval when page is not visible or autoRefresh is disabled
+      clearInterval(refreshIntervalRef.current);
+      refreshIntervalRef.current = null;
     }
-  }, [autoRefresh, refreshInterval, fetchDashboardOverview]);
+  }, [autoRefresh, refreshInterval, isPageVisible, fetchDashboardOverview]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -210,6 +242,7 @@ export const useDashboard = (
     isLoading: state.isLoading,
     error: state.error,
     lastUpdated: state.lastUpdated,
+    isPageVisible,
     refreshDashboard,
     refreshStatistics,
   };

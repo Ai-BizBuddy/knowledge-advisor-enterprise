@@ -15,11 +15,12 @@ import { createClientTable } from '@/utils/supabase/client';
 export interface ChatSession {
     id: string;
     user_id: string;
-    knowledge_base_id: string;
+    knowledge_base_id?: string;
     title: string;
     started_at: string;
+    messageCount: number;
     ended_at?: string;
-    is_active: boolean;
+    is_active?: boolean;
     session_metadata?: Record<string, unknown>;
 }
 

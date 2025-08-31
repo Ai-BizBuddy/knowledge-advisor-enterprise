@@ -2,7 +2,7 @@ interface ChatHistoryProps {
   title: string;
   dateTime: string;
   messageCount: number;
-  size: string;
+  // size: string;
   tags: string[];
   onDelete: () => void;
   onExport: () => void;
@@ -10,3 +10,4 @@ interface ChatHistoryProps {
 }
 
 export type { ChatHistoryProps };
+

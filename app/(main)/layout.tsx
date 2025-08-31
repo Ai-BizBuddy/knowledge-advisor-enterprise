@@ -63,7 +63,6 @@ export default function MainLayout({
         }}
         handleLogout={handleLogout}
       >
-        <h1>Hello</h1>
         {children}
       </SlideBar>
     </>

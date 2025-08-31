@@ -31,8 +31,7 @@ export default function Dashboard() {
     error: dashboardError,
     lastUpdated,
   } = useDashboard({
-    autoRefresh: true,
-    refreshInterval: 300000, // 5 minutes
+    autoRefresh: false,
     enableChatData: true,
   });
 

@@ -1,13 +1,14 @@
 'use client';
 
-import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
-import { useCallback, useEffect, useState } from 'react';
+import type { ChatSession } from '@/hooks/useChatHistory';
+import { useChatHistory } from '@/hooks/useChatHistory';
+import { useCallback, useEffect } from 'react';
 import ChatHistoryCard from '../chatHistoryCard';
 
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onLoadSession?: (session: ChatSession) => void; // Made optional since not used
+  onLoadSession?: (session: ChatSession) => void;
 }
 
 export default function ChatHistoryList({
@@ -15,19 +16,22 @@ export default function ChatHistoryList({
   onClose,
   onLoadSession,
 }: Props) {
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
-  const { getChatSessions, deleteChatSession, exportChatSession } =
-    useChatHistory();
-  const loadSessions = useCallback(() => {
-    const chatSessions = getChatSessions();
-    setSessions(chatSessions);
-  }, [getChatSessions]);
+  const { 
+    sessions, 
+    loadHistory, 
+    deleteChatSession, 
+    exportChatSession 
+  } = useChatHistory();
+
+  const handleLoadSessions = useCallback(() => {
+    if (isOpen) {
+      loadHistory();
+    }
+  }, [isOpen, loadHistory]);
 
   useEffect(() => {
-    if (isOpen) {
-      loadSessions();
-    }
-  }, [isOpen, loadSessions]);
+    handleLoadSessions();
+  }, [handleLoadSessions]);
 
   return isOpen ? (
     <div
@@ -35,7 +39,7 @@ export default function ChatHistoryList({
       onClick={onClose}
     >
       <div
-        className='flex h-full w-full flex-col gap-4 border-r border-gray-700/50 bg-gray-200 p-4 pt-4 shadow-2xl backdrop-blur-xl sm:w-1/2 lg:w-1/3 xl:w-1/5 dark:bg-gray-800'
+        className='overflow-auto flex h-full w-full flex-col gap-4 border-r border-gray-700/50 bg-gray-200 p-4 pt-4 shadow-2xl backdrop-blur-xl sm:w-1/2 lg:w-1/3 xl:w-1/5 dark:bg-gray-800'
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -63,26 +67,26 @@ export default function ChatHistoryList({
           <ChatHistoryCard
             key={i}
             title={h.title}
-            dateTime={new Date(h.updatedAt).toLocaleDateString('th-TH', {
+            dateTime={new Date(h.started_at).toLocaleDateString('th-TH', {
               year: 'numeric',
               month: 'short',
               day: 'numeric',
               hour: '2-digit',
               minute: '2-digit',
             })}
-            messageCount={h.messages.length}
-            size={''}
-            tags={h.knowledgeBases}
+            messageCount={h.messageCount || 0} // No message count available in new interface
+            // size={''}
+            tags={h.knowledge_base_id ? [h.knowledge_base_id] : []}
             onClick={() => onLoadSession?.(h)}
-            onDelete={() => {
-              deleteChatSession(h.id);
-              loadSessions();
+            onDelete={async () => {
+              await deleteChatSession(h.id);
+              await loadHistory(); // Reload after deletion
             }}
             onExport={() => {
               exportChatSession(h);
             }}
           />
-        ))}{' '}
+        ))}
         {sessions.length === 0 && (
           <div className='mt-10 text-center text-gray-500 dark:text-gray-400'>
             ไม่มีประวัติการสนทนา

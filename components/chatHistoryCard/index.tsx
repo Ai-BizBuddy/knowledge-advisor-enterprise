@@ -4,7 +4,7 @@ export default function ChatHistoryCard({
   title,
   dateTime,
   messageCount,
-  size,
+  // size,
   tags,
   onDelete,
   onExport,
@@ -16,8 +16,8 @@ export default function ChatHistoryCard({
       onClick={onClick}
     >
       <div className='flex items-start justify-between'>
-        <div>
-          <h3 className='mb-1 text-sm font-semibold text-gray-900 dark:text-white'>
+        <div className='w-[80%]'>
+          <h3 className='mb-1 text-sm font-semibold text-gray-900 dark:text-white truncate '>
             {title}
           </h3>
           <p className='mb-3 text-xs text-gray-400'>{dateTime}</p>
@@ -26,9 +26,9 @@ export default function ChatHistoryCard({
             <span className='rounded-full bg-blue-600 px-2 py-0.5 text-xs'>
               {messageCount} ข้อความ
             </span>
-            <span className='rounded-full bg-green-600 px-2 py-0.5 text-xs'>
+            {/* <span className='rounded-full bg-green-600 px-2 py-0.5 text-xs'>
               {size}
-            </span>
+            </span> */}
           </div>
         </div>
         <div>
