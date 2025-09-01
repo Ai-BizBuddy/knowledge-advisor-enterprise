@@ -2,7 +2,7 @@ import { IProps } from '@/interfaces/RecommendedKnowledgeBases';
 
 export function RecommendedKnowledgeBases({ items }: IProps) {
   return (
-    <div className='flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-900'>
+    <div className='flex h-full w-full flex-col rounded-lg border border-gray-200 bg-white shadow-md dark:border-gray-700 dark:bg-gray-800'>
       <div className='h-full px-6 py-10'>
         <h5 className='flex items-center gap-2 text-xl font-bold tracking-tight text-gray-900 dark:text-white'>
           <svg

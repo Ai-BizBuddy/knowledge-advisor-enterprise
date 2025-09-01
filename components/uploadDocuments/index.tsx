@@ -1,7 +1,7 @@
 'use client';
 import { useDocuments } from '@/hooks';
 import { useParams } from 'next/navigation';
-import React, { useState, useRef, JSX, useEffect } from 'react';
+import React, { JSX, useEffect, useRef, useState } from 'react';
 
 interface UploadDocumentProps {
   isOpen: boolean;
@@ -209,7 +209,7 @@ export default function UploadDocument({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-6'>
-      <div className='max-h-[90vh] w-full max-w-4xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl shadow-lg dark:border-gray-700 dark:bg-gray-900 dark:text-white'>
+      <div className='max-h-[90vh] w-full max-w-4xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white'>
         <div className='flex items-start justify-between border-b border-gray-200 dark:border-gray-700'>
           <div className='p-4 sm:p-6'>
             <h2 className='text-base font-bold text-gray-900 sm:text-lg dark:text-white'>

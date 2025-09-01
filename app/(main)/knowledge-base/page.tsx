@@ -1,9 +1,9 @@
 'use client';
 import {
-  CreateKnowledgeBaseModal,
-  KnowledgeBaseCard,
-  LoadingCard,
-  Tabs,
+    CreateKnowledgeBaseModal,
+    KnowledgeBaseCard,
+    LoadingCard,
+    Tabs,
 } from '@/components';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
@@ -130,7 +130,7 @@ export default function KnowledgeBase() {
           </div>
 
           {/* Tabs Section */}
-          <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-900'>
+          <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
             <Tabs
               currentTab={selectedTab}
               tabList={tabList.map((tab) => `${tab.label}`)}

@@ -1,10 +1,10 @@
 'use client';
 
 import {
-  BotTypingBubble,
-  ChatCard,
-  ChatHistoryList,
-  KnowledgeSelect,
+    BotTypingBubble,
+    ChatCard,
+    ChatHistoryList,
+    KnowledgeSelect,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
@@ -101,7 +101,7 @@ export default function ChatPage() {
             </div>
 
             {/* Control Section */}
-            <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900'>
+            <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
               <div className='flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700'>
                 {/* Knowledge Base Selection */}
                 <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>

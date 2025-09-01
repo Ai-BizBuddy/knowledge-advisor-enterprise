@@ -12,7 +12,7 @@ export default function RecentActivityCard({
   }, []);
 
   return (
-    <Card className='h-full border-gray-200 xl:w-full dark:border-gray-700 dark:bg-gray-900'>
+    <Card className='h-full border-gray-200 xl:w-full dark:border-gray-700 dark:bg-gray-800'>
       <div className='p-2 sm:p-4'>
         <h5 className='mb-4 text-lg font-bold text-gray-900 sm:text-xl dark:text-white'>
           Recent Activity

@@ -115,7 +115,7 @@ export default function SlideBar({
       </aside>
 
       {/* Main Content */}
-      <div className='h-full bg-gray-200 sm:ml-64 dark:bg-gray-800'>
+      <div className='h-full bg-gray-200 sm:ml-64 dark:bg-gray-900'>
         <div className='mt-14'>{children}</div>
       </div>
     </>
