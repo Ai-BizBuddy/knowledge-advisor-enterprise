@@ -245,8 +245,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Update token refresh timer when session changes
   useEffect(() => {
+    setLoading(true);
     let refreshTimer: NodeJS.Timeout;
-
     if (session && session.expires_at) {
       const expiresAt = session.expires_at * 1000;
       const now = Date.now();
@@ -259,6 +259,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (!newSession) {
             await signOut();
           }
+          setLoading(false);
         }, refreshTime);
       }
     }

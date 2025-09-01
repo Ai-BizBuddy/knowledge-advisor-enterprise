@@ -1,41 +1,19 @@
 'use client';
 
-import { useLoading } from '@/contexts/LoadingContext';
 import { useAuth } from '@/hooks';
 import { Alert, Spinner } from 'flowbite-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 
 export default function LoginPage() {
   const [submitting, setSubmitting] = useState(false);
-  const router = useRouter();
-  const { setLoading } = useLoading();
-  const { login, getSession, error } = useAuth();
+  const { login, error } = useAuth();
   const [form, setForm] = useState({
     email: '',
     password: '',
     remember: false,
   });
   const disabled = submitting || !form.email || !form.password;
-
-  useEffect(() => {
-    const checkSession = async () => {
-      try {
-        setLoading(true);
-        const session = await getSession();
-        if (session) {
-          //router.replace('/dashboard');
-          return;
-        }
-        setLoading(false);
-      } catch (err) {
-        console.error('Error checking session:', err);
-        setLoading(false);
-      }
-    };
-    checkSession();
-  }, [getSession, router, setLoading]);
 
   const onChange = (key: keyof typeof form, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }));

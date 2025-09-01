@@ -59,7 +59,7 @@ export default function MainLayout({
     <>
       <SlideBar
         onNavigate={() => {
-          setLoading(true);
+          setLoading(false);
         }}
         handleLogout={handleLogout}
       >
