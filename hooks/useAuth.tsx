@@ -3,13 +3,18 @@
 import { useAuthContext } from '@/contexts/AuthContext';
 import { clearRememberedCredentials } from '@/utils/authHelpers';
 import { Session } from '@supabase/supabase-js';
-import { useCallback, useState } from 'react';
+import { useState } from 'react';
 import { createClient } from '../utils/supabase/client';
 
 interface AuthState {
   loading: boolean;
   error: string | null;
   success: boolean;
+}
+
+interface SessionRoles extends Session {
+  roles: string[];
+  permissions: string[];
 }
 
 interface UseAuth {
@@ -20,7 +25,7 @@ interface UseAuth {
   ) => Promise<void>;
   logout: () => Promise<void>;
   signup: (email: string, password: string) => Promise<void>;
-  getSession: () => Promise<Session | null>;
+  getSession: () => Promise<SessionRoles | null>;
   loading: boolean;
   error: string | null;
   success: boolean;
@@ -88,14 +93,34 @@ export function useAuth(): UseAuth {
     });
   };
 
-  const getSession = useCallback(async () => {
+  const getRoles = (jwt: string): string[] => {
+    const roles = jwt ? JSON.parse(atob(jwt.split('.')[1])).roles : [];
+    return roles;
+  };
+
+  const getPermissions = (jwt: string): string[] => {
+    const permissions = jwt ? JSON.parse(atob(jwt.split('.')[1])).permissions : [];
+    return permissions;
+  };
+
+  const getSession = async (): Promise<SessionRoles | null> => {
     const { data, error } = await supabase.auth.getSession();
-    if (error) {
-      setState({ loading: false, error: error.message, success: false });
+    if (error || !data.session) {
+      setState({ loading: false, error: error ? error.message : 'No session', success: false });
       return null;
     }
-    return data.session;
-  }, [supabase]);
+    const access_token = data.session.access_token ?? '';
+    const roles = getRoles(access_token);
+    const permissions = getPermissions(access_token);
+
+    // Ensure all required Session properties are present and not undefined
+    return {
+      ...data.session,
+      access_token,
+      roles,
+      permissions,
+    };
+  };
 
   return {
     login,

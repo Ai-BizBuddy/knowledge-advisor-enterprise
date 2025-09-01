@@ -1,7 +1,3 @@
-/**
- * Application Constants
- * Centralized location for all magic numbers, strings, and configuration values
- */
 
 // UI Constants
 export const UI_CONSTANTS = {
@@ -42,7 +38,7 @@ export const APP_STRINGS = {
     AI_CHAT: 'AI Chat',
     KNOWLEDGE_BASE: 'Knowledge Base',
     DOCUMENTS: 'Documents',
-    USER_MANAGEMENT: 'User Management',
+    USER_SETTINGS: 'Settings',
   },
 
   // Common Actions
@@ -120,7 +116,6 @@ export const ROUTES = {
   DOCUMENTS: '/documents',
   LOGIN: '/login',
   SETTINGS: '/settings',
-  USER_MANAGEMENT: '/settings',
 } as const;
 
 // Error Messages
