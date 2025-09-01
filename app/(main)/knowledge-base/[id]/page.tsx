@@ -2,16 +2,14 @@
 import {
   BotTypingBubble,
   ChatCard,
-  ChatHistoryList,
   DocumentsPagination,
   DocumentsSearch,
   DocumentsTable,
-  UploadDocument,
+  UploadDocument
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { formatStatus } from '@/data/knowledgeBaseData';
 import { useAdkChat, useDocuments, useKnowledgeBase } from '@/hooks';
-import { ChatSession } from '@/hooks/useChatHistory';
 import { Document, Project } from '@/interfaces/Project';
 import { Breadcrumb, BreadcrumbItem, Button } from 'flowbite-react';
 import Image from 'next/image';
@@ -258,11 +256,6 @@ export default function KnowledgeBaseDetail() {
       console.error('ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
       // TODO: Add toast notification component
     }
-  };
-
-  const handleLoadChatSession = (session: ChatSession) => {
-    setMessages(session.messages);
-    setOpenHistory(false);
   };
 
   if (!knowledgeBase) {
@@ -690,12 +683,6 @@ export default function KnowledgeBaseDetail() {
           // Refresh documents list to show newly uploaded files
           refresh();
         }}
-      />
-
-      <ChatHistoryList
-        isOpen={openHistory}
-        onClose={() => setOpenHistory(false)}
-        onLoadSession={handleLoadChatSession}
       />
     </div>
   );

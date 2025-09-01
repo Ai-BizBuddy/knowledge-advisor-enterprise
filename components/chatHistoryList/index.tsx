@@ -19,8 +19,6 @@ export default function ChatHistoryList({
   const { 
     sessions, 
     loadHistory, 
-    deleteChatSession, 
-    exportChatSession 
   } = useChatHistory();
 
   const handleLoadSessions = useCallback(() => {
@@ -75,16 +73,7 @@ export default function ChatHistoryList({
               minute: '2-digit',
             })}
             messageCount={h.messageCount || 0} // No message count available in new interface
-            // size={''}
-            tags={h.knowledge_base_id ? [h.knowledge_base_id] : []}
             onClick={() => onLoadSession?.(h)}
-            onDelete={async () => {
-              await deleteChatSession(h.id);
-              await loadHistory(); // Reload after deletion
-            }}
-            onExport={() => {
-              exportChatSession(h);
-            }}
           />
         ))}
         {sessions.length === 0 && (
