@@ -1,6 +1,5 @@
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
-import { deepSearchService } from '@/services';
-import { DeepSearchResult } from '@/services/DeepSearch';
+import { DeepSearchResult, DeepSearchService } from '@/services/DeepSearch';
 import { useState } from 'react';
 
 export interface useDeepSearchReturn {
@@ -14,6 +13,7 @@ export const useDeepSearch = (): useDeepSearchReturn => {
   const [results, setResults] = useState<DeepSearchRes[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const deepSearchService = new DeepSearchService();
 
   const executeSearch = async (
     query: DeepSearchResult,

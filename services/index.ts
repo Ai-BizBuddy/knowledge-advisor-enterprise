@@ -11,14 +11,8 @@ import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
-// import SortingService from './SortingService';
 import { statisticsService } from './StatisticsService';
 
-/**
- * Service Configuration
- *
- * Central configuration for all services with environment-based settings
- */
 interface ServiceConfig {
   useMockData: boolean;
   timeout: number;
@@ -26,39 +20,11 @@ interface ServiceConfig {
 }
 
 const serviceConfig: Readonly<ServiceConfig> = {
-  // Force mock data disabled globally
   useMockData: false,
   timeout: 30000,
   retryAttempts: 2,
 };
 
-// Simple dev-time hints if important envs are missing
-if (process.env.NODE_ENV !== 'production') {
-  if (!process.env.NEXT_PUBLIC_INGRESS_SERVICE) {
-    console.warn(
-      '[services] NEXT_PUBLIC_INGRESS_SERVICE is not set. Using http://localhost:8000',
-    );
-  }
-  if (
-    !process.env.NEXT_PUBLIC_LANGFLOW_URL ||
-    !process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH
-  ) {
-    console.warn(
-      '[services] Langflow env vars are not fully set. Document search may be limited.',
-    );
-  }
-  if (!process.env.NEXT_PUBLIC_ADK_BASE_URL) {
-    console.warn(
-      '[services] NEXT_PUBLIC_ADK_BASE_URL is not set. ADK chat may not function.',
-    );
-  }
-}
-
-/**
- * Document Ingestion Service Instance
- *
- * Handles document processing and ingestion operations
- */
 export const documentIngestionService = new DocumentIngestionService({
   baseURL: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:8000',
   timeout: serviceConfig.timeout,
@@ -174,10 +140,8 @@ const services: ServicesMap = {
   knowledgeBase: knowledgeBaseService,
   documentSearch: documentSearchService,
   adkChat: adkChatService,
-  // sorting: sortingService,
   dashboard: documentService,
   statistics: statisticsService,
-  // checkHealth: checkAllServicesHealth
 };
 
 export default services;
