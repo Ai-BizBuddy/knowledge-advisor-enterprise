@@ -1,4 +1,4 @@
-import { ROUTES, APP_STRINGS } from '@/constants';
+import { APP_STRINGS, ROUTES } from '@/constants';
 import type { NavigationMenuItem } from './types';
 
 /**
@@ -102,6 +102,27 @@ export const UserManagementIcon = () => (
 );
 
 /**
+ * User Settings icon component
+ */
+export const UserSettingsIcon = () => (
+  <svg
+    className='h-6 w-6 text-gray-500 dark:text-gray-500'
+    aria-hidden='true'
+    xmlns='http://www.w3.org/2000/svg'
+    width='24'
+    height='24'
+    fill='currentColor'
+    viewBox='0 0 24 24'
+  >
+    <path
+      fillRule='evenodd'
+      d='M12 2a2 2 0 0 1 2 2v1.09a7.001 7.001 0 0 1 3.36 1.94l.77-.77a2 2 0 1 1 2.83 2.83l-.77.77A7.001 7.001 0 0 1 20.91 10H22a2 2 0 1 1 0 4h-1.09a7.001 7.001 0 0 1-1.94 3.36l.77.77a2 2 0 1 1-2.83 2.83l-.77-.77A7.001 7.001 0 0 1 14 20.91V22a2 2 0 1 1-4 0v-1.09a7.001 7.001 0 0 1-3.36-1.94l-.77.77a2 2 0 1 1-2.83-2.83l.77-.77A7.001 7.001 0 0 1 3.09 14H2a2 2 0 1 1 0-4h1.09a7.001 7.001 0 0 1 1.94-3.36l-.77-.77a2 2 0 1 1 2.83-2.83l.77.77A7.001 7.001 0 0 1 10 3.09V2a2 2 0 0 1 2-2Zm0 6a4 4 0 1 0 0 8 4 4 0 0 0 0-8Z'
+      clipRule='evenodd'
+    />
+  </svg>
+);
+
+/**
  * Menu icon component for mobile navigation
  */
 export const MenuIcon = () => (
@@ -149,9 +170,9 @@ export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
     active: false,
   },
   {
-    name: APP_STRINGS.NAV_ITEMS.USER_MANAGEMENT,
-    url: ROUTES.USER_MANAGEMENT,
-    icon: <UserManagementIcon />,
+    name: APP_STRINGS.NAV_ITEMS.USER_SETTINGS,
+    url: ROUTES.SETTINGS,
+    icon: <UserSettingsIcon />,
     active: false,
   },
 ];

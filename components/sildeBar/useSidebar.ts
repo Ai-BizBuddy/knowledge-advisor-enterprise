@@ -1,5 +1,7 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+
+import { useAuth } from '@/hooks';
 import { usePathname } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { getDefaultNavigationItems } from './constants';
 import type { NavigationMenuItem } from './types';
 
@@ -13,6 +15,7 @@ export const useSidebar = () => {
     [],
   );
   const isInitialMount = useRef(true);
+  const { getSession } = useAuth();
 
   /**
    * Filter navigation items based on user permissions
@@ -26,9 +29,20 @@ export const useSidebar = () => {
    * Initialize navigation items with permission filtering
    */
   useEffect(() => {
-    const filteredItems = getFilteredNavigationItems();
-    setNavigationItems(filteredItems);
-  }, [getFilteredNavigationItems]);
+    const setNavbarItems = async () => {
+      const session = await getSession();
+      if (session) {
+        const items = getFilteredNavigationItems();
+        const roles = session.roles;
+        const isAdmin = 'admin' in roles;
+        if (isAdmin) {
+          delete items[items.length - 1];
+        }
+        setNavigationItems(items);
+      }
+    };
+    setNavbarItems();
+  }, [getFilteredNavigationItems, getSession]);
 
   /**
    * Handles menu item activation and loading state
