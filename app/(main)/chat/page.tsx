@@ -47,7 +47,7 @@ export default function ChatPage() {
   }, [setLoading]);
 
   const handleLoadChatSession = (session: ChatSession) => {
-    setMessages(session.messages);
+    // setMessages(session.messages);
     setOpenHistory(false);
   };
 

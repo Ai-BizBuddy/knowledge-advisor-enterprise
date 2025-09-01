@@ -16,6 +16,7 @@ export interface ChatSession {
     id: string;
     user_id: string;
     knowledge_base_id?: string;
+    // messages: string;
     title: string;
     started_at: string;
     messageCount: number;
