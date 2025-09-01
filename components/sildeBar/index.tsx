@@ -1,14 +1,14 @@
 'use client';
 
-import { useState } from 'react';
-import Image from 'next/image';
 import { APP_STRINGS, UI_CONSTANTS } from '@/constants';
-import { useSidebar } from './useSidebar';
+import Image from 'next/image';
+import { useState } from 'react';
+import { SafeDarkThemeToggle } from '../SafeDarkThemeToggle';
 import { NavigationMenu } from './NavigationMenu';
 import { UserMenu } from './UserMenu';
 import { MenuIcon } from './constants';
 import type { SlideBarProps } from './types';
-import { SafeDarkThemeToggle } from '../SafeDarkThemeToggle';
+import { useSidebar } from './useSidebar';
 
 /**
  * Sidebar layout component with navigation and user menu
@@ -47,7 +47,7 @@ export default function SlideBar({
       )}
 
       {/* Navigation Bar */}
-      <nav className='fixed top-0 z-50 w-full border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'>
+      <nav className='fixed top-0 z-50 w-full border-b border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800'>
         <div className='px-3 py-3 lg:px-5 lg:pl-3'>
           <div className='flex items-center justify-between'>
             {/* Logo and Mobile Menu Button */}
@@ -98,16 +98,16 @@ export default function SlideBar({
         id='logo-sidebar'
         className={`fixed top-0 left-0 z-40 h-screen w-full border-r border-gray-200 bg-white pt-20 transition-transform sm:w-64 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        } sm:translate-x-0 dark:border-gray-700 dark:bg-gray-900`}
+        } sm:translate-x-0 dark:border-gray-700 dark:bg-gray-800`}
         aria-label='Sidebar'
       >
-        <div className='h-full overflow-y-auto bg-white px-3 pb-4 dark:bg-gray-900'>
+        <div className='h-full overflow-y-auto bg-white px-3 pb-4 dark:bg-gray-800'>
           <NavigationMenu
             items={navigationItems}
             onItemClick={(index) => {
               if (onNavigate) onNavigate();
               handleMenuItemClick(index);
-              closeSidebar(); // Close sidebar on mobile when menu item is clicked
+              closeSidebar();
             }}
           />
         </div>
