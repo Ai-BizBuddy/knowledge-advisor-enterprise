@@ -96,12 +96,13 @@ export default function SlideBar({
       {/* Sidebar */}
       <aside
         id='logo-sidebar'
-        className={`fixed top-0 left-0 z-40 h-screen w-full border-r border-gray-200 bg-white pt-20 transition-transform sm:w-64 ${
+        className={`fixed top-0 left-0 z-40 h-screen w-full border-r border-gray-200 bg-white transition-transform sm:w-64 ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         } sm:translate-x-0 dark:border-gray-700 dark:bg-gray-800`}
         aria-label='Sidebar'
       >
-        <div className='h-full overflow-y-auto bg-white px-3 pb-4 dark:bg-gray-800'>
+        <div className='bg-white dark:bg-gray-800'></div>
+        <div className='h-full overflow-y-auto bg-white w-64 dark:bg-gray-800 pt-20'>
           <NavigationMenu
             items={navigationItems}
             onItemClick={(index) => {
