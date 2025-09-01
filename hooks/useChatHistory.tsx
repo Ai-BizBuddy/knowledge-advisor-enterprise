@@ -1,5 +1,6 @@
 'use client';
 
+import { ChatMessage } from '@/hooks/useAdkChat';
 import ChatHistoryService from '@/services/ChatHistoryService';
 import type { ChatSession } from '@/services/DashboardService';
 import { useCallback, useState } from 'react';
@@ -27,9 +28,19 @@ export const useChatHistory = () => {
     }
   }, []);
 
-  const getChatSessions = useCallback((): ChatSession[] => {
-    return sessions;
-  }, [sessions]);
+  const getChatSessions = useCallback(async (sessionId: string): Promise<ChatMessage[]> => {
+    try {
+
+      const messages = await chatHistoryService.getOldChat(sessionId);
+
+      return messages ?? [];
+
+    } catch (error) {
+      console.error('Error getting chat sessions:', error);
+      return [];
+    }
+    
+  }, []);
 
   const deleteChatSession = useCallback(
     async (sessionId: string) => {

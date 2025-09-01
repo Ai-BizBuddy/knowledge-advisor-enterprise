@@ -8,7 +8,7 @@ import {
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
-import { ChatSession } from '@/hooks/useChatHistory';
+import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
@@ -26,6 +26,13 @@ export default function ChatPage() {
     createNewChat,
     setMessages,
   } = useAdkChat();
+
+  const {
+    getChatSessions,
+    deleteChatSession,
+    exportChatSession,
+    getSessionById,
+  } = useChatHistory();
 
   const {
     knowledgeBases,
@@ -46,8 +53,11 @@ export default function ChatPage() {
     setLoading(false);
   }, [setLoading]);
 
-  const handleLoadChatSession = (session: ChatSession) => {
+  const handleLoadChatSession = async (session: ChatSession) => {
     // setMessages(session.messages);
+    const messagess = await getChatSessions(session.id)
+    setMessages([...messages, ...messagess]);
+    console.log(messages);
     setOpenHistory(false);
   };
 
