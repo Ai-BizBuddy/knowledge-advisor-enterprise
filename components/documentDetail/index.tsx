@@ -220,15 +220,20 @@ const DocumentDetail: React.FC<Document> = ({
         </div>
       </div>
 
-      <div className=' pt-4'>
-        <a
-          href={fileUrl}
-          download={name}
-          target='_blank'
-          className='w-full rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+      <div className=' pt-4 '>
+        <button
+          onClick={() => {
+            const link = document.createElement('a');
+            link.href = fileUrl;
+            link.download = name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+          }}
+          className='w-[-webkit-fill-available] rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
         >
           Download
-        </a>
+        </button>
       </div>
 
       {source.toLowerCase() === 'processed' && (
