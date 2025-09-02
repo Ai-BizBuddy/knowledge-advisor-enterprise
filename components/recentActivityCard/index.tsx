@@ -14,11 +14,13 @@ export default function RecentActivityCard({
   return (
     <Card className='h-full border-gray-200 xl:w-full dark:border-gray-700 dark:bg-gray-800'>
       <div className='p-2 sm:p-4'>
-        <h5 className='mb-4 text-lg font-bold text-gray-900 sm:text-xl dark:text-white'>
-          Recent Activity
-        </h5>
+        <div className='mb-10'>
+          <h5 className='mb-4 text-lg font-bold text-gray-900 sm:text-xl dark:text-white'>
+            Recent Activity
+          </h5>
+        </div>
 
-        <ul className='space-y-0 divide-y divide-gray-200 dark:divide-gray-600'>
+        <ul className='space-y-0 divide-y divide-gray-200 dark:divide-gray-800'>
           {activities.map((activity, index) => (
             <li
               key={index}

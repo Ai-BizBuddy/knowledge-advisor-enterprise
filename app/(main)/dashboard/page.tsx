@@ -7,14 +7,13 @@ import {
 import { PageLayout, Section } from '@/components/layouts';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useRecentActivity } from '@/hooks/useRecentActivity';
-import { Card } from 'flowbite-react';
 import { useMemo } from 'react';
 
 // Removed legacy KPI types in favor of shared StatusCard tiles
 
 export default function DashboardPage() {
   // Data hooks
-  const { statistics, recentKnowledgeBases, recommendedKnowledgeBases } =
+  const { statistics } =
     useDashboard({
       autoRefresh: true,
       enableChatData: false,
@@ -106,12 +105,7 @@ export default function DashboardPage() {
           />
         </div>
       </Section>
-
-      <Card>
-        <div className='lg:col-span-2'>
-          <RecentActivityCard activities={cardActivities} />
-        </div>
-      </Card>
+      <RecentActivityCard activities={cardActivities} />
     </PageLayout>
   );
 }
