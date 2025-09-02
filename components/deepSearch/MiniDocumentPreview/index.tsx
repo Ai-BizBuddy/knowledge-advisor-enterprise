@@ -35,7 +35,7 @@ export const MiniDocumentPreview = ({
       >
         {/* Header */}
         <div className='flex items-center justify-between border-b border-gray-200 p-3 dark:border-gray-700'>
-          <div className='min-w-0 flex-1'>
+          <div className='min-w-0 flex gap-5'>
             <h3 className='truncate text-base font-medium text-gray-900 dark:text-gray-100'>
               {document.name}
             </h3>

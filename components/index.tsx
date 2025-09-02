@@ -6,7 +6,6 @@ export { default as ChatHistoryCard } from './chatHistoryCard';
 export { default as ChatHistoryList } from './chatHistoryList';
 export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
 export { default as DeleteConfirmModal } from './deleteConfirmModal';
-export { default as DocumentDetail } from './documentDetail';
 export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
 export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';

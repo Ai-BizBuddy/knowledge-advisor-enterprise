@@ -1,9 +1,7 @@
 'use client';
 import {
   BulkActions,
-  DeepSearchLayout,
   DeleteConfirmModal,
-  DocumentDetail,
   DocumentsControls,
   DocumentsHeader,
   DocumentsPagination,
@@ -11,6 +9,11 @@ import {
   DocumentsTable,
   NoDocuments,
 } from '@/components';
+import {
+  DeepSearchLayout,
+  DocumentPreview,
+  MiniDocumentPreview,
+} from '@/components/deepSearch';
 import { useLoading } from '@/contexts/LoadingContext';
 import { mockSearchResults } from '@/data/deepSearch';
 import {
@@ -20,7 +23,7 @@ import {
   useSorting,
 } from '@/hooks';
 import { useDeepSearch } from '@/hooks/useDeepSarch';
-import { DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
+import { DeepSearchData, DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
@@ -66,6 +69,20 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
 });
 
+// Adapter function to convert Document to DeepSearchData format for preview components
+const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
+  id: doc.id.toString(),
+  name: doc.name,
+  content: doc.content || '',
+  fileType: doc.file_type,
+  fileSize: doc.file_size
+    ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
+    : 'Unknown',
+  uploadDate: new Date(doc.created_at).toLocaleDateString(),
+  knowledgeName: 'Documents', // Default value
+  fileUrl: doc.url,
+});
+
 export default function DocumentsPage() {
   const { setLoading } = useLoading();
   const [searchQuery, setSearchQuery] = useState('');
@@ -83,6 +100,12 @@ export default function DocumentsPage() {
   const [isNoResults, setIsNoResults] = useState(false);
   const [documentToDelete, setDocumentToDelete] =
     useState<DocumentTableItem | null>(null);
+
+  // Preview modal states
+  const [isMiniPreviewOpen, setIsMiniPreviewOpen] = useState(false);
+  const [isFullPreviewOpen, setIsFullPreviewOpen] = useState(false);
+  const [isFullScale, setIsFullScale] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<DeepSearchData | null>(null);
 
   // Pagination state
   const [deepCurrentPage, setDeepCurrentPage] = useState(1);
@@ -248,6 +271,7 @@ export default function DocumentsPage() {
     // Note: startIndex from hook is 1-based, absoluteIndex is 0-based
     const pageRelativeIndex = absoluteIndex - (startIndex - 1);
     setSelectedDocument(pageRelativeIndex);
+    handleDocumentPreview(pageRelativeIndex);
   };
 
   const adaptedDocuments = documents.map((doc: Document) =>
@@ -430,6 +454,37 @@ export default function DocumentsPage() {
     setDeepCurrentPage(page);
   };
 
+  // Preview handlers
+  const handleDocumentPreview = (index: number) => {
+    if (documents && documents.length > index) {
+      const document = documents[index];
+      const previewData = adaptDocumentToPreviewFormat(document);
+      setPreviewDocument(previewData);
+      setIsMiniPreviewOpen(true);
+    }
+  };
+
+  const handleExpandToFullScale = () => {
+    setIsMiniPreviewOpen(false);
+    setIsFullPreviewOpen(true);
+    setIsFullScale(true);
+  };
+
+  const handleToggleFullScale = () => {
+    setIsFullScale(!isFullScale);
+  };
+
+  const handleCloseMiniPreview = () => {
+    setIsMiniPreviewOpen(false);
+    setPreviewDocument(null);
+  };
+
+  const handleCloseFullPreview = () => {
+    setIsFullPreviewOpen(false);
+    setIsFullScale(false);
+    setPreviewDocument(null);
+  };
+
   useEffect(() => {
     setLoading(loading);
   }, [loading, setLoading]);
@@ -543,15 +598,6 @@ export default function DocumentsPage() {
                 />
               </div>
             )}
-            {/* Document Detail Panel - Responsive sidebar */}
-            {selectedDocument !== null &&
-              selectedDocument >= 0 &&
-              selectedDocument < adaptedDocuments.length &&
-              adaptedDocuments.length > 0 && (
-                <div className='hidden w-1/3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:block dark:border-gray-700 dark:bg-gray-800'>
-                  <DocumentDetail {...adaptedDocuments[selectedDocument]} />
-                </div>
-              )}
           </div>
         )}
 
@@ -596,6 +642,25 @@ export default function DocumentsPage() {
           }
         }}
       />
+
+      {/* Preview Modals */}
+      {previewDocument && (
+        <>
+          <MiniDocumentPreview
+            document={previewDocument}
+            isOpen={isMiniPreviewOpen}
+            onClose={handleCloseMiniPreview}
+            onExpandToFullScale={handleExpandToFullScale}
+          />
+          <DocumentPreview
+            document={previewDocument}
+            isOpen={isFullPreviewOpen}
+            onClose={handleCloseFullPreview}
+            isFullScale={isFullScale}
+            onToggleFullScale={handleToggleFullScale}
+          />
+        </>
+      )}
     </div>
   );
 }
