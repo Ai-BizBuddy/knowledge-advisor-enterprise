@@ -40,7 +40,6 @@ export default function ChatPage() {
   } = useKnowledgeBaseSelection();
 
   useEffect(() => {
-    // Add welcome message when component mounts
     if (messages.length === 0) {
       addWelcomeMessage();
     }
