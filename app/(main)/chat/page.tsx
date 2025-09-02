@@ -1,10 +1,10 @@
 'use client';
 
 import {
-    BotTypingBubble,
-    ChatCard,
-    ChatHistoryList,
-    KnowledgeSelect,
+  BotTypingBubble,
+  ChatCard,
+  ChatHistoryList,
+  KnowledgeSelect,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
@@ -29,9 +29,6 @@ export default function ChatPage() {
 
   const {
     getChatSessions,
-    deleteChatSession,
-    exportChatSession,
-    getSessionById,
   } = useChatHistory();
 
   const {

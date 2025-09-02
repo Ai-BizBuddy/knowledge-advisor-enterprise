@@ -109,7 +109,6 @@ export default function KnowledgeBaseDetail() {
     addWelcomeMessage,
     sendMessage,
     createNewChat,
-    setMessages,
   } = useAdkChat();
 
   // Transform documents to DocumentsTable-compatible format

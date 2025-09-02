@@ -289,9 +289,8 @@ export default function DocumentsPage() {
   };
 
   useEffect(() => {
-    // Use loading from useAllUserDocuments instead of setting it manually
     setLoading(loading);
-  }, []);
+  }, [loading, setLoading]);
 
   // Reset selected document when search term changes
   useEffect(() => {
