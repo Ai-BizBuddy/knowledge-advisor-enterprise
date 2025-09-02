@@ -31,6 +31,7 @@ export interface DocumentTableItem {
   date: string;
   rag_status?: string;
   status: string;
+  fileUrl: string;
   uploadedBy: string;
   avatar: string;
   project: string[];
@@ -49,6 +50,7 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
     : 'Unknown',
   type: doc.file_type,
   date: new Date(doc.created_at).toLocaleDateString(),
+  fileUrl: doc.url,
   rag_status: doc.rag_status || 'not_synced',
   status: doc.rag_status || '',
   uploadedBy: 'User', // This field doesn't exist in new interface
@@ -400,6 +402,7 @@ export default function DocumentsPage() {
   };
 
   const handleDeepSearchClear = () => {
+    setSearchTerm('');
     setSearchQuery('');
     setSearchResults([]);
     setAllSearchResults([]);
@@ -446,6 +449,9 @@ export default function DocumentsPage() {
         </div>
 
         {/* Controls Section */}
+        {
+          !isDeepSearch && (
+            
         <div className='mb-6'>
           <DocumentsControls
             sortBy={sortField}
@@ -454,6 +460,8 @@ export default function DocumentsPage() {
             onSortOrderToggle={handleSortOrderToggle}
           />
         </div>
+          )
+        }
 
         {/* Main Content Layout - Responsive grid */}
 
