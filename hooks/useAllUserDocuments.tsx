@@ -68,7 +68,7 @@ export interface UseAllUserDocumentsReturn {
   setSearchTerm: (term: string) => void;
   setItemsPerPage: (items: number) => void;
 
-  getDocumentById: (id: string[]) => Promise<Document | null>;
+  getDocumentById: (id: string[]) => Promise<Document[] | null>;
 
   // Utility Functions
   refresh: () => Promise<void>;
@@ -272,7 +272,7 @@ export function useAllUserDocuments(
         const documents = await documentService.getDocumentById(id);
         // Return the first document if array is not empty, else null
         if (Array.isArray(documents) && documents.length > 0) {
-          return documents[0];
+          return documents;
         }
         return null;
       } catch (err) {

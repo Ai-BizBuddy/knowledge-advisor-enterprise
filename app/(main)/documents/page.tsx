@@ -16,10 +16,13 @@ import { mockSearchResults } from '@/data/deepSearch';
 import {
   useAllUserDocuments,
   useDocumentsManagement,
+  useKnowledgeBase,
   useSorting,
 } from '@/hooks';
+import { useDeepSearch } from '@/hooks/useDeepSarch';
 import { DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
-import { Document } from '@/interfaces/Project';
+import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
+import { Document, Project } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -121,9 +124,14 @@ export default function DocumentsPage() {
     setSearchTerm,
     setItemsPerPage,
     handlePageChange,
+    getDocumentById
   } = useAllUserDocuments({
     autoLoad: true,
   });
+
+  const {getKnowledgeBaseIDs,getKnowledgeBaseByIDs} = useKnowledgeBase();
+
+  const { executeSearch } = useDeepSearch();
 
   // Sort the documents using the SortingService
   const documents = useMemo(() => {
@@ -347,51 +355,52 @@ export default function DocumentsPage() {
 
       // Original API code (commented out for testing) ห้ามลบ
 
-      // const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
-      // const results: DeepSearchRes[] = await executeSearch({
-      //   query: searchQuery,
-      //   // knowledge_ids: kbId,
-      // });
+      const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
+      const results: DeepSearchRes[] = await executeSearch({
+        query: searchQuery,
+        knowledge_ids: kbId,
+      });
 
-      // if (!results || results.length === 0) {
-      //   console.log("No results found");
-      //   setIsNoResults(true);
-      //   return;
-      // }
+      if (!results || results.length === 0) {
+        console.log('No results found');
+        setIsNoResults(true);
+        return;
+      }
 
-      // const documentIds = await Promise.all(
-      //   results.map(async (res: DeepSearchRes) => res.metadata.document_id),
-      // );
-      // const KBIds = await Promise.all(
-      //   results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
-      // );
-      // const docRes = await getDocumentById(documentIds);
-      // const kbRes = await getKnowledgeBaseByIDs(KBIds);
+      const documentIds = await Promise.all(
+        results.map(async (res: DeepSearchRes) => res.metadata.document_id),
+      );
+      const KBIds = await Promise.all(
+        results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
+      );
+      const docRes = await getDocumentById(documentIds);
+      const kbRes = await getKnowledgeBaseByIDs(KBIds);
 
-      // console.log("Raw search results:", docRes);
-      // console.log("Knowledge Base results:", kbRes);
+      console.log('Raw search results:', docRes);
+      console.log('Knowledge Base results:', kbRes);
 
-      // // Map document and knowledge base results to search results
-      // const mappedResults: DocumentSearchResult[] = docRes.map(
-      //   (doc: Document) => {
-      //     const knowledge = kbRes.find(
-      //       (kb: Project) => kb.id === doc.knowledge_base_id,
-      //     );
-      //     return {
-      //       id: doc.id,
-      //       title: doc.name,
-      //       content: doc.content,
-      //       fileType: doc.file_type,
-      //       fileSize: doc.file_size,
-      //       uploadDate: doc.updated_at,
-      //       knowledgeName: knowledge ? knowledge.name : null,
-      //       document: doc,
-      //       // knowledgeBase: knowledge || null,
-      //     };
-      //   },
-      // );
+      // Map document and knowledge base results to search results
+      const mappedResults = docRes?.map(
+        (doc: Document) => {
+          const knowledge = kbRes.find(
+            (kb: Project) => kb.id === doc.knowledge_base_id,
+          );
+          return {
+            id: doc.id,
+            title: doc.name,
+            content: doc.content || '',
+            fileType: doc.file_type,
+            fileSize: doc.file_size?.toString() || '0',
+            fileUrl: doc.url,
+            uploadDate: doc.updated_at,
+            knowledgeName: knowledge ? knowledge.name : '',
+            document: doc,
+            // knowledgeBase: knowledge || null,
+          };
+        },
+      );
 
-      // setSearchResults(mappedResults);
+      setSearchResults(mappedResults || []);
     } catch (error) {
       console.error('Search error:', error);
       setIsNoResults(true);

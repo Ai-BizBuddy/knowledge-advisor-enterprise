@@ -13,7 +13,7 @@ export const EmptyState = ({
 }: EmptyStateProps) => {
   if (type === 'no-results') {
     return (
-      <div className={`card py-12 text-center ${className}`}>
+      <div className={`card py-12 text-center mt-4 ${className}`}>
         <svg
           className='mx-auto h-12 w-12 text-gray-400'
           fill='none'
@@ -48,7 +48,7 @@ export const EmptyState = ({
   }
 
   return (
-    <div className={`card py-16 text-center ${className}`}>
+    <div className={`card py-16 text-center mt-4 ${className}`}>
       <div className='mx-auto flex h-16 w-16 items-center justify-center rounded-xl bg-blue-100 dark:bg-blue-900'>
         <svg
           className='h-8 w-8 text-blue-600 dark:text-blue-400'
