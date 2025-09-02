@@ -1,7 +1,8 @@
 'use client';
 
 import { Document } from '@/interfaces/Project';
-import { getAllDocuments } from '@/services/Project/supabase';
+// import { getAllDocuments } from '@/services/Project/supabase';
+import { documentService, knowledgeBaseService } from '@/services';
 import { useCallback, useEffect, useState } from 'react';
 import { useKnowledgeBase } from './useKnowledgeBase';
 
@@ -76,7 +77,7 @@ export const useRecentActivity = (
       // Fetch all documents (which have timestamps we can use for activity)
       let documents: Document[] = [];
       try {
-        documents = await getAllDocuments();
+        documents = await documentService.getAllDocuments();
       } catch (err) {
         console.error('Error fetching documents for activity:', err);
       }
@@ -102,7 +103,7 @@ export const useRecentActivity = (
         }
 
         const projectName =
-          doc.metadata?.project_name || getProjectName(doc.knowledge_base_id);
+          doc.metadata?.project_name || knowledgeBaseService.getProject(doc.knowledge_base_id);
 
         // Create message based on activity type
         let message = '';
