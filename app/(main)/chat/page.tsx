@@ -29,9 +29,6 @@ export default function ChatPage() {
 
   const {
     getChatSessions,
-    deleteChatSession,
-    exportChatSession,
-    getSessionById,
   } = useChatHistory();
 
   const {
