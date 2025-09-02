@@ -1,10 +1,10 @@
 'use client';
 
 import {
-    BotTypingBubble,
-    ChatCard,
-    ChatHistoryList,
-    KnowledgeSelect,
+  BotTypingBubble,
+  ChatCard,
+  ChatHistoryList,
+  KnowledgeSelect,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
@@ -13,7 +13,7 @@ import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function ChatPage() {
-  const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
+  const [isOnline, setIsOnline] = useState(false); // Removed setter as it's not used
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
   const { setLoading } = useLoading();
@@ -214,62 +214,7 @@ export default function ChatPage() {
                   >
                     {/* Status and Input Row */}
                     <div className='flex items-center gap-2'>
-                      <div
-                        className='flex-shrink-0 cursor-pointer'
-                        onClick={() => setIsOnline(!isOnline)}
-                        title={isOnline ? 'Online Mode' : 'Offline Mode'}
-                      >
-                        {isOnline ? (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-6 w-6 text-blue-400 hover:text-blue-600'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0'></path>
-                            <path d='M3.6 9h16.8'></path>
-                            <path d='M3.6 15h16.8'></path>
-                            <path d='M11.5 3a17 17 0 0 0 0 18'></path>
-                            <path d='M12.5 3a17 17 0 0 1 0 18'></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-6 w-6 text-gray-400 hover:text-gray-600'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M5.657 5.615a9 9 0 1 0 12.717 12.739m1.672 -2.322a9 9 0 0 0 -12.066 -12.084'></path>
-                            <path d='M3.6 9h5.4m4 0h7.4'></path>
-                            <path d='M3.6 15h11.4m4 0h1.4'></path>
-                            <path d='M11.5 3a17.001 17.001 0 0 0 -1.493 3.022m-.847 3.145c-.68 4.027 .1 8.244 2.34 11.833'></path>
-                            <path d='M12.5 3a16.982 16.982 0 0 1 2.549 8.005m-.207 3.818a16.979 16.979 0 0 1 -2.342 6.177'></path>
-                            <path d='M3 3l18 18'></path>
-                          </svg>
-                        )}
-                      </div>
+                      
                       <div className='flex-1'>
                         <textarea
                           ref={(textarea) => {
