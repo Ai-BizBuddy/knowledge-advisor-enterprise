@@ -307,29 +307,6 @@ export default function DocumentsPage() {
         <div className='mb-6 sm:mb-8'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <DocumentsHeader />
-
-            {/* Upload Button - Responsive sizing */}
-            {/* <button
-              onClick={() => setIsUploadModalOpen(true)}
-              className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto'
-            >
-              <svg
-                className='h-4 w-4 flex-shrink-0'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12'
-                />
-              </svg>
-              <span className='text-sm font-medium'>Upload Documents</span>
-            </button> */}
-
-            {/* Deep Search Button */}
           </div>
         </div>
 
@@ -344,17 +321,12 @@ export default function DocumentsPage() {
         </div>
 
         {/* Main Content Layout - Responsive grid */}
-        <div className='grid grid-cols-1 gap-6 xl:grid-cols-4'>
+        <div className={`grid grid-cols-1 gap-6 ${selectedDocument !== null &&
+            selectedDocument >= 0 &&
+            selectedDocument < adaptedDocuments.length &&
+            adaptedDocuments.length > 0 && 'xl:grid-cols-4'}`}>
           {/* Main Content Area */}
           <div className='space-y-6 xl:col-span-3'>
-            {/* <DocumentsTabs
-              activeTab={activeTab}
-              onTabChange={handleTabChange}
-              documents={adaptedDocuments}
-              onTabAction={handleTabAction}
-              loading={loading}
-            /> */}
-
             <DocumentsSearch
               searchTerm={searchTerm}
               onSearchChange={setSearchTerm}
