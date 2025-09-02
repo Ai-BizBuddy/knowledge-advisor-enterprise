@@ -83,48 +83,51 @@ export const useRecentActivity = (
       }
 
       // Process documents into activity items
-      const documentActivities: ActivityItem[] = documents.map((doc) => {
-        // Determine activity type based on document status
-        let activityType: 'upload' | 'processing' | 'error';
-        let status: 'success' | 'error' | 'info';
+      const documentActivities: ActivityItem[] = await Promise.all(
+        documents.map(async (doc) => {
+          // Determine activity type based on document status
+          let activityType: 'upload' | 'processing' | 'error';
+          let status: 'success' | 'error' | 'info';
 
-        if (doc.status === 'processed' || doc.status === 'uploaded') {
-          activityType = 'upload';
-          status = 'success';
-        } else if (doc.status === 'processing') {
-          activityType = 'processing';
-          status = 'info';
-        } else if (doc.status === 'error' || doc.status === 'failed') {
-          activityType = 'error';
-          status = 'error';
-        } else {
-          activityType = 'upload';
-          status = 'info';
-        }
+          if (doc.status === 'processed' || doc.status === 'uploaded') {
+            activityType = 'upload';
+            status = 'success';
+          } else if (doc.status === 'processing') {
+            activityType = 'processing';
+            status = 'info';
+          } else if (doc.status === 'error' || doc.status === 'failed') {
+            activityType = 'error';
+            status = 'error';
+          } else {
+            activityType = 'upload';
+            status = 'info';
+          }
 
-        const projectName =
-          doc.metadata?.project_name || knowledgeBaseService.getProject(doc.knowledge_base_id);
+          const projectName = await knowledgeBaseService.getProject(
+            doc.knowledge_base_id,
+          );
 
-        // Create message based on activity type
-        let message = '';
-        if (activityType === 'upload') {
-          message = `Document "${doc.name}" uploaded to ${projectName}`;
-        } else if (activityType === 'processing') {
-          message = `Processing document "${doc.name}" in ${projectName}`;
-        } else {
-          message = `Error processing document "${doc.name}" in ${projectName}`;
-        }
+          // Create message based on activity type
+          let message = '';
+          if (activityType === 'upload') {
+            message = `Document "${doc.name}" uploaded to ${projectName?.name}`;
+          } else if (activityType === 'processing') {
+            message = `Processing document "${doc.name}" in ${projectName?.name}`;
+          } else {
+            message = `Error processing document "${doc.name}" in ${projectName?.name}`;
+          }
 
-        return {
-          id: `doc-${doc.id}`,
-          type: activityType,
-          message,
-          time: formatRelativeTime(doc.updated_at || doc.created_at),
-          status,
-          projectId: doc.knowledge_base_id,
-          documentId: doc.id,
-        };
-      });
+          return {
+            id: `doc-${doc.id}`,
+            type: activityType,
+            message,
+            time: formatRelativeTime(doc.updated_at || doc.created_at),
+            status,
+            projectId: doc.knowledge_base_id,
+            documentId: doc.id,
+          };
+        }),
+      );
 
       // Add activities for knowledge base creation or updates
       const kbActivities: ActivityItem[] =
