@@ -21,6 +21,7 @@ interface DocumentsTableProps {
   documents: DocumentTableItem[];
   selectedDocuments: number[];
   selectedDocument: number | null;
+  isOpenSync?: boolean;
   startIndex: number;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
@@ -104,6 +105,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onDeleteDocument,
   isAllSelected,
   isIndeterminate,
+  isOpenSync = true,
 }) => {
   const getSortIcon = (column: string) => {
     if (sortBy !== column) return null;
@@ -184,14 +186,16 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       <div className='text-xs text-gray-500 dark:text-gray-400'>
                         {doc.lastUpdated || doc.date}
                       </div>
-                      <div className='flex items-center space-x-2'>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
-                        >
-                          {doc.syncStatus || doc.status || 'Unknown'}
-                        </span>
-                        {getSyncButton(doc.syncStatus)}
-                      </div>
+                      {isOpenSync && (
+                        <div className='flex items-center space-x-2'>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
+                          >
+                            {doc.syncStatus || doc.status || 'Unknown'}
+                          </span>
+                          {getSyncButton(doc.syncStatus)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -235,12 +239,16 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                     Last Updated
                   </SortableHeader>
                 </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  Sync
-                </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  {/* Actions column */}
-                </th>
+                {isOpenSync && (
+                  <>
+                    <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                      Sync
+                    </th>
+                    <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                      {/* Actions column */}
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
@@ -307,20 +315,25 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         {doc.lastUpdated || doc.date}
                       </td>
-                      <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                        {getSyncButton(doc.syncStatus)}
-                      </td>
-                      <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
-                        <button
-                          className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteDocument(pageIndex);
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </td>
+                      {isOpenSync && (
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                          {getSyncButton(doc.syncStatus)}
+                        </td>
+                      )}
+
+                      {isOpenSync && (
+                        <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
+                          <button
+                            className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteDocument(pageIndex);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}

@@ -505,6 +505,7 @@ export default function DocumentsPage() {
             ) : (
               <div className='w-full space-y-6'>
                 <DocumentsTable
+                  isOpenSync={false}
                   documents={adaptedDocuments}
                   selectedDocuments={selectedDocuments}
                   selectedDocument={selectedDocument}
