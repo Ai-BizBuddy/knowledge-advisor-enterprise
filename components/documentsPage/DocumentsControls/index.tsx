@@ -1,6 +1,5 @@
 import { useLoading } from '@/contexts/LoadingContext';
 import { useSorting } from '@/hooks';
-import Link from 'next/link';
 import React from 'react';
 
 interface DocumentsControlsProps {
@@ -90,45 +89,6 @@ export const DocumentsControls: React.FC<DocumentsControlsProps> = ({
         </div>
       </div>
 
-      {/* Additional Controls (for future features) */}
-      <div className='flex items-center gap-2'>
-        {/* Placeholder for future controls like view toggle, filters, etc. */}
-        <Link href='/documents/deep-search'>
-          <button
-            className='btn-primary flex transform items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 font-medium text-white shadow-lg transition-all duration-300 hover:-translate-y-0.5 hover:from-purple-700 hover:to-indigo-700 hover:shadow-xl focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none'
-            onClick={() => setLoading(true)}
-          >
-            <svg
-              className='h-5 w-5 flex-shrink-0'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-              xmlns='http://www.w3.org/2000/svg'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'
-              />
-            </svg>
-            <span className='text-sm font-medium'>Deep Search</span>
-            <svg
-              className='h-4 w-4 flex-shrink-0 opacity-75'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M13 7l5 5m0 0l-5 5m5-5H6'
-              />
-            </svg>
-          </button>
-        </Link>
-      </div>
     </div>
   );
 };

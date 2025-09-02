@@ -82,9 +82,9 @@ export const useDashboard = (
   options: UseDashboardOptions = {},
 ): UseDashboardReturn => {
   const {
-    autoRefresh = true,
+    autoRefresh = false,
     refreshInterval = 300000, // 5 minutes default
-    enableChatData = true,
+    enableChatData = false,
     onError,
     onSuccess,
   } = options;
@@ -105,7 +105,7 @@ export const useDashboard = (
 
   const [state, setState] = useState<UseDashboardState>({
     overview: null,
-    isLoading: true,
+    isLoading: false,
     error: null,
     lastUpdated: null,
   });

@@ -1,6 +1,7 @@
 'use client';
 import {
   BulkActions,
+  DeepSearchLayout,
   DeleteConfirmModal,
   DocumentDetail,
   DocumentsControls,
@@ -9,20 +10,21 @@ import {
   DocumentsSearch,
   DocumentsTable,
   NoDocuments,
-  UploadDocument,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
+import { mockSearchResults } from '@/data/deepSearch';
 import {
   useAllUserDocuments,
   useDocumentsManagement,
   useSorting,
 } from '@/hooks';
+import { DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
 import { Document } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { useEffect, useMemo, useState } from 'react';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
-interface DocumentTableItem {
+export interface DocumentTableItem {
   name: string;
   size: string;
   type: string;
@@ -61,11 +63,30 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
 
 export default function DocumentsPage() {
   const { setLoading } = useLoading();
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [deepSearchLoad, setDeepSearchLoad] = useState(false);
+  const [searchResults, setSearchResults] = useState<DocumentSearchResult[]>(
+    [],
+  );
+  const [allSearchResults, setAllSearchResults] = useState<
+    DocumentSearchResult[]
+  >([]);
+  const [isSearching, setIsSearching] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [optionBulkDelete, setOptionBulkDelete] = useState(false);
+  const [isDeepSearch, setIsDeepSearch] = useState(false);
+  const [isNoResults, setIsNoResults] = useState(false);
   const [documentToDelete, setDocumentToDelete] =
     useState<DocumentTableItem | null>(null);
+
+  // Pagination state
+  const [deepCurrentPage, setDeepCurrentPage] = useState(1);
+
+  // Calculate pagination values
+  const dtotalResults = allSearchResults.length;
+  const dTotalPages = Math.ceil(dtotalResults / 10);
+  const dStartIndex = (deepCurrentPage - 1) * 10;
+  const dEndIndex = dStartIndex + 10;
 
   // Document service instance
   const [documentService] = useState(() => new DocumentService());
@@ -164,7 +185,9 @@ export default function DocumentsPage() {
 
     if (
       selectedDocuments.length === currentPageIndices.length &&
-      currentPageIndices.every((index: number) => selectedDocuments.includes(index))
+      currentPageIndices.every((index: number) =>
+        selectedDocuments.includes(index),
+      )
     ) {
       const filteredSelection = selectedDocuments.filter(
         (index) => !currentPageIndices.includes(index),
@@ -251,6 +274,11 @@ export default function DocumentsPage() {
     }
   };
 
+  const handleNomalSearch = async (search: string) => {
+    setSearchQuery(search);
+    setSearchTerm(search);
+  };
+
   const handleBulkDocumentDelete = async (selectedIndices: number[]) => {
     try {
       setLoading(true);
@@ -288,6 +316,108 @@ export default function DocumentsPage() {
     }
   };
 
+  const handleDeepSearch = async () => {
+    if (!searchQuery.trim()) return;
+    setIsDeepSearch(true);
+    setDeepSearchLoad(true);
+    setIsSearching(true);
+    setIsNoResults(false);
+    setDeepCurrentPage(1); // Reset to first page on new search
+
+    try {
+      console.log('Searching for:', searchQuery);
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      // Use mock data for testing
+      const filteredResults = mockSearchResults.filter(
+        (doc) =>
+          doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          doc.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          doc.knowledgeName?.toLowerCase().includes(searchQuery.toLowerCase()),
+      );
+
+      setAllSearchResults(filteredResults);
+      setIsNoResults(filteredResults.length === 0);
+
+      console.log('Search results:', filteredResults);
+
+      // Original API code (commented out for testing) ห้ามลบ
+
+      // const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
+      // const results: DeepSearchRes[] = await executeSearch({
+      //   query: searchQuery,
+      //   // knowledge_ids: kbId,
+      // });
+
+      // if (!results || results.length === 0) {
+      //   console.log("No results found");
+      //   setIsNoResults(true);
+      //   return;
+      // }
+
+      // const documentIds = await Promise.all(
+      //   results.map(async (res: DeepSearchRes) => res.metadata.document_id),
+      // );
+      // const KBIds = await Promise.all(
+      //   results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
+      // );
+      // const docRes = await getDocumentById(documentIds);
+      // const kbRes = await getKnowledgeBaseByIDs(KBIds);
+
+      // console.log("Raw search results:", docRes);
+      // console.log("Knowledge Base results:", kbRes);
+
+      // // Map document and knowledge base results to search results
+      // const mappedResults: DocumentSearchResult[] = docRes.map(
+      //   (doc: Document) => {
+      //     const knowledge = kbRes.find(
+      //       (kb: Project) => kb.id === doc.knowledge_base_id,
+      //     );
+      //     return {
+      //       id: doc.id,
+      //       title: doc.name,
+      //       content: doc.content,
+      //       fileType: doc.file_type,
+      //       fileSize: doc.file_size,
+      //       uploadDate: doc.updated_at,
+      //       knowledgeName: knowledge ? knowledge.name : null,
+      //       document: doc,
+      //       // knowledgeBase: knowledge || null,
+      //     };
+      //   },
+      // );
+
+      // setSearchResults(mappedResults);
+    } catch (error) {
+      console.error('Search error:', error);
+      setIsNoResults(true);
+    } finally {
+      setIsSearching(false);
+      setDeepSearchLoad(false);
+    }
+  };
+
+  const handleDeepSearchClear = () => {
+    setSearchQuery('');
+    setSearchResults([]);
+    setAllSearchResults([]);
+    setIsNoResults(false);
+    setIsSearching(false);
+    setDeepCurrentPage(1);
+    setIsDeepSearch(false);
+  };
+
+  const handleResultClick = (result: DocumentSearchResult) => {
+    console.log('Document clicked:', result);
+    // In real implementation, this would open the document or navigate to document detail
+  };
+
+  const handlePageChanges = (page: number) => {
+    setDeepCurrentPage(page);
+  };
+
   useEffect(() => {
     setLoading(loading);
   }, [loading, setLoading]);
@@ -297,6 +427,12 @@ export default function DocumentsPage() {
     setSelectedDocument(null);
     setSelectedDocuments([]); // Reset selected documents when search changes
   }, [searchTerm, setSelectedDocument, setSelectedDocuments]);
+
+  // Update displayed results when page or results per page changes
+  useEffect(() => {
+    const paginatedResults = allSearchResults.slice(dStartIndex, dEndIndex);
+    setSearchResults(paginatedResults);
+  }, [allSearchResults, deepCurrentPage, dStartIndex, dEndIndex]);
 
   return (
     <div className='min-h-screen'>
@@ -320,17 +456,20 @@ export default function DocumentsPage() {
         </div>
 
         {/* Main Content Layout - Responsive grid */}
-        <div className={`grid grid-cols-1 gap-6 ${selectedDocument !== null &&
-            selectedDocument >= 0 &&
-            selectedDocument < adaptedDocuments.length &&
-            adaptedDocuments.length > 0 && 'xl:grid-cols-4'}`}>
-          {/* Main Content Area */}
-          <div className='space-y-6 xl:col-span-3'>
-            <DocumentsSearch
-              searchTerm={searchTerm}
-              onSearchChange={setSearchTerm}
-            />
 
+        {/* Main Content Area */}
+        <div className='space-y-6 xl:col-span-3 flex justify-center w-full'>
+          <DocumentsSearch
+            onDeepSearchClick={handleDeepSearch}
+            searchTerm={searchTerm}
+            onSearchChange={handleNomalSearch}
+            isDeepSearch={isDeepSearch}
+            handleDeepSearchClear={handleDeepSearchClear}
+          />
+        </div>
+
+        {!isDeepSearch && (
+          <div className='flex gap-4 pt-4'>
             <BulkActions
               selectedDocuments={selectedDocuments}
               totalPages={totalPages}
@@ -343,14 +482,11 @@ export default function DocumentsPage() {
 
             {/* Documents List or Empty State */}
             {totalItems === 0 ? (
-              <div className='mt-8 flex justify-center'>
-                <NoDocuments
-                  activeTab={activeTab}
-                  setOpenModal={setIsUploadModalOpen}
-                />
+              <div className='mt-8 flex w-full justify-center'>
+                <NoDocuments activeTab={activeTab} />
               </div>
             ) : (
-              <div className='space-y-6'>
+              <div className='w-full space-y-6'>
                 <DocumentsTable
                   documents={adaptedDocuments}
                   selectedDocuments={selectedDocuments}
@@ -389,22 +525,34 @@ export default function DocumentsPage() {
                 />
               </div>
             )}
-          </div>
-
-          {/* Document Detail Panel - Responsive sidebar */}
-          {selectedDocument !== null &&
-            selectedDocument >= 0 &&
-            selectedDocument < adaptedDocuments.length &&
-            adaptedDocuments.length > 0 && (
-              <div className='xl:col-span-1'>
-                <div className='sticky top-4'>
-                  <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 dark:border-gray-700 dark:bg-gray-800'>
-                    <DocumentDetail {...adaptedDocuments[selectedDocument]} />
-                  </div>
+            {/* Document Detail Panel - Responsive sidebar */}
+            {selectedDocument !== null &&
+              selectedDocument >= 0 &&
+              selectedDocument < adaptedDocuments.length &&
+              adaptedDocuments.length > 0 && (
+                <div className='hidden w-1/3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-6 lg:block dark:border-gray-700 dark:bg-gray-800'>
+                  <DocumentDetail {...adaptedDocuments[selectedDocument]} />
                 </div>
-              </div>
-            )}
-        </div>
+              )}
+          </div>
+        )}
+
+        {isDeepSearch && (
+          <DeepSearchLayout
+            className='pt-4'
+            searchQuery={searchQuery}
+            searchResults={searchResults}
+            loading={deepSearchLoad}
+            isSearching={isSearching}
+            isNoResults={isNoResults}
+            onResultClick={handleResultClick}
+            currentPage={deepCurrentPage}
+            totalPages={dTotalPages}
+            resultsPerPage={10}
+            totalResults={dtotalResults}
+            onPageChange={handlePageChanges}
+          />
+        )}
       </div>
 
       <DeleteConfirmModal
@@ -429,12 +577,6 @@ export default function DocumentsPage() {
             setOptionBulkDelete(false);
           }
         }}
-      />
-
-      {/* Upload Modal */}
-      <UploadDocument
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
       />
     </div>
   );
