@@ -307,78 +307,7 @@ export default function ChatPage() {
                     }}
                     className='flex items-center gap-3'
                   >
-                    <div className='flex items-center gap-2'>
-                      {/* svg internet */}
-                      <div
-                        className='cursor-pointer'
-                        onClick={() => setIsOnline(!isOnline)}
-                        title={
-                          isOnline
-                            ? 'Switch to Offline Mode'
-                            : 'Switch to Online Mode'
-                        }
-                      >
-                        {isOnline ? (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-7 w-7 text-blue-400 hover:text-blue-600 sm:h-8 sm:w-8'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0'></path>
-                            <path d='M3.6 9h16.8'></path>
-                            <path d='M3.6 15h16.8'></path>
-                            <path d='M11.5 3a17 17 0 0 0 0 18'></path>
-                            <path d='M12.5 3a17 17 0 0 1 0 18'></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-7 w-7 text-gray-400 hover:text-gray-600 sm:h-8 sm:w-8'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M5.657 5.615a9 9 0 1 0 12.717 12.739m1.672 -2.322a9 9 0 0 0 -12.066 -12.084'></path>
-                            <path d='M3.6 9h5.4m4 0h7.4'></path>
-                            <path d='M3.6 15h11.4m4 0h1.4'></path>
-                            <path d='M11.5 3a17.001 17.001 0 0 0 -1.493 3.022m-.847 3.145c-.68 4.027 .1 8.244 2.34 11.833'></path>
-                            <path d='M12.5 3a16.982 16.982 0 0 1 2.549 8.005m-.207 3.818a16.979 16.979 0 0 1 -2.342 6.177'></path>
-                            <path d='M3 3l18 18'></path>
-                          </svg>
-                        )}
-                      </div>
-                      {/* Status indicator - hidden on smaller screens, visible on medium+ */}
-                      <div className='hidden items-center gap-2 md:flex'>
-                        <div
-                          className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}
-                        ></div>
-                        <span className='text-xs text-gray-500 dark:text-gray-400'>
-                          {isOnline ? 'Online' : 'Offline'}
-                        </span>
-                      </div>
-                    </div>
+                    
                     <div className='flex-1'>
                       <textarea
                         ref={(textarea) => {
