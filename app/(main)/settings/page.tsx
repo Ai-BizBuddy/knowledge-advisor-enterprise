@@ -1,242 +1,371 @@
 'use client';
 
-import { Card } from 'flowbite-react';
-import Link from 'next/link';
-import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { useLoading } from '@/contexts/LoadingContext';
-import { useEffect } from 'react';
-
-const settingsOverview = [
-  {
-    title: 'Users',
-    description: 'Manage user accounts, profiles, and access',
-    href: '/settings/users',
-    bgColor: 'bg-blue-50 dark:bg-blue-900/20',
-    borderColor: 'border-blue-200 dark:border-blue-800',
-    textColor: 'text-blue-900 dark:text-blue-100',
-  },
-  {
-    title: 'Roles',
-    description: 'Configure user roles and permission levels',
-    href: '/settings/roles',
-    bgColor: 'bg-purple-50 dark:bg-purple-900/20',
-    borderColor: 'border-purple-200 dark:border-purple-800',
-    textColor: 'text-purple-900 dark:text-purple-100',
-  },
-  {
-    title: 'Permissions',
-    description: 'Set up granular access controls',
-    href: '/settings/permissions',
-    bgColor: 'bg-emerald-50 dark:bg-emerald-900/20',
-    borderColor: 'border-emerald-200 dark:border-emerald-800',
-    textColor: 'text-emerald-900 dark:text-emerald-100',
-  },
-  {
-    title: 'Departments',
-    description: 'Organize users by departments',
-    href: '/settings/departments',
-    bgColor: 'bg-orange-50 dark:bg-orange-900/20',
-    borderColor: 'border-orange-200 dark:border-orange-800',
-    textColor: 'text-orange-900 dark:text-orange-100',
-  },
-];
+import { usePermissionManagement } from '@/hooks';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { UserStatus } from '@/interfaces/UserManagement';
+import {
+  Alert,
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  Spinner,
+  TabItem,
+  Tabs,
+} from 'flowbite-react';
+import Link from 'next/link';
+import { useEffect, useMemo } from 'react';
 
 export default function SettingsPage() {
-  const { systemStatus } = useSystemStatus();
   const { setLoading } = useLoading();
+  const { systemStatus } = useSystemStatus();
+
+  // Data hooks
+  const {
+    users,
+    roles,
+    departments,
+    loading: loadingUM,
+    error: errorUM,
+    getUsersPaginated,
+    getUserStatistics,
+    getRolesPaginated,
+    getDepartmentsPaginated,
+  } = usePaginatedUserManagement();
+
+  const {
+    resources: permissionResources,
+    loading: loadingPerm,
+    error: errorPerm,
+    clearError: clearPermError,
+  } = usePermissionManagement();
+
+  // Local tab state is driven by Tabs internals; no external usage needed
 
   useEffect(() => {
     setLoading(false);
   }, [setLoading]);
 
+  // Initial lightweight loads for dashboard previews
+  useEffect(() => {
+    const load = async () => {
+      try {
+        await Promise.all([
+          getUsersPaginated({ page: 1, pageSize: 5 }),
+          getUserStatistics(),
+          getRolesPaginated({ page: 1, pageSize: 5 }),
+          getDepartmentsPaginated({ page: 1, pageSize: 5 }),
+        ]);
+  } catch {
+        // handled via hook error states
+      }
+    };
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const usersPreview = useMemo(() => users?.data?.slice(0, 5) ?? [], [users]);
+  const rolesPreview = useMemo(() => roles?.data?.slice(0, 5) ?? [], [roles]);
+  const departmentsPreview = useMemo(
+    () => departments?.data?.slice(0, 5) ?? [],
+    [departments],
+  );
+
+  const LoadingBlock = (
+    <div className='flex h-32 items-center justify-center'>
+      <Spinner size='lg' />
+    </div>
+  );
+
+  const ErrorBlock = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
+    <Alert color='failure'>
+      <div className='flex items-center justify-between'>
+        <span>{message}</span>
+        {onRetry && (
+          <Button size='xs' color='gray' onClick={onRetry}>
+            Retry
+          </Button>
+        )}
+      </div>
+    </Alert>
+  );
+
   return (
-    <div className='space-y-8'>
-      {/* Overview Cards */}
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>
-        {settingsOverview.map((item) => (
-          <Link key={item.title} href={item.href}>
-            <Card
-              className={`group h-full cursor-pointer border-gray-200 transition-all duration-200 hover:shadow-lg dark:border-gray-700 ${item.bgColor} ${item.borderColor}`}
-            >
-              <div className='flex items-start justify-between'>
-                <div className='flex-1'>
-                  <div className='mb-3'>
-                    <h3
-                      className={`text-lg font-semibold transition-colors group-hover:text-purple-600 dark:group-hover:text-purple-400 ${item.textColor}`}
-                    >
-                      {item.title}
-                    </h3>
-                  </div>
-                  <p className='mb-4 text-sm text-gray-600 dark:text-gray-400'>
-                    {item.description}
-                  </p>
-                </div>
-                <div className='text-gray-400 transition-colors group-hover:text-purple-600 dark:text-gray-500 dark:group-hover:text-purple-400'>
-                  <svg
-                    className='h-5 w-5'
-                    fill='none'
-                    stroke='currentColor'
-                    viewBox='0 0 24 24'
-                  >
-                    <path
-                      strokeLinecap='round'
-                      strokeLinejoin='round'
-                      strokeWidth={2}
-                      d='M9 5l7 7-7 7'
-                    />
-                  </svg>
-                </div>
-              </div>
-            </Card>
-          </Link>
-        ))}
+    <div className='space-y-6'>
+      {/* System status summary */}
+      <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+        <Card>
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-blue-100 p-3 dark:bg-blue-900'>
+              <svg className='h-6 w-6 text-blue-600 dark:text-blue-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z' />
+              </svg>
+            </div>
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>Total Users</p>
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>{systemStatus.loading ? '...' : systemStatus.totalUsers}</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-green-100 p-3 dark:bg-green-900'>
+              <svg className='h-6 w-6 text-green-600 dark:text-green-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+              </svg>
+            </div>
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>Active Sessions</p>
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>{systemStatus.loading ? '...' : systemStatus.activeSessions}</p>
+            </div>
+          </div>
+        </Card>
+        <Card>
+          <div className='flex items-center'>
+            <div className='rounded-lg bg-purple-100 p-3 dark:bg-purple-900'>
+              <svg className='h-6 w-6 text-purple-600 dark:text-purple-300' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' />
+              </svg>
+            </div>
+            <div className='ml-4'>
+              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>System Roles</p>
+              <p className='text-2xl font-bold text-gray-900 dark:text-white'>{systemStatus.loading ? '...' : systemStatus.systemRoles}</p>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      {/* Quick Actions */}
-      <Card className='border-gray-200 dark:border-gray-700'>
-        <div className='mb-6 flex items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
-              Quick Actions
-            </h2>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              Common administrative tasks
-            </p>
-          </div>
-        </div>
+      {/* Tabs: Users | Roles | Permissions | Departments */}
+      <Card className='p-2'>
+  <Tabs aria-label='Settings tabs' variant='underline'>
+          <TabItem active title='Users'>
+            <div className='mb-4 flex items-center justify-between'>
+              <div>
+                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Users</h2>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>Manage user accounts, profiles, and access</p>
+              </div>
+              <Link href='/settings/users'>
+                <Button>Open Users</Button>
+              </Link>
+            </div>
+            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+              {loadingUM && usersPreview.length === 0 ? (
+                LoadingBlock
+              ) : errorUM ? (
+                <ErrorBlock message={errorUM} onRetry={() => getUsersPaginated({ page: 1, pageSize: 5 })} />
+              ) : usersPreview.length === 0 ? (
+                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No users yet</div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+                    <thead className='bg-gray-50 dark:bg-gray-700'>
+                      <tr>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>User</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Role</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Status</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
+                      {usersPreview.map((u) => (
+                        <tr key={u.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
+                          <td className='px-6 py-4'>
+                            <div className='flex items-center'>
+                              <Avatar img={u.avatar_url} rounded size='sm' className='mr-3' />
+                              <div>
+                                <div className='text-sm font-medium text-gray-900 dark:text-white'>{u.display_name || u.email}</div>
+                                <div className='text-xs text-gray-500 dark:text-gray-400'>{u.email}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <Badge color='purple' size='sm'>
+                              {u.user_roles && u.user_roles.length > 0 ? u.user_roles[0]?.role?.name || 'Unknown' : 'No Role'}
+                            </Badge>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <Badge color={u.status === UserStatus.ACTIVE ? 'success' : u.status === UserStatus.SUSPENDED ? 'failure' : u.status === UserStatus.PENDING ? 'warning' : 'gray'}>
+                              {u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase()}
+                            </Badge>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(u.created_at).toLocaleDateString()}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </TabItem>
 
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3'>
-          <Link
-            href='/settings/users'
-            className='flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
-          >
-            <div className='rounded-lg bg-blue-100 p-2 dark:bg-blue-900'>
-              <div className='h-5 w-5 rounded bg-blue-600 dark:bg-blue-400'></div>
-            </div>
-            <div>
-              <div className='font-medium text-gray-900 dark:text-white'>
-                Add New User
+          <TabItem title='Roles'>
+            <div className='mb-4 flex items-center justify-between'>
+              <div>
+                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Roles</h2>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>Configure user roles and permission levels</p>
               </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Create a new user account
-              </div>
+              <Link href='/settings/roles'>
+                <Button>Open Roles</Button>
+              </Link>
             </div>
-          </Link>
+            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+              {loadingUM && rolesPreview.length === 0 ? (
+                LoadingBlock
+              ) : errorUM ? (
+                <ErrorBlock message={errorUM} onRetry={() => getRolesPaginated({ page: 1, pageSize: 5 })} />
+              ) : rolesPreview.length === 0 ? (
+                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No roles yet</div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+                    <thead className='bg-gray-50 dark:bg-gray-700'>
+                      <tr>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Role</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Level</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Type</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
+                      {rolesPreview.map((r) => (
+                        <tr key={r.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
+                          <td className='px-6 py-4'>
+                            <div>
+                              <div className='text-sm font-medium text-gray-900 dark:text-white'>{r.name}</div>
+                              <div className='text-xs text-gray-500 dark:text-gray-400'>{r.description || '—'}</div>
+                            </div>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <Badge color={(r.level || 0) >= 90 ? 'failure' : (r.level || 0) >= 70 ? 'warning' : 'info'}>
+                              {r.level || 0}
+                            </Badge>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <Badge color={r.is_system_role ? 'blue' : 'gray'} size='sm'>
+                              {r.is_system_role ? 'System' : 'Custom'}
+                            </Badge>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(r.created_at).toLocaleDateString()}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </TabItem>
 
-          <Link
-            href='/settings/roles'
-            className='flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
-          >
-            <div className='rounded-lg bg-purple-100 p-2 dark:bg-purple-900'>
-              <div className='h-5 w-5 rounded bg-purple-600 dark:bg-purple-400'></div>
-            </div>
-            <div>
-              <div className='font-medium text-gray-900 dark:text-white'>
-                Create Role
+          <TabItem title='Permissions'>
+            <div className='mb-4 flex items-center justify-between'>
+              <div>
+                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Permissions</h2>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>Set up granular access for resources and actions</p>
               </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Define a new user role
-              </div>
+              <Link href='/settings/permissions'>
+                <Button>Open Permissions</Button>
+              </Link>
             </div>
-          </Link>
+            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+              {loadingPerm && permissionResources.length === 0 ? (
+                LoadingBlock
+              ) : errorPerm ? (
+                <ErrorBlock message={errorPerm} onRetry={clearPermError} />
+              ) : permissionResources.length === 0 ? (
+                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No permission resources</div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+                    <thead className='bg-gray-50 dark:bg-gray-700'>
+                      <tr>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Resource</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Description</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
+                      {permissionResources.slice(0, 5).map((res) => (
+                        <tr key={res.key} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
+                          <td className='px-6 py-4 font-medium text-gray-900 dark:text-white'>{res.name}</td>
+                          <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300'>{res.description}</td>
+                          <td className='px-6 py-4'>
+                            <div className='flex flex-wrap gap-2'>
+                              {res.actions.slice(0, 6).map((a) => (
+                                <Badge key={`${res.key}-${a}`} color='indigo' size='sm'>
+                                  {a.toUpperCase()}
+                                </Badge>
+                              ))}
+                              {res.actions.length > 6 && (
+                                <Badge color='gray' size='sm'>+{res.actions.length - 6} more</Badge>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </TabItem>
 
-          <Link
-            href='/settings/departments'
-            className='flex items-center space-x-3 rounded-lg border border-gray-200 p-4 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:hover:bg-gray-700'
-          >
-            <div className='rounded-lg bg-orange-100 p-2 dark:bg-orange-900'>
-              <div className='h-5 w-5 rounded bg-orange-600 dark:bg-orange-400'></div>
+          <TabItem title='Departments'>
+            <div className='mb-4 flex items-center justify-between'>
+              <div>
+                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Departments</h2>
+                <p className='text-sm text-gray-600 dark:text-gray-400'>Organize users by departments and teams</p>
+              </div>
+              <Link href='/settings/departments'>
+                <Button>Open Departments</Button>
+              </Link>
             </div>
-            <div>
-              <div className='font-medium text-gray-900 dark:text-white'>
-                Add Department
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Create a new department
-              </div>
+            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
+              {loadingUM && departmentsPreview.length === 0 ? (
+                LoadingBlock
+              ) : errorUM ? (
+                <ErrorBlock message={errorUM} onRetry={() => getDepartmentsPaginated({ page: 1, pageSize: 5 })} />
+              ) : departmentsPreview.length === 0 ? (
+                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No departments yet</div>
+              ) : (
+                <div className='overflow-x-auto'>
+                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
+                    <thead className='bg-gray-50 dark:bg-gray-700'>
+                      <tr>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Name</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Description</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Status</th>
+                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
+                      </tr>
+                    </thead>
+                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
+                      {departmentsPreview.map((d) => (
+                        <tr key={d.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
+                          <td className='px-6 py-4 font-medium text-gray-900 dark:text-white'>{d.name}</td>
+                          <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300'>
+                            {d.description || '—'}
+                          </td>
+                          <td className='px-6 py-4'>
+                            <Badge color={d.is_active ? 'success' : 'gray'} size='sm'>
+                              {d.is_active ? 'Active' : 'Inactive'}
+                            </Badge>
+                          </td>
+                          <td className='px-6 py-4'>
+                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(d.created_at).toLocaleDateString()}</span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
-          </Link>
-        </div>
-      </Card>
-
-      {/* System Status */}
-      <Card className='border-gray-200 dark:border-gray-700'>
-        <div className='mb-6 flex items-center justify-between'>
-          <div>
-            <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>
-              System Status
-            </h2>
-            <p className='text-sm text-gray-600 dark:text-gray-400'>
-              Current system information
-            </p>
-          </div>
-          <div className='flex items-center space-x-2'>
-            <div className='h-2 w-2 rounded-full bg-green-500'></div>
-            <span className='text-sm font-medium text-green-600 dark:text-green-400'>
-              Operational
-            </span>
-          </div>
-        </div>
-
-        {systemStatus.loading ? (
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <div className='animate-pulse rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                ...
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Total Users
-              </div>
-            </div>
-            <div className='animate-pulse rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                ...
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Active Sessions
-              </div>
-            </div>
-            <div className='animate-pulse rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                ...
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                System Roles
-              </div>
-            </div>
-          </div>
-        ) : systemStatus.error ? (
-          <div className='p-4 text-center text-red-500'>
-            {systemStatus.error}
-          </div>
-        ) : (
-          <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-            <div className='rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {systemStatus.totalUsers}
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Total Users
-              </div>
-            </div>
-            <div className='rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {systemStatus.activeSessions}
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                Active Sessions
-              </div>
-            </div>
-            <div className='rounded-lg bg-gray-50 p-4 text-center dark:bg-gray-700'>
-              <div className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {systemStatus.systemRoles}
-              </div>
-              <div className='text-sm text-gray-600 dark:text-gray-400'>
-                System Roles
-              </div>
-            </div>
-          </div>
-        )}
+          </TabItem>
+        </Tabs>
       </Card>
     </div>
   );
