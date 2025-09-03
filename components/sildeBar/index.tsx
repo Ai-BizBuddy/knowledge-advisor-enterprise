@@ -102,7 +102,7 @@ export default function SlideBar({
         aria-label='Sidebar'
       >
         <div className='bg-white dark:bg-gray-800'></div>
-        <div className='h-full overflow-y-auto bg-white w-64 dark:bg-gray-800 pt-20'>
+        <div className='h-full overflow-y-auto w-[inherit] bg-white dark:bg-gray-800 pt-20'>
           <NavigationMenu
             items={navigationItems}
             onItemClick={(index) => {
