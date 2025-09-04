@@ -1,10 +1,10 @@
 'use client';
 import {
-    CreateKnowledgeBaseModal,
-    KnowledgeBaseCard,
-    LoadingCard,
-    PageHeader,
-    Tabs,
+  CreateKnowledgeBaseModal,
+  KnowledgeBaseCard,
+  LoadingCard,
+  PageHeader,
+  Tabs,
 } from '@/components';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';

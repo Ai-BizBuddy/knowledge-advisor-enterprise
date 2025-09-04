@@ -1,6 +1,6 @@
 'use client';
 
-import { TableSearch, PageHeader } from '@/components';
+import { PageHeader, TableSearch } from '@/components';
 import { Pagination } from '@/components/pagination';
 import { CreateRolePayload, RoleModal } from '@/components/roleModal';
 import { useToast } from '@/components/toast';

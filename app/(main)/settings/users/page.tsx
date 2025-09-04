@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Modal, Label, Badge, Avatar } from 'flowbite-react';
-import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { PageHeader, TableSearch } from '@/components';
 import { Pagination } from '@/components/pagination';
-import { TableSearch, PageHeader } from '@/components';
 import { ProfilePictureUpload } from '@/components/profilePictureUpload';
-import { UserFormModal } from '@/components/userManagement';
 import { useToast } from '@/components/toast';
-import { User, UserStatus, UserRoleRow } from '@/interfaces/UserManagement';
-import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { UserFormModal } from '@/components/userManagement';
 import { SUCCESS_MESSAGES } from '@/constants';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { User, UserRoleRow, UserStatus } from '@/interfaces/UserManagement';
+import { Avatar, Badge, Button, Card, Label, Modal } from 'flowbite-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function UsersPage() {
   const { showToast } = useToast();
