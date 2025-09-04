@@ -3,6 +3,7 @@ import {
     CreateKnowledgeBaseModal,
     KnowledgeBaseCard,
     LoadingCard,
+    PageHeader,
     Tabs,
 } from '@/components';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
@@ -74,38 +75,32 @@ export default function KnowledgeBase() {
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
         <div className='mb-6 sm:mb-8'>
-          <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-            <div className='flex-1'>
-              <h1 className='mb-2 text-2xl font-bold text-gray-900 dark:text-white'>
-                Knowledge Base
-              </h1>
-              <p className='text-sm text-gray-500 sm:text-base dark:text-gray-400'>
-                Manage your enterprise knowledge repositories
-              </p>
-            </div>
-
-            {/* Create New Button */}
-            <button
-              className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-blue-700 sm:w-auto'
-              onClick={() => setOpenModal(true)}
-            >
-              <svg
-                xmlns='http://www.w3.org/2000/svg'
-                fill='none'
-                viewBox='0 0 24 24'
-                strokeWidth={1.5}
-                stroke='currentColor'
-                className='h-5 w-5 flex-shrink-0'
+          <PageHeader
+            title='Knowledge Base'
+            subtitle='Manage your enterprise knowledge repositories'
+            action={
+              <button
+                className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-blue-700 sm:w-auto'
+                onClick={() => setOpenModal(true)}
               >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  d='M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-              <span className='text-sm font-medium'>New Knowledge Base</span>
-            </button>
-          </div>
+                <svg
+                  xmlns='http://www.w3.org/2000/svg'
+                  fill='none'
+                  viewBox='0 0 24 24'
+                  strokeWidth={1.5}
+                  stroke='currentColor'
+                  className='h-5 w-5 flex-shrink-0'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    d='M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'
+                  />
+                </svg>
+                <span className='text-sm font-medium'>New Knowledge Base</span>
+              </button>
+            }
+          />
         </div>
 
         {/* Search and Filter Section */}

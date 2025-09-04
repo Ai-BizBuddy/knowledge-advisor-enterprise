@@ -1,6 +1,6 @@
 'use client';
 
-import { TableSearch } from '@/components';
+import { TableSearch, PageHeader } from '@/components';
 import { Pagination } from '@/components/pagination';
 import { CreateRolePayload, RoleModal } from '@/components/roleModal';
 import { useToast } from '@/components/toast';
@@ -556,35 +556,31 @@ export default function RolesPage() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-            Roles Management
-          </h1>
-          <p className='text-gray-600 dark:text-gray-400'>
-            Configure user roles and permission levels
-          </p>
-        </div>
-        <Button
-          onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
-        >
-          <svg
-            className='mr-2 h-4 w-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
+      <PageHeader
+        title='Roles Management'
+        subtitle='Configure user roles and permission levels'
+        action={
+          <Button
+            onClick={openCreateModal}
+            className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
           >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 4v16m8-8H4'
-            />
-          </svg>
-          Create Role
-        </Button>
-      </div>
+            <svg
+              className='mr-2 h-4 w-4'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 4v16m8-8H4'
+              />
+            </svg>
+            Create Role
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-4'>

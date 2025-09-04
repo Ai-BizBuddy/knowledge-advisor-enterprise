@@ -46,6 +46,9 @@ export * from './tableSearch';
 // Layout Components
 export * from './layouts';
 
+// Page Header Components
+export * from './PageHeader';
+
 // Deep Search Components
 export * from './deepSearch';
 
