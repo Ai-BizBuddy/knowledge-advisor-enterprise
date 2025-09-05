@@ -1,16 +1,16 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Card, Button, Modal, Label, Badge, Avatar } from 'flowbite-react';
-import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { PageHeader, TableSearch } from '@/components';
 import { Pagination } from '@/components/pagination';
-import { TableSearch } from '@/components';
 import { ProfilePictureUpload } from '@/components/profilePictureUpload';
-import { UserFormModal } from '@/components/userManagement';
 import { useToast } from '@/components/toast';
-import { User, UserStatus, UserRoleRow } from '@/interfaces/UserManagement';
-import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { UserFormModal } from '@/components/userManagement';
 import { SUCCESS_MESSAGES } from '@/constants';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
+import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
+import { User, UserRoleRow, UserStatus } from '@/interfaces/UserManagement';
+import { Avatar, Badge, Button, Card, Label, Modal } from 'flowbite-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function UsersPage() {
   const { showToast } = useToast();
@@ -318,35 +318,31 @@ export default function UsersPage() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-            Users Management
-          </h1>
-          <p className='text-gray-600 dark:text-gray-400'>
-            Manage user accounts, profiles, and access permissions
-          </p>
-        </div>
-        <Button
-          onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
-        >
-          <svg
-            className='mr-2 h-4 w-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
+      <PageHeader
+        title='Users Management'
+        subtitle='Manage user accounts, profiles, and access permissions'
+        action={
+          <Button
+            onClick={openCreateModal}
+            className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
           >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 4v16m8-8H4'
-            />
-          </svg>
-          Add User
-        </Button>
-      </div>
+            <svg
+              className='mr-2 h-4 w-4'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 4v16m8-8H4'
+              />
+            </svg>
+            Add User
+          </Button>
+        }
+      />
 
       {/* Stats Cards */}
       <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>

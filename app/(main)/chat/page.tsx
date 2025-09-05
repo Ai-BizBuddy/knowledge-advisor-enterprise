@@ -5,6 +5,7 @@ import {
   ChatCard,
   ChatHistoryList,
   KnowledgeSelect,
+  PageHeader,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
@@ -13,7 +14,7 @@ import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function ChatPage() {
-  const [isOnline, setIsOnline] = useState(false); // Removed setter as it's not used
+  const [isOnline] = useState(false);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
   const { setLoading } = useLoading();
@@ -83,18 +84,14 @@ export default function ChatPage() {
         <div className='p-4 sm:p-6 lg:p-8'>
           <div className='space-y-3 sm:space-y-3'>
             {/* Page Header - Outside the card */}
-            <div className='space-y-3 pb-3'>
-              <div className='flex items-center gap-3'>
-                <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  AI Chat Assistant
-                </h1>
-              </div>
-              <p className='text-sm font-medium text-gray-600 sm:text-base dark:text-gray-400'>
-                {getSelectedCount() !== 0
+            <PageHeader
+              title='AI Chat Assistant'
+              subtitle={
+                getSelectedCount() !== 0
                   ? `กำลังค้นหาข้อมูลจาก ${getSelectedCount()} Knowledge Base`
-                  : 'กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา'}
-              </p>
-            </div>
+                  : 'กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา'
+              }
+            />
 
             {/* Control Section */}
             <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
