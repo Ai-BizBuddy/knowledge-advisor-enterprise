@@ -127,10 +127,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
+      const previousUser = user;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
-      const previousUser = session?.user || null;
 
       switch (event) {
         case 'SIGNED_IN':
@@ -165,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           break;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
