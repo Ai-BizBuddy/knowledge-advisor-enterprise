@@ -1,96 +1,22 @@
 'use client';
 
+import { DepartmentsPage, PermissionsPage, RolesPage, UsersPage } from '@/components/SettingsPage';
 import { useLoading } from '@/contexts/LoadingContext';
-import { usePermissionManagement } from '@/hooks';
-import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
-import { UserStatus } from '@/interfaces/UserManagement';
 import {
-  Alert,
-  Avatar,
-  Badge,
-  Button,
   Card,
-  Spinner,
   TabItem,
-  Tabs,
+  Tabs
 } from 'flowbite-react';
-import Link from 'next/link';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 
 export default function SettingsPage() {
   const { setLoading } = useLoading();
   const { systemStatus } = useSystemStatus();
 
-  // Data hooks
-  const {
-    users,
-    roles,
-    departments,
-    loading: loadingUM,
-    error: errorUM,
-    getUsersPaginated,
-    getUserStatistics,
-    getRolesPaginated,
-    getDepartmentsPaginated,
-  } = usePaginatedUserManagement();
-
-  const {
-    resources: permissionResources,
-    loading: loadingPerm,
-    error: errorPerm,
-    clearError: clearPermError,
-  } = usePermissionManagement();
-
-  // Local tab state is driven by Tabs internals; no external usage needed
-
   useEffect(() => {
     setLoading(false);
   }, [setLoading]);
-
-  // Initial lightweight loads for dashboard previews
-  useEffect(() => {
-    const load = async () => {
-      try {
-        await Promise.all([
-          getUsersPaginated({ page: 1, pageSize: 5 }),
-          getUserStatistics(),
-          getRolesPaginated({ page: 1, pageSize: 5 }),
-          getDepartmentsPaginated({ page: 1, pageSize: 5 }),
-        ]);
-  } catch {
-        // handled via hook error states
-      }
-    };
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const usersPreview = useMemo(() => users?.data?.slice(0, 5) ?? [], [users]);
-  const rolesPreview = useMemo(() => roles?.data?.slice(0, 5) ?? [], [roles]);
-  const departmentsPreview = useMemo(
-    () => departments?.data?.slice(0, 5) ?? [],
-    [departments],
-  );
-
-  const LoadingBlock = (
-    <div className='flex h-32 items-center justify-center'>
-      <Spinner size='lg' />
-    </div>
-  );
-
-  const ErrorBlock = ({ message, onRetry }: { message: string; onRetry?: () => void }) => (
-    <Alert color='failure'>
-      <div className='flex items-center justify-between'>
-        <span>{message}</span>
-        {onRetry && (
-          <Button size='xs' color='gray' onClick={onRetry}>
-            Retry
-          </Button>
-        )}
-      </div>
-    </Alert>
-  );
 
   return (
     <div className='space-y-6'>
@@ -141,229 +67,19 @@ export default function SettingsPage() {
       <Card className='p-2'>
   <Tabs aria-label='Settings tabs' variant='underline'>
           <TabItem active title='Users'>
-            <div className='mb-4 flex items-center justify-between'>
-              <div>
-                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Users</h2>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>Manage user accounts, profiles, and access</p>
-              </div>
-              <Link href='/settings/users'>
-                <Button>Open Users</Button>
-              </Link>
-            </div>
-            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
-              {loadingUM && usersPreview.length === 0 ? (
-                LoadingBlock
-              ) : errorUM ? (
-                <ErrorBlock message={errorUM} onRetry={() => getUsersPaginated({ page: 1, pageSize: 5 })} />
-              ) : usersPreview.length === 0 ? (
-                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No users yet</div>
-              ) : (
-                <div className='overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-                    <thead className='bg-gray-50 dark:bg-gray-700'>
-                      <tr>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>User</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Role</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Status</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
-                      {usersPreview.map((u) => (
-                        <tr key={u.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
-                          <td className='px-6 py-4'>
-                            <div className='flex items-center'>
-                              <Avatar img={u.avatar_url} rounded size='sm' className='mr-3' />
-                              <div>
-                                <div className='text-sm font-medium text-gray-900 dark:text-white'>{u.display_name || u.email}</div>
-                                <div className='text-xs text-gray-500 dark:text-gray-400'>{u.email}</div>
-                              </div>
-                            </div>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <Badge color='purple' size='sm'>
-                              {u.user_roles && u.user_roles.length > 0 ? u.user_roles[0]?.role?.name || 'Unknown' : 'No Role'}
-                            </Badge>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <Badge color={u.status === UserStatus.ACTIVE ? 'success' : u.status === UserStatus.SUSPENDED ? 'failure' : u.status === UserStatus.PENDING ? 'warning' : 'gray'}>
-                              {u.status.charAt(0).toUpperCase() + u.status.slice(1).toLowerCase()}
-                            </Badge>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(u.created_at).toLocaleDateString()}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <UsersPage />
           </TabItem>
 
           <TabItem title='Roles'>
-            <div className='mb-4 flex items-center justify-between'>
-              <div>
-                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Roles</h2>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>Configure user roles and permission levels</p>
-              </div>
-              <Link href='/settings/roles'>
-                <Button>Open Roles</Button>
-              </Link>
-            </div>
-            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
-              {loadingUM && rolesPreview.length === 0 ? (
-                LoadingBlock
-              ) : errorUM ? (
-                <ErrorBlock message={errorUM} onRetry={() => getRolesPaginated({ page: 1, pageSize: 5 })} />
-              ) : rolesPreview.length === 0 ? (
-                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No roles yet</div>
-              ) : (
-                <div className='overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-                    <thead className='bg-gray-50 dark:bg-gray-700'>
-                      <tr>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Role</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Level</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Type</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
-                      {rolesPreview.map((r) => (
-                        <tr key={r.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
-                          <td className='px-6 py-4'>
-                            <div>
-                              <div className='text-sm font-medium text-gray-900 dark:text-white'>{r.name}</div>
-                              <div className='text-xs text-gray-500 dark:text-gray-400'>{r.description || '—'}</div>
-                            </div>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <Badge color={(r.level || 0) >= 90 ? 'failure' : (r.level || 0) >= 70 ? 'warning' : 'info'}>
-                              {r.level || 0}
-                            </Badge>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <Badge color={r.is_system_role ? 'blue' : 'gray'} size='sm'>
-                              {r.is_system_role ? 'System' : 'Custom'}
-                            </Badge>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(r.created_at).toLocaleDateString()}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <RolesPage />
           </TabItem>
 
           <TabItem title='Permissions'>
-            <div className='mb-4 flex items-center justify-between'>
-              <div>
-                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Permissions</h2>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>Set up granular access for resources and actions</p>
-              </div>
-              <Link href='/settings/permissions'>
-                <Button>Open Permissions</Button>
-              </Link>
-            </div>
-            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
-              {loadingPerm && permissionResources.length === 0 ? (
-                LoadingBlock
-              ) : errorPerm ? (
-                <ErrorBlock message={errorPerm} onRetry={clearPermError} />
-              ) : permissionResources.length === 0 ? (
-                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No permission resources</div>
-              ) : (
-                <div className='overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-                    <thead className='bg-gray-50 dark:bg-gray-700'>
-                      <tr>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Resource</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Description</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
-                      {permissionResources.slice(0, 5).map((res) => (
-                        <tr key={res.key} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
-                          <td className='px-6 py-4 font-medium text-gray-900 dark:text-white'>{res.name}</td>
-                          <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300'>{res.description}</td>
-                          <td className='px-6 py-4'>
-                            <div className='flex flex-wrap gap-2'>
-                              {res.actions.slice(0, 6).map((a) => (
-                                <Badge key={`${res.key}-${a}`} color='indigo' size='sm'>
-                                  {a.toUpperCase()}
-                                </Badge>
-                              ))}
-                              {res.actions.length > 6 && (
-                                <Badge color='gray' size='sm'>+{res.actions.length - 6} more</Badge>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <PermissionsPage />
           </TabItem>
 
           <TabItem title='Departments'>
-            <div className='mb-4 flex items-center justify-between'>
-              <div>
-                <h2 className='text-xl font-semibold text-gray-900 dark:text-white'>Departments</h2>
-                <p className='text-sm text-gray-600 dark:text-gray-400'>Organize users by departments and teams</p>
-              </div>
-              <Link href='/settings/departments'>
-                <Button>Open Departments</Button>
-              </Link>
-            </div>
-            <div className='overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700'>
-              {loadingUM && departmentsPreview.length === 0 ? (
-                LoadingBlock
-              ) : errorUM ? (
-                <ErrorBlock message={errorUM} onRetry={() => getDepartmentsPaginated({ page: 1, pageSize: 5 })} />
-              ) : departmentsPreview.length === 0 ? (
-                <div className='p-8 text-center text-sm text-gray-500 dark:text-gray-400'>No departments yet</div>
-              ) : (
-                <div className='overflow-x-auto'>
-                  <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
-                    <thead className='bg-gray-50 dark:bg-gray-700'>
-                      <tr>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Name</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Description</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Status</th>
-                        <th className='px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-500 dark:text-gray-400'>Created</th>
-                      </tr>
-                    </thead>
-                    <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
-                      {departmentsPreview.map((d) => (
-                        <tr key={d.id} className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'>
-                          <td className='px-6 py-4 font-medium text-gray-900 dark:text-white'>{d.name}</td>
-                          <td className='px-6 py-4 text-sm text-gray-600 dark:text-gray-300'>
-                            {d.description || '—'}
-                          </td>
-                          <td className='px-6 py-4'>
-                            <Badge color={d.is_active ? 'success' : 'gray'} size='sm'>
-                              {d.is_active ? 'Active' : 'Inactive'}
-                            </Badge>
-                          </td>
-                          <td className='px-6 py-4'>
-                            <span className='text-sm text-gray-500 dark:text-gray-400'>{new Date(d.created_at).toLocaleDateString()}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <DepartmentsPage />
           </TabItem>
         </Tabs>
       </Card>

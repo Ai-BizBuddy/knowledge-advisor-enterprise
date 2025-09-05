@@ -8,7 +8,6 @@ import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { CreateDepartmentInput, Department } from '@/interfaces/UserManagement';
 import {
   Button,
-  Card,
   Checkbox,
   Label,
   Modal,
@@ -254,156 +253,8 @@ export default function DepartmentsPage() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex items-center justify-between'>
-        <div>
-          <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-            Departments Management
-          </h1>
-          <p className='text-gray-600 dark:text-gray-400'>
-            Manage organizational departments and teams
-          </p>
-        </div>
-        <Button
-          onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
-        >
-          <svg
-            className='mr-2 h-4 w-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 4v16m8-8H4'
-            />
-          </svg>
-          Create Department
-        </Button>
-      </div>
-
-      {/* Stats Cards */}
-      <div className='grid grid-cols-1 gap-6 md:grid-cols-4'>
-        <Card>
-          <div className='flex items-center'>
-            <div className='rounded-lg bg-purple-100 p-3 dark:bg-purple-900'>
-              <svg
-                className='h-6 w-6 text-purple-600 dark:text-purple-300'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4'
-                />
-              </svg>
-            </div>
-            <div className='ml-4'>
-              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
-                Total Departments
-              </p>
-              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {departments?.pagination.total || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className='flex items-center'>
-            <div className='rounded-lg bg-green-100 p-3 dark:bg-green-900'>
-              <svg
-                className='h-6 w-6 text-green-600 dark:text-green-300'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-            </div>
-            <div className='ml-4'>
-              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
-                Active Departments
-              </p>
-              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {departments?.data.filter((d) => d.is_active).length || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className='flex items-center'>
-            <div className='rounded-lg bg-red-100 p-3 dark:bg-red-900'>
-              <svg
-                className='h-6 w-6 text-red-600 dark:text-red-300'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z'
-                />
-              </svg>
-            </div>
-            <div className='ml-4'>
-              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
-                Inactive Departments
-              </p>
-              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {departments?.data.filter((d) => !d.is_active).length || 0}
-              </p>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <div className='flex items-center'>
-            <div className='rounded-lg bg-blue-100 p-3 dark:bg-blue-900'>
-              <svg
-                className='h-6 w-6 text-blue-600 dark:text-blue-300'
-                fill='none'
-                stroke='currentColor'
-                viewBox='0 0 24 24'
-              >
-                <path
-                  strokeLinecap='round'
-                  strokeLinejoin='round'
-                  strokeWidth={2}
-                  d='M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
-                />
-              </svg>
-            </div>
-            <div className='ml-4'>
-              <p className='text-sm font-medium text-gray-500 dark:text-gray-400'>
-                Success Rate
-              </p>
-              <p className='text-2xl font-bold text-gray-900 dark:text-white'>
-                {departments?.data.length
-                  ? `${Math.round((departments.data.filter((d) => d.is_active).length / departments.data.length) * 100)}%`
-                  : '0%'}
-              </p>
-            </div>
-          </div>
-        </Card>
-      </div>
-
-      {/* Filters */}
-      <Card>
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3'>
+      <div className='flex w-full items-center justify-between'>
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-3 w-[80%]'>
           <div>
             <Label htmlFor='statusFilter'>Filter by Status</Label>
             <select
@@ -430,7 +281,26 @@ export default function DepartmentsPage() {
             </Button>
           </div>
         </div>
-      </Card>
+        <Button
+          onClick={openCreateModal}
+          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+        >
+          <svg
+            className='mr-2 h-4 w-4'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M12 4v16m8-8H4'
+            />
+          </svg>
+          Create Department
+        </Button>
+      </div>
 
       {/* Search and Filters */}
       <div className='mb-6'>
