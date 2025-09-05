@@ -111,21 +111,21 @@ export default function PermissionsPage() {
                     <tr>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
                       >
                         Resource
                       </th>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell sm:px-6 dark:text-gray-400'
                       >
                         Description
                       </th>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='px-3 py-3 text-center text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
                       >
-                        Available Actions
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -135,11 +135,11 @@ export default function PermissionsPage() {
                         key={resource.key}
                         className='transition-colors hover:bg-gray-50 dark:hover:bg-gray-700'
                       >
-                        <td className='px-6 py-4 whitespace-nowrap'>
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                           <div className='flex items-center space-x-3'>
-                            <div className='flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900'>
+                            <div className='flex h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-100 dark:bg-indigo-900'>
                               <svg
-                                className='h-5 w-5 text-indigo-600 dark:text-indigo-400'
+                                className='h-4 w-4 sm:h-5 sm:w-5 text-indigo-600 dark:text-indigo-400'
                                 fill='none'
                                 stroke='currentColor'
                                 viewBox='0 0 24 24'
@@ -156,24 +156,27 @@ export default function PermissionsPage() {
                               <div className='text-sm font-medium text-gray-900 dark:text-white'>
                                 {resource.name}
                               </div>
-                              <div className='text-sm text-gray-500 dark:text-gray-400'>
+                              <div className='text-xs sm:text-sm text-gray-500 md:hidden dark:text-gray-400'>
+                                {resource.description}
+                              </div>
+                              <div className='text-xs text-gray-500 dark:text-gray-400'>
                                 {resource.actions.length} action
                                 {resource.actions.length !== 1 ? 's' : ''}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className='px-6 py-4'>
+                        <td className='hidden px-3 py-4 md:table-cell sm:px-6'>
                           <div className='text-sm text-gray-600 dark:text-gray-300'>
                             {resource.description}
                           </div>
                         </td>
-                        <td className='px-6 py-4'>
-                          <div className='flex flex-wrap justify-center gap-2'>
+                        <td className='px-3 py-4 sm:px-6'>
+                          <div className='flex flex-wrap justify-center gap-1 sm:gap-2'>
                             {resource.actions.map((action) => (
                               <span
                                 key={`${resource.key}-${action}`}
-                                className='inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300'
                               >
                                 {action.toUpperCase()}
                               </span>
@@ -187,12 +190,12 @@ export default function PermissionsPage() {
                       <tr>
                         <td
                           colSpan={3}
-                          className='px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400'
+                          className='px-3 py-12 text-center text-sm text-gray-500 sm:px-6 dark:text-gray-400'
                         >
                           <div className='flex flex-col items-center'>
-                            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800'>
+                            <div className='mx-auto mb-4 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-800'>
                               <svg
-                                className='h-6 w-6 text-gray-400'
+                                className='h-4 w-4 sm:h-6 sm:w-6 text-gray-400'
                                 fill='none'
                                 stroke='currentColor'
                                 viewBox='0 0 24 24'
@@ -230,7 +233,7 @@ export default function PermissionsPage() {
 
             {/* Pagination */}
             {totalItems > 0 && (
-              <div className='border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
+              <div className='border-t border-gray-200 bg-gray-50 px-3 py-4 sm:px-6 dark:border-gray-700 dark:bg-gray-800'>
                 <Pagination
                   currentPage={currentPage}
                   totalPages={totalPages}

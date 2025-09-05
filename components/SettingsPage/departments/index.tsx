@@ -253,15 +253,15 @@ export default function DepartmentsPage() {
   return (
     <div className='space-y-6'>
       {/* Header */}
-      <div className='flex w-full items-center justify-between'>
-        <div className='grid grid-cols-1 gap-4 md:grid-cols-3 w-[80%]'>
-          <div>
+      <div className='flex w-full flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
+        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 w-full lg:w-[80%]'>
+          <div className='sm:col-span-2 lg:col-span-1'>
             <Label htmlFor='statusFilter'>Filter by Status</Label>
             <select
               id='statusFilter'
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white'
+              className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white'
             >
               <option value=''>All Statuses</option>
               <option value='active'>Active Only</option>
@@ -276,6 +276,7 @@ export default function DepartmentsPage() {
                 setStatusFilter('');
                 setSearchTerm('');
               }}
+              className='w-full sm:w-auto'
             >
               Clear Filters
             </Button>
@@ -283,7 +284,7 @@ export default function DepartmentsPage() {
         </div>
         <Button
           onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none w-full sm:w-auto'
         >
           <svg
             className='mr-2 h-4 w-4'
@@ -298,7 +299,8 @@ export default function DepartmentsPage() {
               d='M12 4v16m8-8H4'
             />
           </svg>
-          Create Department
+          <span className='block sm:hidden'>Create</span>
+          <span className='hidden sm:block'>Create Department</span>
         </Button>
       </div>
 
@@ -328,7 +330,7 @@ export default function DepartmentsPage() {
                     <tr>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
                       >
                         <input
                           type='checkbox'
@@ -337,25 +339,25 @@ export default function DepartmentsPage() {
                       </th>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
                       >
                         Name
                       </th>
                       <th
                         scope='col'
-                        className='hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell dark:text-gray-400'
+                        className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell sm:px-6 dark:text-gray-400'
                       >
                         Description
                       </th>
                       <th
                         scope='col'
-                        className='hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase lg:table-cell dark:text-gray-400'
+                        className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase lg:table-cell sm:px-6 dark:text-gray-400'
                       >
                         Created
                       </th>
                       <th
                         scope='col'
-                        className='px-6 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'
+                        className='px-3 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
                       >
                         Actions
                       </th>
@@ -366,11 +368,11 @@ export default function DepartmentsPage() {
                       <tr>
                         <td
                           colSpan={6}
-                          className='px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400'
+                          className='px-3 py-12 text-center text-sm text-gray-500 sm:px-6 dark:text-gray-400'
                         >
                           <div className='flex flex-col items-center justify-center'>
                             <svg
-                              className='mx-auto h-12 w-12 text-gray-400'
+                              className='mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-400'
                               fill='none'
                               stroke='currentColor'
                               viewBox='0 0 24 24'
@@ -406,7 +408,8 @@ export default function DepartmentsPage() {
                                     d='M12 4v16m8-8H4'
                                   />
                                 </svg>
-                                Create Department
+                                <span className='block sm:hidden'>Create</span>
+                                <span className='hidden sm:block'>Create Department</span>
                               </Button>
                             </div>
                           </div>
@@ -418,18 +421,18 @@ export default function DepartmentsPage() {
                           key={department.id}
                           className='transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
                         >
-                          <td className='px-6 py-4 whitespace-nowrap'>
+                          <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                             <input
                               type='checkbox'
                               className='h-4 w-4 rounded border-gray-300 bg-gray-100 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-indigo-600'
                             />
                           </td>
-                          <td className='px-6 py-4 whitespace-nowrap'>
+                          <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                             <div className='flex items-center'>
-                              <div className='h-10 w-10 flex-shrink-0'>
-                                <div className='flex h-10 w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900'>
+                              <div className='h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0'>
+                                <div className='flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-blue-100 dark:bg-blue-900'>
                                   <svg
-                                    className='h-5 w-5 text-blue-600 dark:text-blue-400'
+                                    className='h-4 w-4 sm:h-5 sm:w-5 text-blue-600 dark:text-blue-400'
                                     fill='none'
                                     stroke='currentColor'
                                     viewBox='0 0 24 24'
@@ -443,41 +446,47 @@ export default function DepartmentsPage() {
                                   </svg>
                                 </div>
                               </div>
-                              <div className='ml-4'>
+                              <div className='ml-3 sm:ml-4'>
                                 <div className='text-sm font-medium text-gray-900 dark:text-white'>
                                   {department.name}
                                 </div>
-                                <div className='text-sm text-gray-500 sm:hidden dark:text-gray-400'>
+                                <div className='text-xs sm:text-sm text-gray-500 md:hidden dark:text-gray-400'>
                                   {department.description}
                                 </div>
                               </div>
                             </div>
                           </td>
-                          <td className='hidden max-w-xs px-6 py-4 text-sm text-gray-500 md:table-cell dark:text-gray-400'>
+                          <td className='hidden max-w-xs px-3 py-4 text-sm text-gray-500 md:table-cell sm:px-6 dark:text-gray-400'>
                             <div className='truncate'>
                               {department.description || 'No description'}
                             </div>
                           </td>
-                          <td className='hidden px-6 py-4 text-sm whitespace-nowrap text-gray-500 lg:table-cell dark:text-gray-400'>
+                          <td className='hidden px-3 py-4 text-sm whitespace-nowrap text-gray-500 lg:table-cell sm:px-6 dark:text-gray-400'>
                             {new Date(
                               department.created_at,
                             ).toLocaleDateString()}
                           </td>
-                          <td className='px-6 py-4 text-right text-sm font-medium whitespace-nowrap'>
-                            <div className='flex items-center justify-end space-x-2'>
+                          <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
+                            <div className='flex items-center justify-end space-x-1 sm:space-x-2'>
                               <button
                                 onClick={() => openEditModal(department)}
-                                className='inline-flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                className='inline-flex items-center rounded-md bg-gray-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                                 title='Edit department'
                               >
-                                Edit
+                                <span className='hidden sm:block'>Edit</span>
+                                <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                                </svg>
                               </button>
                               <button
                                 onClick={() => openDeleteModal(department)}
-                                className='inline-flex items-center rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
+                                className='inline-flex items-center rounded-md bg-red-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
                                 title='Delete department'
                               >
-                                Delete
+                                <span className='hidden sm:block'>Delete</span>
+                                <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                  <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                                </svg>
                               </button>
                             </div>
                           </td>
@@ -490,7 +499,7 @@ export default function DepartmentsPage() {
 
               {/* Pagination */}
               {departments && (
-                <div className='border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
+                <div className='border-t border-gray-200 bg-gray-50 px-3 py-4 sm:px-6 dark:border-gray-700 dark:bg-gray-800'>
                   <Pagination
                     currentPage={departments.pagination.page}
                     totalPages={departments.pagination.totalPages}
@@ -510,8 +519,9 @@ export default function DepartmentsPage() {
         show={showCreateModal}
         onClose={() => setShowCreateModal(false)}
         size='lg'
+        className='p-2 sm:p-4'
       >
-        <div className='p-6'>
+        <div className='p-4 sm:p-6'>
           <h3 className='mb-4 text-lg font-bold text-gray-900 dark:text-white'>
             Create New Department
           </h3>
@@ -527,6 +537,7 @@ export default function DepartmentsPage() {
                 }
                 required
                 placeholder='e.g., Engineering'
+                className='w-full'
               />
             </div>
 
@@ -540,6 +551,7 @@ export default function DepartmentsPage() {
                 }
                 placeholder="Describe the department's purpose and responsibilities..."
                 rows={3}
+                className='w-full'
               />
             </div>
 
@@ -554,11 +566,11 @@ export default function DepartmentsPage() {
               <Label htmlFor='is_active'>Active Department</Label>
             </div>
 
-            <div className='flex justify-end space-x-2'>
-              <Button color='gray' onClick={() => setShowCreateModal(false)}>
+            <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0'>
+              <Button color='gray' onClick={() => setShowCreateModal(false)} className='w-full sm:w-auto'>
                 Cancel
               </Button>
-              <Button type='submit' disabled={loading}>
+              <Button type='submit' disabled={loading} className='w-full sm:w-auto'>
                 {loading ? 'Creating...' : 'Create Department'}
               </Button>
             </div>
@@ -571,8 +583,9 @@ export default function DepartmentsPage() {
         show={showEditModal}
         onClose={() => setShowEditModal(false)}
         size='lg'
+        className='p-2 sm:p-4'
       >
-        <div className='p-6'>
+        <div className='p-4 sm:p-6'>
           <h3 className='mb-4 text-lg font-bold text-gray-900 dark:text-white'>
             Edit Department
           </h3>
@@ -587,6 +600,7 @@ export default function DepartmentsPage() {
                   setFormData({ ...formData, name: e.target.value })
                 }
                 required
+                className='w-full'
               />
             </div>
 
@@ -599,6 +613,7 @@ export default function DepartmentsPage() {
                   setFormData({ ...formData, description: e.target.value })
                 }
                 rows={3}
+                className='w-full'
               />
             </div>
 
@@ -613,11 +628,11 @@ export default function DepartmentsPage() {
               <Label htmlFor='edit_is_active'>Active Department</Label>
             </div>
 
-            <div className='flex justify-end space-x-2'>
-              <Button color='gray' onClick={() => setShowEditModal(false)}>
+            <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0'>
+              <Button color='gray' onClick={() => setShowEditModal(false)} className='w-full sm:w-auto'>
                 Cancel
               </Button>
-              <Button type='submit' disabled={loading}>
+              <Button type='submit' disabled={loading} className='w-full sm:w-auto'>
                 {loading ? 'Updating...' : 'Update Department'}
               </Button>
             </div>
@@ -630,11 +645,12 @@ export default function DepartmentsPage() {
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         size='md'
+        className='p-2 sm:p-4'
       >
-        <div className='p-6'>
+        <div className='p-4 sm:p-6'>
           <div className='text-center'>
             <svg
-              className='mx-auto mb-4 h-14 w-14 text-red-600'
+              className='mx-auto mb-4 h-12 w-12 sm:h-14 sm:w-14 text-red-600'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -658,16 +674,17 @@ export default function DepartmentsPage() {
               to be reassigned.
             </p>
 
-            <div className='mt-6 flex justify-center gap-4'>
+            <div className='mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
+              <Button color='gray' onClick={() => setShowDeleteModal(false)} className='w-full sm:w-auto'>
+                Cancel
+              </Button>
               <Button
                 color='failure'
                 onClick={handleDeleteDepartment}
                 disabled={loading}
+                className='w-full sm:w-auto'
               >
                 {loading ? 'Deleting...' : 'Yes, delete'}
-              </Button>
-              <Button color='gray' onClick={() => setShowDeleteModal(false)}>
-                Cancel
               </Button>
             </div>
           </div>

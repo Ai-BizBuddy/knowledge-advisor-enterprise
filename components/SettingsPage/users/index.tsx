@@ -319,26 +319,27 @@ export default function UsersPage() {
     <div className='space-y-6'>
       {/* Header */}
       <div className='flex items-center justify-end w-full'>
-          <Button
-            onClick={openCreateModal}
-            className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+        <Button
+          onClick={openCreateModal}
+          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none w-full sm:w-auto'
+        >
+          <svg
+            className='mr-2 h-4 w-4'
+            fill='none'
+            stroke='currentColor'
+            viewBox='0 0 24 24'
           >
-            <svg
-              className='mr-2 h-4 w-4'
-              fill='none'
-              stroke='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                strokeWidth={2}
-                d='M12 4v16m8-8H4'
-              />
-            </svg>
-            Add User
-          </Button>
-        </div>
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              strokeWidth={2}
+              d='M12 4v16m8-8H4'
+            />
+          </svg>
+          <span className='block sm:hidden'>Add</span>
+          <span className='hidden sm:block'>Add User</span>
+        </Button>
+      </div>
 
       {/* Search and Filters */}
       <div className='mb-6'>
@@ -365,7 +366,7 @@ export default function UsersPage() {
                 {users?.data.map((user) => (
                   <div
                     key={user.id}
-                    className='cursor-pointer p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    className='cursor-pointer p-3 sm:p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
                   >
                     <div className='flex items-start space-x-3'>
                       <Avatar
@@ -373,30 +374,36 @@ export default function UsersPage() {
                         alt={user.display_name || user.email}
                         rounded
                         size='sm'
+                        className='flex-shrink-0'
                       />
                       <div className='min-w-0 flex-1'>
                         <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                           {user.display_name || user.email}
                         </div>
-                        <div className='mt-1 text-xs text-gray-500 dark:text-gray-400'>
+                        <div className='mt-1 text-xs text-gray-500 dark:text-gray-400 truncate'>
                           {user.email}
                         </div>
+                        <div className='mt-2 flex flex-wrap items-center gap-2'>
+                          <Badge color='purple' size='sm'>
+                            {getRoleName(user.user_roles ?? [])}
+                          </Badge>
+                          <Badge
+                            color={getStatusBadgeColor(user.status)}
+                            size='sm'
+                          >
+                            {getStatusDisplayName(user.status)}
+                          </Badge>
+                        </div>
                         <div className='mt-2 flex items-center justify-between'>
-                          <div className='flex items-center space-x-2'>
-                            <Badge color='purple' size='sm'>
-                              {getRoleName(user.user_roles ?? [])}
-                            </Badge>
-                            <Badge
-                              color={getStatusBadgeColor(user.status)}
-                              size='sm'
-                            >
-                              {getStatusDisplayName(user.status)}
-                            </Badge>
+                          <div className='text-xs text-gray-500 dark:text-gray-400'>
+                            {getDepartmentName(user.department_id)} • Created{' '}
+                            {new Date(user.created_at).toLocaleDateString()}
                           </div>
                           <div className='flex items-center space-x-1'>
                             <button
                               onClick={() => openProfileModal(user)}
-                              className='p-1 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
+                              className='p-1.5 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900'
+                              title='View user'
                             >
                               <svg
                                 className='h-4 w-4'
@@ -414,7 +421,8 @@ export default function UsersPage() {
                             </button>
                             <button
                               onClick={() => openEditModal(user)}
-                              className='p-1 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300'
+                              className='p-1.5 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700'
+                              title='Edit user'
                             >
                               <svg
                                 className='h-4 w-4'
@@ -432,7 +440,8 @@ export default function UsersPage() {
                             </button>
                             <button
                               onClick={() => openDeleteModal(user)}
-                              className='p-1 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
+                              className='p-1.5 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded-full hover:bg-red-50 dark:hover:bg-red-900'
+                              title='Delete user'
                             >
                               <svg
                                 className='h-4 w-4'
@@ -450,10 +459,6 @@ export default function UsersPage() {
                             </button>
                           </div>
                         </div>
-                        <div className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
-                          {getDepartmentName(user.department_id)} • Created{' '}
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -467,22 +472,22 @@ export default function UsersPage() {
                 <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
                   <thead className='bg-gray-50 dark:bg-gray-700'>
                     <tr>
-                      <th className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'>
+                      <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         User
                       </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'>
+                      <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         Role
                       </th>
-                      <th className='hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell dark:text-gray-400'>
+                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell sm:px-6 dark:text-gray-400'>
                         Department
                       </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'>
+                      <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         Status
                       </th>
-                      <th className='hidden px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase xl:table-cell dark:text-gray-400'>
+                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase xl:table-cell sm:px-6 dark:text-gray-400'>
                         Created
                       </th>
-                      <th className='px-6 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'>
+                      <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         Actions
                       </th>
                     </tr>
@@ -493,38 +498,38 @@ export default function UsersPage() {
                         key={user.id}
                         className='cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
                       >
-                        <td className='px-6 py-4 whitespace-nowrap'>
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                           <div className='flex items-center'>
                             <Avatar
                               img={user.avatar_url}
                               alt={user.display_name || user.email}
                               rounded
                               size='sm'
-                              className='mr-3'
+                              className='mr-2 sm:mr-3 flex-shrink-0'
                             />
                             <div className='min-w-0'>
                               <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                                 {user.display_name || user.email}
                               </div>
-                              <div className='truncate text-sm text-gray-500 dark:text-gray-400'>
+                              <div className='truncate text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
                                 {user.email}
                               </div>
                             </div>
                           </div>
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <span className='inline-flex items-center rounded-full bg-purple-100 px-2.5 py-0.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300'>
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                          <span className='inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300'>
                             {getRoleName(user.user_roles ?? [])}
                           </span>
                         </td>
-                        <td className='hidden px-6 py-4 whitespace-nowrap md:table-cell'>
+                        <td className='hidden px-3 py-4 whitespace-nowrap md:table-cell sm:px-6'>
                           <span className='text-sm text-gray-900 dark:text-white'>
                             {getDepartmentName(user.department_id)}
                           </span>
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                           <span
-                            className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 sm:px-2.5 text-xs font-medium ${
                               user.status === UserStatus.ACTIVE
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                                 : user.status === UserStatus.INACTIVE
@@ -537,33 +542,42 @@ export default function UsersPage() {
                             {getStatusDisplayName(user.status)}
                           </span>
                         </td>
-                        <td className='hidden px-6 py-4 whitespace-nowrap xl:table-cell'>
+                        <td className='hidden px-3 py-4 whitespace-nowrap xl:table-cell sm:px-6'>
                           <span className='text-sm text-gray-500 dark:text-gray-400'>
                             {new Date(user.created_at).toLocaleDateString()}
                           </span>
                         </td>
-                        <td className='px-6 py-4 whitespace-nowrap'>
-                          <div className='flex items-center space-x-2'>
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                          <div className='flex items-center space-x-1 sm:space-x-2'>
                             <button
                               onClick={() => openProfileModal(user)}
-                              className='inline-flex items-center rounded-md bg-blue-100 px-3 py-1.5 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
+                              className='inline-flex items-center rounded-md bg-blue-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
                               title='View user'
                             >
-                              View
+                              <span className='hidden sm:block'>View</span>
+                              <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z' />
+                              </svg>
                             </button>
                             <button
                               onClick={() => openEditModal(user)}
-                              className='inline-flex items-center rounded-md bg-gray-100 px-3 py-1.5 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                              className='inline-flex items-center rounded-md bg-gray-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                               title='Edit user'
                             >
-                              Edit
+                              <span className='hidden sm:block'>Edit</span>
+                              <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                              </svg>
                             </button>
                             <button
                               onClick={() => openDeleteModal(user)}
-                              className='inline-flex items-center rounded-md bg-red-100 px-3 py-1.5 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
+                              className='inline-flex items-center rounded-md bg-red-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
                               title='Delete user'
                             >
-                              Delete
+                              <span className='hidden sm:block'>Delete</span>
+                              <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                              </svg>
                             </button>
                           </div>
                         </td>
@@ -573,11 +587,11 @@ export default function UsersPage() {
                       <tr>
                         <td
                           colSpan={6}
-                          className='px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400'
+                          className='px-3 py-12 text-center text-sm text-gray-500 sm:px-6 dark:text-gray-400'
                         >
                           <div className='flex flex-col items-center'>
                             <svg
-                              className='mb-4 h-12 w-12 text-gray-400'
+                              className='mb-4 h-8 w-8 sm:h-12 sm:w-12 text-gray-400'
                               fill='none'
                               stroke='currentColor'
                               viewBox='0 0 24 24'
@@ -608,7 +622,7 @@ export default function UsersPage() {
 
             {/* Pagination */}
             {users && (
-              <div className='border-t border-gray-200 bg-gray-50 px-6 py-4 dark:border-gray-700 dark:bg-gray-800'>
+              <div className='border-t border-gray-200 bg-gray-50 px-3 py-4 sm:px-6 dark:border-gray-700 dark:bg-gray-800'>
                 <Pagination
                   currentPage={users.pagination.page}
                   totalPages={users.pagination.totalPages}
@@ -641,9 +655,9 @@ export default function UsersPage() {
         show={showProfileModal}
         onClose={() => setShowProfileModal(false)}
         size='xl'
-        className='z-[100]'
+        className='z-[100] p-2 sm:p-4'
       >
-        <div className='relative p-6'>
+        <div className='relative p-4 sm:p-6'>
           <h3 className='mb-6 text-lg font-bold text-gray-900 dark:text-white'>
             User Profile
           </h3>
@@ -659,7 +673,7 @@ export default function UsersPage() {
                 <h3 className='mt-4 text-lg font-medium text-gray-900 dark:text-white'>
                   {selectedUser.display_name || selectedUser.email}
                 </h3>
-                <p className='text-gray-500 dark:text-gray-400'>
+                <p className='text-gray-500 dark:text-gray-400 break-words'>
                   {selectedUser.email}
                 </p>
               </div>
@@ -695,11 +709,11 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className='flex justify-end space-x-2'>
-                <Button color='gray' onClick={() => setShowProfileModal(false)}>
+              <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0'>
+                <Button color='gray' onClick={() => setShowProfileModal(false)} className='w-full sm:w-auto'>
                   Close
                 </Button>
-                <Button onClick={() => openEditModal(selectedUser)}>
+                <Button onClick={() => openEditModal(selectedUser)} className='w-full sm:w-auto'>
                   Edit User
                 </Button>
               </div>
@@ -713,13 +727,13 @@ export default function UsersPage() {
         show={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         size='lg'
-        className='z-[100]'
+        className='z-[100] p-2 sm:p-4'
       >
-        <div className='relative p-8'>
+        <div className='relative p-4 sm:p-8'>
           <div className='text-center'>
-            <div className='mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900'>
+            <div className='mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900'>
               <svg
-                className='h-8 w-8 text-red-600 dark:text-red-400'
+                className='h-6 w-6 sm:h-8 sm:w-8 text-red-600 dark:text-red-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -733,19 +747,19 @@ export default function UsersPage() {
               </svg>
             </div>
 
-            <h3 className='mb-2 text-xl font-semibold text-gray-900 dark:text-white'>
+            <h3 className='mb-2 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white'>
               Delete User
             </h3>
 
             <p className='mb-2 text-gray-500 dark:text-gray-400'>
               Are you sure you want to delete{' '}
-              <span className='font-semibold text-gray-900 dark:text-white'>
+              <span className='font-semibold text-gray-900 dark:text-white break-words'>
                 {selectedUser?.display_name || selectedUser?.email}
               </span>
               ?
             </p>
 
-            <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
+            <div className='rounded-lg bg-red-50 p-3 sm:p-4 dark:bg-red-900/20'>
               <div className='flex items-start'>
                 <div className='flex-shrink-0'>
                   <svg
@@ -774,18 +788,18 @@ export default function UsersPage() {
               </div>
             </div>
 
-            <div className='mt-6 flex justify-center gap-4'>
-              <Button color='gray' onClick={() => setShowDeleteModal(false)}>
+            <div className='mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
+              <Button color='gray' onClick={() => setShowDeleteModal(false)} className='w-full sm:w-auto'>
                 Cancel
               </Button>
               <Button
                 color='failure'
                 onClick={handleDeleteUser}
                 disabled={loading}
-                className='focus:ring-red-300'
+                className='focus:ring-red-300 w-full sm:w-auto'
               >
                 {loading ? (
-                  <div className='flex items-center'>
+                  <div className='flex items-center justify-center'>
                     <svg
                       className='mr-2 h-4 w-4 animate-spin'
                       fill='none'
