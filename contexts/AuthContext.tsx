@@ -130,16 +130,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+      const previousUser = session?.user || null;
 
       switch (event) {
         case 'SIGNED_IN':
           console.log('User signed in');
           // Redirect to dashboard after hydration
-          setTimeout(() => {
-            if (window.location.pathname !== '/dashboard') {
-              window.location.href = '/dashboard';
-            }
-          }, 0);
+          if (!previousUser) {
+            setTimeout(() => {
+              if (window.location.pathname !== '/dashboard') {
+                window.location.href = '/dashboard';
+              }
+            }, 0);
+          } else {
+            console.log('User already signed in - likely token refresh, no redirect needed');
+          }
           break;
         case 'SIGNED_OUT':
           console.log('User signed out');
