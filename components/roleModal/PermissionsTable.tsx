@@ -141,14 +141,14 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   return (
     <div className={'space-y-4 p-0'}>
       {/* Permissions summary */}
-      <div className='flex items-center justify-between'>
+      <div className='flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between'>
         <div>
           <p className='text-xs text-gray-500 dark:text-gray-400'>
             Configure access permissions for this role
           </p>
         </div>
-        <div className='text-right'>
-          <span className='text-sm font-medium text-indigo-600 dark:text-indigo-400'>
+        <div className='text-left sm:text-right'>
+          <span className='text-xs sm:text-sm font-medium text-indigo-600 dark:text-indigo-400'>
             {totalSelectedPermissions} of {totalAvailablePermissions}{' '}
             permissions selected
           </span>
@@ -169,15 +169,15 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
         }}
       >
         <div className={`p-0 ${className} overflow-x-auto`}>
-          <table className='w-full divide-y divide-gray-200 dark:divide-gray-700'>
+          <table className='w-full min-w-[600px] divide-y divide-gray-200 dark:divide-gray-700'>
             {/* Table header */}
             <thead className='bg-gray-50 dark:bg-gray-800'>
               <tr>
                 {/* Resource column header */}
-                <th className='px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400'>
-                  <div className='flex items-center space-x-2'>
+                <th className='px-3 sm:px-4 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase dark:text-gray-400 w-32 sm:w-40'>
+                  <div className='flex flex-col sm:flex-row sm:items-center sm:space-x-2'>
                     <span>Resource</span>
-                    <div className='text-xs text-gray-400 dark:text-gray-500'>
+                    <div className='text-xs text-gray-400 dark:text-gray-500 mt-1 sm:mt-0'>
                       ({resources.length} total)
                     </div>
                   </div>
@@ -215,9 +215,9 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       </Card>
 
       {/* Action types legend */}
-      <div className='flex items-center justify-between rounded-lg bg-gray-50 p-4 dark:bg-gray-800'>
-        <div className='text-sm text-gray-600 dark:text-gray-400'>
-          <div className='flex items-center space-x-4'>
+      <div className='flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between rounded-lg bg-gray-50 p-3 sm:p-4 dark:bg-gray-800'>
+        <div className='text-xs sm:text-sm text-gray-600 dark:text-gray-400'>
+          <div className='flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-4'>
             <div className='flex items-center space-x-2'>
               <div className='h-2 w-2 rounded-full bg-indigo-500'></div>
               <span>Standard Actions (Create, Read, Update, Delete)</span>
@@ -227,14 +227,14 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               <span>Custom Actions</span>
             </div>
           </div>
-          <p className='mt-1 text-xs'>
+          <p className='mt-1 text-xs hidden sm:block'>
             Use column headers to toggle all resources for an action, or
             resource buttons to toggle all actions for a resource. Disabled
             checkboxes indicate actions not available for that resource.
           </p>
         </div>
 
-        <div className='flex space-x-2'>
+        <div className='flex space-x-2 justify-center sm:justify-end'>
           <button
             type='button'
             onClick={() => {
@@ -255,7 +255,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               });
               onChange(allPermissions);
             }}
-            className='px-3 py-1 text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300'
+            className='px-2 sm:px-3 py-1 text-xs font-medium text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300'
           >
             Grant All Available
           </button>
@@ -272,7 +272,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
               }));
               onChange(noPermissions);
             }}
-            className='px-3 py-1 text-xs font-medium text-red-600 transition-colors hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
+            className='px-2 sm:px-3 py-1 text-xs font-medium text-red-600 transition-colors hover:text-red-800 dark:text-red-400 dark:hover:text-red-300'
           >
             Remove All
           </button>

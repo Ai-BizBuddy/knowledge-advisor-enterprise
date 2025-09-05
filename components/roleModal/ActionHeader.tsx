@@ -5,8 +5,8 @@
  * Now supports dynamic actions including standard CRUD + custom actions.
  */
 
-import React from 'react';
 import { Checkbox } from 'flowbite-react';
+import React from 'react';
 
 export interface ActionHeaderProps {
   action: string;
@@ -86,8 +86,8 @@ export const ActionHeader: React.FC<ActionHeaderProps> = ({
   };
 
   return (
-    <th className={`px-4 py-3 text-center ${className}`}>
-      <div className='flex flex-col items-center space-y-2'>
+    <th className={`px-2 sm:px-4 py-3 text-center w-16 sm:w-20 ${className}`}>
+      <div className='flex flex-col items-center space-y-1 sm:space-y-2'>
         {/* Action label with custom action indicator */}
         <div className='flex flex-col items-center'>
           <span
@@ -103,7 +103,7 @@ export const ActionHeader: React.FC<ActionHeaderProps> = ({
 
           {/* Custom action indicator */}
           {isCustomAction(action) && (
-            <span className='text-xs font-normal text-purple-500 dark:text-purple-400'>
+            <span className='text-xs font-normal text-purple-500 dark:text-purple-400 hidden sm:block'>
               Custom
             </span>
           )}
@@ -115,7 +115,7 @@ export const ActionHeader: React.FC<ActionHeaderProps> = ({
             id={`toggle-all-${action}`}
             checked={allChecked}
             onChange={(e) => handleToggleAll(e.target.checked)}
-            className={`focus:ring-2 ${
+            className={`focus:ring-2 h-3 w-3 sm:h-4 sm:w-4 ${
               isCustomAction(action)
                 ? 'focus:ring-purple-500'
                 : 'focus:ring-indigo-500'

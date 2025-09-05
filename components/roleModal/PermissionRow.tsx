@@ -5,8 +5,8 @@
  * Now supports dynamic actions with disabled checkboxes for unavailable permissions.
  */
 
+import { Button, Checkbox } from 'flowbite-react';
 import React from 'react';
-import { Checkbox, Button } from 'flowbite-react';
 
 // Enhanced props to include dynamic actions and validation errors
 export interface PermissionRowProps {
@@ -124,12 +124,12 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           hasError ? 'bg-red-50 dark:bg-red-900/20' : ''
         } ${className}`}
       >
-        <td className='px-4 py-3 whitespace-nowrap'>
-          <div className='flex items-center space-x-3'>
+        <td className='px-3 sm:px-4 py-3 whitespace-nowrap'>
+          <div className='flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:space-x-3'>
             {/* Resource name and toggle all button */}
-            <div className='flex items-center space-x-2'>
+            <div className='flex items-center space-x-1 sm:space-x-2'>
               <span
-                className={`text-sm font-medium ${
+                className={`text-xs sm:text-sm font-medium ${
                   hasError
                     ? 'text-red-700 dark:text-red-300'
                     : 'text-gray-900 dark:text-white'
@@ -145,30 +145,30 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
                 </span>
               )}
 
-              {/* Available actions count indicator */}
+              {/* Available actions count indicator - hidden on mobile */}
               <span
-                className='text-xs text-gray-500 dark:text-gray-400'
+                className='hidden sm:inline text-xs text-gray-500 dark:text-gray-400'
                 title={`${resourceActions.length} actions available`}
               >
                 ({resourceActions.length})
               </span>
-
-              {/* Toggle all actions button */}
-              <Button
-                size='xs'
-                color={allAvailableActionsChecked ? 'failure' : 'success'}
-                onClick={handleToggleAllActions}
-                className='ml-2 opacity-70 transition-opacity hover:opacity-100'
-                title={
-                  allAvailableActionsChecked
-                    ? `Remove all ${resource} permissions`
-                    : `Grant all available ${resource} permissions`
-                }
-                disabled={resourceActions.length === 0}
-              >
-                {allAvailableActionsChecked ? 'None' : 'All'}
-              </Button>
             </div>
+
+            {/* Toggle all actions button */}
+            <Button
+              size='xs'
+              color={allAvailableActionsChecked ? 'failure' : 'success'}
+              onClick={handleToggleAllActions}
+              className='w-full sm:w-auto sm:ml-2 opacity-70 transition-opacity hover:opacity-100'
+              title={
+                allAvailableActionsChecked
+                  ? `Remove all ${resource} permissions`
+                  : `Grant all available ${resource} permissions`
+              }
+              disabled={resourceActions.length === 0}
+            >
+              {allAvailableActionsChecked ? 'Remove All' : 'Grant All'}
+            </Button>
           </div>
         </td>
 
@@ -178,14 +178,14 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
           const isCustom = isCustomAction(action);
 
           return (
-            <td key={action} className='px-4 py-3 text-center'>
+            <td key={action} className='px-2 sm:px-4 py-3 text-center'>
               <div className='flex justify-center'>
                 <Checkbox
                   id={`${resource}-${action}`}
                   checked={actions[action]?.value === true}
                   disabled={!isAvailable}
                   onChange={(e) => handleActionChange(action, e.target.checked)}
-                  className={`focus:ring-2 ${
+                  className={`focus:ring-2 h-3 w-3 sm:h-4 sm:w-4 ${
                     hasError
                       ? 'border-red-300 focus:ring-red-500'
                       : isCustom
@@ -208,7 +208,7 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
               {/* Unavailable indicator */}
               {!isAvailable && (
                 <div
-                  className='mt-1 text-xs text-gray-400'
+                  className='mt-1 text-xs text-gray-400 hidden sm:block'
                   title='Not available for this resource'
                 >
                   N/A
@@ -216,8 +216,8 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
               )}
               {isAvailable && (
                 <div
-                  className='mt-1 text-xs text-gray-400'
-                  title='Not available for this resource'
+                  className='mt-1 text-xs text-gray-400 hidden sm:block'
+                  title='Action type'
                 >
                   {action}
                 </div>
@@ -232,11 +232,11 @@ export const PermissionRow: React.FC<PermissionRowProps> = ({
         <tr>
           <td
             colSpan={availableActions.length + 1}
-            className='bg-red-50 px-4 py-2 dark:bg-red-900/10'
+            className='bg-red-50 px-3 sm:px-4 py-2 dark:bg-red-900/10'
           >
-            <div className='flex items-center space-x-2 text-sm text-red-600 dark:text-red-400'>
+            <div className='flex items-center space-x-2 text-xs sm:text-sm text-red-600 dark:text-red-400'>
               <svg
-                className='h-4 w-4 flex-shrink-0'
+                className='h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0'
                 fill='currentColor'
                 viewBox='0 0 20 20'
               >

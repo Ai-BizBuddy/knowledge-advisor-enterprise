@@ -364,31 +364,31 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       onClose={handleClose}
       size='4xl'
       dismissible={!isSubmitting && !isLoading}
-      className='roleModal'
+      className='roleModal mx-2 sm:mx-4 md:mx-6'
     >
       <motion.div
         variants={modalVariants}
         animate='visible'
         exit='exit'
         transition={{ duration: 0.2 }}
-        className='p-6'
+        className='p-4 sm:p-6 bg-white shadow-sm dark:bg-gray-700'
       >
         {/* Modal Header */}
-        <div className='mb-6 flex items-center justify-between'>
-          <div>
-            <h3 className='text-xl font-bold text-gray-900 dark:text-white'>
+        <div className='mb-4 sm:mb-6 flex flex-col space-y-2 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between'>
+          <div className='flex-1'>
+            <h3 className='text-lg sm:text-xl font-bold text-gray-900 dark:text-white'>
               {isEditMode ? 'Edit Role' : 'Create New Role'}
             </h3>
-            <p className='mt-1 text-sm text-gray-500 dark:text-gray-400'>
+            <p className='mt-1 text-sm text-gray-500 dark:text-gray-400 hidden sm:block'>
               Configure role permissions and access levels for your organization
             </p>
           </div>
 
           {/* Loading indicator */}
           {(isSubmitting || isLoading) && (
-            <div className='flex items-center space-x-2 text-indigo-600'>
+            <div className='flex items-center justify-center sm:justify-start space-x-2 text-indigo-600 mt-2 sm:mt-0'>
               <Spinner size='sm' />
-              <span className='text-sm'>
+              <span className='text-xs sm:text-sm'>
                 {isSubmitting
                   ? `${isEditMode ? 'Updating' : 'Creating'} role...`
                   : 'Loading...'}
@@ -398,13 +398,13 @@ export const RoleModal: React.FC<RoleModalProps> = ({
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-6'>
+        <form onSubmit={handleSubmit(handleFormSubmit)} className='space-y-4 sm:space-y-6'>
           <div className='h-[100%]'>
             {/* Basic Information */}
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <div className='grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2'>
               {/* Role Name */}
-              <div>
-                <Label htmlFor='roleName' className='mb-2 block'>
+              <div className='lg:col-span-1'>
+                <Label htmlFor='roleName' className='mb-2 block text-sm font-medium'>
                   Role Name <span className='text-red-500'>*</span>
                 </Label>
                 <Controller
@@ -416,10 +416,11 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                       {...field}
                       id='roleName'
                       type='text'
-                      placeholder='Enter role name (e.g., Content Manager)'
+                      placeholder='Enter role name'
                       color={errors.roleName ? 'failure' : 'gray'}
                       disabled={isSubmitting || isLoading}
                       autoFocus
+                      className='w-full text-sm sm:text-base'
                       onChange={(e) => {
                         field.onChange(e);
                         // Clear form errors when user starts typing
@@ -441,8 +442,8 @@ export const RoleModal: React.FC<RoleModalProps> = ({
               </div>
 
               {/* Access Level */}
-              <div>
-                <Label htmlFor='accessLevel' className='mb-2 block'>
+              <div className='lg:col-span-1'>
+                <Label htmlFor='accessLevel' className='mb-2 block text-sm font-medium'>
                   Access Level <span className='text-red-500'>*</span>
                 </Label>
                 <Controller
@@ -455,6 +456,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                       id='accessLevel'
                       color={errors.accessLevel ? 'failure' : 'gray'}
                       disabled={isSubmitting || isLoading}
+                      className='w-full text-sm sm:text-base'
                       onChange={(e) => {
                         field.onChange(e);
                         // Clear form errors when user makes a selection
@@ -467,7 +469,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                       }}
                     >
                       {Object.entries(ACCESS_LEVELS).map(([level, config]) => (
-                        <option key={level} value={level}>
+                        <option key={level} value={level} className='text-sm'>
                           {level} (Level {config.level}) - {config.description}
                         </option>
                       ))}
@@ -483,10 +485,10 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             </div>
 
             {/* Description */}
-            <div>
-              <Label htmlFor='description' className='mb-2 block'>
+            <div className='lg:col-span-2'>
+              <Label htmlFor='description' className='mb-2 block text-sm font-medium'>
                 Description
-                <span className='ml-1 text-sm text-gray-400'>(optional)</span>
+                <span className='ml-1 text-xs sm:text-sm text-gray-400'>(optional)</span>
               </Label>
               <Controller
                 name='description'
@@ -500,6 +502,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                     rows={1}
                     color={errors.description ? 'failure' : 'gray'}
                     disabled={isSubmitting || isLoading}
+                    className='w-full text-sm sm:text-base resize-none'
                     onChange={(e) => {
                       field.onChange(e);
                       // Clear form errors when user starts typing
@@ -521,14 +524,14 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             </div>
 
             {/* Permissions Table */}
-            <div>
-              <Label htmlFor='permissions' className='mb-2 block'>
+            <div className='lg:col-span-2'>
+              <Label htmlFor='permissions' className='mb-2 block text-sm font-medium'>
                 Role Permissions <span className='text-red-500'>*</span>
               </Label>
               <PermissionsTable
                 permissions={watchedPermissions}
                 onChange={handlePermissionsChange}
-                className='h-[24vh] max-h-[300px] min-h-[200px] p-0'
+                className='h-[20vh] sm:h-[24vh] max-h-[250px] sm:max-h-[300px] min-h-[180px] sm:min-h-[200px] p-0 overflow-x-auto'
                 validationErrors={permissionValidationErrors}
               />
               {errors.permissions && (
@@ -540,11 +543,11 @@ export const RoleModal: React.FC<RoleModalProps> = ({
 
             {/* General form errors */}
             {errors.root && (
-              <div className='rounded-lg bg-red-50 p-4 dark:bg-red-900/20'>
+              <div className='lg:col-span-2 rounded-lg bg-red-50 p-3 sm:p-4 dark:bg-red-900/20'>
                 <div className='flex'>
                   <div className='flex-shrink-0'>
                     <svg
-                      className='h-5 w-5 text-red-400'
+                      className='h-4 w-4 sm:h-5 sm:w-5 text-red-400'
                       viewBox='0 0 20 20'
                       fill='currentColor'
                     >
@@ -555,8 +558,8 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                       />
                     </svg>
                   </div>
-                  <div className='ml-3'>
-                    <h3 className='text-sm font-medium text-red-800 dark:text-red-200'>
+                  <div className='ml-2 sm:ml-3'>
+                    <h3 className='text-xs sm:text-sm font-medium text-red-800 dark:text-red-200'>
                       {errors.root.message}
                     </h3>
                   </div>
@@ -565,8 +568,8 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             )}
 
             {/* Form Actions */}
-            <div className='flex items-center justify-between border-t border-gray-200 pt-6 dark:border-gray-700'>
-              <div className='text-sm text-gray-500 dark:text-gray-400'>
+            <div className='lg:col-span-2 flex flex-col space-y-3 sm:space-y-0 sm:flex-row sm:items-center sm:justify-between border-t border-gray-200 pt-4 sm:pt-6 dark:border-gray-700'>
+              <div className='text-xs sm:text-sm text-gray-500 dark:text-gray-400 order-2 sm:order-1 text-center sm:text-left'>
                 {watchedPermissions?.filter((p) =>
                   Object.values(p.actions).some(
                     (action) => action?.value === true,
@@ -575,12 +578,13 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 of {permissionResources.length} resources configured
               </div>
 
-              <div className='flex space-x-3'>
+              <div className='flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 order-1 sm:order-2'>
                 <Button
                   color='gray'
                   onClick={handleClose}
                   disabled={isSubmitting || isLoading}
                   type='button'
+                  className='w-full sm:w-auto text-sm py-2 px-4'
                 >
                   Cancel
                 </Button>
@@ -588,10 +592,10 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 <Button
                   type='submit'
                   disabled={!canSubmit}
-                  className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none'
+                  className='w-full sm:w-auto bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none text-sm py-2 px-4'
                 >
                   {isSubmitting || isLoading ? (
-                    <div className='flex items-center space-x-2'>
+                    <div className='flex items-center justify-center space-x-2'>
                       <Spinner size='sm' />
                       <span>
                         {isEditMode ? 'Updating Role...' : 'Creating Role...'}
