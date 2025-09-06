@@ -4,6 +4,7 @@ export interface Project {
   name: string;
   description: string;
   visibility: string;
+  department_id?: string; // Department ID for department visibility
   document_count?: number; // Computed field
   status: 1 | 2; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
   owner: string; // UUID foreign key to auth.users
@@ -27,6 +28,7 @@ export interface CreateProjectInput {
   description: string;
   status: ProjectStatus;
   visibility: 'public' | 'private' | 'department' | 'custom'; // 1=Public, 2=Private (optional, defaults to 2)
+  department_id?: string; // Optional department ID for department visibility
 }
 
 // Update project input interface

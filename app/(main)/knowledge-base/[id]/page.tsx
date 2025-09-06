@@ -1,13 +1,16 @@
 'use client';
 import {
+  AppLoading,
   BotTypingBubble,
   ChatCard,
   ChatHistoryList,
   DocumentsPagination,
   DocumentsSearch,
   DocumentsTable,
+  TableSkeleton,
   UploadDocument,
 } from '@/components';
+import { UserManagementTab } from '@/components/knowledgeBaseUsers';
 import { useLoading } from '@/contexts/LoadingContext';
 import { formatStatus } from '@/data/knowledgeBaseData';
 import { useAdkChat, useDocuments, useKnowledgeBase } from '@/hooks';
@@ -67,10 +70,18 @@ export default function KnowledgeBaseDetail() {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState<Project | null>(null);
+  const [knowledgeBaseLoading, setKnowledgeBaseLoading] = useState(true);
+  const [knowledgeBaseError, setKnowledgeBaseError] = useState<string | null>(
+    null,
+  );
 
   const { getKnowledgeBase } = useKnowledgeBase();
 
-  const tabsList = ['Documents', 'Chat Assistant'];
+  // Dynamic tabs list based on knowledge base visibility
+  const tabsList =
+    knowledgeBase?.visibility === 'custom'
+      ? ['Documents', 'Chat Assistant', 'Users']
+      : ['Documents', 'Chat Assistant'];
 
   // Additional state for document selection and UI
   const [selectedDocumentIndex, setSelectedDocumentIndex] = useState<number>(0);
@@ -98,6 +109,7 @@ export default function KnowledgeBaseDetail() {
     endIndex,
     searchTerm,
     totalItems,
+    loading,
 
     // Handlers
     handlePageChange,
@@ -214,21 +226,30 @@ export default function KnowledgeBaseDetail() {
 
   useEffect(() => {
     const fetchKnowledgeBase = async (kbId: string) => {
-      const kb = await getKnowledgeBase(kbId);
-      return kb;
-    };
-
-    const fetchData = async () => {
-      if (id) {
-        const kb = await fetchKnowledgeBase(id);
-        if (!kb) {
-          setKnowledgeBase(null);
-          return;
-        }
+      try {
+        setKnowledgeBaseLoading(true);
+        setKnowledgeBaseError(null);
+        const kb = await getKnowledgeBase(kbId);
         setKnowledgeBase(kb);
+        if (!kb) {
+          setKnowledgeBaseError('Knowledge base not found');
+        }
+      } catch (error) {
+        console.error('Error fetching knowledge base:', error);
+        setKnowledgeBaseError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load knowledge base',
+        );
+        setKnowledgeBase(null);
+      } finally {
+        setKnowledgeBaseLoading(false);
       }
     };
-    fetchData();
+
+    if (id) {
+      fetchKnowledgeBase(id);
+    }
   }, [id, getKnowledgeBase]);
 
   const handleSendMessage = async () => {
@@ -265,7 +286,17 @@ export default function KnowledgeBaseDetail() {
     setOpenHistory(false);
   };
 
-  if (!knowledgeBase) {
+  // Show loading state while fetching knowledge base
+  if (knowledgeBaseLoading) {
+    return (
+      <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
+        <AppLoading variant='default' message='Loading knowledge base...' />
+      </div>
+    );
+  }
+
+  // Show error state if knowledge base not found or error occurred
+  if (knowledgeBaseError || !knowledgeBase) {
     return (
       <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
         <div className='flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800'>
@@ -283,11 +314,12 @@ export default function KnowledgeBaseDetail() {
             />
           </svg>
           <h3 className='mt-4 text-lg font-medium text-gray-900 dark:text-white'>
-            Knowledge Base Not Found
+            {knowledgeBaseError || 'Knowledge Base Not Found'}
           </h3>
           <p className='mt-2 text-sm text-gray-500 dark:text-gray-400'>
-            The knowledge base you&apos;re looking for doesn&apos;t exist or has
-            been removed.
+            {knowledgeBaseError
+              ? 'There was an error loading the knowledge base. Please try again.'
+              : "The knowledge base you're looking for doesn't exist or has been removed."}
           </p>
           <button
             onClick={handleBackButtonClick}
@@ -474,8 +506,13 @@ export default function KnowledgeBaseDetail() {
               )}
 
               <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:px-4'
+                onClick={() => {
+                  if (!isUploadModalOpen) {
+                    setIsUploadModalOpen(true);
+                  }
+                }}
+                disabled={isUploadModalOpen}
+                className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4'
               >
                 <svg
                   className='h-4 w-4 flex-shrink-0'
@@ -497,21 +534,31 @@ export default function KnowledgeBaseDetail() {
           </div>
           {/* Documents Table */}
           <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800'>
-            <DocumentsTable
-              documents={adaptedDocuments}
-              selectedDocuments={selectedDocuments}
-              selectedDocument={selectedDocumentIndex}
-              startIndex={startIndex}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSort={handleSort}
-              onSelectAll={handleSelectAll}
-              onSelectDocument={handleSelectDocument}
-              onDocumentClick={handleDocumentTableClick}
-              onDeleteDocument={() => alert('Delete')}
-              isAllSelected={isAllSelected}
-              isIndeterminate={isIndeterminate}
-            />
+            {loading ? (
+              <TableSkeleton
+                rows={5}
+                columns={6}
+                showHeader={true}
+                showActions={true}
+                message='Loading documents...'
+              />
+            ) : (
+              <DocumentsTable
+                documents={adaptedDocuments}
+                selectedDocuments={selectedDocuments}
+                selectedDocument={selectedDocumentIndex}
+                startIndex={startIndex}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+                onSelectAll={handleSelectAll}
+                onSelectDocument={handleSelectDocument}
+                onDocumentClick={handleDocumentTableClick}
+                onDeleteDocument={() => alert('Delete')}
+                isAllSelected={isAllSelected}
+                isIndeterminate={isIndeterminate}
+              />
+            )}
           </div>
 
           {/* Pagination */}
@@ -682,15 +729,22 @@ export default function KnowledgeBaseDetail() {
         </div>
       )}
 
+      {/* Users Tab Content */}
+      {currentTab === 'Users' && knowledgeBase?.visibility === 'custom' && (
+        <UserManagementTab knowledgeBaseId={id} />
+      )}
+
       {/* Modals */}
-      <UploadDocument
-        isOpen={isUploadModalOpen}
-        onClose={() => {
-          setIsUploadModalOpen(false);
-          // Refresh documents list to show newly uploaded files
-          refresh();
-        }}
-      />
+      {isUploadModalOpen && (
+        <UploadDocument
+          isOpen={isUploadModalOpen}
+          onClose={() => {
+            setIsUploadModalOpen(false);
+            // Refresh documents list to show newly uploaded files
+            refresh();
+          }}
+        />
+      )}
 
       <ChatHistoryList
         isOpen={openHistory}

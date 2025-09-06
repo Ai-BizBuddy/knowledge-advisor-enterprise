@@ -9,6 +9,7 @@ import {
   DocumentsSearch,
   DocumentsTable,
   NoDocuments,
+  TableSkeleton,
   UploadDocument,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
@@ -360,6 +361,16 @@ export default function DocumentsPage() {
                 <NoDocuments
                   activeTab={activeTab}
                   setOpenModal={setIsUploadModalOpen}
+                />
+              </div>
+            ) : loading ? (
+              <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
+                <TableSkeleton
+                  rows={5}
+                  columns={6}
+                  showHeader={true}
+                  showActions={true}
+                  message='Loading documents...'
                 />
               </div>
             ) : (
