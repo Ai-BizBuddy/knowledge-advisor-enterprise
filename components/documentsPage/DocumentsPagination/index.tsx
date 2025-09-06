@@ -20,10 +20,10 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
   startIndex,
   endIndex,
   totalDocuments,
-  itemsPerPage = 10,
+  itemsPerPage = 10, // eslint-disable-line @typescript-eslint/no-unused-vars
   loading = false,
   onPageChange,
-  onItemsPerPageChange,
+  onItemsPerPageChange, // eslint-disable-line @typescript-eslint/no-unused-vars
 }) => {
   const [goToPage, setGoToPage] = useState('');
   const generatePageNumbers = () => {

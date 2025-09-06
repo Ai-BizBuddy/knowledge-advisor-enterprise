@@ -735,12 +735,10 @@ class KnowledgeBaseUserService {
         )
         .limit(limit);
 
-      // Apply search filter - search by email and name only (no metadata)
+      // Apply search filter - search by email only for now
       if (searchTerm && searchTerm.trim()) {
-        const search = searchTerm.trim().toLowerCase();
-        query = query.or(
-          `email.ilike.%${search}%,profiles.full_name.ilike.%${search}%`,
-        );
+        const search = `%${searchTerm.trim().toLowerCase()}%`;
+        query = query.ilike('email', search);
       }
 
       const { data: usersData, error: searchError } = await query;

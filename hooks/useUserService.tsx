@@ -121,7 +121,7 @@ export const useUserService = (): UseUserService => {
   // Import the server actions (these would be defined in a separate actions file)
   const importServerActions = useCallback(async () => {
     // Dynamic import to avoid build issues
-    const userServiceModule = await import('@/services/UserService');
+    const userServiceModule = await import('@/services/UserService/index');
     return new userServiceModule.default();
   }, []);
 

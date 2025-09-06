@@ -1,9 +1,40 @@
-import {
-  createClient,
-  createClientAuth,
-  createClientTable,
-} from '@/utils/supabase/client';
 import { getAuthSession } from '@/utils/supabase/authUtils';
+import { createClientAuth, createClientTable } from '@/utils/supabase/client';
+
+/**
+ * TypedResponse interface for consistent API responses
+ */
+interface TypedResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * User search result interface
+ */
+interface UserSearchResult {
+  id: string;
+  email: string;
+  display_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  department_name?: string;
+  created_at?: string;
+}
+
+/**
+ * User search filter interface
+ */
+interface UserSearchFilter {
+  search?: string;
+  role?: string;
+  department_id?: string;
+  status?: 'active' | 'inactive' | 'all';
+  limit?: number;
+  exclude_ids?: string[];
+}
 
 /**
  * Database row interfaces for type safety
@@ -18,289 +49,73 @@ interface AuthUserRow {
   };
   created_at?: string;
   updated_at?: string;
-  profiles?: {
+  profiles?: Array<{
     full_name: string;
-    // Export interfaces and service instance
-    export type { UserSearchResult, UserSearchFilter, TypedResponse };
-    export default UserService;
-  ): Promise<
-    TypedResponse<{
-      totalUsers: number;
-      activeUsers: number;
-      roleDistribution: Array<{ role: string; count: number }>;
-    }>
-  > {
-    try {
-      const user = await this.getCurrentUser();
-      const supabaseTable = createClientTable();
-
-      // Get user count for this knowledge base
-      const { count: totalUsers, error: countError } = await supabaseTable
-        .from('user_roles')
-        .select('*', { count: 'exact', head: true })
-        .eq('knowledge_base_id', knowledgeBaseId);
-
-      if (countError) {
-        return { success: false, error: countError.message };
-      }
-
-      // Get role distribution
-      const { data: roleData, error: roleError } = await supabaseTable
-        .from('user_roles')
-        .select(`
-          role:roles(name),
-          user_id
-        `)
-        .eq('knowledge_base_id', knowledgeBaseId);
-
-      if (roleError) {
-        return { success: false, error: roleError.message };
-      }
-
-      // Calculate role distribution
-      const roleDistribution: { [key: string]: number } = {};
-      (roleData || []).forEach((item: { role: { name: string }[]; user_id: string }) => {
-        const roleName = item.role?.[0]?.name || 'Unknown';
-        roleDistribution[roleName] = (roleDistribution[roleName] || 0) + 1;
-      });
-
-      const roleDistributionArray = Object.entries(roleDistribution).map(
-        ([role, count]) => ({ role, count })
-      );
-
-      return {
-        success: true,
-        data: {
-          totalUsers: totalUsers || 0,
-          activeUsers: totalUsers || 0,
-          roleDistribution: roleDistributionArray,
-        },
-      };
-    } catch (error) {
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
-      };
-    }
-  }
+  }>;
 }
 
-// Export interfaces and service instance
-export type { UserSearchResult, UserSearchFilter, TypedResponse };
-export default UserService;
-  ): Promise<TypedResponse<{ users: UserSearchResult[]; total: number; hasMore: boolean }>> {
+/**
+ * User Service Class
+ *
+ * Handles all user management operations including user search,
+ * user statistics, and user profile management.
+ */
+class UserService {
+  private readonly serviceName = 'UserService';
+
+  constructor() {
+    // Service initialization
+  }
+
+  /**
+   * Get current user from Supabase auth
+   */
+  private async getCurrentUser() {
+    return await getAuthSession();
+  }
+
+  /**
+   * Get user statistics - general statistics (not knowledge base specific)
+   */
+  async getUserStatistics(): Promise<
+    TypedResponse<{
+      total: number;
+      active: number;
+      inactive: number;
+      departments: number;
+    }>
+  > {
     try {
-      console.log(`[${this.serviceName}] Searching users in knowledge base:`, {
-        knowledgeBaseId,
-        page,
-        limit,
-        searchTerm,
-      });
-
       const user = await this.getCurrentUser();
-      const supabase = createClientAuth();
-      const supabaseTable = createClientTable();
-
-      // Verify user has access to the knowledge base
-      const { data: kbAccess, error: kbError } = await supabaseTable
-        .from('knowledge_base')
-        .select('id, created_by')
-        .eq('id', knowledgeBaseId)
-        .single();
-
-      if (kbError || !kbAccess) {
-        return { success: false, error: 'Knowledge base not found or access denied' };
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
       }
 
-      // Check if user has access (owner or has role)
-      if (kbAccess.created_by !== user.id) {
-        const { data: roleAccess } = await supabaseTable
-          .from('user_roles')
-          .select('user_id')
-          .eq('knowledge_base_id', knowledgeBaseId)
-          .eq('user_id', user.id)
-          .single();
+      const supabaseAuth = createClientAuth();
 
-        if (!roleAccess) {
-          return { success: false, error: 'Access denied to this knowledge base' };
-        }
+      // Get total users count
+      const { count: totalUsers, error: totalError } = await supabaseAuth
+        .from('auth.users')
+        .select('*', { count: 'exact', head: true });
+
+      if (totalError) {
+        return { success: false, error: totalError.message };
       }
-
-      // Calculate pagination
-      const offset = (page - 1) * limit;
-
-      // Build query for searching users
-      let query = supabase
-        .from('users')
-        .select(`
-          id,
-          email,
-          user_metadata,
-          created_at,
-          profiles(full_name, avatar_url),
-          department(id, name)
-        `, { count: 'exact' });
-
-      // Apply search filter if provided
-      if (searchTerm && searchTerm.trim()) {
-        const search = searchTerm.trim().toLowerCase();
-        query = query.or(
-          `email.ilike.%${search}%,user_metadata->>display_name.ilike.%${search}%,user_metadata->>full_name.ilike.%${search}%`
-        );
-      }
-
-      // Apply pagination
-      query = query
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      const { data, error, count } = await query;
-
-      if (error) {
-        console.error(`[${this.serviceName}] Supabase query error:`, error);
-        return {
-          success: false,
-          error: `Failed to search users: ${error.message}`,
-        };
-      }
-
-      // Transform data to match UserSearchResult interface
-      const users: UserSearchResult[] = (data || []).map((userData: unknown) => {
-        const user = userData as AuthUserRow;
-        return {
-          id: user.id,
-          email: user.email || '',
-          display_name:
-            user.user_metadata?.display_name || user.user_metadata?.full_name,
-          full_name:
-            user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
-          avatar_url:
-            user.profiles?.[0]?.avatar_url || user.user_metadata?.avatar_url,
-          department_name: user.department?.[0]?.name,
-          created_at: user.created_at,
-        };
-      });
-
-      const total = count || 0;
-      const hasMore = offset + limit < total;
-
-      console.log(`[${this.serviceName}] Search results:`, {
-        usersFound: users.length,
-        total,
-        hasMore,
-        page,
-      });
 
       return {
         success: true,
         data: {
-          users,
-          total,
-          hasMore,
+          total: totalUsers || 0,
+          active: totalUsers || 0, // Assuming all users are active for now
+          inactive: 0,
+          departments: 0, // Would need to implement departments functionality
         },
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in searchUsersInKnowledgeBase:`, error);
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error occurred',
-      };
-    }
-  }
-
-  /**
-   * Search users available for assignment to knowledge base
-   * Excludes users who already have access
-   */
-  async searchUsersForKnowledgeBaseAssignment(
-    knowledgeBaseId: string,
-    searchTerm: string,
-    limit: number = 10,
-  ): Promise<TypedResponse<UserSearchResult[]>> {
-    try {
-      console.log(`[${this.serviceName}] Searching users for KB assignment:`, {
-        knowledgeBaseId,
-        searchTerm,
-        limit,
-      });
-
-      const user = await this.getCurrentUser();
-      const supabase = createClientAuth();
-      const supabaseTable = createClientTable();
-
-      // Get users who don't already have access to this knowledge base
-      const { data: existingUserIds } = await supabaseTable
-        .from('user_roles')
-        .select('user_id')
-        .eq('knowledge_base_id', knowledgeBaseId);
-
-      const excludeIds =
-        existingUserIds?.map((item: { user_id: string }) => item.user_id) || [];
-
-      // Add the knowledge base owner to exclude list
-      const { data: kbOwner } = await supabaseTable
-        .from('knowledge_base')
-        .select('created_by')
-        .eq('id', knowledgeBaseId)
-        .single();
-
-      if (kbOwner?.created_by) {
-        excludeIds.push(kbOwner.created_by);
-      }
-
-      // Search users from auth.users
-      let query = supabase
-        .from('users')
-        .select(`
-          id,
-          email,
-          user_metadata,
-          profiles(full_name, avatar_url),
-          department(name)
-        `)
-        .limit(limit);
-
-      // Apply search filter
-      if (searchTerm && searchTerm.trim()) {
-        const search = searchTerm.trim().toLowerCase();
-        query = query.or(
-          `email.ilike.%${search}%,user_metadata->>display_name.ilike.%${search}%,user_metadata->>full_name.ilike.%${search}%`
-        );
-      }
-
-      const { data, error } = await query;
-
-      if (error) {
-        console.error(`[${this.serviceName}] Assignment search error:`, error);
-        return { success: false, error: error.message };
-      }
-
-      // Filter out users who already have access and transform data
-      const users = (data || [])
-        .filter((userData: { id: string }) => !excludeIds.includes(userData.id))
-        .map((userData: unknown) => {
-          const user = userData as AuthUserRow;
-          return {
-            id: user.id,
-            email: user.email || '',
-            display_name:
-              user.user_metadata?.display_name ||
-              user.user_metadata?.full_name ||
-              user.profiles?.[0]?.full_name,
-            full_name:
-              user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
-            avatar_url: 
-              user.user_metadata?.avatar_url ||
-              user.profiles?.[0]?.avatar_url,
-            department_name: user.department?.[0]?.name,
-          };
-        });
-
-      console.log(`[${this.serviceName}] Assignment search found:`, users.length);
-
-      return { success: true, data: users };
-    } catch (error) {
-      console.error(`[${this.serviceName}] Error in searchUsersForKnowledgeBaseAssignment:`, error);
+      console.error(
+        `[${this.serviceName}] Error getting user statistics:`,
+        error,
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -309,11 +124,9 @@ export default UserService;
   }
 
   /**
-   * Get user statistics for knowledge base
+   * Get user statistics for a knowledge base
    */
-  async getKnowledgeBaseUserStatistics(
-    knowledgeBaseId: string,
-  ): Promise<
+  async getKnowledgeBaseUserStatistics(knowledgeBaseId: string): Promise<
     TypedResponse<{
       totalUsers: number;
       activeUsers: number;
@@ -322,6 +135,10 @@ export default UserService;
   > {
     try {
       const user = await this.getCurrentUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
       const supabaseTable = createClientTable();
 
       // Get user count for this knowledge base
@@ -337,10 +154,7 @@ export default UserService;
       // Get role distribution
       const { data: roleData, error: roleError } = await supabaseTable
         .from('user_roles')
-        .select(`
-          role:roles(name),
-          user_id
-        `)
+        .select('role, user_id')
         .eq('knowledge_base_id', knowledgeBaseId);
 
       if (roleError) {
@@ -349,25 +163,31 @@ export default UserService;
 
       // Calculate role distribution
       const roleDistribution: { [key: string]: number } = {};
-      (roleData || []).forEach((item: { role: { name: string }[]; user_id: string }) => {
-        const roleName = item.role?.[0]?.name || 'Unknown';
+      (roleData || []).forEach((item: { role: string; user_id: string }) => {
+        const roleName = item.role || 'Unknown';
         roleDistribution[roleName] = (roleDistribution[roleName] || 0) + 1;
       });
 
-      const roleDistributionArray = Object.entries(roleDistribution).map(
-        ([role, count]) => ({ role, count })
+      const roleDistArray = Object.entries(roleDistribution).map(
+        ([role, count]) => ({
+          role,
+          count,
+        }),
       );
 
       return {
         success: true,
         data: {
           totalUsers: totalUsers || 0,
-          activeUsers: totalUsers || 0, // For now, assume all users are active
-          roleDistribution: roleDistributionArray,
+          activeUsers: totalUsers || 0, // Assuming all users are active for now
+          roleDistribution: roleDistArray,
         },
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getKnowledgeBaseUserStatistics:`, error);
+      console.error(
+        `[${this.serviceName}] Error getting user statistics:`,
+        error,
+      );
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
@@ -376,68 +196,49 @@ export default UserService;
   }
 
   /**
-   * Get all users with filtering and search capabilities
+   * Get all users with optional filtering (matching the hook's expectation)
    */
   async getUsers(
     filter: UserSearchFilter = {},
   ): Promise<TypedResponse<UserSearchResult[]>> {
     try {
-      const supabase = createClientAuth();
-
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
+      const user = await this.getCurrentUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
       }
 
-      // Build query for auth.users with related data
-      let query = supabase.from('users').select(`
+      const supabaseAuth = createClientAuth();
+      const limit = filter?.limit || 100;
+
+      let query = supabaseAuth
+        .from('auth.users')
+        .select(
+          `
           id,
           email,
           user_metadata,
           created_at,
-          updated_at,
-          profiles(full_name, avatar_url),
-          department(id, name)
-        `);
+          profiles(full_name)
+        `,
+        )
+        .limit(limit);
 
-      // Apply search filter
-      if (filter.search) {
-        const searchTerm = filter.search.toLowerCase();
-        query = query.or(
-          `email.ilike.%${searchTerm}%,user_metadata->>display_name.ilike.%${searchTerm}%,user_metadata->>full_name.ilike.%${searchTerm}%`,
-        );
+      // Apply search filter if provided - search by email only for now
+      if (filter?.search && filter.search.trim()) {
+        const search = `%${filter.search.trim().toLowerCase()}%`;
+        query = query.ilike('email', search);
       }
 
-      // Apply department filter
-      if (filter.department_id) {
-        query = query.eq('department_id', filter.department_id);
-      }
-
-      // Exclude specific user IDs
-      if (filter.exclude_ids && filter.exclude_ids.length > 0) {
+      // Exclude specific user IDs if provided
+      if (filter?.exclude_ids && filter.exclude_ids.length > 0) {
         query = query.not('id', 'in', `(${filter.exclude_ids.join(',')})`);
       }
-
-      // Apply limit
-      const limit = filter.limit || 50;
-      query = query.limit(limit);
-
-      // Order by created_at desc
-      query = query.order('created_at', { ascending: false });
 
       const { data, error } = await query;
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching users:`, error);
-        return {
-          success: false,
-          error: `Failed to fetch users: ${error.message}`,
-        };
+        console.error(`[${this.serviceName}] Error getting all users:`, error);
+        return { success: false, error: error.message };
       }
 
       // Transform data to match UserSearchResult interface
@@ -446,14 +247,11 @@ export default UserService;
           const user = userData as AuthUserRow;
           return {
             id: user.id,
-            email: user.email || '',
-            display_name:
-              user.user_metadata?.display_name || user.user_metadata?.full_name,
+            email: user.email,
+            display_name: user.user_metadata?.display_name,
             full_name:
               user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
-            avatar_url:
-              user.profiles?.[0]?.avatar_url || user.user_metadata?.avatar_url,
-            department_name: user.department?.[0]?.name,
+            avatar_url: user.user_metadata?.avatar_url,
             created_at: user.created_at,
           };
         },
@@ -464,15 +262,113 @@ export default UserService;
       console.error(`[${this.serviceName}] Error in getUsers:`, error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * Search users for assignment/selection purposes
-   * Excludes users who already have certain associations
+   * Search users in a knowledge base with pagination
+   */
+  async searchUsersInKnowledgeBase(
+    knowledgeBaseId: string,
+    page: number = 1,
+    limit: number = 10,
+    searchTerm?: string,
+  ): Promise<
+    TypedResponse<{
+      users: UserSearchResult[];
+      total: number;
+      hasMore: boolean;
+    }>
+  > {
+    try {
+      console.log(`[${this.serviceName}] Searching users in knowledge base:`, {
+        knowledgeBaseId,
+        page,
+        limit,
+        searchTerm,
+      });
+
+      const user = await this.getCurrentUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
+      const supabaseAuth = createClientAuth();
+      const offset = (page - 1) * limit;
+
+      let query = supabaseAuth
+        .from('auth.users')
+        .select(
+          `
+          id,
+          email,
+          user_metadata,
+          created_at,
+          profiles(full_name)
+        `,
+          { count: 'exact' },
+        )
+        .limit(limit)
+        .range(offset, offset + limit - 1);
+
+      // Apply search filter if provided - search by email only for now
+      if (searchTerm && searchTerm.trim()) {
+        const search = `%${searchTerm.trim().toLowerCase()}%`;
+        query = query.ilike('email', search);
+      }
+
+      const { data, error, count } = await query;
+
+      if (error) {
+        console.error(`[${this.serviceName}] Error searching users:`, error);
+        return { success: false, error: error.message };
+      }
+
+      // Transform data to match UserSearchResult interface
+      const users: UserSearchResult[] = (data || []).map(
+        (userData: unknown) => {
+          const user = userData as AuthUserRow;
+          return {
+            id: user.id,
+            email: user.email,
+            display_name: user.user_metadata?.display_name,
+            full_name:
+              user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
+            avatar_url: user.user_metadata?.avatar_url,
+            created_at: user.created_at,
+          };
+        },
+      );
+
+      const total = count || 0;
+      const hasMore = offset + limit < total;
+
+      console.log(`[${this.serviceName}] Search completed:`, {
+        usersFound: users.length,
+        total,
+        hasMore,
+      });
+
+      return {
+        success: true,
+        data: { users, total, hasMore },
+      };
+    } catch (error) {
+      console.error(
+        `[${this.serviceName}] Error in searchUsersInKnowledgeBase:`,
+        error,
+      );
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error',
+      };
+    }
+  }
+
+  /**
+   * Search for users to assign to knowledge base (excluding already assigned users)
    */
   async searchUsersForAssignment(
     searchTerm: string,
@@ -480,37 +376,30 @@ export default UserService;
     limit: number = 10,
   ): Promise<TypedResponse<UserSearchResult[]>> {
     try {
-      const supabase = createClientAuth();
-
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
+      const user = await this.getCurrentUser();
+      if (!user) {
+        return { success: false, error: 'User not authenticated' };
       }
 
-      // Build search query
-      let query = supabase
-        .from('users')
+      const supabaseAuth = createClientAuth();
+
+      let query = supabaseAuth
+        .from('auth.users')
         .select(
           `
           id,
           email,
           user_metadata,
-          profiles(full_name, avatar_url),
-          department(name)
+          created_at,
+          profiles(full_name)
         `,
         )
         .limit(limit);
 
-      // Apply search filter
-      if (searchTerm) {
-        query = query.or(
-          `email.ilike.%${searchTerm}%,user_metadata->>display_name.ilike.%${searchTerm}%,user_metadata->>full_name.ilike.%${searchTerm}%`,
-        );
+      // Apply search filter - search by email only for now
+      if (searchTerm && searchTerm.trim()) {
+        const search = `%${searchTerm.trim().toLowerCase()}%`;
+        query = query.ilike('email', search);
       }
 
       // Exclude specific user IDs
@@ -521,27 +410,25 @@ export default UserService;
       const { data, error } = await query;
 
       if (error) {
-        console.error(`[${this.serviceName}] Error searching users:`, error);
-        return {
-          success: false,
-          error: `Failed to search users: ${error.message}`,
-        };
+        console.error(
+          `[${this.serviceName}] Error searching users for assignment:`,
+          error,
+        );
+        return { success: false, error: error.message };
       }
 
-      // Transform data
+      // Transform data to match UserSearchResult interface
       const users: UserSearchResult[] = (data || []).map(
         (userData: unknown) => {
           const user = userData as AuthUserRow;
           return {
             id: user.id,
-            email: user.email || '',
-            display_name:
-              user.user_metadata?.display_name || user.user_metadata?.full_name,
+            email: user.email,
+            display_name: user.user_metadata?.display_name,
             full_name:
               user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
-            avatar_url:
-              user.profiles?.[0]?.avatar_url || user.user_metadata?.avatar_url,
-            department_name: user.department?.[0]?.name,
+            avatar_url: user.user_metadata?.avatar_url,
+            created_at: user.created_at,
           };
         },
       );
@@ -554,71 +441,55 @@ export default UserService;
       );
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * Get user by ID with detailed information
+   * Get a user by ID
    */
   async getUserById(userId: string): Promise<TypedResponse<UserSearchResult>> {
     try {
-      const supabase = createClientAuth();
-
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        return { success: false, error: 'User not authenticated' };
       }
 
-      const { data, error } = await supabase
-        .from('users')
+      const supabaseAuth = createClientAuth();
+
+      const { data, error } = await supabaseAuth
+        .from('auth.users')
         .select(
           `
           id,
           email,
           user_metadata,
           created_at,
-          profiles(full_name, avatar_url),
-          department(name)
+          profiles(full_name)
         `,
         )
         .eq('id', userId)
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching user by ID:`,
-          error,
-        );
-        return {
-          success: false,
-          error: `Failed to fetch user: ${error.message}`,
-        };
+        console.error(`[${this.serviceName}] Error getting user by ID:`, error);
+        return { success: false, error: error.message };
       }
 
       if (!data) {
         return { success: false, error: 'User not found' };
       }
 
-      // Transform data
+      const user = data as AuthUserRow;
       const userResult: UserSearchResult = {
-        id: data.id,
-        email: data.email || '',
-        display_name:
-          data.user_metadata?.display_name || data.user_metadata?.full_name,
+        id: user.id,
+        email: user.email,
+        display_name: user.user_metadata?.display_name,
         full_name:
-          data.profiles?.[0]?.full_name || data.user_metadata?.full_name,
-        avatar_url:
-          data.profiles?.[0]?.avatar_url || data.user_metadata?.avatar_url,
-        department_name: data.department?.[0]?.name,
-        created_at: data.created_at,
+          user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
+        avatar_url: user.user_metadata?.avatar_url,
+        created_at: user.created_at,
       };
 
       return { success: true, data: userResult };
@@ -626,74 +497,60 @@ export default UserService;
       console.error(`[${this.serviceName}] Error in getUserById:`, error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * Get users by multiple IDs
+   * Get multiple users by IDs
    */
   async getUsersByIds(
     userIds: string[],
   ): Promise<TypedResponse<UserSearchResult[]>> {
     try {
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        return { success: false, error: 'User not authenticated' };
+      }
+
       if (userIds.length === 0) {
         return { success: true, data: [] };
       }
 
-      const supabase = createClientAuth();
+      const supabaseAuth = createClientAuth();
 
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
-      }
-
-      const { data, error } = await supabase
-        .from('users')
+      const { data, error } = await supabaseAuth
+        .from('auth.users')
         .select(
           `
           id,
           email,
           user_metadata,
           created_at,
-          profiles(full_name, avatar_url),
-          department(name)
+          profiles(full_name)
         `,
         )
         .in('id', userIds);
 
       if (error) {
         console.error(
-          `[${this.serviceName}] Error fetching users by IDs:`,
+          `[${this.serviceName}] Error getting users by IDs:`,
           error,
         );
-        return {
-          success: false,
-          error: `Failed to fetch users: ${error.message}`,
-        };
+        return { success: false, error: error.message };
       }
 
-      // Transform data
       const users: UserSearchResult[] = (data || []).map(
         (userData: unknown) => {
           const user = userData as AuthUserRow;
           return {
             id: user.id,
-            email: user.email || '',
-            display_name:
-              user.user_metadata?.display_name || user.user_metadata?.full_name,
+            email: user.email,
+            display_name: user.user_metadata?.display_name,
             full_name:
               user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
-            avatar_url:
-              user.profiles?.[0]?.avatar_url || user.user_metadata?.avatar_url,
-            department_name: user.department?.[0]?.name,
+            avatar_url: user.user_metadata?.avatar_url,
             created_at: user.created_at,
           };
         },
@@ -704,72 +561,60 @@ export default UserService;
       console.error(`[${this.serviceName}] Error in getUsersByIds:`, error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 
   /**
-   * Check if user exists by email
+   * Check if user exists and get user data
    */
   async checkUserExists(
     email: string,
   ): Promise<TypedResponse<{ exists: boolean; user?: UserSearchResult }>> {
     try {
-      const supabase = createClientAuth();
-
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
+      const currentUser = await this.getCurrentUser();
+      if (!currentUser) {
+        return { success: false, error: 'User not authenticated' };
       }
 
-      const { data, error } = await supabase
-        .from('users')
+      const supabaseAuth = createClientAuth();
+
+      const { data, error } = await supabaseAuth
+        .from('auth.users')
         .select(
           `
           id,
           email,
           user_metadata,
-          profiles(full_name, avatar_url),
-          department(name)
+          created_at,
+          profiles(full_name)
         `,
         )
-        .eq('email', email)
+        .eq('email', email.toLowerCase())
         .single();
 
-      if (error && error.code !== 'PGRST116') {
-        // PGRST116 is "not found" error
+      if (error) {
+        // User not found is not really an error for this function
+        if (error.code === 'PGRST116') {
+          return { success: true, data: { exists: false } };
+        }
         console.error(
-          `[${this.serviceName}] Error checking user existence:`,
+          `[${this.serviceName}] Error checking user exists:`,
           error,
         );
-        return {
-          success: false,
-          error: `Failed to check user existence: ${error.message}`,
-        };
+        return { success: false, error: error.message };
       }
 
-      if (!data) {
-        return { success: true, data: { exists: false } };
-      }
-
-      // Transform data
+      const user = data as AuthUserRow;
       const userResult: UserSearchResult = {
-        id: data.id,
-        email: data.email || '',
-        display_name:
-          data.user_metadata?.display_name || data.user_metadata?.full_name,
+        id: user.id,
+        email: user.email,
+        display_name: user.user_metadata?.display_name,
         full_name:
-          data.profiles?.[0]?.full_name || data.user_metadata?.full_name,
-        avatar_url:
-          data.profiles?.[0]?.avatar_url || data.user_metadata?.avatar_url,
-        department_name: data.department?.[0]?.name,
+          user.profiles?.[0]?.full_name || user.user_metadata?.full_name,
+        avatar_url: user.user_metadata?.avatar_url,
+        created_at: user.created_at,
       };
 
       return { success: true, data: { exists: true, user: userResult } };
@@ -777,86 +622,12 @@ export default UserService;
       console.error(`[${this.serviceName}] Error in checkUserExists:`, error);
       return {
         success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
-      };
-    }
-  }
-
-  /**
-   * Get user statistics
-   */
-  async getUserStatistics(): Promise<
-    TypedResponse<{
-      total: number;
-      active: number;
-      inactive: number;
-      departments: number;
-    }>
-  > {
-    try {
-      const supabase = createClientAuth();
-      const supabaseTable = createClientTable();
-
-      // Check authentication
-      const supabaseClient = createClient();
-      const {
-        data: { user },
-        error: authError,
-      } = await supabaseClient.auth.getUser();
-      if (authError || !user) {
-        return { success: false, error: 'Unauthorized' };
-      }
-
-      // Get total users count
-      const { count: totalUsers, error: totalError } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-
-      if (totalError) {
-        console.error(
-          `[${this.serviceName}] Error fetching total users:`,
-          totalError,
-        );
-        return {
-          success: false,
-          error: `Failed to fetch user statistics: ${totalError.message}`,
-        };
-      }
-
-      // Get departments count
-      const { count: totalDepartments, error: deptError } = await supabaseTable
-        .from('department')
-        .select('*', { count: 'exact', head: true });
-
-      if (deptError) {
-        console.error(
-          `[${this.serviceName}] Error fetching departments:`,
-          deptError,
-        );
-        return {
-          success: false,
-          error: `Failed to fetch department statistics: ${deptError.message}`,
-        };
-      }
-
-      const stats = {
-        total: totalUsers || 0,
-        active: totalUsers || 0, // For now, assume all users are active
-        inactive: 0,
-        departments: totalDepartments || 0,
-      };
-
-      return { success: true, data: stats };
-    } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUserStatistics:`, error);
-      return {
-        success: false,
-        error:
-          error instanceof Error ? error.message : 'Unknown error occurred',
+        error: error instanceof Error ? error.message : 'Unknown error',
       };
     }
   }
 }
 
+// Export interfaces and service instance
+export type { TypedResponse, UserSearchFilter, UserSearchResult };
 export default UserService;

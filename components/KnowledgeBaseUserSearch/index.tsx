@@ -1,7 +1,9 @@
 'use client';
 
-import type { UserSearchResult } from '@/actions/userSearch.actions';
-import { useKnowledgeBaseUserSearch } from '@/hooks/useKnowledgeBaseUserSearch';
+import {
+  useKnowledgeBaseUserSearch,
+  type UserSearchResult,
+} from '@/hooks/useKnowledgeBaseUserSearch';
 import { Avatar, Badge, Button, Card, TextInput } from 'flowbite-react';
 import React, { useEffect, useState } from 'react';
 
@@ -132,7 +134,7 @@ export const KnowledgeBaseUserSearch: React.FC<
         <nav className='-mb-px flex space-x-8'>
           <button
             onClick={() => setActiveTab('users')}
-            className={`whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium ${
+            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'users'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -143,7 +145,7 @@ export const KnowledgeBaseUserSearch: React.FC<
           {showAssignmentSearch && (
             <button
               onClick={() => setActiveTab('assignment')}
-              className={`whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium ${
+              className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
                 activeTab === 'assignment'
                   ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                   : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
@@ -154,7 +156,7 @@ export const KnowledgeBaseUserSearch: React.FC<
           )}
           <button
             onClick={() => setActiveTab('stats')}
-            className={`whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium ${
+            className={`border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap ${
               activeTab === 'stats'
                 ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                 : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'
