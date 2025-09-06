@@ -228,13 +228,19 @@ class KnowledgeBaseUserService {
         return { success: false, error: dataError.message };
       }
 
-      // Get user details from auth.users - only email needed
+      // Get user details from auth.users - get name, email and user_id only (no metadata)
       const userIds = (userRoles || []).map(
         (ur: { user_id: string }) => ur.user_id,
       );
       const { data: usersData, error: userError } = await supabaseAuth
         .from('users')
-        .select('id, email')
+        .select(
+          `
+          id,
+          email,
+          profiles(full_name)
+        `,
+        )
         .in('id', userIds);
 
       if (userError) {
@@ -245,7 +251,7 @@ class KnowledgeBaseUserService {
         return { success: false, error: userError.message };
       }
 
-      // Get granter information - only email needed
+      // Get granter information - get name and email only (no metadata)
       const granterIds = [
         ...new Set(
           (userRoles || []).map((ur: { granted_by: string }) => ur.granted_by),
@@ -253,7 +259,13 @@ class KnowledgeBaseUserService {
       ];
       const { data: granterData } = await supabaseAuth
         .from('users')
-        .select('id, email')
+        .select(
+          `
+          id,
+          email,
+          profiles(full_name)
+        `,
+        )
         .in('id', granterIds);
 
       // Combine data
@@ -277,15 +289,20 @@ class KnowledgeBaseUserService {
           return {
             id: userRole.user_id,
             email: userData?.email || '',
-            display_name: userData?.email || '', // Use email as display name
-            full_name: userData?.email || '', // Use email as full name
+            display_name:
+              userData?.profiles?.[0]?.full_name || userData?.email || '', // Use profile name or fallback to email
+            full_name:
+              userData?.profiles?.[0]?.full_name || userData?.email || '', // Use profile name or fallback to email
             avatar_url: undefined, // No avatar display
             role: userRole.role as KnowledgeBaseRole,
             granted_by: userRole.granted_by,
             granted_at: userRole.granted_at,
             expires_at: userRole.expires_at,
             is_active: userRole.is_active,
-            granter_name: granterInfo?.email || 'Unknown', // Use granter email only
+            granter_name:
+              granterInfo?.profiles?.[0]?.full_name ||
+              granterInfo?.email ||
+              'Unknown', // Use granter profile name or email
           };
         },
       );
@@ -406,11 +423,17 @@ class KnowledgeBaseUserService {
         return { success: false, error: insertError.message };
       }
 
-      // Get user details - only email needed
+      // Get user details - get name, email and user_id only (no metadata)
       const supabaseAuth = createClientAuth();
       const { data: userData, error: userError } = await supabaseAuth
         .from('users')
-        .select('id, email')
+        .select(
+          `
+          id,
+          email,
+          profiles(full_name)
+        `,
+        )
         .eq('id', input.user_id)
         .single();
 
@@ -425,8 +448,8 @@ class KnowledgeBaseUserService {
       const knowledgeBaseUser: KnowledgeBaseUser = {
         id: userData.id,
         email: userData.email || '',
-        display_name: userData.email || '', // Use email as display name
-        full_name: userData.email || '', // Use email as full name
+        display_name: userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
+        full_name: userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
         avatar_url: undefined, // No avatar display
         role: input.role,
         granted_by: newRole.granted_by,
@@ -524,11 +547,17 @@ class KnowledgeBaseUserService {
         return { success: false, error: updateError.message };
       }
 
-      // Get user details - only email needed
+      // Get user details - get name, email and user_id only (no metadata)
       const supabaseAuth = createClientAuth();
       const { data: userData, error: userError } = await supabaseAuth
         .from('users')
-        .select('id, email')
+        .select(
+          `
+          id,
+          email,
+          profiles(full_name)
+        `,
+        )
         .eq('id', userId)
         .single();
 
@@ -543,8 +572,8 @@ class KnowledgeBaseUserService {
       const knowledgeBaseUser: KnowledgeBaseUser = {
         id: userData.id,
         email: userData.email || '',
-        display_name: userData.email || '', // Use email as display name
-        full_name: userData.email || '', // Use email as full name
+        display_name: userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
+        full_name: userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
         avatar_url: undefined, // No avatar display
         role: updatedRole.role as KnowledgeBaseRole,
         granted_by: updatedRole.granted_by,
@@ -693,17 +722,24 @@ class KnowledgeBaseUserService {
         excludeIds.push(kbData.created_by);
       }
 
-      // Search for users - only email needed
+      // Search for users - get name, email and user_id only (no metadata)
       let query = supabaseAuth
         .from('users')
-        .select('id, email, created_at')
+        .select(
+          `
+          id,
+          email,
+          created_at,
+          profiles(full_name)
+        `,
+        )
         .limit(limit);
 
-      // Apply search filter
+      // Apply search filter - search by email and name only (no metadata)
       if (searchTerm && searchTerm.trim()) {
         const search = searchTerm.trim().toLowerCase();
         query = query.or(
-          `email.ilike.%${search}%,user_metadata->>display_name.ilike.%${search}%,user_metadata->>full_name.ilike.%${search}%`,
+          `email.ilike.%${search}%,profiles.full_name.ilike.%${search}%`,
         );
       }
 
@@ -721,11 +757,20 @@ class KnowledgeBaseUserService {
       const availableUsers = (usersData || [])
         .filter((userData: { id: string }) => !excludeIds.includes(userData.id))
         .map(
-          (userData: { id: string; email: string; created_at?: string }) => ({
+          (userData: {
+            id: string;
+            email: string;
+            created_at?: string;
+            profiles?: Array<{
+              full_name?: string;
+            }>;
+          }) => ({
             id: userData.id,
             email: userData.email || '',
-            display_name: userData.email || '', // Use email as display name
-            full_name: userData.email || '', // Use email as full name
+            display_name:
+              userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
+            full_name:
+              userData.profiles?.[0]?.full_name || userData.email || '', // Use profile name or fallback to email
             avatar_url: undefined, // No avatar display
             department_name: undefined, // No department display
             created_at: userData.created_at,
