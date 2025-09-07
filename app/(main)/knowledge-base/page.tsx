@@ -1,10 +1,11 @@
 'use client';
-import { KnowledgeBaseCard, LoadingCard, PageHeader, Tabs } from '@/components';
+import { KnowledgeBaseCard, PageHeader, Tabs } from '@/components';
 import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal/CreateKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
+import { HelperText, Spinner } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function KnowledgeBase() {
@@ -168,13 +169,11 @@ export default function KnowledgeBase() {
         {/* Content Area */}
         {loading ? (
           /* Loading State with LoadingCard */
-          <div className='space-y-6'>
-            <LoadingCard
-              count={10}
-              variant='grid'
-              message='Loading knowledge bases...'
-              className=''
-            />
+          <div className='space-y-6 flex justify-center h-100 items-center'>
+            <div className='text-center gap-1'>
+              <Spinner className='m-4' />
+              <HelperText>Loading knowledge bases...</HelperText>
+            </div>
           </div>
         ) : projects.length > 0 ? (
           <div className='space-y-6'>
