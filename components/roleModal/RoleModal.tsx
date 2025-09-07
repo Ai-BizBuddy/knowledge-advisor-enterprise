@@ -524,7 +524,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             </div>
 
             {/* Permissions Table */}
-            <div className='lg:col-span-2'>
+            <div className='lg:col-span-2 pt-[2%]'>
               <Label htmlFor='permissions' className='mb-2 block text-sm font-medium'>
                 Role Permissions <span className='text-red-500'>*</span>
               </Label>
