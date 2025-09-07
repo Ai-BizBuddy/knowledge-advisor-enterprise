@@ -15,11 +15,11 @@ import { useLoading } from '@/contexts/LoadingContext';
 import { formatStatus } from '@/data/knowledgeBaseData';
 import { useAdkChat, useDocuments, useKnowledgeBase } from '@/hooks';
 import { Document, Project } from '@/interfaces/Project';
+import type { ChatSession } from '@/services/DashboardService';
 import { Breadcrumb, BreadcrumbItem, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
-import type { ChatSession } from '@/services/DashboardService';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
