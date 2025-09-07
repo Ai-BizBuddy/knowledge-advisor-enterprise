@@ -1,4 +1,3 @@
-import { useLoading } from '@/contexts/LoadingContext';
 import { useSorting } from '@/hooks';
 import React from 'react';
 
@@ -17,7 +16,6 @@ export const DocumentsControls: React.FC<DocumentsControlsProps> = ({
 }) => {
   // Get available sort fields from the sorting service
   const { availableSortFields } = useSorting();
-  const { setLoading } = useLoading();
 
   return (
     <div className='mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>

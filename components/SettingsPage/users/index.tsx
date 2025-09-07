@@ -18,7 +18,6 @@ export default function UsersPage() {
     users,
     allRoles,
     allDepartments,
-    userStatistics,
     loading,
     error,
     uploadingImage,

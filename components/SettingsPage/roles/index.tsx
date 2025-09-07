@@ -132,7 +132,6 @@ const transformRoleToModalData = async (
 export default function RolesPage() {
   const {
     roles,
-    permissions,
     loading,
     error,
     getRolesPaginated,
