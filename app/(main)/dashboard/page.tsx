@@ -18,7 +18,12 @@ export default function DashboardPage() {
       autoRefresh: true,
       enableChatData: false,
     });
-  const { activities: recentActivities } = useRecentActivity({
+  const { 
+    activities: recentActivities, 
+    loading: activitiesLoading, 
+    error: activitiesError,
+    refresh: refreshActivities 
+  } = useRecentActivity({
     limit: 10,
     autoRefresh: true,
     refreshInterval: 60000,
@@ -27,13 +32,37 @@ export default function DashboardPage() {
 
   // Map to RecentActivityCard props
   const cardActivities = useMemo(
-    () =>
-      (recentActivities || []).map((a) => ({
+    () => {
+      const mapped = (recentActivities || []).map((a) => ({
         title: a.message,
         timestamp: a.time,
         description: `${a.type} • ${a.status}`,
-      })),
-    [recentActivities],
+      }));
+      
+      // Add some fallback data for testing when no real activities exist
+      if (mapped.length === 0 && !activitiesLoading && !activitiesError) {
+        return [
+          {
+            title: 'Welcome to Knowledge Advisor',
+            timestamp: 'Just now',
+            description: 'system • info',
+          },
+          {
+            title: 'System initialized successfully',
+            timestamp: '1 minute ago', 
+            description: 'system • success',
+          },
+          {
+            title: 'Ready to upload documents',
+            timestamp: '2 minutes ago',
+            description: 'system • info',
+          },
+        ];
+      }
+      
+      return mapped;
+    },
+    [recentActivities, activitiesLoading, activitiesError],
   );
 
   return (
@@ -105,7 +134,12 @@ export default function DashboardPage() {
           />
         </div>
       </Section>
-      <RecentActivityCard activities={cardActivities} />
+      <RecentActivityCard 
+        activities={cardActivities} 
+        loading={activitiesLoading}
+        error={activitiesError}
+        onRetry={refreshActivities}
+      />
     </PageLayout>
   );
 }

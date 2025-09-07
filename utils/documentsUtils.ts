@@ -36,7 +36,6 @@ export interface DocumentDisplayItem {
  */
 export const getFileIcon = (type: string): string => {
   const normalizedType = type.toLowerCase();
-  console.log('File type:', normalizedType);
 
   if (normalizedType === 'unknown' || !normalizedType) return '📁';
   if (normalizedType.includes('pdf')) return '📄';

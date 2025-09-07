@@ -85,14 +85,12 @@ class KnowledgeBaseService {
     );
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
         .from('knowledge_base')
         .select('*', { count: 'exact', head: true })
-        .eq('created_by', user.id)
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
@@ -106,7 +104,6 @@ class KnowledgeBaseService {
       const { data: projects, error } = await supabaseTable
         .from('knowledge_base')
         .select('*')
-        .eq('created_by', user.id)
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
@@ -162,13 +159,9 @@ class KnowledgeBaseService {
       // Build base query
       let countQuery = supabaseTable
         .from('knowledge_base')
-        .select('*', { count: 'exact', head: true })
-        .eq('created_by', user.id);
+        .select('*', { count: 'exact', head: true });
 
-      let dataQuery = supabaseTable
-        .from('knowledge_base')
-        .select('*')
-        .eq('created_by', user.id);
+      let dataQuery = supabaseTable.from('knowledge_base').select('*');
 
       // Apply filters
       if (filters?.status && filters.status !== 'all') {
@@ -231,14 +224,12 @@ class KnowledgeBaseService {
    */
   async getProject(id: string): Promise<Project | null> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       const { data: project, error } = await supabaseTable
         .from('knowledge_base')
         .select('*')
         .eq('id', id)
-        .eq('created_by', user.id)
         .single();
 
       if (error) {
@@ -262,12 +253,12 @@ class KnowledgeBaseService {
         id: project.id,
         name: project.name,
         description: project.description || '',
-        is_active: project.is_active,
+        visibility: project.visibility,
+        department_id: project.department_id,
         document_count: documentCount || 0,
-        status: project.is_active ? 1 : 2,
+        status: project.is_active ? 1 : 2, // Convert is_active to status number
         owner: project.created_by,
-        created_at: project.created_at,
-        updated_at: project.updated_at || project.created_at,
+        is_active: project.is_active,
       } as Project;
     } catch (error) {
       console.error(
@@ -293,9 +284,8 @@ class KnowledgeBaseService {
         created_by: user.id,
         is_active: input.status === ProjectStatus.ACTIVE,
         visibility: input.visibility,
-        settings: {}, // Default empty settings object
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        department_id: input.department_id || null,
+        settings: {},
       };
 
       const { data: project, error } = await supabaseTable
@@ -327,7 +317,6 @@ class KnowledgeBaseService {
    */
   async updateProject(id: string, input: UpdateProjectInput): Promise<Project> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       const updateData = {
@@ -339,7 +328,6 @@ class KnowledgeBaseService {
         .from('knowledge_base')
         .update(updateData)
         .eq('id', id)
-        .eq('created_by', user.id)
         .select()
         .single();
 

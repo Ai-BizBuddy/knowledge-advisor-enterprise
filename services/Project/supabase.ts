@@ -44,8 +44,6 @@ async function getCurrentUser() {
  */
 export async function getProjects(): Promise<Project[]> {
   try {
-    const user = await getCurrentUser();
-
     const supabase = createClientTable();
     const { data, error } = await supabase
       .from('knowledge_base')
@@ -60,7 +58,6 @@ export async function getProjects(): Promise<Project[]> {
         updated_at
       `,
       )
-      .eq('owner', user.id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -130,7 +127,6 @@ export async function getProjectById(id: string): Promise<Project> {
       `,
       )
       .eq('id', id)
-      .eq('owner', user.id)
       .single();
 
     if (error) {
@@ -185,6 +181,8 @@ export async function createProject(
         name: projectData.name,
         description: projectData.description,
         status: projectData.status,
+        visibility: projectData.visibility,
+        department_id: projectData.department_id || null,
         owner: user.id,
         updated_at: new Date().toISOString(),
       },
@@ -230,7 +228,6 @@ export async function updateProject(
       updated_at: new Date().toISOString(),
     })
     .eq('id', id)
-    .eq('owner', user.id)
     .select(
       `
       id,
@@ -292,8 +289,7 @@ export async function deleteProject(id: string): Promise<void> {
   const { error } = await supabaseDelete
     .from('knowledge_base')
     .delete()
-    .eq('id', id)
-    .eq('owner', user.id);
+    .eq('id', id);
 
   if (error) {
     console.error('Error deleting knowledge base:', error);
@@ -790,13 +786,11 @@ export async function bulkSyncDocumentsToRAG(
  * Get knowledge bases count for the current user
  */
 export async function getProjectsCount(): Promise<number> {
-  const user = await getCurrentUser();
   const supabase = createClientTable();
 
   const result = await supabase
     .from('knowledge_base')
-    .select('*', { count: 'exact', head: true })
-    .eq('owner', user.id);
+    .select('*', { count: 'exact', head: true });
 
   const { count, error } = result;
 
@@ -843,7 +837,6 @@ export async function getProjectsPaginated(
       updated_at
     `,
     )
-    .eq('owner', user.id)
     .order(sortBy, { ascending: sortOrder === 'asc' })
     .range(offset, offset + limit - 1);
   const { data, error } = result;
@@ -949,7 +942,6 @@ export async function getProjectsByStatus(
       updated_at
     `,
     )
-    .eq('owner', user.id)
     .eq('status', status)
     .order('created_at', { ascending: false });
 
@@ -1036,7 +1028,6 @@ export async function batchUpdateProjects(
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .eq('owner', user.id)
     .in('id', projectIds).select(`
       id,
       name,
@@ -1078,7 +1069,6 @@ export async function batchUpdateProjects(
 export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
   const supabase = createClient(); // Use full client for storage access
   const supabaseTable = createClientTable(); // Use table client for table operations
-  const user = await getCurrentUser();
 
   // Delete all documents for these projects first
   for (const projectId of projectIds) {
@@ -1114,7 +1104,6 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
   const deleteResult = await supabaseTable
     .from('knowledge_base')
     .delete()
-    .eq('owner', user.id)
     .in('id', projectIds);
   const { error } = deleteResult;
 

@@ -127,7 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
-      const previousUser = user;
+      const wasSignedIn = !!user;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -135,15 +135,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       switch (event) {
         case 'SIGNED_IN':
           console.log('User signed in');
-          // Redirect to dashboard after hydration
-          if (!previousUser) {
+          // Only redirect to dashboard for NEW logins, not session restoration
+          // If user was already signed in (wasSignedIn = true), this is likely a page refresh or token refresh
+          if (!wasSignedIn && session?.user) {
+            console.log('New login detected - redirecting to dashboard');
             setTimeout(() => {
-              if (window.location.pathname !== '/dashboard') {
+              if (window.location.pathname === '/login' || window.location.pathname === '/') {
                 window.location.href = '/dashboard';
               }
             }, 0);
           } else {
-            console.log('User already signed in - likely token refresh, no redirect needed');
+            console.log('Session restored from refresh or token refresh - maintaining current page');
           }
           break;
         case 'SIGNED_OUT':
@@ -165,8 +167,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           break;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [],
+    [user], // Include user in dependencies to track previous sign-in state
   );
 
   // Set up automatic token refresh with improved logic

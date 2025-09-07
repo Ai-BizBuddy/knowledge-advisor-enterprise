@@ -55,7 +55,6 @@ class DocumentService {
     );
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // First verify the knowledge base belongs to the user
@@ -63,7 +62,6 @@ class DocumentService {
         .from('knowledge_base')
         .select('id')
         .eq('id', knowledgeBaseId)
-        .eq('created_by', user.id)
         .single();
 
       if (!kbData) {
@@ -88,8 +86,8 @@ class DocumentService {
       }
 
       if (filters?.type && filters.type !== 'all') {
-        countQuery = countQuery.eq('type', filters.type);
-        dataQuery = dataQuery.eq('type', filters.type);
+        countQuery = countQuery.eq('file_type', filters.type);
+        dataQuery = dataQuery.eq('file_type', filters.type);
       }
 
       if (filters?.searchTerm && filters.searchTerm.trim()) {
@@ -142,7 +140,6 @@ class DocumentService {
     );
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify access to knowledge base
@@ -150,7 +147,6 @@ class DocumentService {
         .from('knowledge_base')
         .select('id')
         .eq('id', knowledgeBaseId)
-        .eq('uploaded_by', user.id)
         .single();
 
       if (!kbData) {
@@ -279,7 +275,6 @@ class DocumentService {
     console.log(`[${this.serviceName}] Creating document:`, input.name);
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -287,7 +282,6 @@ class DocumentService {
         .from('knowledge_base')
         .select('id')
         .eq('id', input.knowledge_base_id)
-        .eq('uploaded_by', user.id)
         .single();
 
       if (!kbData) {
@@ -338,7 +332,6 @@ class DocumentService {
     );
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -346,7 +339,6 @@ class DocumentService {
         .from('knowledge_base')
         .select('id')
         .eq('id', input.knowledge_base_id)
-        .eq('uploaded_by', user.id)
         .single();
 
       if (!kbData) {
@@ -420,6 +412,9 @@ class DocumentService {
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
+      const supabaseClient = await import('@/utils/supabase/client').then((m) =>
+        m.createClient(),
+      );
 
       // Verify the knowledge base belongs to the user
       const { data: kbData } = await supabaseTable
@@ -437,66 +432,123 @@ class DocumentService {
         throw new Error('No files provided for upload');
       }
 
-      // Process each file and prepare document data
-      const documentsData = input.files.map((file, index) => {
+      // Upload each file to Supabase Storage and create document records
+      const uploadPromises = input.files.map(async (file, index) => {
         if (!file.name || !file.type) {
           throw new Error(
             `File at index ${index} is missing required properties`,
           );
         }
 
-        // Extract file extension from name
-        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        try {
+          // Generate unique file path for storage
+          const timestamp = Date.now();
+          const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const filePath = `documents/${timestamp}_${sanitizedFileName}`;
 
-        // Generate file path and URL (these would typically be generated after actual file upload)
-        const timestamp = Date.now();
-        const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-        const filePath = `/uploads/${input.knowledge_base_id}/${timestamp}_${sanitizedFileName}`;
-        const fileUrl = `${process.env.NEXT_PUBLIC_STORAGE_URL || '/storage'}${filePath}`;
+          // Check if storage bucket exists for this knowledge base, create if not
+          const { data: buckets } = await supabaseClient.storage.listBuckets();
+          const bucketExists = buckets?.some(
+            (b) => b.name === input.knowledge_base_id,
+          );
 
-        return {
-          name: file.name,
-          file_type: fileExtension,
-          knowledge_base_id: input.knowledge_base_id,
-          // status: 'uploading',
-          file_size: file.size,
-          mime_type: file.type,
-          // file_path: filePath,
-          url: fileUrl,
-          chunk_count: 0,
-          // rag_status: 'not_synced' as const,
-          metadata: {
-            originalFileName: file.name,
-            uploadedAt: new Date().toISOString(),
-            ...input.metadata,
-          },
-          uploaded_by: user.id,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
+          if (!bucketExists) {
+            const { error: createError } =
+              await supabaseClient.storage.createBucket(
+                input.knowledge_base_id,
+                {
+                  public: false,
+                  fileSizeLimit: 10485760, // 10MB
+                },
+              );
+            if (
+              createError &&
+              !createError.message.includes('already exists')
+            ) {
+              throw new Error(
+                `Failed to create storage bucket: ${createError.message}`,
+              );
+            }
+          }
+
+          // Upload file to Supabase Storage
+          const { error: uploadError } = await supabaseClient.storage
+            .from(input.knowledge_base_id)
+            .upload(filePath, file, {
+              upsert: true,
+              cacheControl: '3600',
+            });
+
+          if (uploadError) {
+            throw new Error(`Failed to upload file: ${uploadError.message}`);
+          }
+
+          // Get signed URL for the uploaded file
+          const { data: urlData } = await supabaseClient.storage
+            .from(input.knowledge_base_id)
+            .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year expiry
+
+          // Extract file extension from name
+          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+
+          // Create document record in database using the 'document' table schema
+          const documentData = {
+            name: file.name,
+            file_type: fileExtension, // Database uses 'file_type'
+            knowledge_base_id: input.knowledge_base_id,
+            status: 'uploaded',
+            file_size: file.size,
+            mime_type: file.type,
+            url: urlData?.signedUrl || '',
+            chunk_count: 0,
+            uploaded_by: user.id,
+            metadata: {
+              originalFileName: file.name,
+              uploadedAt: new Date().toISOString(),
+              uploadSource: 'upload_modal',
+              ...input.metadata,
+            },
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          // Insert document record
+          const { data: document, error: insertError } = await supabaseTable
+            .from('document')
+            .insert([documentData])
+            .select()
+            .single();
+
+          if (insertError) {
+            throw new Error(
+              `Failed to create document record: ${insertError.message}`,
+            );
+          }
+
+          console.log(
+            `[${this.serviceName}] File ${file.name} uploaded successfully`,
+          );
+
+          return document as Document;
+        } catch (error) {
+          console.error(
+            `[${this.serviceName}] Error uploading file ${file.name}:`,
+            error,
+          );
+          throw new Error(
+            `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          );
+        }
       });
 
-      // Insert all documents in batch
-      const { data: documents, error } = await supabaseTable
-        .from('document')
-        .insert(documentsData)
-        .select();
-
-      if (error) {
-        console.error(
-          `[${this.serviceName}] Error creating documents from files:`,
-          error,
-        );
-        throw new Error(
-          `Failed to create documents from files: ${error.message}`,
-        );
-      }
+      // Wait for all uploads to complete
+      const documents = await Promise.all(uploadPromises);
 
       console.log(
         `[${this.serviceName}] ${documents.length} documents created from files successfully`,
       );
 
-      return documents as Document[];
+      return documents;
     } catch (error) {
       console.error(
         `[${this.serviceName}] Error creating documents from files:`,

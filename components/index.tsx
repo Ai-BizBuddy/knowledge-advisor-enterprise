@@ -6,11 +6,19 @@ export { default as ChatHistoryCard } from './chatHistoryCard';
 export { default as ChatHistoryList } from './chatHistoryList';
 export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
 export { default as DeleteConfirmModal } from './deleteConfirmModal';
+export { DocumentDeleteModal } from './documentDeleteModal';
+export { default as DocumentDetail } from './documentDetail';
+export { FileUploadModal } from './fileUpload';
+export type {
+    FileUploadItem,
+    FileUploadModalProps,
+    FileUploadStatus
+} from './fileUpload';
 export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
 export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';
 export { default as KnowledgeSelect } from './knowledgeSelect';
-export { LoadingCard } from './LoadingCard';
+export { LoadingCard, TableSkeleton } from './LoadingCard';
 export { default as LoadingPage } from './loadingPage';
 export { default as NoDocuments } from './noDocuments';
 export { default as RecentActivityCard } from './recentActivityCard';

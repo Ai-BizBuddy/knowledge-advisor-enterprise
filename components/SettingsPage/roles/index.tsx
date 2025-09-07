@@ -14,7 +14,7 @@ import {
   UpdateRoleInput,
 } from '@/interfaces/UserManagement';
 import { dynamicPermissionMappingService as permissionMappingService } from '@/services/DynamicPermissionMappingService';
-import { Badge, Button, Modal } from 'flowbite-react';
+import { Button, Modal } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Helper function to convert role level to access level
@@ -522,13 +522,6 @@ export default function RolesPage() {
   };
 
   // Utility functions
-  const getLevelBadgeColor = (level: number) => {
-    if (level >= 90) return 'failure';
-    if (level >= 70) return 'warning';
-    if (level >= 50) return 'info';
-    return 'success';
-  };
-
   const getLevelLabel = (level: number) => {
     if (level >= 100) return 'Super Admin';
     if (level >= 90) return 'Admin';
@@ -644,10 +637,18 @@ export default function RolesPage() {
                         </div>
                       </td>
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                        <Badge color={getLevelBadgeColor(role.level || 0)} size='sm'>
+                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 sm:px-2.5 text-xs font-medium ${
+                          (role.level || 0) >= 90 
+                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                            : (role.level || 0) >= 70 
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                              : (role.level || 0) >= 50 
+                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                        }`}>
                           <span className='hidden sm:inline'>{getLevelLabel(role.level || 0)} </span>
                           ({role.level || 0})
-                        </Badge>
+                        </span>
                       </td>
                       <td className='hidden px-3 py-4 whitespace-nowrap md:table-cell sm:px-6'>
                         <span className='text-sm text-gray-900 dark:text-white'>
@@ -656,13 +657,13 @@ export default function RolesPage() {
                       </td>
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                         {role.is_system_role ? (
-                          <Badge color='blue' size='sm'>
+                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300'>
                             System
-                          </Badge>
+                          </span>
                         ) : (
-                          <Badge color='gray' size='sm'>
+                          <span className='inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-300'>
                             Custom
-                          </Badge>
+                          </span>
                         )}
                       </td>
                       <td className='hidden px-3 py-4 whitespace-nowrap xl:table-cell sm:px-6'>
@@ -671,25 +672,23 @@ export default function RolesPage() {
                         </span>
                       </td>
                       <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
-                        <div className='flex items-center justify-end space-x-1 sm:space-x-2'>
+                        <div className='flex items-center justify-end space-x-2'>
                           <button
                             onClick={() => openEditModal(role)}
-                            className='inline-flex items-center rounded-md bg-gray-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                            className='inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                             title='Edit role'
                           >
-                            <span className='hidden sm:block'>Edit</span>
-                            <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
                             </svg>
                           </button>
                           <button
                             onClick={() => openDeleteModal(role)}
                             disabled={role.is_system_role}
-                            className='inline-flex items-center rounded-md bg-red-100 px-2 py-1.5 sm:px-3 text-xs font-medium text-red-700 transition-colors hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
+                            className='inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-700 transition-colors hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
                             title='Delete role'
                           >
-                            <span className='hidden sm:block'>Delete</span>
-                            <svg className='h-4 w-4 sm:hidden' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+                            <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
                               <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
                             </svg>
                           </button>

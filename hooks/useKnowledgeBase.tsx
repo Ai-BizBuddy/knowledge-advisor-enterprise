@@ -229,7 +229,18 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setLoading(true);
         setError(null);
         const newProject = await knowledgeBaseService.createProject(data);
-        setProjects((prev) => [newProject, ...prev.slice(0, -1)]); // del last
+
+        // Add the new project to the beginning of the list
+        setProjects((prev) => [newProject, ...prev]);
+
+        // Update the state to reflect the new totals
+        setState((prev) => ({
+          ...prev,
+          totalItems: prev.totalItems + 1,
+          // Reset to first page to show the new item
+          currentPage: 1,
+        }));
+
         return newProject;
       } catch (err) {
         const errorMessage =
@@ -303,6 +314,13 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       setError(null);
       await knowledgeBaseService.deleteProject(id);
       setProjects((prev) => prev.filter((p) => p.id !== id));
+
+      // Update state to reflect the deletion
+      setState((prev) => ({
+        ...prev,
+        totalItems: prev.totalItems - 1,
+        totalPages: Math.ceil((prev.totalItems - 1) / prev.itemsPerPage),
+      }));
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to delete knowledge base';

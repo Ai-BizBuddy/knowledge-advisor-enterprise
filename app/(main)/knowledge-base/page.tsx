@@ -1,11 +1,7 @@
 'use client';
-import {
-  CreateKnowledgeBaseModal,
-  KnowledgeBaseCard,
-  LoadingCard,
-  PageHeader,
-  Tabs,
-} from '@/components';
+import { KnowledgeBaseCard, LoadingCard, PageHeader, Tabs } from '@/components';
+import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal/CreateKnowledgeBaseModal';
+import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
@@ -13,6 +9,10 @@ import { useEffect, useState } from 'react';
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [knowledgeBaseToDelete, setKnowledgeBaseToDelete] = useState<
+    string | null
+  >(null);
 
   const {
     // State
@@ -62,6 +62,33 @@ export default function KnowledgeBase() {
 
   const handleKnowledgeBaseSearch = async (query: string) => {
     await searchKnowledgeBases(query);
+  };
+
+  // Handle delete confirmation
+  const handleDeleteClick = (id: string) => {
+    setKnowledgeBaseToDelete(id);
+    setDeleteModal(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (knowledgeBaseToDelete) {
+      try {
+        await handleKnowledgeBaseDelete(knowledgeBaseToDelete);
+        // Reload the data after successful deletion
+        await initialLoad();
+        setDeleteModal(false);
+        setKnowledgeBaseToDelete(null);
+      } catch (error) {
+        console.error('Failed to delete knowledge base:', error);
+        setDeleteModal(false);
+        setKnowledgeBaseToDelete(null);
+      }
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModal(false);
+    setKnowledgeBaseToDelete(null);
   };
 
   // Initialize data on component mount
@@ -160,7 +187,7 @@ export default function KnowledgeBase() {
                   title={kb.name}
                   detail={kb.description}
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
-                  onDelete={() => handleKnowledgeBaseDelete(kb.id)}
+                  onDelete={() => handleDeleteClick(kb.id)}
                   onDetail={() => {
                     handleKnowledgeBaseClick(kb.id);
                   }}
@@ -231,9 +258,23 @@ export default function KnowledgeBase() {
           isOpen={openModal}
           onClose={() => setOpenModal(false)}
           onSubmit={async (data) => {
-            await createKnowledgeBase(data);
-            setOpenModal(false);
+            try {
+              await createKnowledgeBase(data);
+              setOpenModal(false);
+              // Force reload to show the new knowledge base
+              await initialLoad();
+            } catch (error) {
+              console.error('Failed to create knowledge base:', error);
+              // TODO: Add toast notification for error
+            }
           }}
+        />
+
+        {/* Delete Confirmation Modal */}
+        <DeleteConfirmModal
+          isOpen={deleteModal}
+          onClose={handleCancelDelete}
+          onConfirm={handleConfirmDelete}
         />
       </div>
     </div>

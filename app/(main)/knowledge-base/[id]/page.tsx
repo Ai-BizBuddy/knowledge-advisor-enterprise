@@ -1,20 +1,28 @@
 'use client';
 import {
+  AppLoading,
   BotTypingBubble,
   ChatCard,
+  ChatHistoryList,
+  DocumentDeleteModal,
   DocumentsPagination,
   DocumentsSearch,
   DocumentsTable,
+  TableSkeleton,
   UploadDocument
 } from '@/components';
+import { UserManagementTab } from '@/components/knowledgeBaseUsers';
+import { useToast } from '@/components/toast';
 import { useLoading } from '@/contexts/LoadingContext';
 import { formatStatus } from '@/data/knowledgeBaseData';
-import { useAdkChat, useDocuments, useKnowledgeBase } from '@/hooks';
+import { useAdkChat, useDocuments, useDocumentSync, useKnowledgeBase } from '@/hooks';
 import { Document, Project } from '@/interfaces/Project';
+import type { ChatSession } from '@/services/DashboardService';
+import DocumentService from '@/services/DocumentService';
 import { Breadcrumb, BreadcrumbItem, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -50,31 +58,62 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   source: doc.rag_status || 'not_synced',
   uploadDate: new Date(doc.created_at).toLocaleDateString(),
   chunk: doc.chunk_count,
-  syncStatus: doc.rag_status === 'synced' ? 'Synced' : 'Not Synced',
+  syncStatus: mapRagStatusToDisplayStatus(doc.rag_status),
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
 });
+
+// Helper function to map rag_status to user-friendly display status
+const mapRagStatusToDisplayStatus = (ragStatus: string | null | undefined): string => {
+  switch (ragStatus) {
+    case 'synced':
+      return 'Synced';
+    case 'syncing':
+      return 'Syncing';
+    case 'error':
+      return 'Error';
+    case 'not_synced':
+    case null:
+    case undefined:
+    default:
+      return 'Not Synced';
+  }
+};
 
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
   const params = useParams();
   const id = params.id as string;
   const { setLoading } = useLoading();
+  const { showToast } = useToast();
 
   const [currentTab, setCurrentTabs] = useState('Documents');
   const [openHistory, setOpenHistory] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [knowledgeBase, setKnowledgeBase] = useState<Project | null>(null);
+  const [knowledgeBaseLoading, setKnowledgeBaseLoading] = useState(true);
+  const [knowledgeBaseError, setKnowledgeBaseError] = useState<string | null>(
+    null,
+  );
 
   const { getKnowledgeBase } = useKnowledgeBase();
 
-  const tabsList = ['Documents', 'Chat Assistant'];
+  // Dynamic tabs list based on knowledge base visibility
+  const tabsList =
+    knowledgeBase?.visibility === 'custom'
+      ? ['Documents', 'Chat Assistant', 'Users']
+      : ['Documents', 'Chat Assistant'];
 
   // Additional state for document selection and UI
   const [selectedDocumentIndex, setSelectedDocumentIndex] = useState<number>(0);
   const [selectedDocuments, setSelectedDocuments] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+
+  // Delete modal state
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentTableItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Chat scroll ref
   const chatMessagesRef = useRef<HTMLDivElement>(null);
@@ -96,6 +135,7 @@ export default function KnowledgeBaseDetail() {
     endIndex,
     searchTerm,
     totalItems,
+    loading,
 
     // Handlers
     handlePageChange,
@@ -110,6 +150,15 @@ export default function KnowledgeBaseDetail() {
     sendMessage,
     createNewChat,
   } = useAdkChat();
+
+  // Document sync functionality
+  const {
+    syncDocument,
+    syncMultipleDocuments,
+    syncingDocuments,
+    error: syncError,
+    clearError: clearSyncError,
+  } = useDocumentSync();
 
   // Transform documents to DocumentsTable-compatible format
   const adaptedDocuments = documents.map((doc) =>
@@ -127,6 +176,14 @@ export default function KnowledgeBaseDetail() {
     }
   }, [id, messages.length, addWelcomeMessage]);
 
+  // Show sync error notification
+  useEffect(() => {
+    if (syncError) {
+      showToast(syncError, 'error', 5000);
+      clearSyncError();
+    }
+  }, [syncError, clearSyncError, showToast]);
+
   // Auto-scroll to bottom when messages or typing status changes
   useEffect(() => {
     scrollToBottom();
@@ -134,8 +191,11 @@ export default function KnowledgeBaseDetail() {
 
   // Selection logic - แก้ไขให้ทำงานถูกต้องกับ pagination
   // DocumentsTable ส่ง actualIndex มาให้เรา (startIndex + pageIndex)
+  // Note: startIndex from useDocuments is 1-based for display, convert to 0-based for calculations
+  const zeroBasedStartIndex = startIndex - 1;
+  
   const currentPageSelectedCount = selectedDocuments.filter(
-    (index) => index >= startIndex && index < startIndex + documents.length,
+    (index) => index >= zeroBasedStartIndex && index < zeroBasedStartIndex + documents.length,
   ).length;
 
   const isAllSelected =
@@ -146,12 +206,16 @@ export default function KnowledgeBaseDetail() {
   // Handle document selection by pageIndex (DocumentsTable ส่ง pageIndex มา)
   const handleSelectDocument = (pageIndex: number) => {
     // แปลง pageIndex เป็น actualIndex เพื่อให้ตรงกับสิ่งที่ DocumentsTable คาดหวัง
-    const actualIndex = startIndex + pageIndex;
+    const actualIndex = zeroBasedStartIndex + pageIndex;
     console.log(
       'Toggling selection for pageIndex:',
       pageIndex,
       'actualIndex:',
       actualIndex,
+      'startIndex (1-based):',
+      startIndex,
+      'zeroBasedStartIndex:',
+      zeroBasedStartIndex,
     );
     setSelectedDocuments((prev) =>
       prev.includes(actualIndex)
@@ -167,7 +231,7 @@ export default function KnowledgeBaseDetail() {
     } else {
       // สร้าง actualIndex array สำหรับหน้าปัจจุบัน
       const currentPageIndices = documents.map(
-        (_, pageIndex) => startIndex + pageIndex,
+        (_, pageIndex) => zeroBasedStartIndex + pageIndex,
       );
       setSelectedDocuments(currentPageIndices);
     }
@@ -211,21 +275,30 @@ export default function KnowledgeBaseDetail() {
 
   useEffect(() => {
     const fetchKnowledgeBase = async (kbId: string) => {
-      const kb = await getKnowledgeBase(kbId);
-      return kb;
-    };
-
-    const fetchData = async () => {
-      if (id) {
-        const kb = await fetchKnowledgeBase(id);
-        if (!kb) {
-          setKnowledgeBase(null);
-          return;
-        }
+      try {
+        setKnowledgeBaseLoading(true);
+        setKnowledgeBaseError(null);
+        const kb = await getKnowledgeBase(kbId);
         setKnowledgeBase(kb);
+        if (!kb) {
+          setKnowledgeBaseError('Knowledge base not found');
+        }
+      } catch (error) {
+        console.error('Error fetching knowledge base:', error);
+        setKnowledgeBaseError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load knowledge base',
+        );
+        setKnowledgeBase(null);
+      } finally {
+        setKnowledgeBaseLoading(false);
       }
     };
-    fetchData();
+
+    if (id) {
+      fetchKnowledgeBase(id);
+    }
   }, [id, getKnowledgeBase]);
 
   const handleSendMessage = async () => {
@@ -252,12 +325,189 @@ export default function KnowledgeBaseDetail() {
       }, 100);
     } catch (err) {
       console.error('[KnowledgeBaseDetail] Chat error:', err);
-      console.error('ไม่สามารถส่งข้อความได้ กรุณาลองใหม่');
-      // TODO: Add toast notification component
+      showToast('Failed to send message. Please try again.', 'error', 4000);
     }
   };
 
-  if (!knowledgeBase) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleLoadChatSession = (session: ChatSession) => {
+    // ChatSession doesn't have messages property - need to fetch messages separately
+    // For now, create a new chat session since we don't have the messages
+    createNewChat();
+    setOpenHistory(false);
+  };
+
+  // Handle single document sync
+  const handleDocumentSync = useCallback(
+    async (pageIndex: number) => {
+      try {
+        const document = documents[pageIndex];
+        if (!document?.id) {
+          console.error('[KnowledgeBaseDetail] No document ID found for sync');
+          showToast('Error: No document ID found for sync', 'error');
+          return;
+        }
+
+        console.log(`[KnowledgeBaseDetail] Syncing document: ${document.name} (${document.id})`);
+        showToast(`Starting sync for "${document.name}"...`, 'info', 3000);
+        
+        await syncDocument(document.id);
+        
+        console.log(`[KnowledgeBaseDetail] Successfully called sync API for document: ${document.name}`);
+        showToast(`Successfully submitted "${document.name}" for sync`, 'success', 4000);
+      } catch (err) {
+        console.error('[KnowledgeBaseDetail] Sync error:', err);
+        // Error is already handled by useDocumentSync hook and will show via syncError effect
+      }
+    },
+    [documents, syncDocument, showToast],
+  );
+
+  // Handle bulk sync for selected documents
+  const handleBulkSync = useCallback(
+    async () => {
+      try {
+        if (selectedDocuments.length === 0) {
+          console.warn('[KnowledgeBaseDetail] No documents selected for sync');
+          showToast('Please select documents to sync', 'warning', 3000);
+          return;
+        }
+
+        const selectedDocumentIds = selectedDocuments
+          .map(index => {
+            // Convert selected index back to actual array index
+            const arrayIndex = index - zeroBasedStartIndex;
+            return documents[arrayIndex]?.id;
+          })
+          .filter(Boolean);
+
+        if (selectedDocumentIds.length === 0) {
+          console.error('[KnowledgeBaseDetail] No valid document IDs found for sync');
+          showToast('Error: No valid document IDs found for sync', 'error');
+          return;
+        }
+
+        console.log(`[KnowledgeBaseDetail] Bulk syncing ${selectedDocumentIds.length} documents`);
+        showToast(`Starting bulk sync for ${selectedDocumentIds.length} documents...`, 'info', 3000);
+        
+        await syncMultipleDocuments(selectedDocumentIds);
+        
+        // Clear selection after successful API calls
+        setSelectedDocuments([]);
+        
+        console.log(`[KnowledgeBaseDetail] Successfully submitted ${selectedDocumentIds.length} documents for sync`);
+        showToast(`Successfully submitted ${selectedDocumentIds.length} documents for sync`, 'success', 4000);
+      } catch (err) {
+        console.error('[KnowledgeBaseDetail] Bulk sync error:', err);
+        // Error is already handled by useDocumentSync hook and will show via syncError effect
+      }
+    },
+    [selectedDocuments, zeroBasedStartIndex, documents, syncMultipleDocuments, showToast],
+  );
+
+  // Convert syncingDocuments Set<string> to Set<number> for table display
+  const syncingDocumentIndices = useMemo(() => {
+    const indices = new Set<number>();
+    documents.forEach((doc, index) => {
+      if (syncingDocuments.has(doc.id)) {
+        indices.add(index);
+      }
+    });
+    return indices;
+  }, [documents, syncingDocuments]);
+
+  // Handle single document deletion
+  const handleDocumentDelete = useCallback(
+    async (pageIndex: number) => {
+      try {
+        const document = documents[pageIndex];
+        if (!document?.id) {
+          console.error('[KnowledgeBaseDetail] No document ID found for deletion');
+          showToast('Error: No document ID found for deletion', 'error');
+          return;
+        }
+
+        console.log(`[KnowledgeBaseDetail] Opening delete modal for document: ${document.name} (${document.id})`);
+        
+        // Set the document to delete and open modal
+        const documentItem = adaptDocumentToTableFormat(document);
+        setDocumentToDelete(documentItem);
+        setIsDeleteModalOpen(true);
+      } catch (err) {
+        console.error('[KnowledgeBaseDetail] Error preparing document deletion:', err);
+        showToast('Error preparing document deletion', 'error');
+      }
+    },
+    [documents, showToast],
+  );
+
+  // Confirm and execute document deletion
+  const handleConfirmDelete = useCallback(
+    async () => {
+      if (!documentToDelete) {
+        console.error('[KnowledgeBaseDetail] No document selected for deletion');
+        return;
+      }
+
+      try {
+        setIsDeleting(true);
+        
+        // Find the original document by name to get the ID
+        const originalDoc = documents.find(
+          (doc) => doc.name === documentToDelete.name,
+        );
+        
+        if (!originalDoc?.id) {
+          throw new Error('Document not found');
+        }
+
+        console.log(`[KnowledgeBaseDetail] Deleting document: ${originalDoc.name} (${originalDoc.id})`);
+        
+        // Create an instance of DocumentService and delete the document
+        const documentService = new DocumentService();
+        await documentService.deleteDocument(originalDoc.id);
+
+        console.log(`[KnowledgeBaseDetail] Successfully deleted document: ${originalDoc.name}`);
+        showToast(`Document "${originalDoc.name}" deleted successfully`, 'success', 4000);
+
+        // Close modal and reset state
+        setIsDeleteModalOpen(false);
+        setDocumentToDelete(null);
+
+        // Refresh documents list
+        refresh();
+      } catch (err) {
+        console.error('[KnowledgeBaseDetail] Delete error:', err);
+        const errorMessage = err instanceof Error 
+          ? err.message 
+          : 'Failed to delete document. Please try again.';
+        showToast(errorMessage, 'error', 5000);
+      } finally {
+        setIsDeleting(false);
+      }
+    },
+    [documentToDelete, documents, showToast, refresh],
+  );
+
+  // Handle modal close
+  const handleCloseDeleteModal = useCallback(() => {
+    if (!isDeleting) {
+      setIsDeleteModalOpen(false);
+      setDocumentToDelete(null);
+    }
+  }, [isDeleting]);
+
+  // Show loading state while fetching knowledge base
+  if (knowledgeBaseLoading) {
+    return (
+      <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
+        <AppLoading variant='default' message='Loading knowledge base...' />
+      </div>
+    );
+  }
+
+  // Show error state if knowledge base not found or error occurred
+  if (knowledgeBaseError || !knowledgeBase) {
     return (
       <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
         <div className='flex min-h-[400px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 p-8 text-center dark:border-gray-600 dark:bg-gray-800'>
@@ -275,11 +525,12 @@ export default function KnowledgeBaseDetail() {
             />
           </svg>
           <h3 className='mt-4 text-lg font-medium text-gray-900 dark:text-white'>
-            Knowledge Base Not Found
+            {knowledgeBaseError || 'Knowledge Base Not Found'}
           </h3>
           <p className='mt-2 text-sm text-gray-500 dark:text-gray-400'>
-            The knowledge base you&apos;re looking for doesn&apos;t exist or has
-            been removed.
+            {knowledgeBaseError
+              ? 'There was an error loading the knowledge base. Please try again.'
+              : "The knowledge base you're looking for doesn't exist or has been removed."}
           </p>
           <button
             onClick={handleBackButtonClick}
@@ -445,29 +696,49 @@ export default function KnowledgeBaseDetail() {
                       />
                     </svg>
                   </button>
-                  <button className='flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none sm:px-4'>
-                    <svg
-                      className='h-4 w-4'
-                      fill='none'
-                      stroke='currentColor'
-                      viewBox='0 0 24 24'
-                    >
-                      <path
-                        strokeLinecap='round'
-                        strokeLinejoin='round'
-                        strokeWidth='2'
-                        d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
-                      />
-                    </svg>
-                    <span className='hidden sm:inline'>Sync to RAG</span>
-                    <span className='sm:hidden'>Sync</span>
+                  <button 
+                    onClick={handleBulkSync}
+                    disabled={loading || syncingDocuments.size > 0}
+                    className='flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:px-4'
+                  >
+                    {syncingDocuments.size > 0 ? (
+                      <svg className='h-4 w-4 animate-spin' fill='none' viewBox='0 0 24 24'>
+                        <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+                        <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+                      </svg>
+                    ) : (
+                      <svg
+                        className='h-4 w-4'
+                        fill='none'
+                        stroke='currentColor'
+                        viewBox='0 0 24 24'
+                      >
+                        <path
+                          strokeLinecap='round'
+                          strokeLinejoin='round'
+                          strokeWidth='2'
+                          d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15'
+                        />
+                      </svg>
+                    )}
+                    <span className='hidden sm:inline'>
+                      {syncingDocuments.size > 0 ? 'Syncing...' : 'Sync to RAG'}
+                    </span>
+                    <span className='sm:hidden'>
+                      {syncingDocuments.size > 0 ? 'Syncing...' : 'Sync'}
+                    </span>
                   </button>
                 </>
               )}
 
               <button
-                onClick={() => setIsUploadModalOpen(true)}
-                className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:px-4'
+                onClick={() => {
+                  if (!isUploadModalOpen) {
+                    setIsUploadModalOpen(true);
+                  }
+                }}
+                disabled={isUploadModalOpen}
+                className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4'
               >
                 <svg
                   className='h-4 w-4 flex-shrink-0'
@@ -489,21 +760,34 @@ export default function KnowledgeBaseDetail() {
           </div>
           {/* Documents Table */}
           <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800'>
-            <DocumentsTable
-              documents={adaptedDocuments}
-              selectedDocuments={selectedDocuments}
-              selectedDocument={selectedDocumentIndex}
-              startIndex={startIndex}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onSort={handleSort}
-              onSelectAll={handleSelectAll}
-              onSelectDocument={handleSelectDocument}
-              onDocumentClick={handleDocumentTableClick}
-              onDeleteDocument={() => alert('Delete')}
-              isAllSelected={isAllSelected}
-              isIndeterminate={isIndeterminate}
-            />
+            {loading ? (
+              <TableSkeleton
+                rows={5}
+                columns={6}
+                showHeader={true}
+                showActions={true}
+                message='Loading documents...'
+              />
+            ) : (
+              <DocumentsTable
+                documents={adaptedDocuments}
+                selectedDocuments={selectedDocuments}
+                selectedDocument={selectedDocumentIndex}
+                startIndex={startIndex}
+                sortBy={sortBy}
+                sortOrder={sortOrder}
+                onSort={handleSort}
+                onSelectAll={handleSelectAll}
+                onSelectDocument={handleSelectDocument}
+                onDocumentClick={handleDocumentTableClick}
+                onDeleteDocument={handleDocumentDelete}
+                onSyncDocument={handleDocumentSync}
+                syncingDocuments={syncingDocumentIndices}
+                isAllSelected={isAllSelected}
+                isIndeterminate={isIndeterminate}
+                isOpenSync={true}
+              />
+            )}
           </div>
 
           {/* Pagination */}
@@ -674,14 +958,36 @@ export default function KnowledgeBaseDetail() {
         </div>
       )}
 
+      {/* Users Tab Content */}
+      {currentTab === 'Users' && knowledgeBase?.visibility === 'custom' && (
+        <UserManagementTab knowledgeBaseId={id} />
+      )}
+
       {/* Modals */}
-      <UploadDocument
-        isOpen={isUploadModalOpen}
-        onClose={() => {
-          setIsUploadModalOpen(false);
-          // Refresh documents list to show newly uploaded files
-          refresh();
-        }}
+      {isUploadModalOpen && (
+        <UploadDocument
+          isOpen={isUploadModalOpen}
+          onClose={() => {
+            setIsUploadModalOpen(false);
+            // Refresh documents list to show newly uploaded files
+            refresh();
+          }}
+        />
+      )}
+
+      <ChatHistoryList
+        isOpen={openHistory}
+        onClose={() => setOpenHistory(false)}
+        onLoadSession={handleLoadChatSession}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <DocumentDeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleCloseDeleteModal}
+        onConfirm={handleConfirmDelete}
+        documentName={documentToDelete?.name}
+        loading={isDeleting}
       />
     </div>
   );
