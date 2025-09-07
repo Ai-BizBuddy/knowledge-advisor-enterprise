@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import React from 'react';
 import type { LoadingCardProps } from './LoadingCard.types';
 
@@ -56,9 +55,9 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
               <div className='flex min-w-0 flex-1 items-center gap-3'>
                 {/* Status indicator skeleton */}
                 <div className='h-3 w-3 flex-shrink-0 rounded-full bg-gray-300 dark:bg-gray-600'></div>
-                
+
                 {/* Title skeleton */}
-                <div className='h-5 flex-1 rounded bg-gray-300 dark:bg-gray-600 sm:h-6'></div>
+                <div className='h-5 flex-1 rounded bg-gray-300 sm:h-6 dark:bg-gray-600'></div>
               </div>
 
               {/* Delete button skeleton - only show for grid variant */}
@@ -96,11 +95,11 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
 
             {/* Footer Section Skeleton - for grid variant */}
             {variant === 'grid' && (
-              <div className='absolute bottom-4 left-4 right-4 flex items-center justify-between gap-2 sm:bottom-6 sm:left-6 sm:right-6'>
+              <div className='absolute right-4 bottom-4 left-4 flex items-center justify-between gap-2 sm:right-6 sm:bottom-6 sm:left-6'>
                 <div className='flex min-w-0 flex-1 items-center gap-2'>
                   {/* Clock icon skeleton */}
                   <div className='h-4 w-4 flex-shrink-0 rounded bg-gray-300 dark:bg-gray-600'></div>
-                  
+
                   {/* Updated time skeleton */}
                   <div className='h-3 w-20 rounded bg-gray-200 dark:bg-gray-700'></div>
                 </div>
@@ -119,7 +118,7 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
           </div>
         </div>
       ))}
-
+{/* 
       {showMessage && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -138,7 +137,7 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
             </div>
           </div>
         </motion.div>
-      )}
+      )} */}
     </div>
   );
 };

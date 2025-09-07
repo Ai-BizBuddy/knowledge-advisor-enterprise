@@ -1,4 +1,3 @@
-export { DocumentsControls } from './DocumentsControls';
 export { DocumentsHeader } from './DocumentsHeader';
 export { DocumentsPagination } from './DocumentsPagination';
 export { DocumentsSearch } from './DocumentsSearch';
