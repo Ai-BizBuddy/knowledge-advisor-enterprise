@@ -485,7 +485,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
             </div>
 
             {/* Description */}
-            <div className='lg:col-span-2'>
+            <div className='lg:col-span-2 pt-[2%]'>
               <Label htmlFor='description' className='mb-2 block text-sm font-medium'>
                 Description
                 <span className='ml-1 text-xs sm:text-sm text-gray-400'>(optional)</span>
