@@ -45,6 +45,10 @@ export interface UseKnowledgeBaseReturn {
   deleteKnowledgeBase: (id: string) => Promise<void>;
   getKnowledgeBase: (id: string) => Promise<Project | null>;
 
+  getKnowledgeBaseIDs: () => Promise<string[]>;
+
+  getKnowledgeBaseByIDs: (ids: string[]) => Promise<Project[]>;
+
   // Batch Operations
   batchUpdate: (
     ids: string[],
@@ -252,6 +256,33 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     [],
   );
 
+  const getKnowledgeBaseByIDs = useCallback(
+    async (ids: string[]): Promise<Project[]> => {
+      try {
+        const kbProjects = await knowledgeBaseService.getProjectsByIDs(ids);
+        return kbProjects;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to get knowledge bases';
+        setError(errorMessage);
+        throw err;
+      }
+    },
+    [],
+  );
+
+  const getKnowledgeBaseIDs = useCallback(async (): Promise<string[]> => {
+    try {
+      const kbIds = await knowledgeBaseService.getKBIDs();
+      return kbIds;
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to get knowledge base IDs';
+      setError(errorMessage);
+      throw err;
+    }
+  }, []);
+
   // Update knowledge base
   const updateKnowledgeBase = useCallback(
     async (id: string, data: UpdateProjectInput): Promise<Project> => {
@@ -328,7 +359,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const updatedProjects = await Promise.all(updatePromises);
         setProjects((prev) =>
           prev.map((p) => {
-            const updated = updatedProjects.find((up) => up.id === p.id);
+            const updated = updatedProjects.find((up: Project) => up.id === p.id);
             return updated || p;
           }),
         );
@@ -509,9 +540,11 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
     // Tab counts
     tabCounts: tabCountsData,
+    initialLoad,
 
     loadKnowledgeBases,
-    initialLoad,
+    getKnowledgeBaseIDs,
+    getKnowledgeBaseByIDs,
 
     // CRUD Operations
     createKnowledgeBase,

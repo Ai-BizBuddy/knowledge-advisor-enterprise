@@ -68,6 +68,8 @@ export interface UseAllUserDocumentsReturn {
   setSearchTerm: (term: string) => void;
   setItemsPerPage: (items: number) => void;
 
+  getDocumentById: (id: string[]) => Promise<Document[] | null>;
+
   // Utility Functions
   refresh: () => Promise<void>;
   clearError: () => void;
@@ -264,6 +266,26 @@ export function useAllUserDocuments(
     [itemsPerPage, documentService],
   );
 
+  const getDocumentById = useCallback(
+    async (id: string[]) => {
+      try {
+        const documents = await documentService.getDocumentById(id);
+        // Return the first document if array is not empty, else null
+        if (Array.isArray(documents) && documents.length > 0) {
+          return documents;
+        }
+        return null;
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to get document';
+        console.error('[useAllUserDocuments] Error getting document:', err);
+        setError(errorMessage);
+        return null;
+      }
+    },
+    [documentService],
+  );
+
   /**
    * Get a single document by ID
    */
@@ -336,7 +358,7 @@ export function useAllUserDocuments(
   }, []);
 
   //   const handleDeleteDocument = useCallback((id: string) => {
-  //     console.log("[useAllUserDocuments] Document delete clicked:", id);
+  //     console.log('[useAllUserDocuments] Document delete clicked:', id);
   //     setDocumentToDelete(id);
   //     setIsDeleteModalOpen(true);
   //   }, []);
@@ -399,6 +421,7 @@ export function useAllUserDocuments(
     handleDocumentClick,
     setSearchTerm,
     setItemsPerPage,
+    getDocumentById,
 
     // Utility Functions
     refresh,

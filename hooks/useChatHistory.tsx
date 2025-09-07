@@ -1,172 +1,119 @@
 'use client';
 
-import { ChatMessage } from '@/hooks/useChat';
-import { useCallback } from 'react';
-import { secureStorage } from '@/utils/secureStorage';
+import { ChatMessage } from '@/hooks/useAdkChat';
+import ChatHistoryService from '@/services/ChatHistoryService';
+import type { ChatSession } from '@/services/DashboardService';
+import { useCallback, useState } from 'react';
 
-export interface ChatSession {
-  id: string;
-  title: string;
-  messages: ChatMessage[];
-  createdAt: string;
-  updatedAt: string;
-  knowledgeBases: string[];
-}
+const chatHistoryService = new ChatHistoryService();
+
+export type { ChatSession };
 
 export const useChatHistory = () => {
-  const getChatSessions = useCallback((): ChatSession[] => {
-    if (typeof window === 'undefined') return [];
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [loading, setLoading] = useState(false);
 
+  const loadHistory = useCallback(async () => {
+    setLoading(true);
     try {
-      // Use secure storage with encryption and 24-hour expiration
-      const sessions = secureStorage.getItem<ChatSession[]>('chatSessions', {
-        encrypt: true,
-        expiration: 24 * 60 * 60 * 1000, // 24 hours
-      });
-      return sessions || [];
+        const historyData = await chatHistoryService.loadHistory();
+      console.log('Loaded chat history:', historyData);
+      setSessions(historyData);
     } catch (error) {
-      console.error('Error loading chat sessions:', error);
-      return [];
+      console.error('Error loading chat history:', error);
+      alert('Error loading chat history. Please check console for details.');
+      setSessions([]);
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  const saveChatSession = useCallback(
-    (messages: ChatMessage[], title: string, knowledgeBases: string[]) => {
-      const sessions = getChatSessions();
-      const newSession: ChatSession = {
-        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`, // More secure ID
-        title: title.trim().substring(0, 100), // Limit title length
-        messages: messages.map(msg => ({
-          ...msg,
-          content: msg.content.trim(), // Sanitize content
-        })),
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        knowledgeBases: knowledgeBases.filter(kb => kb.trim()), // Remove empty KB IDs
-      };
+  const getChatSessions = useCallback(async (sessionId: string): Promise<ChatMessage[]> => {
+    try {
 
-      // Limit to last 50 sessions to prevent storage bloat
-      const updatedSessions = [newSession, ...sessions.slice(0, 49)];
-      
-      secureStorage.setItem('chatSessions', updatedSessions, {
-        encrypt: true,
-        expiration: 24 * 60 * 60 * 1000, // 24 hours
-      });
-      
-      return newSession;
-    },
-    [getChatSessions],
-  );
+      const messages = await chatHistoryService.getOldChat(sessionId);
+
+      return messages ?? [];
+
+    } catch (error) {
+      console.error('Error getting chat sessions:', error);
+      return [];
+    }
+    
+  }, []);
 
   const deleteChatSession = useCallback(
-    (sessionId: string) => {
-      // Validate session ID format
+    async (sessionId: string) => {
       if (!sessionId || typeof sessionId !== 'string') return;
-      
-      const sessions = getChatSessions();
-      const updatedSessions = sessions.filter(
-        (session) => session.id !== sessionId,
-      );
-      
-      secureStorage.setItem('chatSessions', updatedSessions, {
-        encrypt: true,
-        expiration: 24 * 60 * 60 * 1000, // 24 hours
-      });
+
+      try {
+        const success = await chatHistoryService.deleteSession(sessionId);
+        if (success) {
+          await loadHistory(); // Reload after deletion
+        }
+      } catch (error) {
+        console.error('Error deleting chat session:', error);
+      }
     },
-    [getChatSessions],
+    [loadHistory],
   );
 
   const exportChatSession = useCallback((session: ChatSession) => {
-    // Validate session object
-    if (!session || !session.messages || !Array.isArray(session.messages)) {
+    // Basic export functionality for the new ChatSession interface
+    if (!session) {
       console.error('Invalid session data for export');
       return;
     }
 
-    // Sanitize data for export
     const sanitizedTitle = session.title.replace(/[<>:"/\\|?*]/g, '-');
-    const chatText = session.messages
-      .filter(msg => msg && msg.content) // Filter out invalid messages
-      .map((msg) => {
-        const role = msg.type === 'user' ? 'คุณ' : 'AI';
-        const content = msg.content.replace(/[<>]/g, ''); // Basic XSS prevention
-        return `${role}: ${content}`;
-      })
-      .join('\n\n');
-
     const exportData = [
       `แชทเซสชัน: ${sanitizedTitle}`,
-      `สร้างเมื่อ: ${new Date(session.createdAt).toLocaleString('th-TH')}`,
-      `Knowledge Base: ${session.knowledgeBases.join(', ')}`,
+      `สร้างเมื่อ: ${new Date(session.started_at).toLocaleString('th-TH')}`,
+      `Knowledge Base ID: ${session.knowledge_base_id || 'ไม่ระบุ'}`,
       '',
-      chatText,
+      '--- Chat Session Data ---',
+      `Session ID: ${session.id}`,
+      `User ID: ${session.user_id}`,
+      session.ended_at ? `สิ้นสุดเมื่อ: ${new Date(session.ended_at).toLocaleString('th-TH')}` : 'ยังไม่สิ้นสุด',
       '',
       '--- End of Chat Session ---',
     ].join('\n');
 
     try {
-      const blob = new Blob([exportData], { 
-        type: 'text/plain;charset=utf-8' 
+      const blob = new Blob([exportData], {
+        type: 'text/plain;charset=utf-8',
       });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
       link.download = `chat-${sanitizedTitle}-${new Date().toISOString().split('T')[0]}.txt`;
-      
-      // Security: Append to body, click, and remove immediately
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      // Clean up the blob URL
+
       setTimeout(() => URL.revokeObjectURL(url), 100);
     } catch (error) {
       console.error('Failed to export chat session:', error);
     }
   }, []);
 
-  const clearAllSessions = useCallback(() => {
-    secureStorage.removeItem('chatSessions');
-  }, []);
+  const getSessionById = useCallback(
+    (sessionId: string): ChatSession | null => {
+      if (!sessionId || typeof sessionId !== 'string') return null;
 
-  const getSessionById = useCallback((sessionId: string): ChatSession | null => {
-    if (!sessionId || typeof sessionId !== 'string') return null;
-    
-    const sessions = getChatSessions();
-    return sessions.find(session => session.id === sessionId) || null;
-  }, [getChatSessions]);
-
-  const updateSession = useCallback((sessionId: string, updates: Partial<ChatSession>) => {
-    if (!sessionId || typeof sessionId !== 'string') return false;
-    
-    const sessions = getChatSessions();
-    const sessionIndex = sessions.findIndex(session => session.id === sessionId);
-    
-    if (sessionIndex === -1) return false;
-    
-    const updatedSession = {
-      ...sessions[sessionIndex],
-      ...updates,
-      updatedAt: new Date().toISOString(),
-    };
-    
-    sessions[sessionIndex] = updatedSession;
-    
-    secureStorage.setItem('chatSessions', sessions, {
-      encrypt: true,
-      expiration: 24 * 60 * 60 * 1000, // 24 hours
-    });
-    
-    return true;
-  }, [getChatSessions]);
+      return sessions.find((session) => session.id === sessionId) || null;
+    },
+    [sessions],
+  );
 
   return {
-    saveChatSession,
+    sessions,
+    loading,
+    loadHistory,
     getChatSessions,
     deleteChatSession,
     exportChatSession,
-    clearAllSessions,
     getSessionById,
-    updateSession,
   };
 };

@@ -318,27 +318,13 @@ export default function UploadDocument({
   if (!isOpen) return null;
 
   return (
-    <div
-      className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-6'
-      onClick={(e) => {
-        // Only close if clicking the backdrop, not the modal itself
-        if (e.target === e.currentTarget && !isUploading && !loading) {
-          onClose();
-          setFileStates([]);
-          setError('');
-        }
-      }}
-    >
-      <div
-        className={`max-h-[90vh] w-full max-w-2xl rounded-2xl border border-gray-300 bg-white text-gray-900 shadow-2xl backdrop-blur-xl transition-all duration-200 ease-in-out dark:border-slate-600/30 dark:bg-slate-800/90 dark:text-slate-100 ${
-          isUploading || loading ? 'pointer-events-none' : 'pointer-events-auto'
-        }`}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className='flex items-start justify-between border-b border-gray-200 p-6 dark:border-slate-600/30'>
-          <div>
-            <h2 className='mb-1 text-xl font-semibold text-gray-900 dark:text-slate-100'>
-              File upload
+    <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-6'>
+      <div className='max-h-[90vh] w-full max-w-4xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white'>
+        <div className='flex items-start justify-between border-b border-gray-200 dark:border-gray-700'>
+          <div className='p-4 sm:p-6'>
+            <h2 className='text-base font-bold text-gray-900 sm:text-lg dark:text-white'>
+              {' '}
+              Upload Document{' '}
             </h2>
             <p className='text-sm text-gray-600 dark:text-slate-400'>
               Upload your files here

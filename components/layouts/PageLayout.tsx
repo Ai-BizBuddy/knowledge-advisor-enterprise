@@ -21,13 +21,19 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   return (
     <div className={`page-container ${className}`}>
-      <div className='content-container'>
+      <div className='p-4 sm:p-6 lg:p-7'>
         {/* Page Header */}
         <div className='section-spacing'>
           <div className='flex-responsive'>
             <div className='flex-1'>
-              <h1 className='page-title mb-2'>{title}</h1>
-              {subtitle && <p className='page-subtitle'>{subtitle}</p>}
+              <h1 className='mb-2 text-2xl font-bold text-gray-900 dark:text-white'>
+                {title}
+              </h1>
+              {subtitle && (
+                <p className='text-sm text-gray-500 sm:text-base dark:text-gray-400'>
+                  {subtitle}
+                </p>
+              )}
             </div>
             {action && <div className='flex-shrink-0'>{action}</div>}
           </div>

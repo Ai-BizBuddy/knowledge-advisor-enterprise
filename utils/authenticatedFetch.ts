@@ -1,9 +1,3 @@
-/**
- * Authenticated Fetch Client - Enhanced fetch client with Supabase Auth integration
- *
- * Automatically handles token refresh and includes auth headers for all requests
- */
-
 import type {
   ApiClientConfig,
   TypedFetchConfig,
@@ -12,9 +6,6 @@ import type {
 import { BaseFetchClient } from '@/utils/fetchClient';
 import { createClient } from '@/utils/supabase/client';
 
-/**
- * Authenticated fetch client that automatically includes auth tokens
- */
 class AuthenticatedFetchClient extends BaseFetchClient {
   private supabase = createClient();
 

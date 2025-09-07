@@ -1,49 +1,50 @@
-# Knowledge Advisor - Enhanced Copilot Instructions
+# Knowledge Advisor Enterprise — Copilot Instructions
 
 ## Project Overview
 
-**Last Updated**: 2025-08-10 00:13:55 UTC
+Last Updated: 2025-08-31
 
-This is a Next.js 15 CSR Only Mode, TypeScript project for an AI-powered knowledge base ingestion
-system called "Knowledge Advisor". The application manages RAG (Retrieval-Augmented Generation)
-projects with document upload and processing capabilities. This guide = **real implementation
-steps** (no mockups).
+Next.js 15 App Router in CSR-only mode with TypeScript, Tailwind v4, Supabase (Auth/DB/Storage),
+Flowbite React. Manages RAG projects with document upload and processing. This guide mandates real,
+tested changes.
 
 ## 🚨 CRITICAL DEVELOPMENT WORKFLOW
 
 ### Required Testing Process
 
-**MANDATORY**: After completing any code changes, ALWAYS execute the following commands in order:
+MANDATORY: After any code changes, run these in order and wait for completion:
 
 1. **Development Testing**
 
-   ```bash
-   npm run dev
-   ```
+```bash
+npm run dev
+```
 
-   - Start development server
-   - Open browser and test UI functionality
-   - Verify all components render correctly
-   - Check console for errors
-   - Test user interactions
-   - **WAIT** for confirmation that UI works properly
+- Start development server
+- Open browser and test UI functionality
+- Verify all components render correctly
+- Check console for errors
+- Test user interactions
+- **WAIT** for confirmation that UI works properly
 
 2. **Production Build Verification**
 
-   ```bash
-   npm run build
-   ```
+```bash
+npm run build
+```
 
-   - **WAIT** for build process to complete fully
-   - Check for TypeScript errors
-   - Verify no build failures
-   - Confirm all imports resolve correctly
-   - **DO NOT** assume build is successful until process completes
+- **WAIT** for build process to complete fully
+- Check for TypeScript errors
+- Verify no build failures
+- Confirm all imports resolve correctly
+- **DO NOT** assume build is successful until process completes
 
 3. **Additional Checks**
-   ```bash
-   npm run lint        # Check code quality
-   ```
+
+```bash
+npm run lint        # ESLint
+npm run format:check
+```
 
 ### ⚠️ Important Notes
 
@@ -69,22 +70,20 @@ steps** (no mockups).
 
 ### Core Technologies
 
-- **Framework**: Next.js 15.3.3 with App Router and Turbo mode
-- **Language**: TypeScript 5 (strict mode enabled)
-- **Database**: Supabase with Row Level Security (RLS)
-- **Authentication**: Supabase Auth with SSR support
-- **Styling**: Tailwind CSS + flowbite-react components
-- **Animation**: Framer Motion 12.16.0
-- **State Management**: React hooks + Zustand (if needed)
-- **Forms**: React Hook Form with custom utilities
-- **File Upload**: Supabase Storage with progress tracking
+- Framework: Next.js 15.x (App Router, Turbo dev)
+- Language: TypeScript 5 (strict)
+- Styling: Tailwind CSS v4 + flowbite-react
+- Animations: Framer Motion 12
+- Data: Supabase JS v2 (RLS on the DB)
+- Forms: React Hook Form
+- Notifications: React Toastify
 
 ### Development Tools
 
-- **Linting**: ESLint + TypeScript strict rules
-- **Formatting**: Prettier
-- **Package Manager**: npm
-- **Build Tool**: Turbo (Next.js built-in)
+- Linting: ESLint (Next config)
+- Formatting: Prettier (+ tailwindcss plugin)
+- Package Manager: npm
+- Tailwind v4 via PostCSS plugin
 
 ## Database Schema & Supabase Setup
 
@@ -189,7 +188,7 @@ export interface UpdateProjectRequest extends Partial<CreateProjectRequest> {
 #### Component Structure
 
 ```
-src/components/ProjectCard/
+components/ProjectCard/
 ├── index.tsx          # Main component
 ├── ProjectCard.tsx    # Implementation
 ├── ProjectCard.types.ts # Type definitions
@@ -199,11 +198,11 @@ src/components/ProjectCard/
 #### Component Template
 
 ```typescript
-// /src/components/ProjectCard/index.tsx
+// /components/ProjectCard/index.tsx
 export { ProjectCard } from './ProjectCard';
 export type { ProjectCardProps } from './ProjectCard.types';
 
-// /src/components/ProjectCard/ProjectCard.types.ts
+// /components/ProjectCard/ProjectCard.types.ts
 export interface ProjectCardProps {
   project: Project;
   onEdit?: (project: Project) => void;
@@ -211,7 +210,7 @@ export interface ProjectCardProps {
   className?: string;
 }
 
-// /src/components/ProjectCard/ProjectCard.tsx
+// /components/ProjectCard/ProjectCard.tsx
 import { motion } from 'framer-motion';
 import type { ProjectCardProps } from './ProjectCard.types';
 
@@ -233,12 +232,12 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
 };
 ```
 
-### Forms Pattern (Enhanced)
+### Forms Pattern
 
 #### Form Hook Usage
 
 ```typescript
-// /src/hooks/useReactHookForm.ts
+// /hooks/useReactHookForm.tsx
 import { useForm, UseFormProps } from 'react-hook-form';
 
 export function useReactHookForm<TFormValues extends Record<string, unknown>>(
@@ -304,55 +303,17 @@ const CreateProjectForm: React.FC = () => {
 };
 ```
 
-### Server Actions Pattern
+### Data/Service Pattern (CSR-only)
 
-```typescript
-// /src/actions/project.actions.ts
-'use server';
-
-import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
-
-export async function createProject(data: CreateProjectRequest): Promise<TypedResponse<Project>> {
-  try {
-    const supabase = createClient();
-
-    const { data: user } = await supabase.auth.getUser();
-    if (!user.user) {
-      return { success: false, error: 'Unauthorized' };
-    }
-
-    const { data: project, error } = await supabase
-      .from('projects')
-      .insert({
-        ...data,
-        owner_id: user.user.id,
-      })
-      .select()
-      .single();
-
-    if (error) {
-      return { success: false, error: error.message };
-    }
-
-    revalidatePath('/dashboard');
-    return { success: true, data: project };
-  } catch (error) {
-    console.error('Create project error:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error',
-    };
-  }
-}
-```
+Place Supabase client and CRUD in `services/` returning typed results using `TypedResponse<T>`.
+Never use `use server` actions in CSR-only mode.
 
 ### Error Handling Patterns
 
 #### Typed Error Responses
 
 ```typescript
-// /src/interfaces/ApiTypes.ts
+// /interfaces/ApiTypes.ts
 export interface TypedResponse<T> {
   success: boolean;
   data?: T;
@@ -431,7 +392,7 @@ const buttonVariants = {
 
 - [ ] Pull latest changes from main branch
 - [ ] Check current Node.js version compatibility
-- [ ] Ensure all dependencies are installed (`npm ci`)
+- [ ] Install dependencies (`npm ci`)
 - [ ] Verify environment variables are set
 
 ### During Development
@@ -451,7 +412,7 @@ const buttonVariants = {
 - [ ] **Run `npm run build`** - Wait for completion
 - [ ] **Confirm build succeeds without errors**
 - [ ] Run `npm run lint` - Fix any issues
-- [ ] Run `npm run type-check` - Resolve type errors
+- [ ] Type errors resolved (build must pass)
 - [ ] Test responsive design on different screen sizes
 - [ ] Verify form submissions work correctly
 - [ ] Check authentication flows
@@ -478,7 +439,7 @@ npm run lint:fix       # Fix ESLint issues
 npm run type-check     # TypeScript type checking
 
 # Database
-npx supabase gen types typescript --project-id YOUR_PROJECT_ID > src/interfaces/database.types.ts
+npx supabase gen types typescript --project-id YOUR_PROJECT_ID > interfaces/database.types.ts
 
 # Testing
 npm run test           # Run tests

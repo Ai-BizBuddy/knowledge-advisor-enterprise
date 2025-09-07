@@ -5,15 +5,16 @@ import {
   ChatCard,
   ChatHistoryList,
   KnowledgeSelect,
+  PageHeader,
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
-import { ChatSession } from '@/hooks/useChatHistory';
+import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 
 export default function ChatPage() {
-  const [isOnline, setIsOnline] = useState(true); // Removed setter as it's not used
+  const [isOnline] = useState(false);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
   const { setLoading } = useLoading();
@@ -28,6 +29,10 @@ export default function ChatPage() {
   } = useAdkChat();
 
   const {
+    getChatSessions,
+  } = useChatHistory();
+
+  const {
     knowledgeBases,
     handleSelectKnowledgeBase,
     handleSelectAllKB,
@@ -36,7 +41,6 @@ export default function ChatPage() {
   } = useKnowledgeBaseSelection();
 
   useEffect(() => {
-    // Add welcome message when component mounts
     if (messages.length === 0) {
       addWelcomeMessage();
     }
@@ -46,8 +50,11 @@ export default function ChatPage() {
     setLoading(false);
   }, [setLoading]);
 
-  const handleLoadChatSession = (session: ChatSession) => {
-    setMessages(session.messages);
+  const handleLoadChatSession = async (session: ChatSession) => {
+    // setMessages(session.messages);
+    const messagess = await getChatSessions(session.id)
+    setMessages([...messages, ...messagess]);
+    console.log(messages);
     setOpenHistory(false);
   };
 
@@ -77,21 +84,17 @@ export default function ChatPage() {
         <div className='p-4 sm:p-6 lg:p-8'>
           <div className='space-y-3 sm:space-y-3'>
             {/* Page Header - Outside the card */}
-            <div className='space-y-2'>
-              <div className='flex items-center gap-3'>
-                <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
-                  AI Chat Assistant
-                </h1>
-              </div>
-              <p className='text-sm font-medium text-gray-600 sm:text-base dark:text-gray-400'>
-                {getSelectedCount() !== 0
+            <PageHeader
+              title='AI Chat Assistant'
+              subtitle={
+                getSelectedCount() !== 0
                   ? `กำลังค้นหาข้อมูลจาก ${getSelectedCount()} Knowledge Base`
-                  : 'กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา'}
-              </p>
-            </div>
+                  : 'กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา'
+              }
+            />
 
             {/* Control Section */}
-            <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-900'>
+            <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
               <div className='flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700'>
                 {/* Knowledge Base Selection */}
                 <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
@@ -204,62 +207,7 @@ export default function ChatPage() {
                   >
                     {/* Status and Input Row */}
                     <div className='flex items-center gap-2'>
-                      <div
-                        className='flex-shrink-0 cursor-pointer'
-                        onClick={() => setIsOnline(!isOnline)}
-                        title={isOnline ? 'Online Mode' : 'Offline Mode'}
-                      >
-                        {isOnline ? (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-6 w-6 text-blue-400 hover:text-blue-600'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0'></path>
-                            <path d='M3.6 9h16.8'></path>
-                            <path d='M3.6 15h16.8'></path>
-                            <path d='M11.5 3a17 17 0 0 0 0 18'></path>
-                            <path d='M12.5 3a17 17 0 0 1 0 18'></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-6 w-6 text-gray-400 hover:text-gray-600'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M5.657 5.615a9 9 0 1 0 12.717 12.739m1.672 -2.322a9 9 0 0 0 -12.066 -12.084'></path>
-                            <path d='M3.6 9h5.4m4 0h7.4'></path>
-                            <path d='M3.6 15h11.4m4 0h1.4'></path>
-                            <path d='M11.5 3a17.001 17.001 0 0 0 -1.493 3.022m-.847 3.145c-.68 4.027 .1 8.244 2.34 11.833'></path>
-                            <path d='M12.5 3a16.982 16.982 0 0 1 2.549 8.005m-.207 3.818a16.979 16.979 0 0 1 -2.342 6.177'></path>
-                            <path d='M3 3l18 18'></path>
-                          </svg>
-                        )}
-                      </div>
+                      
                       <div className='flex-1'>
                         <textarea
                           ref={(textarea) => {
@@ -355,78 +303,7 @@ export default function ChatPage() {
                     }}
                     className='flex items-center gap-3'
                   >
-                    <div className='flex items-center gap-2'>
-                      {/* svg internet */}
-                      <div
-                        className='cursor-pointer'
-                        onClick={() => setIsOnline(!isOnline)}
-                        title={
-                          isOnline
-                            ? 'Switch to Offline Mode'
-                            : 'Switch to Online Mode'
-                        }
-                      >
-                        {isOnline ? (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-7 w-7 text-blue-400 hover:text-blue-600 sm:h-8 sm:w-8'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M3 12a9 9 0 1 0 18 0a9 9 0 0 0 -18 0'></path>
-                            <path d='M3.6 9h16.8'></path>
-                            <path d='M3.6 15h16.8'></path>
-                            <path d='M11.5 3a17 17 0 0 0 0 18'></path>
-                            <path d='M12.5 3a17 17 0 0 1 0 18'></path>
-                          </svg>
-                        ) : (
-                          <svg
-                            stroke='currentColor'
-                            fill='none'
-                            strokeWidth='2'
-                            viewBox='0 0 24 24'
-                            strokeLinecap='round'
-                            strokeLinejoin='round'
-                            className='h-7 w-7 text-gray-400 hover:text-gray-600 sm:h-8 sm:w-8'
-                            height='1em'
-                            width='1em'
-                            xmlns='http://www.w3.org/2000/svg'
-                          >
-                            <path
-                              stroke='none'
-                              d='M0 0h24v24H0z'
-                              fill='none'
-                            ></path>
-                            <path d='M5.657 5.615a9 9 0 1 0 12.717 12.739m1.672 -2.322a9 9 0 0 0 -12.066 -12.084'></path>
-                            <path d='M3.6 9h5.4m4 0h7.4'></path>
-                            <path d='M3.6 15h11.4m4 0h1.4'></path>
-                            <path d='M11.5 3a17.001 17.001 0 0 0 -1.493 3.022m-.847 3.145c-.68 4.027 .1 8.244 2.34 11.833'></path>
-                            <path d='M12.5 3a16.982 16.982 0 0 1 2.549 8.005m-.207 3.818a16.979 16.979 0 0 1 -2.342 6.177'></path>
-                            <path d='M3 3l18 18'></path>
-                          </svg>
-                        )}
-                      </div>
-                      {/* Status indicator - hidden on smaller screens, visible on medium+ */}
-                      <div className='hidden items-center gap-2 md:flex'>
-                        <div
-                          className={`h-2 w-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`}
-                        ></div>
-                        <span className='text-xs text-gray-500 dark:text-gray-400'>
-                          {isOnline ? 'Online' : 'Offline'}
-                        </span>
-                      </div>
-                    </div>
+                    
                     <div className='flex-1'>
                       <textarea
                         ref={(textarea) => {

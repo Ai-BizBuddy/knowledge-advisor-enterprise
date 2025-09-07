@@ -11,7 +11,7 @@ export { FileUploadModal } from './fileUpload';
 export type {
 	FileUploadItem,
 	FileUploadModalProps,
-	FileUploadStatus,
+	FileUploadStatus
 } from './fileUpload';
 export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
@@ -52,3 +52,10 @@ export * from './tableSearch';
 
 // Layout Components
 export * from './layouts';
+
+// Page Header Components
+export * from './PageHeader';
+
+// Deep Search Components
+export * from './deepSearch';
+

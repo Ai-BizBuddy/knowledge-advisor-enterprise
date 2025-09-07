@@ -6,6 +6,11 @@
 export interface DashboardStatistics {
   totalKnowledgeBases: number;
   activeDocuments: number;
+  // Optional extended metrics for KPIs
+  totalDocuments?: number;
+  totalStorageBytes?: number; // Sum of document.file_size in bytes
+  totalStorageFormatted?: string; // Human-readable string
+  totalChunks?: number; // Sum of document.chunk_count
   totalQueries: number;
   avgResponseTimeMs: number;
   avgResponseTime: string;

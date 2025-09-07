@@ -1,6 +1,6 @@
 interface NoDocumentsProps {
   activeTab: string;
-  setOpenModal: (open: boolean) => void;
+  setOpenModal?: (open: boolean) => void;
 }
 export default function NoDocuments({
   activeTab,
@@ -34,12 +34,15 @@ export default function NoDocuments({
           ? 'No documents match your current filters. Upload your first document or use AI search to find specific content.'
           : `No Documents with status "${activeTab}" found. Upload your first document or use AI search to find specific content.`}
       </p>
-      <button
-        className='flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700'
-        onClick={() => setOpenModal(true)}
-      >
-        <span className='text-sm font-medium'>Add Your First Document</span>
-      </button>
+      {
+        setOpenModal && (
+          <button
+            className='flex items-center gap-2 rounded-md bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-700'
+            onClick={() => setOpenModal(true)}
+          >
+            <span className='text-sm font-medium'>Add Your First Document</span>
+          </button>
+        )}
     </div>
   );
 }

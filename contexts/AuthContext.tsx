@@ -1,14 +1,14 @@
 'use client';
 
+import { createClient } from '@/utils/supabase/client';
+import { AuthChangeEvent, Session, User } from '@supabase/supabase-js';
 import React, {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useState,
-  useCallback,
 } from 'react';
-import { User, Session, AuthChangeEvent } from '@supabase/supabase-js';
-import { createClient } from '@/utils/supabase/client';
 
 interface AuthContextType {
   user: User | null;
@@ -127,8 +127,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
-      console.log('Auth state changed:', event, session);
-
+      const previousUser = user;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -136,6 +135,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       switch (event) {
         case 'SIGNED_IN':
           console.log('User signed in');
+          // Redirect to dashboard after hydration
+          if (!previousUser) {
+            setTimeout(() => {
+              if (window.location.pathname !== '/dashboard') {
+                window.location.href = '/dashboard';
+              }
+            }, 0);
+          } else {
+            console.log('User already signed in - likely token refresh, no redirect needed');
+          }
           break;
         case 'SIGNED_OUT':
           console.log('User signed out');
@@ -156,6 +165,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           break;
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [],
   );
 
@@ -241,8 +251,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Update token refresh timer when session changes
   useEffect(() => {
+    setLoading(true);
     let refreshTimer: NodeJS.Timeout;
-
     if (session && session.expires_at) {
       const expiresAt = session.expires_at * 1000;
       const now = Date.now();
@@ -255,6 +265,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (!newSession) {
             await signOut();
           }
+          setLoading(false);
         }, refreshTime);
       }
     }

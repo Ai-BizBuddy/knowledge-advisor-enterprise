@@ -21,6 +21,7 @@ interface DocumentsTableProps {
   documents: DocumentTableItem[];
   selectedDocuments: number[];
   selectedDocument: number | null;
+  isOpenSync?: boolean;
   startIndex: number;
   sortBy: string;
   sortOrder: 'asc' | 'desc';
@@ -104,6 +105,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onDeleteDocument,
   isAllSelected,
   isIndeterminate,
+  isOpenSync = true,
 }) => {
   const getSortIcon = (column: string) => {
     if (sortBy !== column) return null;
@@ -184,14 +186,16 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       <div className='text-xs text-gray-500 dark:text-gray-400'>
                         {doc.lastUpdated || doc.date}
                       </div>
-                      <div className='flex items-center space-x-2'>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
-                        >
-                          {doc.syncStatus || doc.status || 'Unknown'}
-                        </span>
-                        {getSyncButton(doc.syncStatus)}
-                      </div>
+                      {isOpenSync && (
+                        <div className='flex items-center space-x-2'>
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
+                          >
+                            {doc.syncStatus || doc.status || 'Unknown'}
+                          </span>
+                          {getSyncButton(doc.syncStatus)}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -207,7 +211,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
           <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
             <thead className='bg-gray-50 dark:bg-gray-700'>
               <tr>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                <th className='w-8 px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <input
                     type='checkbox'
                     className='rounded border-gray-300'
@@ -218,29 +222,33 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                     onChange={onSelectAll}
                   />
                 </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                <th className='w-[45%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <SortableHeader column='name'>Name</SortableHeader>
                 </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  <SortableHeader column='type'>Type</SortableHeader>
-                </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  <SortableHeader column='status'>Status</SortableHeader>
-                </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  <SortableHeader column='chunk'>Chunk</SortableHeader>
-                </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                <th className='w-[20%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <SortableHeader column='lastUpdated'>
                     Last Updated
                   </SortableHeader>
                 </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  Sync
+                <th className='w-[10%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                  <SortableHeader column='status'>Status</SortableHeader>
                 </th>
-                <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                  {/* Actions column */}
+                <th className='w-[15%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                  <SortableHeader column='type'>Type</SortableHeader>
                 </th>
+                <th className='w-[5%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                  <SortableHeader column='chunk'>Chunk</SortableHeader>
+                </th>
+                {isOpenSync && (
+                  <>
+                    <th className='w-auto px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                      Sync
+                    </th>
+                    <th className='w-auto px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                      {/* Actions column */}
+                    </th>
+                  </>
+                )}
               </tr>
             </thead>
             <tbody className='divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-800'>
@@ -265,7 +273,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           : ''
                       }`}
                     >
-                      <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                      <td className='w-8 px-3 py-4 whitespace-nowrap sm:px-6'>
                         <input
                           type='checkbox'
                           className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
@@ -274,7 +282,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
-                      <td className='max-w-xs truncate px-3 py-4 sm:px-6'>
+                      <td className='w-[45%] px-3 py-4 sm:px-6'>
                         <div className='flex items-center'>
                           <div className='mr-3 text-xl sm:text-2xl'>
                             {getFileIcon(doc.type)}
@@ -286,7 +294,17 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           </div>
                         </div>
                       </td>
-                      <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
+                      <td className='w-[20%] px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
+                        {doc.lastUpdated || doc.date}
+                      </td>
+                      <td className='w-[10%] px-3 py-4 whitespace-nowrap sm:px-6'>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || 'Unknown')}`}
+                        >
+                          {doc.status || 'Unknown'}
+                        </span>
+                      </td>
+                      <td className='w-[15%] px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         <span className='font-medium'>
                           {doc.type
                             ? doc.type.toLocaleLowerCase()
@@ -294,40 +312,35 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           Document
                         </span>
                       </td>
-                      <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || 'Unknown')}`}
-                        >
-                          {doc.status || 'Unknown'}
-                        </span>
-                      </td>
-                      <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-900 sm:px-6 dark:text-white'>
+                      <td className='w-[5%] px-3 py-4 text-sm whitespace-nowrap text-gray-900 sm:px-6 dark:text-white'>
                         {doc.chunk || 0}
                       </td>
-                      <td className='px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
-                        {doc.lastUpdated || doc.date}
-                      </td>
-                      <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                        {getSyncButton(doc.syncStatus)}
-                      </td>
-                      <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
-                        <button
-                          className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            onDeleteDocument(pageIndex);
-                          }}
-                        >
-                          Delete
-                        </button>
-                      </td>
+                      {isOpenSync && (
+                        <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                          {getSyncButton(doc.syncStatus)}
+                        </td>
+                      )}
+
+                      {isOpenSync && (
+                        <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
+                          <button
+                            className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onDeleteDocument(pageIndex);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
               {documents.length === 0 && (
                 <tr>
                   <td
-                    colSpan={8}
+                    colSpan={isOpenSync ? 8 : 6}
                     className='px-3 py-4 text-center text-sm text-gray-500 dark:text-gray-400'
                   >
                     No documents found.

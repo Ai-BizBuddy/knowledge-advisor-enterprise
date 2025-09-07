@@ -6,12 +6,9 @@ interface NavigationMenuProps {
   onItemClick: (index: number) => void;
 }
 
-/**
- * Navigation menu component for sidebar
- */
 export const NavigationMenu = ({ items, onItemClick }: NavigationMenuProps) => {
   return (
-    <ul className='space-y-2 font-medium'>
+    <ul className='space-y-2 font-medium p-2'>
       {items.map((item, index) => (
         <li key={item.name}>
           <Link

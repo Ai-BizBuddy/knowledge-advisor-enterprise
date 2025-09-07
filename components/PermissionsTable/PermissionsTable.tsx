@@ -250,7 +250,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
                     transition={{ delay: index * 0.03 }}
                   >
                     {/* Permission column */}
-                    <td className='whitespace-nowrap px-6 py-4 font-medium text-gray-900 dark:text-white'>
+                    <td className='px-6 py-4 font-medium whitespace-nowrap text-gray-900 dark:text-white'>
                       <div className='flex items-center'>
                         <div className='mr-3 flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/50'>
                           <span

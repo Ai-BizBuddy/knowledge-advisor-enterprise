@@ -5,7 +5,7 @@ export default function RecentKnowledgeBasesCard({
   items,
 }: IRecentKnowledgeBasesCardProps) {
   return (
-    <Card className='h-full w-full dark:bg-gray-900'>
+    <Card className='h-full w-full dark:bg-gray-800'>
       <h5 className='text-xl font-bold tracking-tight text-gray-900 dark:text-white'>
         Recent Knowledge Bases
       </h5>

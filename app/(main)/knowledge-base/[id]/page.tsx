@@ -8,18 +8,18 @@ import {
   DocumentsSearch,
   DocumentsTable,
   TableSkeleton,
-  UploadDocument,
+  UploadDocument
 } from '@/components';
 import { UserManagementTab } from '@/components/knowledgeBaseUsers';
 import { useLoading } from '@/contexts/LoadingContext';
 import { formatStatus } from '@/data/knowledgeBaseData';
 import { useAdkChat, useDocuments, useKnowledgeBase } from '@/hooks';
-import { ChatSession } from '@/hooks/useChatHistory';
 import { Document, Project } from '@/interfaces/Project';
 import { Breadcrumb, BreadcrumbItem, Button } from 'flowbite-react';
 import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
+import type { ChatSession } from '@/services/DashboardService';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -123,7 +123,6 @@ export default function KnowledgeBaseDetail() {
     addWelcomeMessage,
     sendMessage,
     createNewChat,
-    setMessages,
   } = useAdkChat();
 
   // Transform documents to DocumentsTable-compatible format
@@ -282,7 +281,9 @@ export default function KnowledgeBaseDetail() {
   };
 
   const handleLoadChatSession = (session: ChatSession) => {
-    setMessages(session.messages);
+    // ChatSession doesn't have messages property - need to fetch messages separately
+    // For now, create a new chat session since we don't have the messages
+    createNewChat();
     setOpenHistory(false);
   };
 

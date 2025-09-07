@@ -12,42 +12,33 @@ export default function MainLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const { logout, getSession } = useAuth();
   const { user, loading: authLoading } = useAuthContext();
-  // const { hasFeatureAccess } = usePermissions();
   const { setLoading } = useLoading();
-
-  // Filter navigation items based on permissions
 
   const handleLogout = async () => {
     await logout();
-    // Use setTimeout to avoid hydration mismatch
     setTimeout(() => {
       window.location.href = '/login';
     }, 0);
   };
 
   useEffect(() => {
-    // Auth context will handle redirects automatically
-    // This is just for backward compatibility
     const checkAuth = async () => {
       if (!authLoading && !user && pathname !== '/login') {
-        // Use setTimeout to avoid hydration mismatch
         setTimeout(() => {
           window.location.href = '/login';
         }, 0);
       }
     };
     checkAuth();
-  }, [user, authLoading, pathname]);
-
-  // Close mobile menu when route changes
+  }, [user, authLoading, pathname, getSession]);
 
   return (
     <>
       <SlideBar
         onNavigate={() => {
-          setLoading(true);
+          setLoading(false);
         }}
         handleLogout={handleLogout}
       >

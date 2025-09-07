@@ -225,7 +225,7 @@ class AdkChatService {
       const authHeaders = await this.getAuthHeaders();
 
       // Use EventSource for SSE streaming
-      const url = `${this.baseUrl}api/chat`;
+      const url = `${this.baseUrl}/api/chat`;
 
       return new Promise<AdkChatResult>((resolve) => {
         let fullContent = '';
@@ -325,17 +325,6 @@ class AdkChatService {
                         const newText = parsed.data.content.parts[0].text;
                         const messageId = parsed.data.id;
                         const isPartial = parsed.data.partial;
-
-                        // Debug logging for tracking
-                        console.log(
-                          `[${this.serviceName}] Processing streaming chunk:`,
-                          {
-                            messageId,
-                            newText,
-                            partial: isPartial,
-                            currentLength: fullContent.length,
-                          },
-                        );
 
                         // Skip if we already processed this message ID to prevent duplicates
                         if (messageId === lastProcessedId) {
