@@ -42,8 +42,10 @@ export default function KnowledgeBase() {
 
   const tabList = [
     { label: 'All', count: tabCounts.all },
-    { label: 'Active', count: tabCounts.active },
-    { label: 'Inactive', count: tabCounts.inactive },
+    { label: 'Public', count: tabCounts.public },
+    { label: 'Private', count: tabCounts.private },
+    { label: 'Department', count: tabCounts.department },
+    { label: 'custom', count: tabCounts.custom },
   ];
 
   const handleTabSelect = (tab: string) => {

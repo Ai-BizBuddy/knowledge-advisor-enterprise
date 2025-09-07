@@ -165,9 +165,9 @@ class KnowledgeBaseService {
 
       // Apply filters
       if (filters?.status && filters.status !== 'all') {
-        const statusValue = filters.status === 'active' ? true : false;
-        countQuery = countQuery.eq('is_active', statusValue);
-        dataQuery = dataQuery.eq('is_active', statusValue);
+        const statusValue = filters.status;
+        countQuery = countQuery.eq('visibility', statusValue);
+        dataQuery = dataQuery.eq('visibility', statusValue);
       }
 
       if (filters?.searchTerm && filters.searchTerm.trim()) {

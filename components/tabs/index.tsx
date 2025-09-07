@@ -16,7 +16,7 @@ export default function Tabs({ currentTab, tabList, onTabChange }: TabsProps) {
         <button
           key={index}
           onClick={() => onTabChange(tab)}
-          className={`inline-block w-[80px] rounded-lg p-2 hover:bg-gray-200 dark:hover:bg-gray-500 ${
+          className={`inline-block w-[100px] rounded-lg p-2 hover:bg-gray-200 dark:hover:bg-gray-500 ${
             currentTab === tab ? 'bg-blue-600 text-white' : ''
           }`}
           aria-current={currentTab === tab ? 'page' : undefined}

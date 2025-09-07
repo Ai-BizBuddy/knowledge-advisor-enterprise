@@ -1,6 +1,5 @@
 'use client';
 import {
-  BulkActions,
   DocumentDeleteModal,
   DocumentsControls,
   DocumentsHeader,
@@ -556,7 +555,7 @@ export default function DocumentsPage() {
         {/* Main Content Layout - Responsive grid */}
 
         {/* Main Content Area */}
-        <div className='space-y-6 xl:col-span-3 flex justify-center w-full'>
+        <div className='space-y-6 xl:col-span-3 flex justify-center sm:max-w-md'>
           <DocumentsSearch
             onDeepSearchClick={handleDeepSearch}
             searchTerm={searchTerm}
@@ -568,15 +567,6 @@ export default function DocumentsPage() {
 
         {!isDeepSearch && (
           <div className='flex gap-4 pt-4'>
-            <BulkActions
-              selectedDocuments={selectedDocuments}
-              totalPages={totalPages}
-              onDelete={() => {
-                setIsDeleteModalOpen(true);
-                setOptionBulkDelete(true);
-              }}
-              onClear={handleClearSelection}
-            />
 
             {/* Documents List or Empty State */}
             {totalItems === 0 ? (
@@ -584,7 +574,7 @@ export default function DocumentsPage() {
                 <NoDocuments activeTab={activeTab} />
               </div>
             ) : loading ? (
-              <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
+              <div className='w-full space-y-6'>
                 <TableSkeleton
                   rows={5}
                   columns={6}

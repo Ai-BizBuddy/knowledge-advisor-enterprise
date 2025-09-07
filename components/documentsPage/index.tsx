@@ -1,7 +1,7 @@
-export { DocumentsHeader } from './DocumentsHeader';
 export { DocumentsControls } from './DocumentsControls';
-export { DocumentsTabs } from './DocumentsTabs';
-export { DocumentsSearch } from './DocumentsSearch';
-export { BulkActions } from './BulkActions';
-export { DocumentsTable } from './DocumentsTable';
+export { DocumentsHeader } from './DocumentsHeader';
 export { DocumentsPagination } from './DocumentsPagination';
+export { DocumentsSearch } from './DocumentsSearch';
+export { DocumentsTable } from './DocumentsTable';
+export { DocumentsTabs } from './DocumentsTabs';
+

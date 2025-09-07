@@ -29,8 +29,10 @@ export interface UseKnowledgeBaseReturn {
   // Tab counts
   tabCounts: {
     all: number;
-    active: number;
-    inactive: number;
+    public: number;
+    private: number;
+    department: number;
+    custom: number;
   };
 
   loadKnowledgeBases: (page?: number, forceRefresh?: boolean) => Promise<void>;
@@ -130,8 +132,10 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   // TODO: Get accurate counts from API for each tab
   const tabCountsData = {
     all: state.totalItems, // Use totalItems from API instead of projects.length
-    active: Math.floor(state.totalItems * 0.7), // Estimate - should be from API
-    inactive: Math.floor(state.totalItems * 0.3), // Estimate - should be from API
+    public: Math.floor(state.totalItems * 0.4), // Estimate - should be from API
+    private: Math.floor(state.totalItems * 0.3), // Estimate - should be from API
+    department: Math.floor(state.totalItems * 0.2), // Estimate - should be from API
+    custom: Math.floor(state.totalItems * 0.1), // Estimate - should be from API
   };
 
   // Update filtered projects when filters change
