@@ -33,8 +33,10 @@ interface DocumentsTableProps {
     event: React.ChangeEvent<HTMLInputElement>,
   ) => void;
   onDocumentClick: (index: number) => void;
+  onSyncDocument?: (index: number) => void;
   isAllSelected: boolean;
   isIndeterminate: boolean;
+  syncingDocuments?: Set<number>;
 }
 
 const getStatusBadge = (status: string | null | undefined) => {
@@ -63,30 +65,91 @@ const getStatusBadge = (status: string | null | undefined) => {
   );
 };
 
-const getSyncButton = (syncStatus: string = 'Synced') => {
-  const issynced = syncStatus === 'Synced';
+const getSyncButton = (
+  syncStatus: string = 'Not Synced',
+  isLoading: boolean = false,
+  onSync?: () => void,
+) => {
+  const getStatusConfig = () => {
+    switch (syncStatus) {
+      case 'synced':
+      case 'Synced':
+        return {
+          color: 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+            </svg>
+          ),
+          text: 'Synced',
+          disabled: true,
+        };
+      case 'syncing':
+      case 'Syncing':
+      case 'processing':
+      case 'Processing':
+        return {
+          color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4 animate-spin' fill='none' viewBox='0 0 24 24'>
+              <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+              <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+            </svg>
+          ),
+          text: 'Syncing...',
+          disabled: true,
+        };
+      case 'error':
+      case 'Error':
+        return {
+          color: 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900 dark:text-red-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z' />
+            </svg>
+          ),
+          text: 'Retry',
+          disabled: false,
+        };
+      default:
+        return {
+          color: 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' />
+            </svg>
+          ),
+          text: 'Sync',
+          disabled: false,
+        };
+    }
+  };
+
+  const config = getStatusConfig();
+  const showLoading = isLoading || syncStatus === 'syncing' || syncStatus === 'Syncing' || syncStatus === 'processing' || syncStatus === 'Processing';
+
   return (
     <button
-      className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium transition-colors ${
-        issynced
-          ? 'bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300'
-          : 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-900 dark:text-gray-300'
+      onClick={(e) => {
+        e.stopPropagation();
+        if (onSync && !config.disabled && !isLoading) {
+          onSync();
+        }
+      }}
+      disabled={config.disabled || isLoading}
+      className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium transition-colors ${config.color} ${
+        (config.disabled || isLoading) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
       }`}
     >
-      <svg
-        className='mr-1 h-4 w-4'
-        fill='none'
-        stroke='currentColor'
-        viewBox='0 0 24 24'
-      >
-        <path
-          strokeLinecap='round'
-          strokeLinejoin='round'
-          strokeWidth={2}
-          d='M12 4v16m8-8H4'
-        />
-      </svg>
-      {syncStatus}
+      {showLoading ? (
+        <svg className='mr-1 h-4 w-4 animate-spin' fill='none' viewBox='0 0 24 24'>
+          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+        </svg>
+      ) : (
+        config.icon
+      )}
+      {config.text}
     </button>
   );
 };
@@ -103,9 +166,11 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
   onSelectDocument,
   onDocumentClick,
   onDeleteDocument,
+  onSyncDocument,
   isAllSelected,
   isIndeterminate,
   isOpenSync = true,
+  syncingDocuments = new Set(),
 }) => {
   const getSortIcon = (column: string) => {
     if (sortBy !== column) return null;
@@ -186,16 +251,46 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       <div className='text-xs text-gray-500 dark:text-gray-400'>
                         {doc.lastUpdated || doc.date}
                       </div>
-                      {isOpenSync && (
-                        <div className='flex items-center space-x-2'>
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
-                          >
-                            {doc.syncStatus || doc.status || 'Unknown'}
-                          </span>
-                          {getSyncButton(doc.syncStatus)}
-                        </div>
-                      )}
+                      <div className='flex items-center space-x-2'>
+                        {isOpenSync && (
+                          <>
+                            <span
+                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
+                            >
+                              {doc.syncStatus || doc.status || 'Unknown'}
+                            </span>
+                            {getSyncButton(
+                              doc.syncStatus,
+                              syncingDocuments.has(pageIndex),
+                              () => onSyncDocument?.(pageIndex),
+                            )}
+                            <button
+                              className='inline-flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onDeleteDocument(pageIndex);
+                              }}
+                              title='Delete document'
+                              aria-label='Delete document'
+                            >
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                                aria-hidden='true'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                />
+                              </svg>
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -245,7 +340,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       Sync
                     </th>
                     <th className='w-auto px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
-                      {/* Actions column */}
+                      Actions
                     </th>
                   </>
                 )}
@@ -278,7 +373,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                           type='checkbox'
                           className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
                           checked={isSelected}
-                          onChange={(e) => onSelectDocument(pageIndex, e)}
+                          onChange={(e) => onSelectDocument(actualIndex, e)}
                           onClick={(e) => e.stopPropagation()}
                         />
                       </td>
@@ -317,20 +412,39 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       </td>
                       {isOpenSync && (
                         <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                          {getSyncButton(doc.syncStatus)}
+                          {getSyncButton(
+                            doc.syncStatus,
+                            syncingDocuments.has(pageIndex),
+                            () => onSyncDocument?.(pageIndex),
+                          )}
                         </td>
                       )}
 
                       {isOpenSync && (
                         <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
                           <button
-                            className='cursor-pointer text-gray-400 hover:text-gray-600 dark:hover:text-gray-300'
+                            className='inline-flex items-center justify-center rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
                             onClick={(e) => {
                               e.stopPropagation();
                               onDeleteDocument(pageIndex);
                             }}
+                            title='Delete document'
+                            aria-label='Delete document'
                           >
-                            Delete
+                            <svg
+                              className='h-4 w-4'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                              aria-hidden='true'
+                            >
+                              <path
+                                strokeLinecap='round'
+                                strokeLinejoin='round'
+                                strokeWidth={2}
+                                d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                              />
+                            </svg>
                           </button>
                         </td>
                       )}

@@ -1,7 +1,7 @@
 'use client';
 import {
   BulkActions,
-  DeleteConfirmModal,
+  DocumentDeleteModal,
   DocumentsControls,
   DocumentsHeader,
   DocumentsPagination,
@@ -15,6 +15,7 @@ import {
   DocumentPreview,
   MiniDocumentPreview,
 } from '@/components/deepSearch';
+import { useToast } from '@/components/toast';
 import { useLoading } from '@/contexts/LoadingContext';
 import { mockSearchResults } from '@/data/deepSearch';
 import {
@@ -86,6 +87,7 @@ const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
 
 export default function DocumentsPage() {
   const { setLoading } = useLoading();
+  const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [deepSearchLoad, setDeepSearchLoad] = useState(false);
   const [searchResults, setSearchResults] = useState<DocumentSearchResult[]>(
@@ -295,6 +297,9 @@ export default function DocumentsPage() {
 
       await documentService.deleteDocument(originalDoc.id);
 
+      // Show success notification
+      showToast(`Document "${originalDoc.name}" deleted successfully`, 'success');
+
       // Close modal and refresh data
       setIsDeleteModalOpen(false);
       setDocumentToDelete(null);
@@ -303,7 +308,16 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       console.error('[DocumentsPage] Error deleting document:', error);
-      alert('Failed to delete document. Please try again.');
+      
+      // Show error notification
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to delete document. Please try again.';
+      showToast(errorMessage, 'error');
+      
+      // Close modal
+      setIsDeleteModalOpen(false);
+      setDocumentToDelete(null);
     } finally {
       setLoading(false);
     }
@@ -321,11 +335,13 @@ export default function DocumentsPage() {
       // selectedIndices are absolute indices from the filteredDocuments
       // But we need to map them to the actual documents array
       const documentIds: string[] = [];
+      const documentNames: string[] = [];
       selectedIndices.forEach((absoluteIndex) => {
         // Find the document from userFilteredDocuments
         const documentAtIndex = userFilteredDocuments[absoluteIndex];
         if (documentAtIndex?.id) {
           documentIds.push(documentAtIndex.id);
+          documentNames.push(documentAtIndex.name);
         }
       });
 
@@ -338,6 +354,13 @@ export default function DocumentsPage() {
         await documentService.deleteDocument(id);
       }
 
+      // Show success notification
+      const documentCount = documentIds.length;
+      const successMessage = documentCount === 1 
+        ? `Document "${documentNames[0]}" deleted successfully`
+        : `${documentCount} documents deleted successfully`;
+      showToast(successMessage, 'success');
+
       // Clear selection and refresh
       handleClearSelection();
 
@@ -345,7 +368,12 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       console.error('[DocumentsPage] Error deleting documents:', error);
-      alert('Failed to delete documents. Please try again.');
+      
+      // Show error notification
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Failed to delete documents. Please try again.';
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -486,15 +514,12 @@ export default function DocumentsPage() {
     setPreviewDocument(null);
   };
 
-  useEffect(() => {
-    setLoading(loading);
-  }, [loading, setLoading]);
-
   // Reset selected document when search term changes
   useEffect(() => {
     setSelectedDocument(null);
     setSelectedDocuments([]); // Reset selected documents when search changes
-  }, [searchTerm, setSelectedDocument, setSelectedDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchTerm]);
 
   // Update displayed results when page or results per page changes
   useEffect(() => {
@@ -630,11 +655,12 @@ export default function DocumentsPage() {
         )}
       </div>
 
-      <DeleteConfirmModal
+      <DocumentDeleteModal
         isOpen={isDeleteModalOpen}
         onClose={() => {
           setIsDeleteModalOpen(false);
           setOptionBulkDelete(false);
+          setDocumentToDelete(null);
         }}
         onConfirm={async () => {
           if (documentToDelete) {
@@ -650,8 +676,13 @@ export default function DocumentsPage() {
 
             setIsDeleteModalOpen(false);
             setOptionBulkDelete(false);
+            setDocumentToDelete(null);
           }
         }}
+        documentName={!optionBulkDelete ? documentToDelete?.name : undefined}
+        documentCount={optionBulkDelete ? selectedDocuments.length : 1}
+        isBulkDelete={optionBulkDelete}
+        loading={loading}
       />
 
       {/* Preview Modals */}

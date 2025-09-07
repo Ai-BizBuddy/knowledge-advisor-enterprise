@@ -247,26 +247,29 @@ export default function UploadDocument({
       // Wait for all uploads to complete
       await Promise.all(uploadPromises);
 
-      // After all uploads are complete, wait a moment to show success state
-      setTimeout(() => {
-        // Check if all files are successful
-        const currentStates = filesToUpload.map((uploadState) =>
-          fileStates.find((fs) => fs.id === uploadState.id),
-        );
+      // Check if all uploads were successful
+      const checkAndCloseModal = () => {
+        setFileStates((currentStates) => {
+          const allSuccessful = filesToUpload.every((uploadState) => {
+            const state = currentStates.find((fs) => fs.id === uploadState.id);
+            return state && state.status === 'success';
+          });
 
-        const allSuccessful = currentStates.every(
-          (state) =>
-            state &&
-            (state.status === 'success' || state.status === 'cancelled'),
-        );
+          if (allSuccessful) {
+            // Auto-close modal after short delay to show success
+            setTimeout(() => {
+              setFileStates([]);
+              setError('');
+              onClose();
+            }, 1500);
+          }
 
-        if (allSuccessful) {
-          // Clear states and close modal
-          setFileStates([]);
-          setError('');
-          onClose();
-        }
-      }, 1000); // Show success state for 1 second before closing
+          return currentStates;
+        });
+      };
+
+      // Wait a moment then check if we should auto-close
+      setTimeout(checkAndCloseModal, 500);
     } catch (err) {
       const errorMessage =
         err instanceof Error
@@ -319,19 +322,18 @@ export default function UploadDocument({
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm sm:p-6'>
-      <div className='max-h-[90vh] w-full max-w-4xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl shadow-lg dark:border-gray-700 dark:bg-gray-800 dark:text-white'>
-        <div className='flex items-start justify-between border-b border-gray-200 dark:border-gray-700'>
-          <div className='p-4 sm:p-6'>
+      <div className='max-h-[90vh] w-full max-w-4xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:text-white'>
+        <div className='flex items-center justify-between border-b border-gray-200 p-4 sm:p-6 dark:border-gray-700'>
+          <div>
             <h2 className='text-base font-bold text-gray-900 sm:text-lg dark:text-white'>
-              {' '}
-              Upload Document{' '}
+              Upload Document
             </h2>
             <p className='text-sm text-gray-600 dark:text-slate-400'>
               Upload your files here
             </p>
           </div>
           <button
-            className='cursor-pointer text-gray-500 transition-colors hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200'
+            className='rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-gray-700 dark:hover:text-slate-200'
             disabled={isUploading || loading}
             onClick={() => {
               if (!isUploading && !loading) {
@@ -340,6 +342,7 @@ export default function UploadDocument({
                 setError('');
               }
             }}
+            aria-label='Close upload modal'
           >
             <svg
               className='h-6 w-6'

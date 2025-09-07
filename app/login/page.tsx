@@ -24,10 +24,14 @@ export default function LoginPage() {
     console.log('Form submitted:', form);
     setSubmitting(true);
     setTimeout(async () => {
-      if (form.email && form.password) {
-        await login(form.email, form.password, form.remember);
+      try {
+        if (form.email && form.password) {
+          await login(form.email, form.password, form.remember);
+        }
+      } catch (error) {
+        setSubmitting(false);
+        console.error('Login error:', error);
       }
-      setSubmitting(false);
     }, 1000);
   };
 
@@ -56,7 +60,6 @@ export default function LoginPage() {
             </h1>
 
             {error ? (
-              
               <Alert color='failure' className='mt-2 items-center'>
                 <span className='font-medium'>Error:</span> {error}
               </Alert>

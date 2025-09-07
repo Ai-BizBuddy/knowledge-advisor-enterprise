@@ -10,6 +10,7 @@ export { useDocumentIngestion } from './useDocumentIngestion';
 export { useDocuments } from './useDocuments';
 export { useDocumentSearch } from './useDocumentSearch';
 export { useDocumentsManagement } from './useDocumentsManagement';
+export { useDocumentSync } from './useDocumentSync';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
 export { usePermissionDataWithFallback } from './usePermissionData';
