@@ -364,7 +364,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       onClose={handleClose}
       size='4xl'
       dismissible={!isSubmitting && !isLoading}
-      className='roleModal mx-2 sm:mx-4 md:mx-6'
+      className='roleModal'
     >
       <motion.div
         variants={modalVariants}
