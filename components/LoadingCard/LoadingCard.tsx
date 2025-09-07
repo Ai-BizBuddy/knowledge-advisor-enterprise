@@ -13,8 +13,6 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
   count = 6,
   variant = 'grid',
   className = '',
-  message = 'Loading...',
-  showMessage = true,
 }) => {
   const getGridClassName = () => {
     switch (variant) {
