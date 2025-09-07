@@ -1,7 +1,6 @@
 'use client';
 import {
   DocumentDeleteModal,
-  DocumentsControls,
   DocumentsHeader,
   DocumentsPagination,
   DocumentsSearch,
@@ -536,21 +535,6 @@ export default function DocumentsPage() {
             <DocumentsHeader />
           </div>
         </div>
-
-        {/* Controls Section */}
-        {
-          !isDeepSearch && (
-            
-        <div className='mb-6'>
-          <DocumentsControls
-            sortBy={sortField}
-            sortOrder={sortOrder}
-            onSortChange={handleSortByString}
-            onSortOrderToggle={handleSortOrderToggle}
-          />
-        </div>
-          )
-        }
 
         {/* Main Content Layout - Responsive grid */}
 
