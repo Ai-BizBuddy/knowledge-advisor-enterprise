@@ -1,10 +1,12 @@
 'use client';
-import { KnowledgeBaseCard, PageHeader, Tabs } from '@/components';
+
+import { KnowledgeBaseCard, PageHeader } from '@/components';
 import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
+import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import Loading from './loading';
 
@@ -20,8 +22,6 @@ export default function KnowledgeBase() {
     projects,
     loading,
     searchTerm,
-    selectedTab,
-    tabCounts,
 
     // Pagination
     currentPage,
@@ -31,9 +31,6 @@ export default function KnowledgeBase() {
     totalItems,
 
     initialLoad,
-
-    // Handlers
-    handleTabChange,
     handlePageChange,
     handleKnowledgeBaseClick,
     handleKnowledgeBaseDelete,
@@ -41,18 +38,6 @@ export default function KnowledgeBase() {
     createKnowledgeBase,
   } = useKnowledgeBase();
 
-  const tabList = [
-    { label: 'All', count: tabCounts.all },
-    { label: 'Public', count: tabCounts.public },
-    { label: 'Private', count: tabCounts.private },
-    { label: 'Department', count: tabCounts.department },
-    { label: 'custom', count: tabCounts.custom },
-  ];
-
-  const handleTabSelect = (tab: string) => {
-    console.log('Selected tab:', tab);
-    handleTabChange(tab);
-  };
 
   const formatUpdatedTime = (updatedAt: string) => {
     const date = new Date(updatedAt);
@@ -108,28 +93,6 @@ export default function KnowledgeBase() {
           <PageHeader
             title='Knowledge Base'
             subtitle='Manage your enterprise knowledge repositories'
-            action={
-              <button
-                className='flex w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-medium text-white transition-colors duration-200 hover:bg-blue-700 sm:w-auto'
-                onClick={() => setOpenModal(true)}
-              >
-                <svg
-                  xmlns='http://www.w3.org/2000/svg'
-                  fill='none'
-                  viewBox='0 0 24 24'
-                  strokeWidth={1.5}
-                  stroke='currentColor'
-                  className='h-5 w-5 flex-shrink-0'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    d='M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z'
-                  />
-                </svg>
-                <span className='text-sm font-medium'>New Knowledge Base</span>
-              </button>
-            }
           />
         </div>
 
@@ -141,21 +104,34 @@ export default function KnowledgeBase() {
               <KnowledgeBaseSearch
                 searchTerm={searchTerm}
                 onSearchChange={handleKnowledgeBaseSearch}
-                placeholder='Search knowledge bases by name, description, or category...'
+                placeholder='Search knowledge bases'
               />
             </div>
-
-            {/* Results Count */}
-            <div className='flex items-center text-sm text-gray-600 dark:text-gray-400'>
-              <span>
-                {totalItems} knowledge base
-                {totalItems !== 1 ? 's' : ''} found
-              </span>
+            <div>
+              <Button
+                onClick={() => setOpenModal(true)}
+                className='inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700'
+              >
+                <svg
+                  className='h-4 w-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 4v16m8-8H4'
+                  />
+                </svg>
+                Create Knowledge Base
+              </Button>
             </div>
           </div>
 
           {/* Tabs Section */}
-          <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
+          {/* <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
             <Tabs
               currentTab={selectedTab}
               tabList={tabList.map((tab) => `${tab.label}`)}
@@ -165,7 +141,7 @@ export default function KnowledgeBase() {
                 handleTabSelect(tabName);
               }}
             />
-          </div>
+          </div> */}
         </div>
 
         {/* Content Area */}

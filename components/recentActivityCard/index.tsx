@@ -165,15 +165,6 @@ export default function RecentActivityCard({
             : activities.length === 0
               ? renderEmptyState()
               : renderActivityList()}
-
-        {loading && (
-          <div className='flex items-center space-x-2 p-4 justify-center'>
-            <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent'></div>
-            <span className='text-xs text-gray-500 dark:text-gray-400'>
-              Loading...
-            </span>
-          </div>
-        )}
       </div>
     </Card>
   );
