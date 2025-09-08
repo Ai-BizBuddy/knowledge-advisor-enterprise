@@ -7,7 +7,7 @@ export default function NoDocuments({
   setOpenModal,
 }: NoDocumentsProps) {
   return (
-    <div className='flex w-3/4 flex-col items-center gap-4 rounded-2xl border-gray-700/50 bg-gray-100 p-6 shadow dark:bg-gray-900'>
+    <div className='flex w-full flex-col items-center gap-4 rounded-2xl border-gray-700/50 bg-gray-100 p-6 shadow dark:bg-gray-800'>
       <div>
         <svg
           className='h-12 w-12 text-gray-500 dark:text-gray-500'

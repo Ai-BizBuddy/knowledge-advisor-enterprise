@@ -766,7 +766,7 @@ export default function KnowledgeBaseDetail() {
                 columns={6}
                 showHeader={true}
                 showActions={true}
-                message='Loading documents...'
+                // message='Loading documents...'
               />
             ) : (
               <DocumentsTable

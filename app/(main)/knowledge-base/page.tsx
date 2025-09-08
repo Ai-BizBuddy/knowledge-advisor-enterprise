@@ -1,6 +1,6 @@
 'use client';
 import { KnowledgeBaseCard, PageHeader } from '@/components';
-import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal/CreateKnowledgeBaseModal';
+import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
@@ -20,8 +20,6 @@ export default function KnowledgeBase() {
     projects,
     loading,
     searchTerm,
-    selectedTab,
-    tabCounts,
 
     // Pagination
     currentPage,
@@ -31,9 +29,6 @@ export default function KnowledgeBase() {
     totalItems,
 
     initialLoad,
-
-    // Handlers
-    handleTabChange,
     handlePageChange,
     handleKnowledgeBaseClick,
     handleKnowledgeBaseDelete,
@@ -41,18 +36,6 @@ export default function KnowledgeBase() {
     createKnowledgeBase,
   } = useKnowledgeBase();
 
-  const tabList = [
-    { label: 'All', count: tabCounts.all },
-    { label: 'Public', count: tabCounts.public },
-    { label: 'Private', count: tabCounts.private },
-    { label: 'Department', count: tabCounts.department },
-    { label: 'Custom', count: tabCounts.custom },
-  ];
-
-  const handleTabSelect = (tab: string) => {
-    console.log('Selected tab:', tab);
-    handleTabChange(tab);
-  };
 
   const formatUpdatedTime = (updatedAt: string) => {
     const date = new Date(updatedAt);
