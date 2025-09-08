@@ -87,9 +87,9 @@ export default function ChatPage() {
             <PageHeader
               title='AI Chat Assistant'
               subtitle={
-                getSelectedCount() !== 0
-                  ? `กำลังค้นหาข้อมูลจาก ${getSelectedCount()} Knowledge Base`
-                  : 'กรุณาเลือก Knowledge Base เพื่อเริ่มการสนทนา'
+              getSelectedCount() !== 0
+                ? `Searching from ${getSelectedCount()} Knowledge Base${getSelectedCount() > 1 ? 's' : ''}`
+                : 'Please select a Knowledge Base to start chatting'
               }
             />
 

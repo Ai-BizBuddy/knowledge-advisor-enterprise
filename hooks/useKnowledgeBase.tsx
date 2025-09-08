@@ -101,7 +101,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     currentPage: 1,
     totalPages: 1,
     totalItems: 0,
-    itemsPerPage: 10, // 3x3 grid for cards
+    itemsPerPage: 20,
     searchTerm: '',
     selectedTab: 'All',
     startIndex: 1,
@@ -363,7 +363,9 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const updatedProjects = await Promise.all(updatePromises);
         setProjects((prev) =>
           prev.map((p) => {
-            const updated = updatedProjects.find((up: Project) => up.id === p.id);
+            const updated = updatedProjects.find(
+              (up: Project) => up.id === p.id,
+            );
             return updated || p;
           }),
         );
