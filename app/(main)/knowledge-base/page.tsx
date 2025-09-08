@@ -1,4 +1,5 @@
 'use client';
+
 import { KnowledgeBaseCard, PageHeader } from '@/components';
 import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
