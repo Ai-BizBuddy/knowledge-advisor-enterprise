@@ -441,10 +441,14 @@ class DocumentService {
         }
 
         try {
-          // Generate unique file path for storage
-          const timestamp = Date.now();
-          const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const filePath = `documents/${timestamp}_${sanitizedFileName}`;
+          // Generate document ID first to use in storage path
+          const documentId = crypto.randomUUID();
+          
+          // Extract file extension from original filename
+          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+          
+          // Create file path using document ID instead of filename
+          const filePath = `documents/${documentId}.${fileExtension}`;
 
           // Check if storage bucket exists for this knowledge base, create if not
           const { data: buckets } = await supabaseClient.storage.listBuckets();
@@ -471,7 +475,7 @@ class DocumentService {
             }
           }
 
-          // Upload file to Supabase Storage
+          // Upload file to Supabase Storage using document ID in path
           const { error: uploadError } = await supabaseClient.storage
             .from(input.knowledge_base_id)
             .upload(filePath, file, {
@@ -488,22 +492,21 @@ class DocumentService {
             .from(input.knowledge_base_id)
             .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year expiry
 
-          // Extract file extension from name
-          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-
           // Create document record in database using the 'document' table schema
           const documentData = {
-            name: file.name,
+            id: documentId, // Use the generated document ID
+            name: documentId, // Use document ID as name instead of filename
             file_type: fileExtension, // Database uses 'file_type'
             knowledge_base_id: input.knowledge_base_id,
             status: 'uploaded',
             file_size: file.size,
             mime_type: file.type,
+            path: filePath, // Add the path field as required by interface
             url: urlData?.signedUrl || '',
             chunk_count: 0,
-            uploaded_by: user.id,
             metadata: {
-              originalFileName: file.name,
+              originalFileName: file.name, // Keep original filename in metadata
+              uploadedBy: user.id, // Store user ID in metadata instead
               uploadedAt: new Date().toISOString(),
               uploadSource: 'upload_modal',
               ...input.metadata,
@@ -526,7 +529,7 @@ class DocumentService {
           }
 
           console.log(
-            `[${this.serviceName}] File ${file.name} uploaded successfully`,
+            `[${this.serviceName}] Document ${documentId} (${file.name}) uploaded successfully`,
           );
 
           return document as Document;

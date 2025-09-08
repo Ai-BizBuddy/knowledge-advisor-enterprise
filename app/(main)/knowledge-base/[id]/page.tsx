@@ -44,7 +44,7 @@ interface DocumentTableItem {
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
 const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
-  name: doc.name,
+  name: doc.metadata?.originalFileName as string || doc.name, // Use original filename from metadata if available
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
     : 'Unknown',
@@ -452,23 +452,23 @@ export default function KnowledgeBaseDetail() {
       try {
         setIsDeleting(true);
         
-        // Find the original document by name to get the ID
+        // Find the original document by matching the original filename from metadata
         const originalDoc = documents.find(
-          (doc) => doc.name === documentToDelete.name,
+          (doc) => doc.metadata?.originalFileName === documentToDelete.name,
         );
         
         if (!originalDoc?.id) {
           throw new Error('Document not found');
         }
 
-        console.log(`[KnowledgeBaseDetail] Deleting document: ${originalDoc.name} (${originalDoc.id})`);
+        console.log(`[KnowledgeBaseDetail] Deleting document: ${documentToDelete.name} (${originalDoc.id})`);
         
         // Create an instance of DocumentService and delete the document
         const documentService = new DocumentService();
         await documentService.deleteDocument(originalDoc.id);
 
-        console.log(`[KnowledgeBaseDetail] Successfully deleted document: ${originalDoc.name}`);
-        showToast(`Document "${originalDoc.name}" deleted successfully`, 'success', 4000);
+        console.log(`[KnowledgeBaseDetail] Successfully deleted document: ${documentToDelete.name}`);
+        showToast(`Document "${documentToDelete.name}" deleted successfully`, 'success', 4000);
 
         // Close modal and reset state
         setIsDeleteModalOpen(false);

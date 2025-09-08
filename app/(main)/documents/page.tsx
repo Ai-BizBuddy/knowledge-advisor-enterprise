@@ -52,7 +52,7 @@ export interface DocumentTableItem {
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
 const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
-  name: doc.name,
+  name: doc.metadata?.originalFileName as string || doc.name, // Use original filename from metadata if available
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
     : 'Unknown',
@@ -287,9 +287,9 @@ export default function DocumentsPage() {
   ) => {
     try {
       setLoading(true);
-      // Find the original document by name to get the ID
+      // Find the original document by matching the original filename from metadata
       const originalDoc = documents.find(
-        (doc) => doc.name === documentItem.name,
+        (doc) => doc.metadata?.originalFileName === documentItem.name,
       );
       if (!originalDoc) {
         throw new Error('Document not found');
@@ -298,7 +298,7 @@ export default function DocumentsPage() {
       await documentService.deleteDocument(originalDoc.id);
 
       // Show success notification
-      showToast(`Document "${originalDoc.name}" deleted successfully`, 'success');
+      showToast(`Document "${documentItem.name}" deleted successfully`, 'success');
 
       // Close modal and refresh data
       setIsDeleteModalOpen(false);
@@ -341,7 +341,9 @@ export default function DocumentsPage() {
         const documentAtIndex = userFilteredDocuments[absoluteIndex];
         if (documentAtIndex?.id) {
           documentIds.push(documentAtIndex.id);
-          documentNames.push(documentAtIndex.name);
+          // Use original filename from metadata for display
+          const originalFileName = documentAtIndex.metadata?.originalFileName as string || documentAtIndex.name;
+          documentNames.push(originalFileName);
         }
       });
 
