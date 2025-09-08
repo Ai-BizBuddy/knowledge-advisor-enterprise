@@ -17,8 +17,8 @@ export default function RecentActivityCard({
   const renderSkeletonLoader = () => (
     <ul className='space-y-0 divide-y divide-gray-200 dark:divide-gray-800'>
       {Array.from({ length: 5 }, (_, index) => (
-        <li 
-          key={index} 
+        <li
+          key={index}
           className='flex items-start gap-3 py-3 first:pt-0 last:pb-0 sm:py-4'
         >
           <div className='flex-shrink-0'>
@@ -59,12 +59,7 @@ export default function RecentActivityCard({
       </p>
       {onRetry && (
         <div>
-          <Button
-            size='sm'
-            color='gray'
-            onClick={onRetry}
-            className='text-xs'
-          >
+          <Button size='sm' color='gray' onClick={onRetry} className='text-xs'>
             <svg
               className='mr-2 h-3 w-3'
               fill='none'
@@ -160,24 +155,16 @@ export default function RecentActivityCard({
             <h5 className='mb-4 text-lg font-bold text-gray-900 sm:text-xl dark:text-white'>
               Recent Activity
             </h5>
-            {loading && (
-              <div className='flex items-center space-x-2'>
-                <div className='h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent'></div>
-                <span className='text-xs text-gray-500 dark:text-gray-400'>Loading...</span>
-              </div>
-            )}
           </div>
         </div>
 
-        {loading ? (
-          renderSkeletonLoader()
-        ) : error ? (
-          renderErrorState()
-        ) : activities.length === 0 ? (
-          renderEmptyState()
-        ) : (
-          renderActivityList()
-        )}
+        {loading
+          ? renderSkeletonLoader()
+          : error
+            ? renderErrorState()
+            : activities.length === 0
+              ? renderEmptyState()
+              : renderActivityList()}
       </div>
     </Card>
   );
