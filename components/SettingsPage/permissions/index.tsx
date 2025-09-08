@@ -18,7 +18,7 @@ export default function PermissionsPage() {
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
 
   // Filter resources based on search
   const filteredResources = resourceConfigs.filter(

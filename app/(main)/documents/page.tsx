@@ -125,7 +125,6 @@ export default function DocumentsPage() {
     sortBy: sortField,
     sortOrder,
     handleSort: handleSortChange,
-    handleSortOrderToggle,
     sortDocuments,
   } = useSorting({
     initialSortField: 'date',

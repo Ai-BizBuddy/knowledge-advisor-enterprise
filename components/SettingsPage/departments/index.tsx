@@ -48,7 +48,7 @@ export default function DepartmentsPage() {
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusFilter, setStatusFilter] = useState('');
   const initialLoadRef = useRef(false);
 
