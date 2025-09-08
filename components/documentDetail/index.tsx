@@ -1,3 +1,6 @@
+import { DocumentStatus } from '@/interfaces/Project';
+import { getDocumentStatusColor, isValidDocumentStatus } from '@/utils/documentsUtils';
+
 // Document interface for detail component
 interface Document {
   name: string;
@@ -28,13 +31,25 @@ const DocumentDetail: React.FC<Document> = ({
   uploadDate,
 }) => {
   const getStatusColor = (source: string) => {
+    // Check if source is a valid DocumentStatus
+    if (isValidDocumentStatus(source)) {
+      return getDocumentStatusColor(source as DocumentStatus);
+    }
+    
+    // Fallback for legacy status values
     switch (source.toLowerCase()) {
       case 'processed':
+      case 'ready':
         return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
       case 'processing':
         return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
       case 'failed':
+      case 'error':
         return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'uploaded':
+        return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'archived':
+        return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
       default:
         return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
     }

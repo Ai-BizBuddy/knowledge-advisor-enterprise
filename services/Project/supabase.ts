@@ -323,6 +323,7 @@ export async function getDocumentsByProjectId(
         type,
         status,
         project_id,
+        uploaded_by,
         chunk_count,
         file_size,
         mime_type,
@@ -350,6 +351,7 @@ export async function getDocumentsByProjectId(
         file_type: doc.type,
         status: doc.status,
         knowledge_base_id: doc.project_id,
+        uploaded_by: doc.uploaded_by,
         chunk_count: doc.chunk_count,
         file_size: doc.file_size,
         mime_type: doc.mime_type,
@@ -397,6 +399,9 @@ export async function uploadDocument(
   const sanitizedName = sanitizeFileName(file.name);
   const sanitizedPath = `documents/${sanitizedName}`;
   try {
+    // Get current user for uploaded_by field
+    const user = await getCurrentUser();
+    
     // Check if bucket exists, create if not
     const supabase = createClient();
     const { data: buckets, error: listError } =
@@ -447,6 +452,7 @@ export async function uploadDocument(
           type: fileType,
           status: 'Uploaded',
           project_id: projectId,
+          uploaded_by: user.id,
           url: urlData?.signedUrl || '',
           path: sanitizedPath,
           file_size: file.size,
@@ -943,6 +949,7 @@ export async function getProjectsByStatus(
     `,
     )
     .eq('status', status)
+    .eq('owner', user.id)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -1028,7 +1035,9 @@ export async function batchUpdateProjects(
       ...updates,
       updated_at: new Date().toISOString(),
     })
-    .in('id', projectIds).select(`
+    .in('id', projectIds)
+    .eq('owner', user.id)
+    .select(`
       id,
       name,
       description,
@@ -1325,6 +1334,7 @@ export async function getAllDocuments(): Promise<Document[]> {
         type,
         status,
         project_id,
+        uploaded_by,
         chunk_count,
         file_size,
         mime_type,
@@ -1366,6 +1376,7 @@ export async function getAllDocuments(): Promise<Document[]> {
       file_type: doc.type || '',
       status: doc.status || '',
       knowledge_base_id: doc.project_id,
+      uploaded_by: doc.uploaded_by,
       chunk_count: doc.chunk_count || 0,
       file_size: doc.file_size,
       mime_type: doc.mime_type,

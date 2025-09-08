@@ -1,7 +1,8 @@
 // Enhanced type definitions for Supabase operations to replace 'any' types
 
-import { createClient } from '@/utils/supabase/client';
 import type { SupabaseProjectRow } from '@/interfaces/AxiosTypes';
+import { DocumentStatus } from '@/interfaces/Project';
+import { createClient } from '@/utils/supabase/client';
 
 /**
  * Type for Supabase client with proper table access
@@ -83,9 +84,10 @@ export interface SupabaseDocumentRow {
   name: string;
   url: string;
   project_id: string;
+  uploaded_by: string;
   file_size?: number;
   mime_type?: string;
-  status?: string;
+  status?: DocumentStatus;
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   chunk_count?: number;
   last_rag_sync?: string;
@@ -104,8 +106,9 @@ export interface DocumentWithProject {
   id: string;
   name: string;
   type?: string;
-  status?: string;
+  status?: DocumentStatus;
   project_id: string;
+  uploaded_by: string;
   chunk_count?: number;
   file_size?: number;
   mime_type?: string;

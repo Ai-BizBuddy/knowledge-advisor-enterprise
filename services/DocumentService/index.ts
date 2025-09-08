@@ -275,6 +275,7 @@ class DocumentService {
     console.log(`[${this.serviceName}] Creating document:`, input.name);
 
     try {
+      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -291,6 +292,7 @@ class DocumentService {
       const documentData = {
         ...input,
         status: input.status || 'uploaded',
+        uploaded_by: user.id,
         chunk_count: 0,
         rag_status: 'not_synced' as const,
         created_at: new Date().toISOString(),
@@ -332,6 +334,7 @@ class DocumentService {
     );
 
     try {
+      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -352,9 +355,9 @@ class DocumentService {
 
       // Prepare documents data with enhanced validation
       const documentsData = input.documents.map((doc, index) => {
-        if (!doc.name || !doc.type || !doc.path || !doc.url) {
+        if (!doc.name || !doc.type || !doc.url) {
           throw new Error(
-            `Document at index ${index} is missing required fields (name, type, path, url)`,
+            `Document at index ${index} is missing required fields (name, type, url)`,
           );
         }
 
@@ -362,6 +365,7 @@ class DocumentService {
           ...doc,
           knowledge_base_id: input.knowledge_base_id,
           status: doc.status || 'uploaded',
+          uploaded_by: user.id,
           chunk_count: 0,
           rag_status: 'not_synced' as const,
           created_at: new Date().toISOString(),
@@ -448,7 +452,7 @@ class DocumentService {
           const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
           
           // Create file path using document ID instead of filename
-          const filePath = `documents/${documentId}.${fileExtension}`;
+          const filePath = `documents/${documentId}`;
 
           // Check if storage bucket exists for this knowledge base, create if not
           const { data: buckets } = await supabaseClient.storage.listBuckets();
@@ -495,20 +499,20 @@ class DocumentService {
           // Create document record in database using the 'document' table schema
           const documentData = {
             id: documentId, // Use the generated document ID
-            name: documentId, // Use document ID as name instead of filename
+            name: file.name, 
             file_type: fileExtension, // Database uses 'file_type'
             knowledge_base_id: input.knowledge_base_id,
             status: 'uploaded',
+            uploaded_by: user.id, // Required field for database constraint
             file_size: file.size,
             mime_type: file.type,
-            path: filePath, // Add the path field as required by interface
             url: urlData?.signedUrl || '',
             chunk_count: 0,
             metadata: {
               originalFileName: file.name, // Keep original filename in metadata
-              uploadedBy: user.id, // Store user ID in metadata instead
               uploadedAt: new Date().toISOString(),
               uploadSource: 'upload_modal',
+              filePath: filePath, // Store path in metadata instead
               ...input.metadata,
             },
             created_at: new Date().toISOString(),

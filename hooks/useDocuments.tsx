@@ -1,12 +1,12 @@
 'use client';
 
 import type {
-  CreateDocumentInput,
-  CreateDocumentsFromFilesInput,
-  CreateMultipleDocumentsInput,
-  Document,
-  PaginationOptions,
-  UpdateDocumentInput,
+    CreateDocumentInput,
+    CreateDocumentsFromFilesInput,
+    CreateMultipleDocumentsInput,
+    Document,
+    PaginationOptions,
+    UpdateDocumentInput,
 } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { useRouter } from 'next/navigation';
@@ -55,8 +55,9 @@ export interface UseDocumentsReturn {
     all: number;
     uploaded: number;
     processing: number;
-    synced: number;
+    ready: number;
     error: number;
+    archived: number;
   };
 
   // CRUD Operations
@@ -140,10 +141,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const tabCountsData = useMemo(
     () => ({
       all: totalItems,
-      uploaded: Math.floor(totalItems * 0.3),
+      uploaded: Math.floor(totalItems * 0.2),
       processing: Math.floor(totalItems * 0.1),
-      synced: Math.floor(totalItems * 0.5),
+      ready: Math.floor(totalItems * 0.5),
       error: Math.floor(totalItems * 0.1),
+      archived: Math.floor(totalItems * 0.1),
     }),
     [totalItems],
   );

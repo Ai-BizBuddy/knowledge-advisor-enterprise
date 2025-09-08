@@ -1,5 +1,6 @@
 // Axios-specific TypeScript interfaces to replace 'any' types
 
+import { DocumentStatus } from '@/interfaces/Project';
 import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 /**
@@ -99,7 +100,7 @@ export interface UploadStatus {
  * File upload update data type
  */
 export interface FileUploadUpdateData {
-  status?: string;
+  status?: DocumentStatus;
   path?: string;
   url?: string;
   file_size?: number;
@@ -114,6 +115,6 @@ export interface DocumentProcessingUpdateData {
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   chunk_count?: number;
-  status?: string;
+  status?: DocumentStatus;
   updated_at?: string;
 }
