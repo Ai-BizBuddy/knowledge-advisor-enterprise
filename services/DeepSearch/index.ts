@@ -28,7 +28,7 @@ export class DeepSearchService {
         // Initialize with default config
         this.config = {
             method: 'post',
-            url: process.env.NEXT_PUBLIC_INGRESS_SERVICE + 'deep-search',
+            url: process.env.NEXT_PUBLIC_INGRESS_SERVICE + '/deep-search',
             // timeout: 10000,
             headers: {
                 Accept: '*/*',
