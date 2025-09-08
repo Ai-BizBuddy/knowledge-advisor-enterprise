@@ -31,6 +31,8 @@ export default function LoginPage() {
       } catch (error) {
         setSubmitting(false);
         console.error('Login error:', error);
+      } finally {
+        setSubmitting(false);
       }
     }, 1000);
   };
