@@ -528,7 +528,7 @@ export default function DocumentsPage() {
   }, [allSearchResults, deepCurrentPage, dStartIndex, dEndIndex]);
 
   return (
-    <div className='min-h-screen'>
+    <div>
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Header Section - Responsive layout */}

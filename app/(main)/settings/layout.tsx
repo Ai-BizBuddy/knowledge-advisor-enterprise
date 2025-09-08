@@ -37,7 +37,7 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
   const isOverviewPage = pathname === '/settings';
 
   return (
-    <div className='min-h-screen'>
+    <div >
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header - only show on overview page */}

@@ -544,7 +544,7 @@ export default function KnowledgeBaseDetail() {
   }
 
   return (
-    <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
+    <div className=' p-3 sm:p-6 lg:p-8'>
       {/* Header Section */}
       <div className='mb-4 sm:mb-6'>
         <Breadcrumb
