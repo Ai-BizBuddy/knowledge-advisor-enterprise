@@ -42,7 +42,7 @@ export default function UsersPage() {
 
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState('');
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Track initial load and prevent duplicate API calls
@@ -123,11 +123,6 @@ export default function UsersPage() {
   // Handle pagination
   const handlePageChange = useCallback((page: number) => {
     setCurrentPage(page);
-  }, []);
-
-  const handlePageSizeChange = useCallback((newPageSize: number) => {
-    setPageSize(newPageSize);
-    setCurrentPage(1); // Reset to first page when page size changes
   }, []);
 
   // Handle successful user creation/edit from the unified modal

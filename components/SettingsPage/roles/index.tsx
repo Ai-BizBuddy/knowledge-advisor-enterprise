@@ -165,7 +165,7 @@ export default function RolesPage() {
 
   // Search and pagination state
   const [searchTerm, setSearchTerm] = useState('');
-  const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
   const initialLoadRef = useRef(false);
 
   // Load roles data with debouncing for search, immediate for initial load
