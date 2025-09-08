@@ -28,9 +28,7 @@ export default function ChatPage() {
     setMessages,
   } = useAdkChat();
 
-  const {
-    getChatSessions,
-  } = useChatHistory();
+  const { getChatSessions } = useChatHistory();
 
   const {
     knowledgeBases,
@@ -52,7 +50,7 @@ export default function ChatPage() {
 
   const handleLoadChatSession = async (session: ChatSession) => {
     // setMessages(session.messages);
-    const messagess = await getChatSessions(session.id)
+    const messagess = await getChatSessions(session.id);
     setMessages([...messages, ...messagess]);
     console.log(messages);
     setOpenHistory(false);
@@ -87,14 +85,14 @@ export default function ChatPage() {
             <PageHeader
               title='AI Chat Assistant'
               subtitle={
-              getSelectedCount() !== 0
-                ? `Searching from ${getSelectedCount()} Knowledge Base${getSelectedCount() > 1 ? 's' : ''}`
-                : 'Please select a Knowledge Base to start chatting'
+                getSelectedCount() !== 0
+                  ? `Searching from ${getSelectedCount()} Knowledge Base${getSelectedCount() > 1 ? 's' : ''}`
+                  : 'Please select a Knowledge Base to start chatting'
               }
             />
 
             {/* Control Section */}
-            <div className='rounded-lg border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
+            <div className='rounded-lg border border-gray-200 bg-white px-3 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
               <div className='flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700'>
                 {/* Knowledge Base Selection */}
                 <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
@@ -176,7 +174,10 @@ export default function ChatPage() {
                       />
                     );
                   }
-                  if (message.type === 'assistant' && message.content.trim() !== '') {
+                  if (
+                    message.type === 'assistant' &&
+                    message.content.trim() !== ''
+                  ) {
                     return (
                       <ChatCard
                         key={index}
@@ -194,7 +195,7 @@ export default function ChatPage() {
               </div>
 
               {/* Message Input */}
-              <div className='border-t border-gray-200 p-3 sm:p-4 lg:p-6 dark:border-gray-600'>
+              <div className='border-t border-gray-200 p-2 sm:p-2 lg:p-3 dark:border-gray-600'>
                 {/* Mobile Layout */}
                 <div className='block sm:hidden'>
                   <form
@@ -207,7 +208,6 @@ export default function ChatPage() {
                   >
                     {/* Status and Input Row */}
                     <div className='flex items-center gap-2'>
-                      
                       <div className='flex-1'>
                         <textarea
                           ref={(textarea) => {
@@ -291,6 +291,9 @@ export default function ChatPage() {
                       </div>
                     </div>
                   </form>
+                  <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
+                    กด Enter เพื่อส่งข้อความ, Shift + Enter เพื่อขึ้นบรรทัดใหม่
+                  </p>
                 </div>
 
                 {/* Desktop Layout */}
@@ -303,7 +306,6 @@ export default function ChatPage() {
                     }}
                     className='flex items-center gap-3'
                   >
-                    
                     <div className='flex-1'>
                       <textarea
                         ref={(textarea) => {
@@ -375,6 +377,9 @@ export default function ChatPage() {
                       )}
                     </button>
                   </form>
+                  <p className='mt-2 text-xs text-gray-500 dark:text-gray-400'>
+                    กด Enter เพื่อส่งข้อความ, Shift + Enter เพื่อขึ้นบรรทัดใหม่
+                  </p>
                 </div>
               </div>
             </div>
