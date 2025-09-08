@@ -41,7 +41,7 @@ export default function RootLayout({
         <ThemeModeScript />
       </head>
       <body
-        className={`${notoSans.variable} ${notoMono.variable} bg-gray-200 antialiased dark:bg-gray-900`}
+        className={`${notoSans.variable} ${notoMono.variable} bg-gray-200 antialiased dark:bg-gray-900 overflow-hidden`}
       >
         <ThemeInit />
         <AuthProvider>

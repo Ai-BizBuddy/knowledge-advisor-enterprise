@@ -5,8 +5,8 @@ import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
-import { HelperText, Spinner } from 'flowbite-react';
 import { useEffect, useState } from 'react';
+import Loading from './loading';
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
@@ -100,7 +100,7 @@ export default function KnowledgeBase() {
   }, [initialLoad]);
 
   return (
-    <div className='min-h-screen'>
+    <div className='h-full '>
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
@@ -171,12 +171,7 @@ export default function KnowledgeBase() {
         {/* Content Area */}
         {loading ? (
           /* Loading State with LoadingCard */
-          <div className='space-y-6 flex justify-center h-100 items-center'>
-            <div className='text-center gap-1'>
-              <Spinner className='m-4' />
-              <HelperText>Loading knowledge bases...</HelperText>
-            </div>
-          </div>
+          <Loading />
         ) : projects.length > 0 ? (
           <div className='space-y-6'>
             {/* Knowledge Base Cards Grid */}

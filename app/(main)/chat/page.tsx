@@ -176,7 +176,7 @@ export default function ChatPage() {
                       />
                     );
                   }
-                  if (message.type === 'assistant') {
+                  if (message.type === 'assistant' && message.content.trim() !== '') {
                     return (
                       <ChatCard
                         key={index}
