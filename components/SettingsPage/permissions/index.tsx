@@ -86,8 +86,7 @@ export default function PermissionsPage() {
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder='Search permission resources...'
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
+    
         />
       </div>
 

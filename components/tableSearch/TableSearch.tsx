@@ -4,19 +4,17 @@
  * Reusable search and filters component that goes above tables.
  */
 
+import { Button, TextInput } from 'flowbite-react';
 import React from 'react';
-import { Select, TextInput } from 'flowbite-react';
-import { PAGE_SIZE_OPTIONS } from '@/interfaces/Pagination';
 
 export interface TableSearchProps {
   searchValue?: string;
   onSearchChange?: (search: string) => void;
   searchPlaceholder?: string;
   showSearch?: boolean;
-  showPageSizeSelector?: boolean;
-  pageSize?: number;
-  onPageSizeChange?: (pageSize: number) => void;
   className?: string;
+  onClickButton?: () => void;
+  textButton?: string;
   children?: React.ReactNode; // For additional filters
 }
 
@@ -25,10 +23,9 @@ export const TableSearch: React.FC<TableSearchProps> = ({
   onSearchChange,
   searchPlaceholder = 'Search...',
   showSearch = true,
-  showPageSizeSelector = true,
-  pageSize = 10,
-  onPageSizeChange,
   className = '',
+  onClickButton = () => {},
+  textButton = '',
   children,
 }) => {
   return (
@@ -68,25 +65,28 @@ export const TableSearch: React.FC<TableSearchProps> = ({
           {children}
 
           {/* Page size selector */}
-          {showPageSizeSelector && onPageSizeChange && (
-            <div className='flex items-center gap-2'>
-              <span className='text-sm text-gray-700 dark:text-gray-300'>
-                Show
-              </span>
-              <Select
-                value={pageSize.toString()}
-                onChange={(e) => onPageSizeChange(parseInt(e.target.value, 10))}
-                className='w-20'
+          {textButton && (
+            <div className='flex w-full items-center justify-end'>
+              <Button
+                onClick={onClickButton}
+                className='w-full bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none sm:w-auto'
               >
-                {PAGE_SIZE_OPTIONS.map((size) => (
-                  <option key={size} value={size.toString()}>
-                    {size}
-                  </option>
-                ))}
-              </Select>
-              <span className='text-sm text-gray-700 dark:text-gray-300'>
-                entries
-              </span>
+                <svg
+                  className='mr-2 h-4 w-4'
+                  fill='none'
+                  stroke='currentColor'
+                  viewBox='0 0 24 24'
+                >
+                  <path
+                    strokeLinecap='round'
+                    strokeLinejoin='round'
+                    strokeWidth={2}
+                    d='M12 4v16m8-8H4'
+                  />
+                </svg>
+                <span className='block sm:hidden'>{textButton.split(' ')[0]}</span>
+                <span className='hidden sm:block'>{textButton}</span>
+              </Button>
             </div>
           )}
         </div>

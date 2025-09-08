@@ -282,26 +282,6 @@ export default function DepartmentsPage() {
             </Button>
           </div>
         </div>
-        <Button
-          onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none w-full sm:w-auto'
-        >
-          <svg
-            className='mr-2 h-4 w-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 4v16m8-8H4'
-            />
-          </svg>
-          <span className='block sm:hidden'>Create</span>
-          <span className='hidden sm:block'>Create Department</span>
-        </Button>
       </div>
 
       {/* Search and Filters */}
@@ -310,8 +290,8 @@ export default function DepartmentsPage() {
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder='Search departments by name...'
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
+          textButton='Create Department'
+          onClickButton={openCreateModal}
         />
       </div>
 

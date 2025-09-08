@@ -547,28 +547,6 @@ export default function RolesPage() {
 
   return (
     <div className='space-y-6'>
-      <div className='flex w-full items-center justify-end'>
-        <Button
-          onClick={openCreateModal}
-          className='bg-blue-600 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none w-full sm:w-auto'
-        >
-          <svg
-            className='mr-2 h-4 w-4'
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
-          >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M12 4v16m8-8H4'
-            />
-          </svg>
-          <span className='block sm:hidden'>Create</span>
-          <span className='hidden sm:block'>Create Role</span>
-        </Button>
-      </div>
 
       {/* Search and Filters */}
       <div className='mb-6'>
@@ -576,8 +554,8 @@ export default function RolesPage() {
           searchValue={searchTerm}
           onSearchChange={setSearchTerm}
           searchPlaceholder='Search roles by name or description...'
-          pageSize={pageSize}
-          onPageSizeChange={setPageSize}
+          textButton='Create Role'
+          onClickButton={openCreateModal}
         />
       </div>
 
