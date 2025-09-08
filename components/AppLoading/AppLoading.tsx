@@ -32,7 +32,7 @@ export const AppLoading: React.FC<AppLoadingProps> = ({
         };
       default:
         return {
-          container: 'flex h-screen w-full items-center justify-center',
+          container: 'flex h-64 w-full items-center justify-center',
           spinner: 'h-12 w-12',
           text: 'text-base',
         };
