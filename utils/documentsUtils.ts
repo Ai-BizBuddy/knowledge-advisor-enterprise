@@ -1,4 +1,44 @@
 import type { Document } from '@/interfaces/Project';
+import { DocumentStatus, DocumentStatusDisplay } from '@/interfaces/Project';
+
+// Document status utility functions
+export const getDocumentStatusDisplay = (status: DocumentStatus): DocumentStatusDisplay => {
+  switch (status) {
+    case DocumentStatus.UPLOADED:
+      return 'Uploaded';
+    case DocumentStatus.PROCESSING:
+      return 'Processing';
+    case DocumentStatus.READY:
+      return 'Ready';
+    case DocumentStatus.ERROR:
+      return 'Error';
+    case DocumentStatus.ARCHIVED:
+      return 'Archived';
+    default:
+      return 'Unknown' as DocumentStatusDisplay;
+  }
+};
+
+export const getDocumentStatusColor = (status: DocumentStatus): string => {
+  switch (status) {
+    case DocumentStatus.UPLOADED:
+      return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    case DocumentStatus.PROCESSING:
+      return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+    case DocumentStatus.READY:
+      return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+    case DocumentStatus.ERROR:
+      return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+    case DocumentStatus.ARCHIVED:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+    default:
+      return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200';
+  }
+};
+
+export const isValidDocumentStatus = (status: string): status is DocumentStatus => {
+  return Object.values(DocumentStatus).includes(status as DocumentStatus);
+};
 
 // Legacy Document interface for backward compatibility
 interface LegacyDocument {

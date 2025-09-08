@@ -275,6 +275,7 @@ class DocumentService {
     console.log(`[${this.serviceName}] Creating document:`, input.name);
 
     try {
+      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -291,6 +292,7 @@ class DocumentService {
       const documentData = {
         ...input,
         status: input.status || 'uploaded',
+        uploaded_by: user.id,
         chunk_count: 0,
         rag_status: 'not_synced' as const,
         created_at: new Date().toISOString(),
@@ -332,6 +334,7 @@ class DocumentService {
     );
 
     try {
+      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Verify the knowledge base belongs to the user
@@ -352,9 +355,9 @@ class DocumentService {
 
       // Prepare documents data with enhanced validation
       const documentsData = input.documents.map((doc, index) => {
-        if (!doc.name || !doc.type || !doc.path || !doc.url) {
+        if (!doc.name || !doc.type || !doc.url) {
           throw new Error(
-            `Document at index ${index} is missing required fields (name, type, path, url)`,
+            `Document at index ${index} is missing required fields (name, type, url)`,
           );
         }
 
@@ -362,6 +365,7 @@ class DocumentService {
           ...doc,
           knowledge_base_id: input.knowledge_base_id,
           status: doc.status || 'uploaded',
+          uploaded_by: user.id,
           chunk_count: 0,
           rag_status: 'not_synced' as const,
           created_at: new Date().toISOString(),
@@ -441,10 +445,14 @@ class DocumentService {
         }
 
         try {
-          // Generate unique file path for storage
-          const timestamp = Date.now();
-          const sanitizedFileName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-          const filePath = `documents/${timestamp}_${sanitizedFileName}`;
+          // Generate document ID first to use in storage path
+          const documentId = crypto.randomUUID();
+          
+          // Extract file extension from original filename
+          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+          
+          // Create file path using document ID instead of filename
+          const filePath = `documents/${documentId}`;
 
           // Check if storage bucket exists for this knowledge base, create if not
           const { data: buckets } = await supabaseClient.storage.listBuckets();
@@ -471,7 +479,7 @@ class DocumentService {
             }
           }
 
-          // Upload file to Supabase Storage
+          // Upload file to Supabase Storage using document ID in path
           const { error: uploadError } = await supabaseClient.storage
             .from(input.knowledge_base_id)
             .upload(filePath, file, {
@@ -488,24 +496,23 @@ class DocumentService {
             .from(input.knowledge_base_id)
             .createSignedUrl(filePath, 60 * 60 * 24 * 365); // 1 year expiry
 
-          // Extract file extension from name
-          const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-
           // Create document record in database using the 'document' table schema
           const documentData = {
-            name: file.name,
+            id: documentId, // Use the generated document ID
+            name: file.name, 
             file_type: fileExtension, // Database uses 'file_type'
             knowledge_base_id: input.knowledge_base_id,
             status: 'uploaded',
+            uploaded_by: user.id, // Required field for database constraint
             file_size: file.size,
             mime_type: file.type,
             url: urlData?.signedUrl || '',
             chunk_count: 0,
-            uploaded_by: user.id,
             metadata: {
-              originalFileName: file.name,
+              originalFileName: file.name, // Keep original filename in metadata
               uploadedAt: new Date().toISOString(),
               uploadSource: 'upload_modal',
+              filePath: filePath, // Store path in metadata instead
               ...input.metadata,
             },
             created_at: new Date().toISOString(),
@@ -526,7 +533,7 @@ class DocumentService {
           }
 
           console.log(
-            `[${this.serviceName}] File ${file.name} uploaded successfully`,
+            `[${this.serviceName}] Document ${documentId} (${file.name}) uploaded successfully`,
           );
 
           return document as Document;

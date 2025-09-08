@@ -22,6 +22,18 @@ export enum ProjectStatus {
 // Helper type for status display
 export type ProjectStatusDisplay = 'Active' | 'Inactive';
 
+// Document status enum to match database constraint
+export enum DocumentStatus {
+  UPLOADED = 'uploaded',
+  PROCESSING = 'processing',
+  READY = 'ready',
+  ERROR = 'error',
+  ARCHIVED = 'archived',
+}
+
+// Helper type for document status display
+export type DocumentStatusDisplay = 'Uploaded' | 'Processing' | 'Ready' | 'Error' | 'Archived';
+
 // Create project input interface
 export interface CreateProjectInput {
   name: string;
@@ -43,15 +55,16 @@ export interface Document {
   id: string; // UUID in Supabase
   name: string;
   file_type: string; // File type (pdf, docx, txt, etc.)
-  status: string; // Upload status (Uploaded, Processing, Error, etc.)
+  status: DocumentStatus; // Upload status using DocumentStatus enum
   knowledge_base_id: string; // UUID foreign key
+  uploaded_by: string; // User ID who uploaded the document
   content?: string; // Extracted text content
   chunk_count: number;
   file_size?: number; // File size in bytes
   mime_type?: string; // MIME type of the file
   updated_at: string;
   created_at: string;
-  path: string; // Storage file path
+  path?: string; // Storage file path (optional, can be reconstructed from ID + file_type)
   url: string; // Signed URL or public URL
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
@@ -76,7 +89,7 @@ export interface CreateDocumentInput {
   status?: string;
   file_size?: number;
   mime_type?: string;
-  path: string;
+  path?: string; // Optional since it can be reconstructed from document ID and file_type
   url: string;
   metadata?: Record<string, unknown>;
 }

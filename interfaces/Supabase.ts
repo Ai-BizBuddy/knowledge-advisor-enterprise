@@ -5,6 +5,8 @@
  * to replace any types with proper TypeScript definitions.
  */
 
+import { DocumentStatus } from '@/interfaces/Project';
+
 // Raw Supabase User type (subset of what we use)
 export interface SupabaseUser {
   id: string;
@@ -31,8 +33,9 @@ export interface SupabaseDocumentRow {
   id: string;
   name: string;
   type: string;
-  status: string;
+  status: DocumentStatus;
   project_id: string;
+  uploaded_by: string;
   chunk_count: number;
   file_size: number | null;
   mime_type: string | null;
@@ -66,7 +69,7 @@ export interface DocumentUpdateData {
   last_rag_sync?: string;
   updated_at?: string;
   chunk_count?: number;
-  status?: string;
+  status?: DocumentStatus;
 }
 
 // Project update data for Supabase operations

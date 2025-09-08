@@ -1,6 +1,6 @@
 'use client';
 
-import { Document } from '@/interfaces/Project';
+import { Document, DocumentStatus } from '@/interfaces/Project';
 // import { getAllDocuments } from '@/services/Project/supabase';
 import { documentService, knowledgeBaseService } from '@/services';
 import { useCallback, useEffect, useState } from 'react';
@@ -89,13 +89,13 @@ export const useRecentActivity = (
           let activityType: 'upload' | 'processing' | 'error';
           let status: 'success' | 'error' | 'info';
 
-          if (doc.status === 'processed' || doc.status === 'uploaded') {
+          if (doc.status === DocumentStatus.READY || doc.status === DocumentStatus.UPLOADED) {
             activityType = 'upload';
             status = 'success';
-          } else if (doc.status === 'processing') {
+          } else if (doc.status === DocumentStatus.PROCESSING) {
             activityType = 'processing';
             status = 'info';
-          } else if (doc.status === 'error' || doc.status === 'failed') {
+          } else if (doc.status === DocumentStatus.ERROR) {
             activityType = 'error';
             status = 'error';
           } else {

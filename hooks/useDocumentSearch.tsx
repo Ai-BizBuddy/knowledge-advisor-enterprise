@@ -6,6 +6,7 @@
  */
 
 import type { Document } from '@/interfaces/Project';
+import { DocumentStatus } from '@/interfaces/Project';
 import type { DocumentSearchResult } from '@/services/DocumentSearchService';
 import {
   getDocumentSearchAnalytics,
@@ -28,7 +29,7 @@ const convertSearchResultToDocument = (searchResult: {
     id: searchResult.id,
     name: searchResult.title,
     file_type: searchResult.documentType,
-    status: 'synced',
+    status: DocumentStatus.READY,
     knowledge_base_id: searchResult.projectId,
     chunk_count: 0,
     file_size: 0,
@@ -39,6 +40,7 @@ const convertSearchResultToDocument = (searchResult: {
     url: '',
     rag_status: 'synced' as const,
     last_rag_sync: searchResult.lastModified,
+    uploaded_by: '', // Default empty string for search results
     metadata: searchResult.metadata,
   };
 };
