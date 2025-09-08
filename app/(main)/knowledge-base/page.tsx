@@ -1,6 +1,6 @@
 'use client';
 import { KnowledgeBaseCard, PageHeader, Tabs } from '@/components';
-import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal/CreateKnowledgeBaseModal';
+import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';

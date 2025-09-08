@@ -566,7 +566,6 @@ export default function DocumentsPage() {
                   columns={6}
                   showHeader={true}
                   showActions={true}
-                  message='Loading documents...'
                 />
               </div>
             ) : (

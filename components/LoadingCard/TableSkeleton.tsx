@@ -1,6 +1,5 @@
 'use client';
 
-import { motion } from 'framer-motion';
 import React from 'react';
 
 export interface TableSkeletonProps {
@@ -32,18 +31,6 @@ export interface TableSkeletonProps {
    * Additional CSS classes
    */
   className?: string;
-
-  /**
-   * Loading message to display
-   * @default 'Loading table data...'
-   */
-  message?: string;
-
-  /**
-   * Whether to show the loading message
-   * @default true
-   */
-  showMessage?: boolean;
 }
 
 /**
@@ -58,8 +45,6 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
   showHeader = true,
   showActions = true,
   className = '',
-  message = 'Loading table data...',
-  showMessage = true,
 }) => {
   const skeletonRows = Array.from({ length: rows }, (_, index) => index);
   const skeletonColumns = Array.from({ length: columns }, (_, index) => index);
@@ -160,26 +145,6 @@ export const TableSkeleton: React.FC<TableSkeletonProps> = ({
           </table>
         </div>
       </div>
-
-      {showMessage && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.5 }}
-          className='flex items-center justify-center py-8 text-center'
-        >
-          <div className='flex flex-col items-center space-y-2'>
-            <p className='text-sm text-gray-500 dark:text-gray-400'>
-              {message}
-            </p>
-            <div className='flex space-x-1'>
-              <div className='h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.3s]'></div>
-              <div className='h-2 w-2 animate-bounce rounded-full bg-blue-600 [animation-delay:-0.15s]'></div>
-              <div className='h-2 w-2 animate-bounce rounded-full bg-blue-600'></div>
-            </div>
-          </div>
-        </motion.div>
-      )}
     </div>
   );
 };

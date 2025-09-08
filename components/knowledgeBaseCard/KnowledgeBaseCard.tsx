@@ -96,13 +96,6 @@ export default function KnowledgeBaseCard({
           </span>
         </div>
 
-        {/* View Details Link - Hidden on mobile, shown on hover for desktop */}
-        <div className='hidden items-center transition-opacity duration-300 sm:flex sm:opacity-0 sm:group-hover:opacity-100'>
-          <span className='text-sm font-medium whitespace-nowrap text-blue-500 dark:text-blue-400'>
-            View Details →
-          </span>
-        </div>
-
         {/* Mobile indicator */}
         <div className='sm:hidden'>
           <svg
