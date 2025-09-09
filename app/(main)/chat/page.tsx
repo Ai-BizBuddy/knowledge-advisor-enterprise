@@ -69,6 +69,17 @@ export default function ChatPage() {
     await sendMessage(cloneValue, selectedKBs, isOnline);
   };
 
+  useEffect(() => {
+    // Scroll to bottom when messages change
+    const chatContainer = document.querySelector(
+      '.overflow-y-auto'
+    ) as HTMLElement;
+
+    if (chatContainer) {
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+    }
+  }, [messages]);
+
   return (
     <>
       <ChatHistoryList
