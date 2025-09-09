@@ -15,6 +15,7 @@ interface DocumentTableItem {
   chunk?: number;
   syncStatus?: string;
   lastUpdated?: string;
+  disableSync?: boolean;
 }
 
 interface DocumentsTableProps {
@@ -69,8 +70,43 @@ const getSyncButton = (
   syncStatus: string = 'Not Synced',
   isLoading: boolean = false,
   onSync?: () => void,
+  documentStatus?: string,
+  disableSync?: boolean,
 ) => {
+  // Hide sync button completely if status is 'ready'
+  if (documentStatus === 'ready') {
+    return null;
+  }
+
   const getStatusConfig = () => {
+    // Check document status first for new status handling
+    switch (documentStatus) {
+      case 'processing':
+        return {
+          color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4 animate-spin' fill='none' viewBox='0 0 24 24'>
+              <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+              <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+            </svg>
+          ),
+          text: 'Processing...',
+          disabled: true,
+        };
+      case 'archived':
+        return {
+          color: 'bg-gray-100 text-gray-700 dark:bg-gray-900 dark:text-gray-300',
+          icon: (
+            <svg className='mr-1 h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 8l6 6M5 8l6-6m6 6l-6 6m-6-6h12' />
+            </svg>
+          ),
+          text: 'Archived',
+          disabled: true,
+        };
+    }
+
+    // Fall back to original syncStatus logic
     switch (syncStatus) {
       case 'synced':
       case 'Synced':
@@ -86,8 +122,6 @@ const getSyncButton = (
         };
       case 'syncing':
       case 'Syncing':
-      case 'processing':
-      case 'Processing':
         return {
           color: 'bg-yellow-100 text-yellow-700 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-300',
           icon: (
@@ -126,19 +160,20 @@ const getSyncButton = (
   };
 
   const config = getStatusConfig();
-  const showLoading = isLoading || syncStatus === 'syncing' || syncStatus === 'Syncing' || syncStatus === 'processing' || syncStatus === 'Processing';
+  const finalDisabled = config.disabled || isLoading || disableSync;
+  const showLoading = isLoading || documentStatus === 'processing' || syncStatus === 'syncing' || syncStatus === 'Syncing';
 
   return (
     <button
       onClick={(e) => {
         e.stopPropagation();
-        if (onSync && !config.disabled && !isLoading) {
+        if (onSync && !finalDisabled) {
           onSync();
         }
       }}
-      disabled={config.disabled || isLoading}
+      disabled={finalDisabled}
       className={`inline-flex items-center rounded-md px-3 py-1 text-sm font-medium transition-colors ${config.color} ${
-        (config.disabled || isLoading) ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
+        finalDisabled ? 'cursor-not-allowed opacity-60' : 'cursor-pointer'
       }`}
     >
       {showLoading ? (
@@ -263,6 +298,8 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                               doc.syncStatus,
                               syncingDocuments.has(pageIndex),
                               () => onSyncDocument?.(pageIndex),
+                              doc.status,
+                              doc.disableSync,
                             )}
                             <button
                               className='inline-flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
@@ -416,6 +453,8 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                             doc.syncStatus,
                             syncingDocuments.has(pageIndex),
                             () => onSyncDocument?.(pageIndex),
+                            doc.status,
+                            doc.disableSync,
                           )}
                         </td>
                       )}

@@ -40,6 +40,7 @@ interface DocumentTableItem {
   chunk?: number;
   syncStatus?: string;
   lastUpdated?: string;
+  disableSync?: boolean;
 }
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
@@ -160,10 +161,20 @@ export default function KnowledgeBaseDetail() {
     clearError: clearSyncError,
   } = useDocumentSync();
 
+
   // Transform documents to DocumentsTable-compatible format
-  const adaptedDocuments = documents.map((doc) =>
-    adaptDocumentToTableFormat(doc),
-  );
+  // Add a flag to disable sync button based on document status
+  const adaptedDocuments = documents.map((doc) => {
+    const tableDoc = adaptDocumentToTableFormat(doc);
+    // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
+    tableDoc.disableSync = (
+      doc.status === 'ready' || 
+      doc.status === 'processing' || 
+      doc.status === 'archived' || 
+      doc.rag_status === 'synced'
+    );
+    return tableDoc;
+  });
 
   // Clear selection เมื่อ documents เปลี่ยน (เช่น search, filter)
   useEffect(() => {
@@ -770,23 +781,24 @@ export default function KnowledgeBaseDetail() {
               />
             ) : (
               <DocumentsTable
-                documents={adaptedDocuments}
-                selectedDocuments={selectedDocuments}
-                selectedDocument={selectedDocumentIndex}
-                startIndex={startIndex}
-                sortBy={sortBy}
-                sortOrder={sortOrder}
-                onSort={handleSort}
-                onSelectAll={handleSelectAll}
-                onSelectDocument={handleSelectDocument}
-                onDocumentClick={handleDocumentTableClick}
-                onDeleteDocument={handleDocumentDelete}
-                onSyncDocument={handleDocumentSync}
-                syncingDocuments={syncingDocumentIndices}
-                isAllSelected={isAllSelected}
-                isIndeterminate={isIndeterminate}
-                isOpenSync={true}
-              />
+                  documents={adaptedDocuments}
+                  selectedDocuments={selectedDocuments}
+                  selectedDocument={selectedDocumentIndex}
+                  startIndex={startIndex}
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                  onSort={handleSort}
+                  onSelectAll={handleSelectAll}
+                  onSelectDocument={handleSelectDocument}
+                  onDocumentClick={handleDocumentTableClick}
+                  onDeleteDocument={handleDocumentDelete}
+                  onSyncDocument={handleDocumentSync}
+                  syncingDocuments={syncingDocumentIndices}
+                  isAllSelected={isAllSelected}
+                  isIndeterminate={isIndeterminate}
+                  isOpenSync={true}
+                  // Pass disableSync flag for each document
+                />
             )}
           </div>
 
