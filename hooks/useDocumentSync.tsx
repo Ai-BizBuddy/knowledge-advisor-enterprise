@@ -66,8 +66,7 @@ export function useDocumentSync(): UseDocumentSyncReturn {
 
         // Call the ingestion API to sync the document
         const ingressUrl = `${process.env.NEXT_PUBLIC_INGRESS_SERVICE}/ingress`;
-        console.log(`[DocumentSync] Calling ingress API: ${ingressUrl}`);
-        
+                
         const response = await fetch(ingressUrl, {
           method: 'POST',
           headers: {
@@ -85,11 +84,9 @@ export function useDocumentSync(): UseDocumentSyncReturn {
           throw error;
         }
 
-        console.log(`[DocumentSync] Successfully called ingress API for document: ${documentId}`);
-      } catch (err) {
+              } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to sync document';
-        console.error(`[DocumentSync] Error syncing document ${documentId}:`, err);
-        
+                
         setError(errorMessage);
         throw err;
       } finally {
@@ -112,8 +109,7 @@ export function useDocumentSync(): UseDocumentSyncReturn {
         await Promise.allSettled(promises);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to sync documents';
-        console.error('[DocumentSync] Error syncing multiple documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);

@@ -58,31 +58,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshToken = useCallback(async (): Promise<Session | null> => {
     // If there's already a refresh in progress, return that promise
     if (refreshPromise) {
-      console.log('Token refresh already in progress, waiting...');
-      return refreshPromise;
+            return refreshPromise;
     }
 
     const promise = (async () => {
       try {
-        console.log('Refreshing session token...');
-        const { data, error } = await supabase.auth.refreshSession();
+                const { data, error } = await supabase.auth.refreshSession();
 
         if (error) {
-          console.error('Token refresh failed:', error);
-          return null;
+                    return null;
         }
 
         if (data.session) {
-          console.log('Token refreshed successfully');
-          setSession(data.session);
+                    setSession(data.session);
           setUser(data.session.user);
           return data.session;
         }
 
         return null;
       } catch (error) {
-        console.error('Token refresh error:', error);
-        return null;
+                return null;
       } finally {
         setRefreshPromise(null);
       }
@@ -100,8 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       setUser(null);
     } catch (error) {
-      console.error('Sign out error:', error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [supabase.auth]);
@@ -111,16 +105,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Check if current token is expiring soon
       if (isTokenExpiring()) {
-        console.log('Token is expiring soon, refreshing...');
-        const newSession = await refreshToken();
+                const newSession = await refreshToken();
         return newSession?.access_token || null;
       }
 
       // Return current token if still valid
       return session?.access_token || null;
     } catch (error) {
-      console.error('Error getting access token:', error);
-      return null;
+            return null;
     }
   }, [session, isTokenExpiring, refreshToken]);
 
@@ -134,23 +126,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       switch (event) {
         case 'SIGNED_IN':
-          console.log('User signed in');
-          // Only redirect to dashboard for NEW logins, not session restoration
+                    // Only redirect to dashboard for NEW logins, not session restoration
           // If user was already signed in (wasSignedIn = true), this is likely a page refresh or token refresh
           if (!wasSignedIn && session?.user) {
-            console.log('New login detected - redirecting to dashboard');
-            setTimeout(() => {
+                        setTimeout(() => {
               if (window.location.pathname === '/login' || window.location.pathname === '/') {
                 window.location.href = '/dashboard';
               }
             }, 0);
           } else {
-            console.log('Session restored from refresh or token refresh - maintaining current page');
-          }
+                      }
           break;
         case 'SIGNED_OUT':
-          console.log('User signed out');
-          // Redirect to login page after hydration
+                    // Redirect to login page after hydration
           setTimeout(() => {
             if (window.location.pathname !== '/login') {
               window.location.href = '/login';
@@ -158,11 +146,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }, 0);
           break;
         case 'TOKEN_REFRESHED':
-          console.log('Token refreshed automatically by Supabase');
-          break;
+                    break;
         case 'USER_UPDATED':
-          console.log('User updated');
-          break;
+                    break;
         default:
           break;
       }
@@ -215,8 +201,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         } = await supabase.auth.getSession();
 
         if (error) {
-          console.error('Error getting session:', error);
-          setLoading(false);
+                    setLoading(false);
           return;
         }
 
@@ -229,8 +214,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setupTokenRefresh(session);
         }
       } catch (error) {
-        console.error('Auth initialization error:', error);
-        setLoading(false);
+                setLoading(false);
       }
     };
 

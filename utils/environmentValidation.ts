@@ -96,14 +96,10 @@ export function getEnvironmentConfig(): EnvironmentConfig {
   try {
     return validateEnvironment();
   } catch (error) {
-    console.error('Environment validation failed:', error);
-
+    
     // In development, provide fallbacks
     if (process.env.NODE_ENV === 'development') {
-      console.warn(
-        'Using development fallbacks for missing environment variables',
-      );
-      return {
+            return {
         supabaseUrl:
           process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://localhost:54321',
         supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'dev-key',

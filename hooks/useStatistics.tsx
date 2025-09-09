@@ -111,8 +111,7 @@ export const useStatistics = (
       }));
 
       onErrorRef.current?.(errorMessage);
-      console.error('[useStatistics] Failed to fetch statistics:', error);
-    }
+          }
   }, []); // No dependencies since we use refs
 
   /**
@@ -148,11 +147,7 @@ export const useStatistics = (
           }, 500); // Delay to allow backend processing
         }
       } catch (error) {
-        console.error(
-          '[useStatistics] Failed to record query activity:',
-          error,
-        );
-        // Don't update the error state for this operation as it's background
+                // Don't update the error state for this operation as it's background
       }
     },
     [fetchStatistics],

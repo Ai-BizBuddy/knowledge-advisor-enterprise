@@ -133,8 +133,7 @@ class AdkChatService {
     });
 
     this.client.addErrorInterceptor((error) => {
-      console.error(`[${this.serviceName}] Error:`, error.message);
-      return error;
+            return error;
     });
   }
 
@@ -172,13 +171,9 @@ class AdkChatService {
         };
       }
 
-      console.warn(
-        `[${this.serviceName}] No access token available for request`,
-      );
-      return {};
+            return {};
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting access token:`, error);
-      return {};
+            return {};
     }
   }
 
@@ -266,10 +261,7 @@ class AdkChatService {
                   // and if we didn't receive a final non-partial chunk
                   if (!hasError && !hasCompleted) {
                     hasCompleted = true;
-                    console.log(
-                      `[${this.serviceName}] Stream done (EOF), completing with final content length: ${fullContent.length}`,
-                    );
-                    onComplete(fullContent);
+                                        onComplete(fullContent);
                     resolve({
                       success: true,
                       content: fullContent,
@@ -293,10 +285,7 @@ class AdkChatService {
 
                       // Handle [DONE] signal
                       if (data === '[DONE]') {
-                        console.log(
-                          `[${this.serviceName}] Received [DONE] signal`,
-                        );
-                        if (!hasCompleted) {
+                                                if (!hasCompleted) {
                           hasCompleted = true;
                           onComplete(fullContent);
                           resolve({
@@ -328,10 +317,7 @@ class AdkChatService {
 
                         // Skip if we already processed this message ID to prevent duplicates
                         if (messageId === lastProcessedId) {
-                          console.log(
-                            `[${this.serviceName}] Skipping duplicate message ID: ${messageId}`,
-                          );
-                          continue;
+                                                    continue;
                         }
 
                         // Update last processed ID
@@ -340,10 +326,7 @@ class AdkChatService {
                         // If this is the final chunk (partial=false), mark as complete
                         if (!isPartial && !hasCompleted) {
                           hasCompleted = true;
-                          console.log(
-                            `[${this.serviceName}] Final chunk received, completing with total content length: ${newText.length}`,
-                          );
-                          onComplete(newText);
+                                                    onComplete(newText);
                           resolve({
                             success: true,
                             content: newText,
@@ -357,22 +340,13 @@ class AdkChatService {
                         // Append new text chunk to full content (accumulate all chunks)
                         if (newText) {
                           fullContent += newText;
-                          console.log(
-                            `[${this.serviceName}] Added chunk: "${newText}", Total length: ${fullContent.length}`,
-                          );
-
+                          
                           // Update UI with current accumulated content after each chunk
                           onStreamData(fullContent);
                         }
                       }
                     } catch (parseError) {
-                      console.warn(
-                        `[${this.serviceName}] Failed to parse SSE data:`,
-                        parseError,
-                        'Raw line:',
-                        line.slice(6).trim(),
-                      );
-                    }
+                                          }
                   }
                 }
 
@@ -383,8 +357,7 @@ class AdkChatService {
             return readStream();
           })
           .catch((error) => {
-            console.error(`[${this.serviceName}] Streaming error:`, error);
-            hasError = true;
+                        hasError = true;
             onError(error.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
             resolve({
               success: false,
@@ -395,11 +368,7 @@ class AdkChatService {
           });
       });
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in sendMessageWithStreaming:`,
-        error,
-      );
-      const errorMessage =
+            const errorMessage =
         error instanceof Error
           ? error.message
           : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
@@ -481,8 +450,7 @@ class AdkChatService {
       });
       return response.ok;
     } catch (error) {
-      console.error(`[${this.serviceName}] Health check failed:`, error);
-      return false;
+            return false;
     }
   }
 }

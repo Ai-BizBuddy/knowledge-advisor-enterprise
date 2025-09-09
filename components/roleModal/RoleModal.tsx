@@ -91,8 +91,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   // Load initial data for edit mode
   useEffect(() => {
     if (isEditMode && initialData && isOpen) {
-      console.log('Loading initial data for edit mode:', initialData);
-      setValue('roleName', initialData.roleName);
+            setValue('roleName', initialData.roleName);
       setValue('description', initialData.description || '');
       setValue('accessLevel', initialData.accessLevel);
       setValue('permissions', initialData.permissions);
@@ -135,10 +134,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
   // Update permissions when access level changes (only in create mode or when explicitly requested)
   useEffect(() => {
     if (!isEditMode && watchedAccessLevel && isOpen) {
-      console.log(
-        'Updating permissions for access level change (create mode only)',
-      );
-      const allResources = [...permissionResources];
+            const allResources = [...permissionResources];
       // actions: defaultPerm?.action
       const updatedPermissions = allResources.map((resource) => {
         return {
@@ -253,11 +249,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       // Reset form and close modal
       handleClose();
     } catch (error) {
-      console.error(
-        `Error ${isEditMode ? 'updating' : 'creating'} role:`,
-        error,
-      );
-
+      
       // Handle different types of errors
       if (error instanceof Error) {
         // Check for specific error types and set appropriate form errors

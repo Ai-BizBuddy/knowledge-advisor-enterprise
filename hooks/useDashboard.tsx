@@ -114,8 +114,7 @@ export const useDashboard = (
   const { statistics, refreshStatistics: refreshStatsOnly } = useStatistics({
     autoRefresh: false,
     onError: (error) => {
-      console.warn('Statistics update failed:', error);
-      // Don't fail the entire dashboard if stats fail
+            // Don't fail the entire dashboard if stats fail
     },
   });
 

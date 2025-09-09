@@ -72,8 +72,7 @@ export default function DepartmentsPage() {
           initialLoadRef.current = true;
         }
       } catch (error) {
-        console.error('Error loading departments data:', error);
-      }
+              }
     };
 
     // Initial load without debouncing
@@ -140,8 +139,7 @@ export default function DepartmentsPage() {
         });
       }
     } catch (error) {
-      console.error('Error creating department:', error);
-      showToast(
+            showToast(
         error instanceof Error ? error.message : 'Failed to create department',
         'error',
       );
@@ -172,8 +170,7 @@ export default function DepartmentsPage() {
         });
       }
     } catch (error) {
-      console.error('Error updating department:', error);
-      showToast(
+            showToast(
         error instanceof Error ? error.message : 'Failed to update department',
         'error',
       );
@@ -206,8 +203,7 @@ export default function DepartmentsPage() {
         });
       }
     } catch (error) {
-      console.error('Error deleting department:', error);
-      showToast(
+            showToast(
         error instanceof Error ? error.message : 'Failed to delete department',
         'error',
       );

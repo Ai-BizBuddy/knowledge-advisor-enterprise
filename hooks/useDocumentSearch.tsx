@@ -163,8 +163,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
           try {
             analytics = await getDocumentSearchAnalytics(query, projectId);
           } catch (analyticsError) {
-            console.warn('Failed to get search analytics:', analyticsError);
-          }
+                      }
         }
 
         setState((prev) => ({
@@ -325,8 +324,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     try {
       return await testDocumentSearchConnection();
     } catch (error) {
-      console.error('Failed to test search connection:', error);
-      return false;
+            return false;
     }
   }, []);
 

@@ -73,8 +73,7 @@ export const useDocumentIngestion = (): UseDocumentIngestionReturn => {
         setError(null);
       }
     } catch (err) {
-      console.warn('Health check failed:', err);
-      setIsServiceAvailable(false);
+            setIsServiceAvailable(false);
     } finally {
       setCheckingHealth(false);
     }
@@ -92,8 +91,7 @@ export const useDocumentIngestion = (): UseDocumentIngestionReturn => {
   const handleError = useCallback((err: unknown) => {
     const error = err as Error | { message?: string };
     const errorMessage = error?.message || 'An unknown error occurred';
-    console.error('[DocumentIngestion Hook]:', errorMessage);
-    setError(errorMessage);
+        setError(errorMessage);
     throw err;
   }, []);
 
@@ -256,8 +254,7 @@ export const useDocumentIngestion = (): UseDocumentIngestionReturn => {
       setIsServiceAvailable(isAvailable);
       return isAvailable;
     } catch (err) {
-      console.warn('Manual health check failed:', err);
-      setIsServiceAvailable(false);
+            setIsServiceAvailable(false);
       return false;
     }
   }, []);

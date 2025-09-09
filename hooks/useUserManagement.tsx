@@ -106,8 +106,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to fetch users';
         setError(errorMessage);
-        console.error('[useUserManagement] Error fetching users:', error);
-      } finally {
+              } finally {
         setLoading(false);
       }
     },
@@ -126,8 +125,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to fetch user';
         setError(errorMessage);
-        console.error('[useUserManagement] Error fetching user:', error);
-        return null;
+                return null;
       }
     },
     [setError],
@@ -155,8 +153,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to create user';
         setError(errorMessage);
-        console.error('[useUserManagement] Error creating user:', error);
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -188,8 +185,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to update user';
         setError(errorMessage);
-        console.error('[useUserManagement] Error updating user:', error);
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -219,8 +215,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to delete user';
         setError(errorMessage);
-        console.error('[useUserManagement] Error deleting user:', error);
-        return false;
+                return false;
       } finally {
         setLoading(false);
       }
@@ -242,8 +237,7 @@ export const useUserManagement = (): UseUserManagement => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to fetch roles';
       setError(errorMessage);
-      console.error('[useUserManagement] Error fetching roles:', error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [setLoading, setError]);
@@ -262,8 +256,7 @@ export const useUserManagement = (): UseUserManagement => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to fetch permissions';
       setError(errorMessage);
-      console.error('[useUserManagement] Error fetching permissions:', error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [setLoading, setError]);
@@ -282,8 +275,7 @@ export const useUserManagement = (): UseUserManagement => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to fetch departments';
       setError(errorMessage);
-      console.error('[useUserManagement] Error fetching departments:', error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [setLoading, setError]);
@@ -308,8 +300,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to check permission';
         setError(errorMessage);
-        console.error('[useUserManagement] Error checking permission:', error);
-        return {
+                return {
           allowed: false,
           reason: 'Error checking permissions',
         };
@@ -333,8 +324,7 @@ export const useUserManagement = (): UseUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to get user session';
         setError(errorMessage);
-        console.error('[useUserManagement] Error getting user session:', error);
-      } finally {
+              } finally {
         setLoading(false);
       }
     },

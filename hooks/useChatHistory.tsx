@@ -16,12 +16,9 @@ export const useChatHistory = () => {
   const loadHistory = useCallback(async () => {
     setLoading(true);
     try {
-        const historyData = await chatHistoryService.loadHistory();
-      console.log('Loaded chat history:', historyData);
+      const historyData = await chatHistoryService.loadHistory();
       setSessions(historyData);
-    } catch (error) {
-      console.error('Error loading chat history:', error);
-      alert('Error loading chat history. Please check console for details.');
+    } catch {
       setSessions([]);
     } finally {
       setLoading(false);
@@ -30,16 +27,11 @@ export const useChatHistory = () => {
 
   const getChatSessions = useCallback(async (sessionId: string): Promise<ChatMessage[]> => {
     try {
-
       const messages = await chatHistoryService.getOldChat(sessionId);
-
       return messages ?? [];
-
-    } catch (error) {
-      console.error('Error getting chat sessions:', error);
+    } catch {
       return [];
     }
-    
   }, []);
 
   const deleteChatSession = useCallback(
@@ -51,8 +43,8 @@ export const useChatHistory = () => {
         if (success) {
           await loadHistory(); // Reload after deletion
         }
-      } catch (error) {
-        console.error('Error deleting chat session:', error);
+      } catch {
+        // Handle deletion error silently
       }
     },
     [loadHistory],
@@ -61,7 +53,6 @@ export const useChatHistory = () => {
   const exportChatSession = useCallback((session: ChatSession) => {
     // Basic export functionality for the new ChatSession interface
     if (!session) {
-      console.error('Invalid session data for export');
       return;
     }
 
@@ -93,8 +84,8 @@ export const useChatHistory = () => {
       document.body.removeChild(link);
 
       setTimeout(() => URL.revokeObjectURL(url), 100);
-    } catch (error) {
-      console.error('Failed to export chat session:', error);
+    } catch {
+      // Handle export error silently
     }
   }, []);
 

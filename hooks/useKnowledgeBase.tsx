@@ -182,9 +182,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
           searchTerm: currentSearchTerm,
         };
 
-        console.log('Sending pagination to API:', paginationOptions);
-        console.log('Sending filters to API:', filters);
-
+                
         const results = await knowledgeBaseService.getProjects(
           paginationOptions,
           filters,
@@ -211,8 +209,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load knowledge bases';
         setError(errorMessage);
-        console.error('Error loading knowledge bases:', err);
-      } finally {
+              } finally {
         setTimeout(() => {
           setLoading(false);
         }, 500);
@@ -402,8 +399,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   // Search knowledge bases
   const searchKnowledgeBases = useCallback(
     (query: string): Promise<void> => {
-      console.log('Searching knowledge bases with query:', query);
-      setState((prev) => ({
+            setState((prev) => ({
         ...prev,
         searchTerm: query,
         currentPage: 1, // Reset to first page for search results
@@ -448,8 +444,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   // Page change handler
   const handlePageChange = useCallback(
     (page: number) => {
-      console.log('Page changed to:', page);
-      // Update state immediately without triggering additional effects
+            // Update state immediately without triggering additional effects
       setState((prev) => ({
         ...prev,
         currentPage: page,
@@ -474,8 +469,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       try {
         await deleteKnowledgeBase(id);
       } catch (err) {
-        console.error('Error deleting knowledge base:', err);
-      }
+              }
     },
     [deleteKnowledgeBase],
   );

@@ -39,8 +39,7 @@ class PermissionsService {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-        console.error('[PermissionsService] No authenticated user:', userError);
-        return null;
+                return null;
       }
 
       // Get user's roles and permissions using auth schema client
@@ -73,11 +72,7 @@ class PermissionsService {
         .single();
 
       if (userDataError) {
-        console.error(
-          '[PermissionsService] Error fetching user data:',
-          userDataError,
-        );
-        return null;
+                return null;
       }
 
       // Transform the data to extract permissions
@@ -135,11 +130,7 @@ class PermissionsService {
         directPermissions: directPerms,
       };
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error getting current user permissions:',
-        error,
-      );
-      return null;
+            return null;
     }
   }
 
@@ -162,11 +153,7 @@ class PermissionsService {
 
       return data || [];
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error fetching all permissions:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -237,11 +224,7 @@ class PermissionsService {
 
       return true;
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error saving role permissions:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -275,8 +258,7 @@ class PermissionsService {
 
       return data;
     } catch (error) {
-      console.error('[PermissionsService] Error creating permission:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -325,23 +307,12 @@ class PermissionsService {
           .insert(newPermissions);
 
         if (error) {
-          console.error(
-            '[PermissionsService] Error creating missing permissions:',
-            error,
-          );
-          // Don't throw here, as this is non-critical
+                    // Don't throw here, as this is non-critical
         } else {
-          console.log(
-            `[PermissionsService] Created ${newPermissions.length} new permissions`,
-          );
-        }
+                  }
       }
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error ensuring permissions exist:',
-        error,
-      );
-      // Don't throw, as this is non-critical for the UI
+            // Don't throw, as this is non-critical for the UI
     }
   }
 
@@ -380,11 +351,7 @@ class PermissionsService {
 
       return hasDirectPermission;
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error checking user permission:',
-        error,
-      );
-      return false;
+            return false;
     }
   }
 
@@ -428,11 +395,7 @@ class PermissionsService {
         actions: Array.from(new Set(actions)),
       }));
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error fetching unique resources:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -473,11 +436,7 @@ class PermissionsService {
         actions,
       }));
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error fetching unique actions:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -522,11 +481,7 @@ class PermissionsService {
 
       return matrix;
     } catch (error) {
-      console.error(
-        '[PermissionsService] Error getting role permissions matrix:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 }

@@ -120,8 +120,7 @@ export const useChat = () => {
 
         addMessage(aiResponse);
       } catch (error) {
-        console.error('Chat error:', error);
-        setConnectionStatus('error');
+                setConnectionStatus('error');
 
         const errorResponse: ChatMessage = {
           id: (Date.now() + 1).toString(),

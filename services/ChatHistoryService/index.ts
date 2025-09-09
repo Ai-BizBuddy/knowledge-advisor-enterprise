@@ -71,17 +71,14 @@ class ChatHistoryService {
       )
       .not('session_events.memories', 'is', null);
 
-    console.log('Supabase loadHistory data:', data);
-
+    
     if (error) {
-      console.error('Error loading chat history:', error);
-      alert('Error loading chat history. Please check console for details.');
+            alert('Error loading chat history. Please check console for details.');
       return [];
     }
 
     if (!data) {
-      console.warn('No chat history data found');
-      return [];
+            return [];
     }
 
     // Type guard for the response data
@@ -101,8 +98,7 @@ class ChatHistoryService {
           if (firstEvent.event_data) {
             const contentText = JSON.parse(firstEvent.event_data).content
               .parts[0].text;
-            console.log('Content Text:', contentText);
-            title = contentText.split('\n')[0] || 'ไม่มีชื่อเรื่อง';
+                        title = contentText.split('\n')[0] || 'ไม่มีชื่อเรื่อง';
           }
         }
 
@@ -118,8 +114,7 @@ class ChatHistoryService {
           ended_at: session.updated_at || undefined,
         };
       } catch (parseError) {
-        console.error('Error parsing event data:', parseError);
-        return {
+                return {
           id: session.id,
           user_id: session.user_id,
           // knowledge_base_id: null,
@@ -172,13 +167,11 @@ class ChatHistoryService {
       .not('session_events.memories', 'is', null);
 
     if (error) {
-      console.error('Error loading old chat:', error);
-      return null;
+            return null;
     }
 
     if (!data || data.length === 0) {
-      console.warn('No session data found for sessionId:', sessionId);
-      return null;
+            return null;
     }
 
     // Type guard to ensure data structure is correct
@@ -209,8 +202,7 @@ class ChatHistoryService {
       .delete()
       .eq('session_id', sessionId);
     if (error || eventError) {
-      console.error('Error deleting chat session:', error || eventError);
-      return false;
+            return false;
     }
     return true;
   }

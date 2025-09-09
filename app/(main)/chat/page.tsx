@@ -11,7 +11,7 @@ import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function ChatPage() {
   const [isOnline] = useState(false);
@@ -39,57 +39,53 @@ export default function ChatPage() {
     getSelectedCount,
   } = useKnowledgeBaseSelection();
 
+  // Combine both effects into one for better performance
   useEffect(() => {
+    setLoading(false);
     if (messages.length === 0) {
       addWelcomeMessage();
     }
-  }, [messages.length, addWelcomeMessage]);
+  }, [messages.length, addWelcomeMessage, setLoading]);
 
-  useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
-
-  const handleLoadChatSession = async (session: ChatSession) => {
-    // setMessages(session.messages);
-    const messagess = await getChatSessions(session.id);
-    setMessages([...messages, ...messagess]);
-    console.log(messages);
+  // Optimized handlers using useCallback to prevent unnecessary re-renders
+  const handleLoadChatSession = useCallback(async (session: ChatSession) => {
+    const sessionMessages = await getChatSessions(session.id);
+    setMessages([...messages, ...sessionMessages]);
     setOpenHistory(false);
-  };
+  }, [getChatSessions, messages, setMessages]);
 
-  const handleCloseHistory = () => {
+  const handleCloseHistory = useCallback(() => {
     setOpenHistory(false);
-  };
+  }, []);
 
-  const handleSendMessage = async () => {
+  const handleSendMessage = useCallback(async () => {
     if (!message.trim()) return;
 
     const selectedKBs = getSelectedKnowledgeBases();
-    const cloneValue = message;
+    const messageContent = message;
     setMessage('');
-    await sendMessage(cloneValue, selectedKBs, isOnline);
-  };
+    await sendMessage(messageContent, selectedKBs, isOnline);
+  }, [message, getSelectedKnowledgeBases, sendMessage, isOnline]);
+
+  // Auto-scroll optimization with debouncing
+  const scrollToBottom = useCallback(() => {
+    if (chatMessagesRef.current) {
+      requestAnimationFrame(() => {
+        const element = chatMessagesRef.current;
+        if (element) {
+          element.scrollTo({
+            top: element.scrollHeight,
+            behavior: 'smooth'
+          });
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    // Scrolling to end when new messages change - using ref for more reliable targeting
-    const scrollToBottom = () => {
-      if (chatMessagesRef.current) {
-        requestAnimationFrame(() => {
-          const element = chatMessagesRef.current;
-          if (element) {
-            element.scrollTo({
-              top: element.scrollHeight,
-              behavior: 'smooth'
-            });
-          }
-        });
-      }
-    };
-
-    // Small delay to ensure DOM is fully rendered
-    const timeoutId = setTimeout(scrollToBottom, 100);
+    const timeoutId = setTimeout(scrollToBottom, 50);
     return () => clearTimeout(timeoutId);
-  }, [messages, isTyping]);
+  }, [messages, isTyping, scrollToBottom]);
 
   return (
     <>
@@ -243,7 +239,7 @@ export default function ChatPage() {
                             }
                           }}
                           placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                          className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                          className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 min-h-[44px] max-h-[120px]'
                           value={message}
                           onChange={(e) => {
                             setMessage(e.target.value);
@@ -261,10 +257,6 @@ export default function ChatPage() {
                             }
                           }}
                           rows={1}
-                          style={{
-                            minHeight: '44px',
-                            maxHeight: '120px',
-                          }}
                         />
                       </div>
                       <button
@@ -341,7 +333,7 @@ export default function ChatPage() {
                           }
                         }}
                         placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                        className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                        className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 min-h-[44px] max-h-[120px]'
                         value={message}
                         onChange={(e) => {
                           setMessage(e.target.value);
@@ -359,10 +351,6 @@ export default function ChatPage() {
                           }
                         }}
                         rows={1}
-                        style={{
-                          minHeight: '44px',
-                          maxHeight: '120px',
-                        }}
                       />
                     </div>
                     <button

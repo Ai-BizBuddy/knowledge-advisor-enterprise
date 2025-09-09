@@ -59,8 +59,7 @@ class UserManagementService {
 
       return session.user;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting current user:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -116,8 +115,7 @@ class UserManagementService {
         const { data: usersData, error } = await query;
 
         if (error) {
-          console.error(`[${this.serviceName}] Error fetching users:`, error);
-          throw new Error(`Failed to fetch users: ${error.message}`);
+                    throw new Error(`Failed to fetch users: ${error.message}`);
         }
 
         // Transform the raw Supabase data to match User interface
@@ -183,8 +181,7 @@ class UserManagementService {
         return transformedUsers;
       });
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUsers:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -254,16 +251,14 @@ class UserManagementService {
           // Table doesn't exist, fall back to auth.users
           return await this.getUserByIdFromAuth(id);
         }
-        console.error(`[${this.serviceName}] Error fetching user:`, error);
-        throw new Error(`Failed to fetch user: ${error.message}`);
+                throw new Error(`Failed to fetch user: ${error.message}`);
       }
 
       const userWithRole = data;
 
       return userWithRole;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUserById:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -300,11 +295,7 @@ class UserManagementService {
         updated_at: authUser.updated_at || authUser.created_at,
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getUserByIdFromAuth:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -328,11 +319,7 @@ class UserManagementService {
       );
 
       if (rpcError) {
-        console.error(
-          `[${this.serviceName}] Error creating user via RPC:`,
-          rpcError,
-        );
-
+        
         // Handle specific error cases
         if (
           rpcError.message?.includes('duplicate key') ||
@@ -358,11 +345,7 @@ class UserManagementService {
       const createdUserId = rpcResult[0].user_id;
       const createdUserEmail = rpcResult[0].email;
 
-      console.log(`[${this.serviceName}] User created successfully via RPC:`, {
-        id: createdUserId,
-        email: createdUserEmail,
-      });
-
+      
       // Fetch the complete user data with roles and profile
       const { data: completeUserData, error: fetchError } = await supabaseAuth
         .from('profiles')
@@ -379,11 +362,7 @@ class UserManagementService {
         .single();
 
       if (fetchError) {
-        console.error(
-          `[${this.serviceName}] Error fetching created user profile:`,
-          fetchError,
-        );
-        throw new Error(
+                throw new Error(
           `Failed to fetch created user profile: ${fetchError.message}`,
         );
       }
@@ -420,11 +399,7 @@ class UserManagementService {
             });
           }
         } catch (rolesFetchError) {
-          console.warn(
-            `[${this.serviceName}] Could not fetch roles for created user:`,
-            rolesFetchError,
-          );
-        }
+                  }
       }
 
       // Construct User object to return
@@ -446,8 +421,7 @@ class UserManagementService {
 
       return newUser;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in createUser:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -471,15 +445,10 @@ class UserManagementService {
       );
 
       if (updateError) {
-        console.error(
-          `[${this.serviceName}] Error updating user via RPC:`,
-          updateError,
-        );
-        throw new Error(`Failed to update user: ${updateError.message}`);
+                throw new Error(`Failed to update user: ${updateError.message}`);
       }
 
-      console.log('User updated successfully via RPC', updateResult);
-
+      
       // Handle role updates
       if (updates.role_ids && updates.role_ids.length > 0) {
         // First, remove existing user roles
@@ -496,11 +465,7 @@ class UserManagementService {
           .insert(roleInserts);
 
         if (roleError) {
-          console.error(
-            `[${this.serviceName}] Error updating user roles:`,
-            roleError,
-          );
-          // Don't throw here, continue
+                    // Don't throw here, continue
         }
       }
 
@@ -529,11 +494,7 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching updated user:`,
-          error,
-        );
-        throw new Error(`Failed to fetch updated user: ${error.message}`);
+                throw new Error(`Failed to fetch updated user: ${error.message}`);
       }
 
       // Get display_name from auth.users metadata
@@ -579,8 +540,7 @@ class UserManagementService {
         updated_at: data.updated_at,
       } as User;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in updateUser:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -599,11 +559,7 @@ class UserManagementService {
         .eq('id', id);
 
       if (profileError) {
-        console.error(
-          `[${this.serviceName}] Error deleting user profile:`,
-          profileError,
-        );
-        throw new Error(
+                throw new Error(
           `Failed to delete user profile: ${profileError.message}`,
         );
       }
@@ -612,15 +568,10 @@ class UserManagementService {
       const { error: authError } = await supabase.auth.admin.deleteUser(id);
 
       if (authError) {
-        console.warn(
-          `[${this.serviceName}] Warning - failed to delete auth user:`,
-          authError,
-        );
-        // Don't throw here as profile is already deleted
+                // Don't throw here as profile is already deleted
       }
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in deleteUser:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -647,8 +598,7 @@ class UserManagementService {
         .order('level', { ascending: false });
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching roles:`, error);
-        throw new Error(`Failed to fetch roles: ${error.message}`);
+                throw new Error(`Failed to fetch roles: ${error.message}`);
       }
 
       // Fetch permissions for each role separately
@@ -682,11 +632,7 @@ class UserManagementService {
               permissions,
             } as Role;
           } catch (permError) {
-            console.warn(
-              `[${this.serviceName}] Could not fetch permissions for role ${role.id}:`,
-              permError,
-            );
-            return {
+                        return {
               ...role,
               permissions: [],
             } as Role;
@@ -696,8 +642,7 @@ class UserManagementService {
 
       return rolesWithPermissions;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getRoles:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -715,17 +660,12 @@ class UserManagementService {
         .order('action', { ascending: true });
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching permissions:`,
-          error,
-        );
-        throw new Error(`Failed to fetch permissions: ${error.message}`);
+                throw new Error(`Failed to fetch permissions: ${error.message}`);
       }
 
       return (data as Permission[]) || [];
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getPermissions:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -746,11 +686,7 @@ class UserManagementService {
         .order('action', { ascending: true });
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching permission resources:`,
-          error,
-        );
-        throw new Error(
+                throw new Error(
           `Failed to fetch permission resources: ${error.message}`,
         );
       }
@@ -780,11 +716,7 @@ class UserManagementService {
 
       return objects;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getPermissionResources:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -812,17 +744,12 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error creating permission:`,
-          error,
-        );
-        throw new Error(`Failed to create permission: ${error.message}`);
+                throw new Error(`Failed to create permission: ${error.message}`);
       }
 
       return data as Permission;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in createPermission:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -844,17 +771,12 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error updating permission:`,
-          error,
-        );
-        throw new Error(`Failed to update permission: ${error.message}`);
+                throw new Error(`Failed to update permission: ${error.message}`);
       }
 
       return data as Permission;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in updatePermission:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -871,15 +793,10 @@ class UserManagementService {
         .eq('id', id);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error deleting permission:`,
-          error,
-        );
-        throw new Error(`Failed to delete permission: ${error.message}`);
+                throw new Error(`Failed to delete permission: ${error.message}`);
       }
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in deletePermission:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -890,8 +807,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      console.log('Creating role with data:', roleData);
-
+      
       // Create role
       const { data: roleRow, error: roleError } = await supabase
         .from('roles')
@@ -909,12 +825,10 @@ class UserManagementService {
         .single();
 
       if (roleError) {
-        console.error(`[${this.serviceName}] Error creating role:`, roleError);
-        throw new Error(`Failed to create role: ${roleError.message}`);
+                throw new Error(`Failed to create role: ${roleError.message}`);
       }
 
-      console.log('Created role:', roleRow);
-      debugger;
+            debugger;
       // Add permissions to role in auth.role_permissions table
       if (roleData.permission_ids.length > 0) {
         const rolePermissions = roleData.permission_ids.map((permissionId) => ({
@@ -922,28 +836,21 @@ class UserManagementService {
           permission_id: permissionId,
         }));
 
-        console.log('Inserting role permissions:', rolePermissions);
-
+        
         const { error: permError } = await supabase
           .from('role_permissions')
           .insert(rolePermissions);
 
         if (permError) {
-          console.error(
-            `[${this.serviceName}] Error adding permissions to role:`,
-            permError,
-          );
-          // Don't throw here to avoid orphaned role, just log the error
+                    // Don't throw here to avoid orphaned role, just log the error
         } else {
-          console.log('Successfully inserted role permissions');
-        }
+                  }
       }
 
       // Fetch complete role with permissions
       return await this.getRoleById(roleRow.id);
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in createRole:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -954,8 +861,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      console.log('Updating role with ID:', id, 'updates:', updates);
-
+      
       // Update role
       const { error: roleError } = await supabase
         .from('roles')
@@ -968,16 +874,13 @@ class UserManagementService {
         .eq('id', id);
 
       if (roleError) {
-        console.error(`[${this.serviceName}] Error updating role:`, roleError);
-        throw new Error(`Failed to update role: ${roleError.message}`);
+                throw new Error(`Failed to update role: ${roleError.message}`);
       }
 
-      console.log('Updated role successfully');
-
+      
       // Update permissions if provided in auth.role_permissions table
       if (updates.permission_ids !== undefined) {
-        console.log('Updating permissions to:', updates.permission_ids);
-
+        
         // Remove existing permissions
         const { error: deleteError } = await supabase
           .from('role_permissions')
@@ -985,13 +888,8 @@ class UserManagementService {
           .eq('role_id', id);
 
         if (deleteError) {
-          console.error(
-            `[${this.serviceName}] Error removing existing permissions:`,
-            deleteError,
-          );
-        } else {
-          console.log('Removed existing permissions');
-        }
+                  } else {
+                  }
 
         // Add new permissions
         if (updates.permission_ids.length > 0) {
@@ -1002,28 +900,21 @@ class UserManagementService {
             }),
           );
 
-          console.log('Inserting new permissions:', rolePermissions);
-
+          
           const { error: permError } = await supabase
             .from('role_permissions')
             .insert(rolePermissions);
 
           if (permError) {
-            console.error(
-              `[${this.serviceName}] Error updating role permissions:`,
-              permError,
-            );
-          } else {
-            console.log('Successfully updated role permissions');
-          }
+                      } else {
+                      }
         }
       }
 
       // Fetch updated role with permissions
       return await this.getRoleById(id);
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in updateRole:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1037,12 +928,10 @@ class UserManagementService {
       const { error } = await supabase.from('roles').delete().eq('id', id);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error deleting role:`, error);
-        throw new Error(`Failed to delete role: ${error.message}`);
+                throw new Error(`Failed to delete role: ${error.message}`);
       }
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in deleteRole:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1073,8 +962,7 @@ class UserManagementService {
         if (error.code === 'PGRST116') {
           throw new Error(`Role with ID ${id} not found`);
         }
-        console.error(`[${this.serviceName}] Error fetching role:`, error);
-        throw new Error(`Failed to fetch role: ${error.message}`);
+                throw new Error(`Failed to fetch role: ${error.message}`);
       }
 
       // Fetch permissions separately
@@ -1102,19 +990,14 @@ class UserManagementService {
             .filter(Boolean)
             .flat() || [];
       } catch (permError) {
-        console.warn(
-          `[${this.serviceName}] Could not fetch permissions for role ${id}:`,
-          permError,
-        );
-      }
+              }
 
       return {
         ...data,
         permissions,
       } as Role;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getRoleById:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1135,17 +1018,12 @@ class UserManagementService {
         .order('name', { ascending: true });
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching departments:`,
-          error,
-        );
-        throw new Error(`Failed to fetch departments: ${error.message}`);
+                throw new Error(`Failed to fetch departments: ${error.message}`);
       }
 
       return (data as Department[]) || [];
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getDepartments:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1176,17 +1054,12 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error creating department:`,
-          error,
-        );
-        throw new Error(`Failed to create department: ${error.message}`);
+                throw new Error(`Failed to create department: ${error.message}`);
       }
 
       return data as Department;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in createDepartment:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1211,17 +1084,12 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error updating department:`,
-          error,
-        );
-        throw new Error(`Failed to update department: ${error.message}`);
+                throw new Error(`Failed to update department: ${error.message}`);
       }
 
       return data as Department;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in updateDepartment:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1235,15 +1103,10 @@ class UserManagementService {
       const { error } = await supabase.from('department').delete().eq('id', id);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error deleting department:`,
-          error,
-        );
-        throw new Error(`Failed to delete department: ${error.message}`);
+                throw new Error(`Failed to delete department: ${error.message}`);
       }
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in deleteDepartment:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -1380,11 +1243,7 @@ class UserManagementService {
         department_id: claims.department_id,
       };
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not extract JWT claims:`,
-        error,
-      );
-      return null;
+            return null;
     }
   }
 
@@ -1412,11 +1271,7 @@ class UserManagementService {
         .single();
 
       if (error) {
-        console.warn(
-          `[${this.serviceName}] Role '${roleName}' not found in database:`,
-          error,
-        );
-        return null;
+                return null;
       }
 
       // Fetch permissions for this role
@@ -1444,22 +1299,14 @@ class UserManagementService {
             .filter(Boolean)
             .flat() || [];
       } catch (permError) {
-        console.warn(
-          `[${this.serviceName}] Could not fetch permissions for role ${roleName}:`,
-          permError,
-        );
-      }
+              }
 
       return {
         ...data,
         permissions,
       } as Role;
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Error in getRoleByName for '${roleName}':`,
-        error,
-      );
-      return null;
+            return null;
     }
   }
 
@@ -1497,11 +1344,7 @@ class UserManagementService {
           jwtData = this.extractUserFromJWT(session.access_token);
         }
       } catch (jwtError) {
-        console.warn(
-          `[${this.serviceName}] Could not extract JWT data:`,
-          jwtError,
-        );
-      }
+              }
 
       const userRoles = jwtData?.roles.map(
         (role, index) =>
@@ -1618,8 +1461,7 @@ class UserManagementService {
 
       return session;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUserSession:`, error);
-      throw error instanceof Error
+            throw error instanceof Error
         ? error
         : new Error('Unknown error getting user session');
     }
@@ -1650,11 +1492,7 @@ class UserManagementService {
             return { allowed: true };
           }
         } catch (roleError) {
-          console.warn(
-            `[${this.serviceName}] Could not check role levels:`,
-            roleError,
-          );
-        }
+                  }
       }
 
       // Also check JWT roles for admin bypass
@@ -1675,11 +1513,7 @@ class UserManagementService {
           }
         }
       } catch (jwtError) {
-        console.warn(
-          `[${this.serviceName}] Could not check JWT roles for admin bypass:`,
-          jwtError,
-        );
-      }
+              }
 
       // Check permissions from database
       const has = session.permissions.some((p) => {
@@ -1710,11 +1544,7 @@ class UserManagementService {
             }
           }
         } catch (jwtError) {
-          console.warn(
-            `[${this.serviceName}] Could not check JWT permissions:`,
-            jwtError,
-          );
-        }
+                  }
       }
 
       return has
@@ -1745,11 +1575,7 @@ class UserManagementService {
       const jwtData = this.extractUserFromJWT(session.access_token);
       return jwtData?.roles || [];
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not get roles from JWT:`,
-        error,
-      );
-      return [];
+            return [];
     }
   }
 
@@ -1766,11 +1592,7 @@ class UserManagementService {
       const jwtData = this.extractUserFromJWT(session.access_token);
       return jwtData?.permissions || [];
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not get permissions from JWT:`,
-        error,
-      );
-      return [];
+            return [];
     }
   }
 
@@ -1797,11 +1619,7 @@ class UserManagementService {
         id: jwtData.department_id,
       };
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not get department from JWT:`,
-        error,
-      );
-      return null;
+            return null;
     }
   }
 
@@ -1817,11 +1635,7 @@ class UserManagementService {
 
       return hasRole(session.access_token, role);
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not check role from JWT:`,
-        error,
-      );
-      return false;
+            return false;
     }
   }
 
@@ -1847,11 +1661,7 @@ class UserManagementService {
         )
       );
     } catch (error) {
-      console.warn(
-        `[${this.serviceName}] Could not check permission from JWT:`,
-        error,
-      );
-      return false;
+            return false;
     }
   }
 
@@ -1880,11 +1690,7 @@ class UserManagementService {
         .eq('role_id', roleId);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching role permissions:`,
-          error,
-        );
-        throw new Error(`Failed to fetch role permissions: ${error.message}`);
+                throw new Error(`Failed to fetch role permissions: ${error.message}`);
       }
 
       return (
@@ -1894,11 +1700,7 @@ class UserManagementService {
           .flat() as Permission[]) || []
       );
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getRolePermissions:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -1918,11 +1720,7 @@ class UserManagementService {
         .not('resource', 'is', null);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching resource metadata:`,
-          error,
-        );
-        throw new Error(`Failed to fetch resource metadata: ${error.message}`);
+                throw new Error(`Failed to fetch resource metadata: ${error.message}`);
       }
 
       // Create metadata mapping from unique resources
@@ -1990,11 +1788,7 @@ class UserManagementService {
 
       return metadata;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getResourceMetadata:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -2012,11 +1806,7 @@ class UserManagementService {
         .not('action', 'is', null);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error fetching action mappings:`,
-          error,
-        );
-        throw new Error(`Failed to fetch action mappings: ${error.message}`);
+                throw new Error(`Failed to fetch action mappings: ${error.message}`);
       }
 
       // Create action display mapping from unique actions
@@ -2055,11 +1845,7 @@ class UserManagementService {
 
       return mappings;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getActionDisplayMappings:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -2083,18 +1869,10 @@ class UserManagementService {
         .insert(rolePermissions);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error adding role permissions:`,
-          error,
-        );
-        throw new Error(`Failed to add role permissions: ${error.message}`);
+                throw new Error(`Failed to add role permissions: ${error.message}`);
       }
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in addRolePermissions:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -2115,18 +1893,10 @@ class UserManagementService {
         .in('permission_id', permissionIds);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error removing role permissions:`,
-          error,
-        );
-        throw new Error(`Failed to remove role permissions: ${error.message}`);
+                throw new Error(`Failed to remove role permissions: ${error.message}`);
       }
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in removeRolePermissions:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -2147,11 +1917,7 @@ class UserManagementService {
         .eq('role_id', roleId);
 
       if (deleteError) {
-        console.error(
-          `[${this.serviceName}] Error removing existing role permissions:`,
-          deleteError,
-        );
-        throw new Error(
+                throw new Error(
           `Failed to remove existing role permissions: ${deleteError.message}`,
         );
       }
@@ -2168,21 +1934,13 @@ class UserManagementService {
           .insert(rolePermissions);
 
         if (insertError) {
-          console.error(
-            `[${this.serviceName}] Error adding new role permissions:`,
-            insertError,
-          );
-          throw new Error(
+                    throw new Error(
             `Failed to add new role permissions: ${insertError.message}`,
           );
         }
       }
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in setRolePermissions:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 }

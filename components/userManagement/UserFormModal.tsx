@@ -157,8 +157,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         try {
           await Promise.all(promises);
         } catch (error) {
-          console.warn('Could not load form data:', error);
-        }
+                  }
       }
     };
 

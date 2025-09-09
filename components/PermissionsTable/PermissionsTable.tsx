@@ -70,16 +70,13 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
       setLoading(true);
       setError(null);
 
-      console.log('Loading permissions from database...');
-      const permissionsData = await userManagementService.getPermissions();
+            const permissionsData = await userManagementService.getPermissions();
 
-      console.log('Loaded permissions:', permissionsData);
-      setPermissions(permissionsData);
+            setPermissions(permissionsData);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to load permissions';
-      console.error('Error loading permissions:', err);
-      setError(errorMessage);
+            setError(errorMessage);
       showToast('Error: ' + errorMessage, 'error');
     } finally {
       setLoading(false);
@@ -181,8 +178,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
   }, [tableData]);
 
   // Log summary for debugging
-  console.log('Permissions summary:', summary);
-
+  
   if (loading) {
     return (
       <div className='flex items-center justify-center py-12'>

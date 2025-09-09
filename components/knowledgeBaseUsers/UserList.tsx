@@ -43,8 +43,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       await onUpdate(user.id, selectedRole);
       onClose();
     } catch (error) {
-      console.error('Error updating user role:', error);
-    } finally {
+          } finally {
       setIsUpdating(false);
     }
   };
@@ -178,8 +177,7 @@ export const UserList: React.FC<UserListProps> = ({
       await removeUser(userId, knowledgeBaseId);
       onRefresh();
     } catch (error) {
-      console.error('Error removing user:', error);
-    } finally {
+          } finally {
       setRemovingUserId(null);
     }
   };

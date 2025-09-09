@@ -21,17 +21,15 @@ export default function LoginPage() {
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    console.log('Form submitted:', form);
-    setSubmitting(true);
+        setSubmitting(true);
     setTimeout(async () => {
       try {
         if (form.email && form.password) {
           await login(form.email, form.password, form.remember);
         }
-      } catch (error) {
+      } catch {
         setSubmitting(false);
-        console.error('Login error:', error);
-      } finally {
+              } finally {
         setSubmitting(false);
       }
     }, 1000);

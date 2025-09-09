@@ -45,8 +45,8 @@ export const useAdkChat = () => {
         setUserId(user.id);
         return user.id;
       }
-    } catch (error) {
-      console.error('Error getting user:', error);
+    } catch {
+      // Handle auth error silently
     }
     return null;
   }, [userId, supabase]);
@@ -212,7 +212,6 @@ export const useAdkChat = () => {
           setCurrentSessionId(chatResult.sessionId);
         }
       } catch (error) {
-        console.error('Chat error:', error);
         setConnectionStatus('error');
         setIsTyping(false);
 

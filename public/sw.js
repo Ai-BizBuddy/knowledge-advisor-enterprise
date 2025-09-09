@@ -4,18 +4,15 @@
  */
 
 // Placeholder service worker with proper lifecycle management
-console.log('Service worker placeholder loaded');
 
 // Basic service worker registration
 self.addEventListener('install', function () {
-  console.log('Service worker installed');
-  // Skip waiting to activate immediately
+    // Skip waiting to activate immediately
   self.skipWaiting();
 });
 
 self.addEventListener('activate', function (event) {
-  console.log('Service worker activated');
-  // Claim all clients immediately
+    // Claim all clients immediately
   event.waitUntil(self.clients.claim());
 });
 

@@ -85,8 +85,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
         try {
           await Promise.all(promises);
         } catch (error) {
-          console.warn('Could not load form data:', error);
-        }
+                  }
       }
     };
 

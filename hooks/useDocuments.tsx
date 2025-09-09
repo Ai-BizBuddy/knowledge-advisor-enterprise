@@ -156,14 +156,12 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const loadDocuments = useCallback(
     async (page = 1, forceRefresh = false) => {
       if (!knowledgeBaseId) {
-        console.warn('[useDocuments] No knowledge base ID provided');
-        return;
+                return;
       }
 
       // Prevent redundant calls when already loading (unless forced)
       if (loadingRef.current && !forceRefresh) {
-        console.log('[useDocuments] Already loading, skipping call');
-        return;
+                return;
       }
 
       try {
@@ -197,14 +195,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setTotalPages(Math.ceil(result.count / itemsPerPage));
         setCurrentPage(page);
 
-        console.log(
-          `[useDocuments] Loaded ${result.data.length} documents (Total: ${result.count})`,
-        );
-      } catch (err) {
+              } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
-        console.error('[useDocuments] Error loading documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
       } finally {
         loadingRef.current = false;
         setLoading(false);
@@ -254,8 +248,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to search documents';
-        console.error('[useDocuments] Error searching documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -281,8 +274,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to create document';
-        console.error('[useDocuments] Error creating document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -312,8 +304,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           err instanceof Error
             ? err.message
             : 'Failed to create multiple documents';
-        console.error('[useDocuments] Error creating multiple documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -343,11 +334,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           err instanceof Error
             ? err.message
             : 'Failed to create documents from files';
-        console.error(
-          '[useDocuments] Error creating documents from files:',
-          err,
-        );
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -379,8 +366,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to update document';
-        console.error('[useDocuments] Error updating document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -407,8 +393,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to delete document';
-        console.error('[useDocuments] Error deleting document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -427,8 +412,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-        console.error('[useDocuments] Error getting document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         return null;
       }
     },
@@ -463,8 +447,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           err instanceof Error
             ? err.message
             : 'Failed to batch update documents';
-        console.error('[useDocuments] Error batch updating documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);
@@ -493,8 +476,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           err instanceof Error
             ? err.message
             : 'Failed to batch delete documents';
-        console.error('[useDocuments] Error batch deleting documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         throw err;
       } finally {
         setLoading(false);

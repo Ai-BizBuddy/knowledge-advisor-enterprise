@@ -82,8 +82,7 @@ class DashboardService {
             }
             return session.user;
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting current user:`, error);
-            throw error;
+                        throw error;
         }
     }
 
@@ -92,8 +91,7 @@ class DashboardService {
      */
     async getDashboardOverview(): Promise<DashboardOverview> {
         try {
-            console.log(`[${this.serviceName}] Fetching dashboard overview...`);
-
+            
             // Fetch all data in parallel for better performance
             const [
                 statistics,
@@ -120,8 +118,7 @@ class DashboardService {
                 recentChatMessages
             };
         } catch (error) {
-            console.error(`[${this.serviceName}] Error fetching dashboard overview:`, error);
-            throw error;
+                        throw error;
         }
     }
 
@@ -132,8 +129,7 @@ class DashboardService {
         try {
             return await statisticsService.getDashboardStatistics();
         } catch (error) {
-            console.error(`[${this.serviceName}] Error fetching statistics:`, error);
-            // Return fallback data if API fails
+                        // Return fallback data if API fails
             return {
                 totalKnowledgeBases: 0,
                 activeDocuments: 0,
@@ -162,14 +158,12 @@ class DashboardService {
                 .limit(5);
 
             if (error) {
-                console.error(`[${this.serviceName}] Error fetching recent knowledge bases:`, error);
-                throw error;
+                                throw error;
             }
 
             return data as Project[];
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting recent knowledge bases:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -191,14 +185,12 @@ class DashboardService {
                 .limit(20);
 
             if (error) {
-                console.error(`[${this.serviceName}] Error fetching recommended knowledge bases:`, error);
-                throw error;
+                                throw error;
             }
 
             return data as Project[];
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting recommended knowledge bases:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -219,14 +211,12 @@ class DashboardService {
                 .limit(5);
 
             if (error) {
-                console.error(`[${this.serviceName}] Error fetching active chat sessions:`, error);
-                throw error;
+                                throw error;
             }
 
             return data as ChatSession[];
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting active chat sessions:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -250,14 +240,12 @@ class DashboardService {
                 .limit(10);
 
             if (error) {
-                console.error(`[${this.serviceName}] Error fetching recent chat messages:`, error);
-                throw error;
+                                throw error;
             }
 
             return data as ChatMessage[];
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting recent chat messages:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -286,8 +274,7 @@ class DashboardService {
 
             return activities.slice(0, 10); // Return top 10 activities
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting recent activities:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -317,8 +304,7 @@ class DashboardService {
                 projectId: kb.id
             }));
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting KB activities:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -363,8 +349,7 @@ class DashboardService {
                 };
             });
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting document activities:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -395,8 +380,7 @@ class DashboardService {
                 projectId: session.knowledge_base_id
             }));
         } catch (error) {
-            console.error(`[${this.serviceName}] Error getting chat activities:`, error);
-            return [];
+                        return [];
         }
     }
 
@@ -407,8 +391,7 @@ class DashboardService {
         try {
             await statisticsService.refreshStatistics();
         } catch (error) {
-            console.error(`[${this.serviceName}] Error refreshing statistics:`, error);
-            throw error;
+                        throw error;
         }
     }
 }

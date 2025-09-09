@@ -68,8 +68,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           setPreviewUrl(uploadedUrl);
         }
       } catch (error) {
-        console.error('Error uploading file:', error);
-        // Revert preview on error
+                // Revert preview on error
         setPreviewUrl(currentAvatarUrl || null);
       }
     },

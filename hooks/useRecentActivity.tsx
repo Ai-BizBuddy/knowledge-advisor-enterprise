@@ -79,8 +79,7 @@ export const useRecentActivity = (
       try {
         documents = await documentService.getAllDocuments();
       } catch (err) {
-        console.error('Error fetching documents for activity:', err);
-      }
+              }
 
       // Process documents into activity items
       const documentActivities: ActivityItem[] = await Promise.all(
@@ -170,8 +169,7 @@ export const useRecentActivity = (
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to load recent activity';
       setError(errorMsg);
-      console.error('Error loading recent activity:', err);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [projects, limit, getProjectName]);

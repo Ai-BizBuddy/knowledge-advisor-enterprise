@@ -139,8 +139,7 @@ export const useKnowledgeBaseUsers = (
           setError(result.error || 'Failed to fetch users');
         }
       } catch (error) {
-        console.error('Error fetching knowledge base users:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setLoading(false);
       }
@@ -170,8 +169,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-        console.error('Error adding user to knowledge base:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(error instanceof Error ? error.message : 'Unknown error');
         return false;
       }
     },
@@ -208,8 +206,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-        console.error('Error updating user role:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(error instanceof Error ? error.message : 'Unknown error');
         return false;
       }
     },
@@ -241,8 +238,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-        console.error('Error removing user from knowledge base:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(error instanceof Error ? error.message : 'Unknown error');
         return false;
       }
     },
@@ -269,8 +265,7 @@ export const useKnowledgeBaseUsers = (
           setError(result.error || 'Failed to search users');
         }
       } catch (error) {
-        console.error('Error searching users:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(error instanceof Error ? error.message : 'Unknown error');
       } finally {
         setState((prev) => ({ ...prev, searchLoading: false }));
       }

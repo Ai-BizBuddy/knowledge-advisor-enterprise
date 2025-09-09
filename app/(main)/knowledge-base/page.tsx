@@ -66,9 +66,8 @@ export default function KnowledgeBase() {
         await initialLoad();
         setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
-      } catch (error) {
-        console.error('Failed to delete knowledge base:', error);
-        setDeleteModal(false);
+      } catch {
+                setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
       }
     }
@@ -235,9 +234,8 @@ export default function KnowledgeBase() {
               setOpenModal(false);
               // Force reload to show the new knowledge base
               await initialLoad();
-            } catch (error) {
-              console.error('Failed to create knowledge base:', error);
-              // TODO: Add toast notification for error
+            } catch {
+                            // TODO: Add toast notification for error
             }
           }}
         />

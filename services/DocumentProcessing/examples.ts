@@ -19,8 +19,7 @@ export async function checkApiHealth() {
     const isHealthy = await documentProcessingApi.healthCheck();
     return isHealthy;
   } catch (error) {
-    console.error('Health check failed:', error);
-    return false;
+        return false;
   }
 }
 
@@ -35,8 +34,7 @@ export async function syncSingleDocument(
     // This function now uses the new API internally
     await syncDocumentToRAG(projectId, documentId);
   } catch (error) {
-    console.error('Document sync failed:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -53,8 +51,7 @@ export async function bulkSyncDocuments(
 
     return result;
   } catch (error) {
-    console.error('Bulk sync failed:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -75,8 +72,7 @@ export async function monitorDocumentProcessing(documentId: string) {
 
     return finalStatus;
   } catch (error) {
-    console.error('Status monitoring failed:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -89,8 +85,7 @@ export async function viewPendingDocuments() {
 
     return pendingDocs;
   } catch (error) {
-    console.error('Failed to fetch pending documents:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -107,15 +102,13 @@ export async function handleFailedJobs() {
         try {
           await documentProcessingApi.retryJob(job.id);
         } catch (retryError) {
-          console.error(`Failed to retry job ${job.id}:`, retryError);
-        }
+                  }
       }
     }
 
     return failedJobs;
   } catch (error) {
-    console.error('Failed to handle failed jobs:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -162,8 +155,7 @@ export async function completeDocumentWorkflow(
       documentStatuses,
     };
   } catch (error) {
-    console.error('Document workflow failed:', error);
-    throw error;
+        throw error;
   }
 }
 

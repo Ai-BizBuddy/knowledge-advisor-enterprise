@@ -112,11 +112,7 @@ class UserService {
         },
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error getting user statistics:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -184,11 +180,7 @@ class UserService {
         },
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error getting user statistics:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -237,8 +229,7 @@ class UserService {
       const { data, error } = await query;
 
       if (error) {
-        console.error(`[${this.serviceName}] Error getting all users:`, error);
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       // Transform data to match UserSearchResult interface
@@ -259,8 +250,7 @@ class UserService {
 
       return { success: true, data: users };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUsers:`, error);
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -283,13 +273,7 @@ class UserService {
     }>
   > {
     try {
-      console.log(`[${this.serviceName}] Searching users in knowledge base:`, {
-        knowledgeBaseId,
-        page,
-        limit,
-        searchTerm,
-      });
-
+      
       const user = await this.getCurrentUser();
       if (!user) {
         return { success: false, error: 'User not authenticated' };
@@ -322,8 +306,7 @@ class UserService {
       const { data, error, count } = await query;
 
       if (error) {
-        console.error(`[${this.serviceName}] Error searching users:`, error);
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       // Transform data to match UserSearchResult interface
@@ -345,22 +328,13 @@ class UserService {
       const total = count || 0;
       const hasMore = offset + limit < total;
 
-      console.log(`[${this.serviceName}] Search completed:`, {
-        usersFound: users.length,
-        total,
-        hasMore,
-      });
-
+      
       return {
         success: true,
         data: { users, total, hasMore },
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in searchUsersInKnowledgeBase:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -410,11 +384,7 @@ class UserService {
       const { data, error } = await query;
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error searching users for assignment:`,
-          error,
-        );
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       // Transform data to match UserSearchResult interface
@@ -435,11 +405,7 @@ class UserService {
 
       return { success: true, data: users };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in searchUsersForAssignment:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -473,8 +439,7 @@ class UserService {
         .single();
 
       if (error) {
-        console.error(`[${this.serviceName}] Error getting user by ID:`, error);
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       if (!data) {
@@ -494,8 +459,7 @@ class UserService {
 
       return { success: true, data: userResult };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUserById:`, error);
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -534,11 +498,7 @@ class UserService {
         .in('id', userIds);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error getting users by IDs:`,
-          error,
-        );
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       const users: UserSearchResult[] = (data || []).map(
@@ -558,8 +518,7 @@ class UserService {
 
       return { success: true, data: users };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in getUsersByIds:`, error);
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -599,11 +558,7 @@ class UserService {
         if (error.code === 'PGRST116') {
           return { success: true, data: { exists: false } };
         }
-        console.error(
-          `[${this.serviceName}] Error checking user exists:`,
-          error,
-        );
-        return { success: false, error: error.message };
+                return { success: false, error: error.message };
       }
 
       const user = data as AuthUserRow;
@@ -619,8 +574,7 @@ class UserService {
 
       return { success: true, data: { exists: true, user: userResult } };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error in checkUserExists:`, error);
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };

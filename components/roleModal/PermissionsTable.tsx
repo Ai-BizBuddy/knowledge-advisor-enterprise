@@ -135,8 +135,7 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
 
   // Show error state with fallback notice
   if (error) {
-    console.warn('Permission data error, using fallback constants:', error);
-  }
+      }
 
   return (
     <div className={'space-y-4 p-0'}>

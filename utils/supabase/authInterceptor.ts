@@ -48,8 +48,7 @@ export class SupabaseAuthClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
-        return;
+                return;
       }
 
       if (!session) {
@@ -67,8 +66,7 @@ export class SupabaseAuthClient {
         await this.refreshToken();
       }
     } catch (error) {
-      console.error('Error ensuring valid token:', error);
-    }
+          }
   }
 
   /**
@@ -85,8 +83,7 @@ export class SupabaseAuthClient {
         const { data, error } = await this.supabase.auth.refreshSession();
 
         if (error) {
-          console.error('Token refresh failed:', error);
-
+          
           // If refresh fails with specific errors, handle auth failure
           if (
             error.message.includes('refresh_token_not_found') ||
@@ -103,8 +100,7 @@ export class SupabaseAuthClient {
 
         return null;
       } catch (error) {
-        console.error('Token refresh error:', error);
-        return null;
+                return null;
       } finally {
         this.refreshPromise = null;
       }
@@ -140,14 +136,12 @@ export class SupabaseAuthClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
-        return null;
+                return null;
       }
 
       return session;
     } catch (error) {
-      console.error('Error getting session:', error);
-      return null;
+            return null;
     }
   }
 

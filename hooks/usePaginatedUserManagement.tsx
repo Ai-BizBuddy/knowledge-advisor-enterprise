@@ -171,11 +171,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to fetch users';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error fetching users:',
-          error,
-        );
-      } finally {
+              } finally {
         setLoading(false);
       }
     },
@@ -205,11 +201,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to fetch roles';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error fetching roles:',
-          error,
-        );
-      } finally {
+              } finally {
         setLoading(false);
       }
     },
@@ -241,11 +233,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to fetch permissions';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error fetching permissions:',
-          error,
-        );
-      } finally {
+              } finally {
         setLoading(false);
       }
     },
@@ -277,11 +265,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to fetch departments';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error fetching departments:',
-          error,
-        );
-      } finally {
+              } finally {
         setLoading(false);
       }
     },
@@ -300,11 +284,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to fetch roles';
       setError(errorMessage);
-      console.error(
-        '[usePaginatedUserManagement] Error fetching all roles:',
-        error,
-      );
-    }
+          }
   }, [setError]);
 
   /**
@@ -319,11 +299,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to fetch departments';
       setError(errorMessage);
-      console.error(
-        '[usePaginatedUserManagement] Error fetching all departments:',
-        error,
-      );
-    }
+          }
   }, [setError]);
 
   /**
@@ -341,11 +317,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           ? error.message
           : 'Failed to fetch user statistics';
       setError(errorMessage);
-      console.error(
-        '[usePaginatedUserManagement] Error fetching user statistics:',
-        error,
-      );
-    }
+          }
   }, [setError]);
 
   /**
@@ -373,11 +345,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to create user';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error creating user:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -412,11 +380,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to update user';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error updating user:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -448,11 +412,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to delete user';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error deleting user:',
-          error,
-        );
-        return false;
+                return false;
       } finally {
         setLoading(false);
       }
@@ -481,11 +441,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to upload profile picture';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error uploading profile picture:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setUploadingImage(false);
       }
@@ -530,11 +486,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to update user profile';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error updating user profile:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -564,11 +516,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to create role';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error creating role:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -600,11 +548,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to update role';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error updating role:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -633,11 +577,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         const errorMessage =
           error instanceof Error ? error.message : 'Failed to delete role';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error deleting role:',
-          error,
-        );
-        return false;
+                return false;
       } finally {
         setLoading(false);
       }
@@ -671,11 +611,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to create department';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error creating department:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -710,11 +646,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to update department';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error updating department:',
-          error,
-        );
-        return null;
+                return null;
       } finally {
         setLoading(false);
       }
@@ -745,11 +677,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
             ? error.message
             : 'Failed to delete department';
         setError(errorMessage);
-        console.error(
-          '[usePaginatedUserManagement] Error deleting department:',
-          error,
-        );
-        return false;
+                return false;
       } finally {
         setLoading(false);
       }

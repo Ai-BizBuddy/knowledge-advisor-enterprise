@@ -39,11 +39,9 @@ class KnowledgeBaseService {
         throw new Error('User not authenticated');
       }
 
-      console.log(`[${this.serviceName}] Current user ID:`, session.user.id);
-      return session.user;
+            return session.user;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting current user:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -73,14 +71,12 @@ class KnowledgeBaseService {
         .in('id', uniqueValidIds);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching knowledge bases by IDs:`, error);
-        throw new Error(`Failed to fetch knowledge bases by IDs: ${error.message}`);
+                throw new Error(`Failed to fetch knowledge bases by IDs: ${error.message}`);
       }
 
       return data as Project[];
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting knowledge bases by IDs:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -94,8 +90,7 @@ class KnowledgeBaseService {
       .select('id')
 
     if (error) {
-      console.error(`[${this.serviceName}] Error fetching KB IDs:`, error);
-      throw new Error(`Failed to fetch KB IDs: ${error.message}`);
+            throw new Error(`Failed to fetch KB IDs: ${error.message}`);
     }
 
   return data.map((row: { id: string }) => row.id).filter((id: string) => this.isValidUUID(id));
@@ -105,11 +100,7 @@ class KnowledgeBaseService {
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Project[]; count: number }> {
-    console.log(
-      `[${this.serviceName}] Searching knowledge bases with query:`,
-      query,
-    );
-
+    
     try {
       const supabaseTable = createClientTable();
 
@@ -120,11 +111,7 @@ class KnowledgeBaseService {
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
-        console.error(
-          `[${this.serviceName}] Error getting search count:`,
-          countError,
-        );
-      }
+              }
 
       // Get paginated search results
       const { data: projects, error } = await supabaseTable
@@ -135,30 +122,18 @@ class KnowledgeBaseService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-        console.error(`[${this.serviceName}] Supabase query error:`, error);
-        throw new Error(`Failed to search knowledge bases: ${error.message}`);
+                throw new Error(`Failed to search knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-        console.log(
-          `[${this.serviceName}] No knowledge bases found for query:`,
-          query,
-        );
-        return { data: [], count: 0 };
+                return { data: [], count: 0 };
       }
 
-      console.log(
-        `[${this.serviceName}] Found ${projects.length} knowledge bases for query: ${query} (Total: ${count})`,
-      );
-
+      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error searching knowledge bases:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -169,19 +144,12 @@ class KnowledgeBaseService {
     paginationOptions?: PaginationOptions,
     filters?: { status?: string; searchTerm?: string },
   ): Promise<{ data: Project[]; count: number }> {
-    console.log(
-      `[${this.serviceName}] Fetching knowledge bases with pagination:`,
-      paginationOptions,
-      'filters:',
-      filters,
-    );
-
+    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      console.log(`[${this.serviceName}] Querying Supabase for user:`, user.id);
-
+      
       // Build base query
       let countQuery = supabaseTable
         .from('knowledge_base')
@@ -210,8 +178,7 @@ class KnowledgeBaseService {
       const { count, error: countError } = await countQuery;
 
       if (countError) {
-        console.error(`[${this.serviceName}] Error getting count:`, countError);
-      }
+              }
 
       // Get paginated data
       const { data: projects, error } = paginationOptions
@@ -221,27 +188,18 @@ class KnowledgeBaseService {
         : await dataQuery.order('created_at', { ascending: false });
 
       if (error) {
-        console.error(`[${this.serviceName}] Supabase query error:`, error);
-        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+                throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-        console.log(`[${this.serviceName}] No knowledge bases found for user`);
-        return { data: [], count: 0 };
+                return { data: [], count: 0 };
       }
 
-      console.log(
-        `[${this.serviceName}] Found ${projects.length} knowledge bases (Total: ${count})`,
-      );
-
+      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error fetching knowledge bases:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -262,11 +220,7 @@ class KnowledgeBaseService {
         if (error.code === 'PGRST116') {
           return null;
         }
-        console.error(
-          `[${this.serviceName}] Error fetching knowledge base:`,
-          error,
-        );
-        throw new Error(`Failed to fetch knowledge base: ${error.message}`);
+                throw new Error(`Failed to fetch knowledge base: ${error.message}`);
       }
 
       // Get document count for this knowledge base
@@ -287,11 +241,7 @@ class KnowledgeBaseService {
         is_active: project.is_active,
       } as Project;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error fetching knowledge base:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -321,20 +271,12 @@ class KnowledgeBaseService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error creating knowledge base:`,
-          error,
-        );
-        throw new Error(`Failed to create knowledge base: ${error.message}`);
+                throw new Error(`Failed to create knowledge base: ${error.message}`);
       }
 
       return project as Project;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error creating knowledge base:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -358,18 +300,10 @@ class KnowledgeBaseService {
         .single();
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error updating knowledge base:`,
-          error,
-        );
-        throw new Error(`Failed to update knowledge base: ${error.message}`);
+                throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
 
-      console.log(
-        `[${this.serviceName}] Knowledge base updated successfully:`,
-        id,
-      );
-
+      
       return {
         id: project.id,
         name: project.name,
@@ -382,11 +316,7 @@ class KnowledgeBaseService {
         updated_at: project.updated_at || project.created_at,
       } as Project;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error updating knowledge base:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -405,18 +335,10 @@ class KnowledgeBaseService {
         .eq('created_by', user.id);
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Error deleting knowledge base:`,
-          error,
-        );
-        throw new Error(`Failed to delete knowledge base: ${error.message}`);
+                throw new Error(`Failed to delete knowledge base: ${error.message}`);
       }
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error deleting knowledge base:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 

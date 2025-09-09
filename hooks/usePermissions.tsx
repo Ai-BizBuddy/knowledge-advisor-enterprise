@@ -100,8 +100,7 @@ export const usePermissions = (): UsePermissions => {
       const errorMessage =
         error instanceof Error ? error.message : 'Failed to load permissions';
       setError(errorMessage);
-      console.error('[usePermissions] Error loading permissions:', error);
-    } finally {
+          } finally {
       setLoading(false);
     }
   }, [setLoading, setError]);
