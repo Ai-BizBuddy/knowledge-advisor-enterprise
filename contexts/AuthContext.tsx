@@ -58,19 +58,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshToken = useCallback(async (): Promise<Session | null> => {
     // If there's already a refresh in progress, return that promise
     if (refreshPromise) {
-            return refreshPromise;
+      return refreshPromise;
     }
 
     const promise = (async () => {
       try {
-                const { data, error } = await supabase.auth.refreshSession();
+        const { data, error } = await supabase.auth.refreshSession();
 
         if (error) {
-                    return null;
+          console.error('Token refresh error:', error);
+          return null;
         }
 
         if (data.session) {
-                    setSession(data.session);
+          setSession(data.session);
           setUser(data.session.user);
           return data.session;
         }
@@ -107,7 +108,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Check if current token is expiring soon
       if (isTokenExpiring()) {
-                const newSession = await refreshToken();
+        const newSession = await refreshToken();
         return newSession?.access_token || null;
       }
 
@@ -177,23 +178,35 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60 * 1000);
 
       // Only set timer if we have enough time left and component is mounted
-      if (refreshTime > 0 && mounted) {
+      if (refreshTime > 0 && refreshTime < 24 * 60 * 60 * 1000 && mounted) { // Max 24 hours
         refreshTimer = setTimeout(async () => {
           if (!mounted) return;
           
-          const newSession = await refreshToken();
-          if (newSession && mounted) {
-            setupTokenRefresh(newSession); // Set up next refresh
-          } else if (mounted) {
-            await signOut();
+          try {
+            const newSession = await refreshToken();
+            if (newSession && mounted) {
+              setupTokenRefresh(newSession); // Set up next refresh
+            } else if (mounted) {
+              await signOut();
+            }
+          } catch (error) {
+            console.error('Auto refresh failed:', error);
+            if (mounted) {
+              await signOut();
+            }
           }
         }, refreshTime);
-      } else if (mounted) {
+      } else if (timeUntilExpiry <= 5 * 60 * 1000 && mounted) {
         // Token is expiring soon, refresh immediately
         refreshToken().then((newSession) => {
           if (newSession && mounted) {
             setupTokenRefresh(newSession);
           } else if (mounted) {
+            signOut();
+          }
+        }).catch((error) => {
+          console.error('Immediate refresh failed:', error);
+          if (mounted) {
             signOut();
           }
         });
