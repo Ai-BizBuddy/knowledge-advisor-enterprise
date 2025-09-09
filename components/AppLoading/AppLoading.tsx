@@ -42,7 +42,7 @@ export const AppLoading: React.FC<AppLoadingProps> = ({
   const styles = getVariantStyles();
 
   return (
-    <div className={`${styles.container} ${className} bg-white-900 dark:bg-slate-800`}>
+    <div className={`${styles.container} ${className} bg-white-900 dark:bg-gray-900 h-[100vh] flex items-center justify-center`}>
       <div className='flex flex-col items-center space-y-4'>
         {/* Loading Spinner */}
         <Spinner className={styles.spinner} />

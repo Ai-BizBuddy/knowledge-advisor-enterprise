@@ -62,7 +62,7 @@ export default function SlideBar({
                 <MenuIcon />
               </button>
 
-              <a href='https://flowbite.com' className='ms-2 flex md:me-24'>
+              <a href='./' className='ms-2 flex md:me-24'>
                 <Image
                   src='/assets/logo-ka.svg'
                   width={UI_CONSTANTS.AVATAR_SIZE}
