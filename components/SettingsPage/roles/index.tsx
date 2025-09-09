@@ -9,9 +9,9 @@ import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { AccessLevel, PermissionRow } from '@/interfaces/RoleModal';
 import {
-  CreateRoleInput,
-  Role,
-  UpdateRoleInput,
+    CreateRoleInput,
+    Role,
+    UpdateRoleInput,
 } from '@/interfaces/UserManagement';
 import { dynamicPermissionMappingService as permissionMappingService } from '@/services/DynamicPermissionMappingService';
 import { Button, Modal } from 'flowbite-react';
