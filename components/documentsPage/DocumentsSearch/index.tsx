@@ -17,8 +17,8 @@ export const DocumentsSearch: React.FC<DocumentsSearchProps> = ({
   return (
     <div className='flex w-full gap-2'>
       {/* Search Input - Takes ~80% */}
-      <div className='relative flex-1'>
-        <div className='absolute inset-y-0 left-0 flex items-center pl-3'>
+      <div className='relative flex w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400'>
+        <div className='inset-y-0 left-0 flex items-center'>
           <svg
             className='h-5 w-5 text-gray-400'
             fill='none'
@@ -38,12 +38,12 @@ export const DocumentsSearch: React.FC<DocumentsSearchProps> = ({
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder='Search documents'
-          className='w-full rounded-lg border border-gray-300 bg-white py-2 pr-4 pl-10 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400'
+          className='w-[calc(100%-2.5rem)] bg-transparent focus:outline-none pl-2'
         />
         {isDeepSearch && (
           <button
             onClick={handleDeepSearchClear}
-            className='absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 transition-colors hover:text-gray-700 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-200'
+            className='inset-y-0 right-0 flex items-center px-3 text-gray-500 transition-colors hover:text-gray-700 disabled:cursor-not-allowed dark:text-gray-400 dark:hover:text-gray-200'
             title='Clear search'
           >
             Clear

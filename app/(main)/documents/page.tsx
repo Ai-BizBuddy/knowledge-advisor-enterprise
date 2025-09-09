@@ -311,7 +311,7 @@ export default function DocumentsPage() {
 
       // Refresh documents using hook's refresh function
       await refresh();
-    } catch {
+    } catch (error) {
       
       // Show error notification
       const errorMessage =
@@ -376,7 +376,7 @@ export default function DocumentsPage() {
 
       // Refresh documents using hook's refresh function
       await refresh();
-    } catch {
+    } catch (error) {
       
       // Show error notification
       const errorMessage =

@@ -77,7 +77,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
         return null;
       } catch (error) {
-                return null;
+        console.error('Token refresh error:', error);
+        return null;
       } finally {
         setRefreshPromise(null);
       }
@@ -95,7 +96,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setSession(null);
       setUser(null);
     } catch (error) {
-          } finally {
+      console.error('Sign out error:', error);
+    } finally {
       setLoading(false);
     }
   }, [supabase.auth]);
@@ -112,33 +114,31 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Return current token if still valid
       return session?.access_token || null;
     } catch (error) {
-            return null;
+      console.error('Get access token error:', error);
+      return null;
     }
   }, [session, isTokenExpiring, refreshToken]);
 
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
-      const wasSignedIn = !!user;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
       switch (event) {
         case 'SIGNED_IN':
-                    // Only redirect to dashboard for NEW logins, not session restoration
-          // If user was already signed in (wasSignedIn = true), this is likely a page refresh or token refresh
-          if (!wasSignedIn && session?.user) {
-                        setTimeout(() => {
+          // Only redirect to dashboard for NEW logins, not session restoration
+          if (session?.user) {
+            setTimeout(() => {
               if (window.location.pathname === '/login' || window.location.pathname === '/') {
                 window.location.href = '/dashboard';
               }
             }, 0);
-          } else {
-                      }
+          }
           break;
         case 'SIGNED_OUT':
-                    // Redirect to login page after hydration
+          // Redirect to login page after hydration
           setTimeout(() => {
             if (window.location.pathname !== '/login') {
               window.location.href = '/login';
@@ -146,22 +146,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }, 0);
           break;
         case 'TOKEN_REFRESHED':
-                    break;
+          break;
         case 'USER_UPDATED':
-                    break;
+          break;
         default:
           break;
       }
     },
-    [user], // Include user in dependencies to track previous sign-in state
+    [], // No dependencies - this callback doesn't depend on external state
   );
 
-  // Set up automatic token refresh with improved logic
+  // Set up auth initialization and token refresh
   useEffect(() => {
     let refreshTimer: NodeJS.Timeout;
+    let mounted = true;
 
     const setupTokenRefresh = (session: Session) => {
-      if (!session.expires_at) return;
+      // Clear any existing timer
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+
+      if (!session.expires_at || !mounted) return;
 
       const expiresAt = session.expires_at * 1000; // Convert to milliseconds
       const now = Date.now();
@@ -170,21 +176,24 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Refresh token 5 minutes before expiry, but at least 1 minute from now
       const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60 * 1000);
 
-      // Only set timer if we have enough time left
-      if (refreshTime > 0) {
+      // Only set timer if we have enough time left and component is mounted
+      if (refreshTime > 0 && mounted) {
         refreshTimer = setTimeout(async () => {
+          if (!mounted) return;
+          
           const newSession = await refreshToken();
-          if (newSession) {
+          if (newSession && mounted) {
             setupTokenRefresh(newSession); // Set up next refresh
-          } else {
+          } else if (mounted) {
             await signOut();
           }
         }, refreshTime);
-      } else {
+      } else if (mounted) {
+        // Token is expiring soon, refresh immediately
         refreshToken().then((newSession) => {
-          if (newSession) {
+          if (newSession && mounted) {
             setupTokenRefresh(newSession);
-          } else {
+          } else if (mounted) {
             signOut();
           }
         });
@@ -193,6 +202,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Initial session check and setup
     const initializeAuth = async () => {
+      if (!mounted) return;
+      
       try {
         setLoading(true);
         const {
@@ -200,8 +211,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           error,
         } = await supabase.auth.getSession();
 
+        if (!mounted) return;
+
         if (error) {
-                    setLoading(false);
+          setLoading(false);
           return;
         }
 
@@ -214,7 +227,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setupTokenRefresh(session);
         }
       } catch (error) {
-                setLoading(false);
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -223,44 +239,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      handleAuthStateChange(event, session);
+      
+      // Set up token refresh for new sessions
+      if (session && event === 'TOKEN_REFRESHED') {
+        setupTokenRefresh(session);
+      }
+    });
 
-    // Clean up timer on unmount
+    // Clean up on unmount
     return () => {
+      mounted = false;
       subscription.unsubscribe();
       if (refreshTimer) {
         clearTimeout(refreshTimer);
       }
     };
-  }, [supabase.auth, handleAuthStateChange, refreshToken, signOut]);
-
-  // Update token refresh timer when session changes
-  useEffect(() => {
-    setLoading(true);
-    let refreshTimer: NodeJS.Timeout;
-    if (session && session.expires_at) {
-      const expiresAt = session.expires_at * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expiresAt - now;
-      const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60 * 1000);
-
-      if (refreshTime > 0) {
-        refreshTimer = setTimeout(async () => {
-          const newSession = await refreshToken();
-          if (!newSession) {
-            await signOut();
-          }
-          setLoading(false);
-        }, refreshTime);
-      }
-    }
-
-    return () => {
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
-      }
-    };
-  }, [session, refreshToken, signOut]);
+  }, [supabase.auth, handleAuthStateChange, refreshToken, signOut]); // Include dependencies
 
   const value: AuthContextType = {
     user,
