@@ -16,10 +16,7 @@ export default function ChatHistoryList({
   onClose,
   onLoadSession,
 }: Props) {
-  const { 
-    sessions, 
-    loadHistory, 
-  } = useChatHistory();
+  const { sessions, loadHistory } = useChatHistory();
 
   const handleLoadSessions = useCallback(() => {
     if (isOpen) {
@@ -37,7 +34,7 @@ export default function ChatHistoryList({
       onClick={onClose}
     >
       <div
-        className='overflow-auto flex h-full w-full flex-col gap-4 border-r border-gray-700/50 bg-gray-200 p-4 pt-4 shadow-2xl backdrop-blur-xl sm:w-1/2 lg:w-1/3 xl:w-1/5 dark:bg-gray-800'
+        className='flex h-full w-full flex-col gap-4 overflow-x-auto border-r border-gray-700/50 bg-gray-200 p-4 pt-4 shadow-2xl backdrop-blur-xl sm:w-1/2 lg:w-1/3 xl:w-1/5 dark:bg-gray-800 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'
         onClick={(e) => e.stopPropagation()}
       >
         <div
