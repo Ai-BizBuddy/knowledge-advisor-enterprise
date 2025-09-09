@@ -21,6 +21,14 @@ class KnowledgeBaseService {
     // Service initialization
   }
   /**
+   * Validate UUID v1-v5 format
+   */
+  private isValidUUID(id: string): boolean {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+      id,
+    );
+  }
+  /**
    * Get current user from Supabase auth
    */
   private async getCurrentUser() {
@@ -39,28 +47,46 @@ class KnowledgeBaseService {
     }
   }
 
-  async getProjectsByIDs(ids: string[]): Promise<Project[]> {
+  async getKnowledgeBaseByIDs(ids: string[]): Promise<Project[]> {
     try {
+      // Guard against undefined/invalid IDs to avoid Postgres 22P02 errors
+      const uniqueValidIds = Array.from(
+        new Set(
+          (ids || []).filter(
+            (id): id is string => typeof id === 'string' && this.isValidUUID(id),
+          ),
+        ),
+      );
+
+      if (uniqueValidIds.length === 0) {
+        console.warn(
+          `[${this.serviceName}] getKnowledgeBaseByIDs called with no valid UUIDs; skipping query`,
+          { receivedCount: ids?.length || 0 },
+        );
+        return [];
+      }
+
       const supabaseTable = createClientTable();
       const { data, error } = await supabaseTable
         .from('knowledge_base')
         .select('*')
-        .in('id', ids);
+        .in('id', uniqueValidIds);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching projects by IDs:`, error);
-        throw new Error(`Failed to fetch projects by IDs: ${error.message}`);
+        console.error(`[${this.serviceName}] Error fetching knowledge bases by IDs:`, error);
+        throw new Error(`Failed to fetch knowledge bases by IDs: ${error.message}`);
       }
 
       return data as Project[];
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting projects by IDs:`, error);
+      console.error(`[${this.serviceName}] Error getting knowledge bases by IDs:`, error);
       throw error;
     }
   }
 
   async getKBIDs(): Promise<string[]> {
-    const user = await this.getCurrentUser();
+    // Ensure user is authenticated (RLS), but we don't need the value here
+    await this.getCurrentUser();
     const supabaseTable = createClientTable();
 
     const { data, error } = await supabaseTable
@@ -72,10 +98,10 @@ class KnowledgeBaseService {
       throw new Error(`Failed to fetch KB IDs: ${error.message}`);
     }
 
-    return data.map((row: { id: string }) => row.id);
+  return data.map((row: { id: string }) => row.id).filter((id: string) => this.isValidUUID(id));
   }
 
-  async searchProject(
+  async searchKnowledgeBase(
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Project[]; count: number }> {

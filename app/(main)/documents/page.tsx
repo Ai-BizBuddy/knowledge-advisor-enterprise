@@ -6,7 +6,7 @@ import {
   DocumentsSearch,
   DocumentsTable,
   NoDocuments,
-  TableSkeleton
+  TableSkeleton,
 } from '@/components';
 import {
   DeepSearchLayout,
@@ -23,7 +23,10 @@ import {
   useSorting,
 } from '@/hooks';
 import { useDeepSearch } from '@/hooks/useDeepSarch';
-import { DeepSearchData, DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
+import {
+  DeepSearchData,
+  DocumentSearchResult,
+} from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
@@ -50,7 +53,7 @@ export interface DocumentTableItem {
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
 const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
-  name: doc.metadata?.originalFileName as string || doc.name, // Use original filename from metadata if available
+  name: (doc.metadata?.originalFileName as string) || doc.name, // Use original filename from metadata if available
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
     : 'Unknown',
@@ -106,7 +109,9 @@ export default function DocumentsPage() {
   const [isMiniPreviewOpen, setIsMiniPreviewOpen] = useState(false);
   const [isFullPreviewOpen, setIsFullPreviewOpen] = useState(false);
   const [isFullScale, setIsFullScale] = useState(false);
-  const [previewDocument, setPreviewDocument] = useState<DeepSearchData | null>(null);
+  const [previewDocument, setPreviewDocument] = useState<DeepSearchData | null>(
+    null,
+  );
 
   // Pagination state
   const [deepCurrentPage, setDeepCurrentPage] = useState(1);
@@ -147,12 +152,12 @@ export default function DocumentsPage() {
     setSearchTerm,
     setItemsPerPage,
     handlePageChange,
-    getDocumentById
+    getDocumentById,
   } = useAllUserDocuments({
     autoLoad: true,
   });
 
-  const {getKnowledgeBaseIDs,getKnowledgeBaseByIDs} = useKnowledgeBase();
+  const { getKnowledgeBaseIDs, getKnowledgeBaseByIDs } = useKnowledgeBase();
 
   const { executeSearch } = useDeepSearch();
 
@@ -295,7 +300,10 @@ export default function DocumentsPage() {
       await documentService.deleteDocument(originalDoc.id);
 
       // Show success notification
-      showToast(`Document "${documentItem.name}" deleted successfully`, 'success');
+      showToast(
+        `Document "${documentItem.name}" deleted successfully`,
+        'success',
+      );
 
       // Close modal and refresh data
       setIsDeleteModalOpen(false);
@@ -305,13 +313,14 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       console.error('[DocumentsPage] Error deleting document:', error);
-      
+
       // Show error notification
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to delete document. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete document. Please try again.';
       showToast(errorMessage, 'error');
-      
+
       // Close modal
       setIsDeleteModalOpen(false);
       setDocumentToDelete(null);
@@ -339,7 +348,9 @@ export default function DocumentsPage() {
         if (documentAtIndex?.id) {
           documentIds.push(documentAtIndex.id);
           // Use original filename from metadata for display
-          const originalFileName = documentAtIndex.metadata?.originalFileName as string || documentAtIndex.name;
+          const originalFileName =
+            (documentAtIndex.metadata?.originalFileName as string) ||
+            documentAtIndex.name;
           documentNames.push(originalFileName);
         }
       });
@@ -355,9 +366,10 @@ export default function DocumentsPage() {
 
       // Show success notification
       const documentCount = documentIds.length;
-      const successMessage = documentCount === 1 
-        ? `Document "${documentNames[0]}" deleted successfully`
-        : `${documentCount} documents deleted successfully`;
+      const successMessage =
+        documentCount === 1
+          ? `Document "${documentNames[0]}" deleted successfully`
+          : `${documentCount} documents deleted successfully`;
       showToast(successMessage, 'success');
 
       // Clear selection and refresh
@@ -367,11 +379,12 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       console.error('[DocumentsPage] Error deleting documents:', error);
-      
+
       // Show error notification
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Failed to delete documents. Please try again.';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Failed to delete documents. Please try again.';
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
@@ -419,12 +432,22 @@ export default function DocumentsPage() {
         return;
       }
 
-      const documentIds = await Promise.all(
-        results.map(async (res: DeepSearchRes) => res.metadata.document_id),
+      // Collect and sanitize IDs (filter out falsy and duplicates)
+      const documentIds = Array.from(
+        new Set(
+          results
+            .map((res: DeepSearchRes) => res.metadata.document_id)
+            .filter((id): id is string => typeof id === 'string' && id.length > 0),
+        ),
       );
-      const KBIds = await Promise.all(
-        results.map(async (res: DeepSearchRes) => res.metadata.knowledge_id),
+      const KBIds = Array.from(
+        new Set(
+          results
+            .map((res: DeepSearchRes) => res.metadata.knowledge_id)
+            .filter((id): id is string => typeof id === 'string' && id.length > 0),
+        ),
       );
+
       const docRes = await getDocumentById(documentIds);
       const kbRes = await getKnowledgeBaseByIDs(KBIds);
 
@@ -432,27 +455,35 @@ export default function DocumentsPage() {
       console.log('Knowledge Base results:', kbRes);
 
       // Map document and knowledge base results to search results
-      const mappedResults = docRes?.map(
-        (doc: Document) => {
-          const knowledge = kbRes.find(
-            (kb: Project) => kb.id === doc.knowledge_base_id,
-          );
-          return {
-            id: doc.id,
-            title: doc.name,
-            content: doc.content || '',
-            fileType: doc.file_type,
-            fileSize: doc.file_size?.toString() || '0',
-            fileUrl: doc.url,
-            uploadDate: doc.updated_at,
-            knowledgeName: knowledge ? knowledge.name : '',
-            document: doc,
-            // knowledgeBase: knowledge || null,
-          };
-        },
-      );
+      // Build a lookup from document_id -> first matching chunk content
+      const contentByDocId = new Map<string, string>();
+      for (const r of results) {
+        const docId = r?.metadata?.document_id;
+        if (typeof docId === 'string' && docId.length > 0 && !contentByDocId.has(docId)) {
+          contentByDocId.set(docId, r.content || '');
+        }
+      }
 
-      setSearchResults(mappedResults || []);
+      const mappedResults = (docRes || []).map((doc: Document) => {
+        const knowledge = kbRes.find(
+          (kb: Project) => kb.id === doc.knowledge_base_id,
+        );
+        const snippet = contentByDocId.get(doc.id) || doc.content || '';
+        return {
+          id: doc.id,
+          title: doc.name,
+          content: snippet,
+          fileType: doc.file_type,
+          fileSize: doc.file_size?.toString() || '0',
+          fileUrl: doc.url,
+          uploadDate: doc.updated_at,
+          knowledgeName: knowledge ? knowledge.name : '',
+          document: doc,
+        } as unknown as DocumentSearchResult; // conforms to UI needs
+      });
+
+      // Feed mapped results into the paginated array state
+      setAllSearchResults(mappedResults);
     } catch (error) {
       console.error('Search error:', error);
       setIsNoResults(true);
@@ -540,7 +571,7 @@ export default function DocumentsPage() {
         {/* Main Content Layout - Responsive grid */}
 
         {/* Main Content Area */}
-        <div className='space-y-6 xl:col-span-3 flex justify-center sm:max-w-md'>
+        <div className='flex justify-center space-y-6 sm:max-w-md xl:col-span-3'>
           <DocumentsSearch
             onDeepSearchClick={handleDeepSearch}
             searchTerm={searchTerm}
@@ -552,7 +583,6 @@ export default function DocumentsPage() {
 
         {!isDeepSearch && (
           <div className='flex gap-4 pt-4'>
-
             {/* Documents List or Empty State */}
             {totalItems === 0 ? (
               <div className='mt-8 flex w-full justify-center'>

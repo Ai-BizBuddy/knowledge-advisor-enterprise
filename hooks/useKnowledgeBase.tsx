@@ -263,7 +263,8 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const getKnowledgeBaseByIDs = useCallback(
     async (ids: string[]): Promise<Project[]> => {
       try {
-        const kbProjects = await knowledgeBaseService.getProjectsByIDs(ids);
+        const kbProjects =
+          await knowledgeBaseService.getKnowledgeBaseByIDs(ids);
         return kbProjects;
       } catch (err) {
         const errorMessage =
