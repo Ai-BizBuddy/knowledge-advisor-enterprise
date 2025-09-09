@@ -116,7 +116,7 @@ export default function SlideBar({
 
       {/* Main Content */}
       <div className='h-full bg-gray-200 sm:ml-64 dark:bg-gray-900 overflow-auto'>
-        <div className='mt-14 h-lvh pb-[40px] overflow-x-auto'>{children}</div>
+        <div className='mt-14 h-lvh overflow-x-auto'>{children}</div>
       </div>
     </>
   );
