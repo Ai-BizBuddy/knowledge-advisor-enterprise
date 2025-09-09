@@ -45,7 +45,7 @@ export const DocumentPreview = ({
       >
         {/* Header */}
         <div className='flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700'>
-          <div className='min-w-0 flex gap-5'>
+          <div className='flex min-w-0 gap-5'>
             <h2 className='truncate text-lg font-semibold text-gray-900 dark:text-gray-100'>
               {document.name}
             </h2>
@@ -177,7 +177,7 @@ export const DocumentPreview = ({
             />
           ) : ['txt', 'md'].includes(document.fileType.toLowerCase()) ? (
             /* Text and Markdown Files */
-            <div className='h-full overflow-auto p-4'>
+            <div className='h-full overflow-x-auto p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'>
               <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-700'>
                 <pre className='font-mono text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200'>
                   {document.content || 'Content not available for preview'}

@@ -102,7 +102,7 @@ export default function SlideBar({
         aria-label='Sidebar'
       >
         <div className='bg-white dark:bg-gray-800'></div>
-        <div className='h-full overflow-y-auto w-[inherit] bg-white dark:bg-gray-800 pt-20'>
+        <div className='h-full w-[inherit] overflow-y-auto bg-white pt-20 dark:bg-gray-800'>
           <NavigationMenu
             items={navigationItems}
             onItemClick={(index) => {
@@ -115,8 +115,10 @@ export default function SlideBar({
       </aside>
 
       {/* Main Content */}
-      <div className='h-full bg-gray-200 sm:ml-64 dark:bg-gray-900 overflow-auto'>
-        <div className='mt-14 h-lvh overflow-x-auto'>{children}</div>
+      <div className='h-full bg-gray-200 sm:ml-64 dark:bg-gray-900'>
+        <div className='mt-14 h-lvh overflow-x-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'>
+          {children}
+        </div>
       </div>
     </>
   );
