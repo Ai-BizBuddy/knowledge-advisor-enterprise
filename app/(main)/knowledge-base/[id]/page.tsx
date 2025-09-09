@@ -312,6 +312,27 @@ export default function KnowledgeBaseDetail() {
     }
   }, [id, getKnowledgeBase]);
 
+   useEffect(() => {
+    // Scrolling to end when new messages change - using ref for more reliable targeting
+    const scrollToBottom = () => {
+      if (chatMessagesRef.current) {
+        requestAnimationFrame(() => {
+          const element = chatMessagesRef.current;
+          if (element) {
+            element.scrollTo({
+              top: element.scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        });
+      }
+    };
+
+    // Small delay to ensure DOM is fully rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages, isTyping]);
+
   const handleSendMessage = async () => {
     try {
       if (!message.trim()) return;

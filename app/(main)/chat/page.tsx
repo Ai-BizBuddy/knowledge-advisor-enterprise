@@ -11,13 +11,14 @@ import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 export default function ChatPage() {
   const [isOnline] = useState(false);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
   const { setLoading } = useLoading();
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const {
     messages,
@@ -70,15 +71,25 @@ export default function ChatPage() {
   };
 
   useEffect(() => {
-    // Scroll to bottom when messages change
-    const chatContainer = document.querySelector(
-      '.overflow-y-auto'
-    ) as HTMLElement;
+    // Scrolling to end when new messages change - using ref for more reliable targeting
+    const scrollToBottom = () => {
+      if (chatMessagesRef.current) {
+        requestAnimationFrame(() => {
+          const element = chatMessagesRef.current;
+          if (element) {
+            element.scrollTo({
+              top: element.scrollHeight,
+              behavior: 'smooth'
+            });
+          }
+        });
+      }
+    };
 
-    if (chatContainer) {
-      chatContainer.scrollTop = chatContainer.scrollHeight;
-    }
-  }, [messages]);
+    // Small delay to ensure DOM is fully rendered
+    const timeoutId = setTimeout(scrollToBottom, 100);
+    return () => clearTimeout(timeoutId);
+  }, [messages, isTyping]);
 
   return (
     <>
@@ -170,7 +181,10 @@ export default function ChatPage() {
                 </div>
               </div>
               {/* Chat Messages Area */}
-              <div className='h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6'>
+              <div 
+                ref={chatMessagesRef}
+                className='h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6'
+              >
                 {messages.map((message, index) => {
                   if (message.type === 'user') {
                     return (
