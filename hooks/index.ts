@@ -2,6 +2,7 @@
 export { useAdkChat } from './useAdkChat';
 export { useAllUserDocuments } from './useAllUserDocuments';
 export { useApiClient } from './useApiClient';
+export { useAsyncOperation } from './useAsyncOperation';
 export { useAuth } from './useAuth';
 export { useChat } from './useChat';
 export { useChatHistory } from './useChatHistory';
@@ -11,6 +12,7 @@ export { useDocuments } from './useDocuments';
 export { useDocumentSearch } from './useDocumentSearch';
 export { useDocumentsManagement } from './useDocumentsManagement';
 export { useDocumentSync } from './useDocumentSync';
+export { useFileUpload } from './useFileUpload';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
 export { usePermissionDataWithFallback } from './usePermissionData';

@@ -60,3 +60,9 @@ export * from './PageHeader';
 // Deep Search Components
 export * from './deepSearch';
 
+// UI Components
+export { BaseButton } from './ui/BaseButton';
+export { BaseModal } from './ui/BaseModal';
+export { BaseProgress } from './ui/BaseProgress';
+export { BaseStatusBadge } from './ui/BaseStatusBadge';
+export { FileUploadModal as FlowbiteFileUploadModal } from './ui/FileUploadModal';
