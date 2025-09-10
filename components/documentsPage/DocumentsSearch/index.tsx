@@ -17,10 +17,10 @@ export const DocumentsSearch: React.FC<DocumentsSearchProps> = ({
   return (
     <div className='flex w-full gap-2'>
       {/* Search Input - Takes ~80% */}
-      <div className='relative flex w-full rounded-lg border border-gray-300 bg-white p-2 text-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:placeholder-gray-400'>
+      <div className='flex w-full rounded-lg border border-gray-300 bg-white py-2.5 pl-4 text-sm text-gray-900 placeholder-gray-500 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 dark:focus:border-blue-500 dark:focus:ring-blue-500'>
         <div className='inset-y-0 left-0 flex items-center'>
           <svg
-            className='h-5 w-5 text-gray-400'
+            className='h-4 w-4 text-gray-400'
             fill='none'
             stroke='currentColor'
             viewBox='0 0 24 24'

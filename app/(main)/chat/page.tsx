@@ -114,12 +114,11 @@ export default function ChatPage() {
               <div className='flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700'>
                 {/* Knowledge Base Selection */}
                 <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
-                  <label
-                    htmlFor='knowledge'
+                  <span
                     className='text-sm font-semibold whitespace-nowrap text-gray-700 dark:text-gray-200'
                   >
                     Knowledge Base:
-                  </label>
+                  </span>
                   <div className='w-full flex-1'>
                     <KnowledgeSelect
                       options={knowledgeBases}
