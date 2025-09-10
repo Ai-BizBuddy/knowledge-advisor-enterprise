@@ -9,6 +9,7 @@ import {
 } from '@/components';
 import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
+import { ChatMessage } from '@/hooks/useAdkChat';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -41,18 +42,28 @@ export default function ChatPage() {
 
   // Combine both effects into one for better performance
   useEffect(() => {
-    setLoading(false);
+    // setLoading(false);
     if (messages.length === 0) {
       addWelcomeMessage();
     }
-  }, [messages.length, addWelcomeMessage, setLoading]);
+  }, [messages.length, addWelcomeMessage, messages]);
 
   // Optimized handlers using useCallback to prevent unnecessary re-renders
   const handleLoadChatSession = useCallback(async (session: ChatSession) => {
+    const welcomeMessage: ChatMessage = {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content:
+            'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        };
     const sessionMessages = await getChatSessions(session.id);
-    setMessages([...messages, ...sessionMessages]);
+    setMessages([welcomeMessage, ...sessionMessages.filter(msg => msg.content.includes('video_metadata=None') || msg.content.includes('image_metadata=None') || msg.content.includes('text_metadata=None') ? false : true)]);
     setOpenHistory(false);
-  }, [getChatSessions, messages, setMessages]);
+  }, [getChatSessions, setMessages]);
 
   const handleCloseHistory = useCallback(() => {
     setOpenHistory(false);

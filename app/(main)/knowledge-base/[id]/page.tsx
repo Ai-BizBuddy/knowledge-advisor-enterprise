@@ -872,32 +872,32 @@ export default function KnowledgeBaseDetail() {
               )}
 
               {messages.map((message, index) => {
-                if (message.type === 'user') {
-                  return (
-                    <ChatCard
-                      key={index}
-                      avatar=''
-                      name='User'
-                      time=''
-                      isUser
-                      message={message.content}
-                      status=''
-                    />
-                  );
-                }
-                if (message.type === 'assistant' && message.content.trim() !== '') {
-                  return (
-                    <ChatCard
-                      key={index}
-                      avatar='/assets/logo-ka.svg'
-                      name='Knowledge Assistant'
-                      time=''
-                      message={message.content}
-                      status=''
-                    />
-                  );
-                }
-              })}
+                  if (message.type === 'user') {
+                    return (
+                      <ChatCard
+                        key={index}
+                        avatar=''
+                        name='User'
+                        time=''
+                        isUser
+                        message={message.content}
+                        status=''
+                      />
+                    );
+                  }
+                  if (message.type === 'assistant') {
+                    return (
+                      <ChatCard
+                        key={index}
+                        avatar='/assets/logo-ka.svg'
+                        name='Knowledge Assistant'
+                        time=''
+                        message={message.content}
+                        status=''
+                      />
+                    );
+                  }
+                })}
 
               {isTyping && <BotTypingBubble />}
             </div>

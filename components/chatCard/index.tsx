@@ -75,7 +75,7 @@ export default function ChatCard({
                 const { inline } = props;
                 return (
                   <code
-                    className={`rounded  dark:bg-gray-700 bg-gray-200 px-1 ${inline ? 'text-pink-600' : 'block p-2'}`}
+                    className={`rounded  dark:bg-dark-700 bg-dark-900 px-1 ${inline ? 'text-pink-600' : 'block p-2'}`}
                     {...props}
                   />
                 );
@@ -98,6 +98,12 @@ export default function ChatCard({
                 <ol className='list-decimal list-inside mb-2' {...props} />
               ),
               li: ({ node, ...props }) => <li className='mb-1' {...props} />,
+              pre: ({ node, ...props }) => (
+                <pre
+                  className='mb-2 overflow-x-auto rounded bg-gray-100 p-2 text-sm text-gray-800 dark:bg-gray-800 dark:text-gray-200'
+                  {...props}
+                />
+              ),
             }}
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
