@@ -848,7 +848,7 @@ export default function KnowledgeBaseDetail() {
             {/* Chat Messages Area */}
             <div
               ref={chatMessagesRef}
-              className='chat-scroll-container width-full flex-1 space-y-2 overflow-y-auto p-4'
+              className='chat-scroll-container width-full flex-1 space-y-2 overflow-y-auto p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'
             >
               {messages.length === 0 && (
                 <div className='flex h-full flex-col items-center justify-center py-12 text-center'>

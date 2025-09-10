@@ -189,7 +189,7 @@ export default function ChatPage() {
               {/* Chat Messages Area */}
               <div 
                 ref={chatMessagesRef}
-                className='h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6'
+                className='h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'
               >
                 {messages.map((message, index) => {
                   if (message.type === 'user') {
