@@ -9,9 +9,9 @@ import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { AccessLevel, PermissionRow } from '@/interfaces/RoleModal';
 import {
-    CreateRoleInput,
-    Role,
-    UpdateRoleInput,
+  CreateRoleInput,
+  Role,
+  UpdateRoleInput,
 } from '@/interfaces/UserManagement';
 import { dynamicPermissionMappingService as permissionMappingService } from '@/services/DynamicPermissionMappingService';
 import { Button, Modal } from 'flowbite-react';
@@ -509,7 +509,7 @@ export default function RolesPage() {
       <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
         {loading ? (
           <div className='flex h-64 items-center justify-center'>
-            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600'></div>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
           </div>
         ) : (
           <>

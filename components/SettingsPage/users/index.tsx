@@ -324,7 +324,7 @@ export default function UsersPage() {
       <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
         {loading ? (
           <div className='flex h-64 items-center justify-center'>
-            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600'></div>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
           </div>
         ) : (
           <>
