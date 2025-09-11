@@ -22,10 +22,10 @@ export default function ChatCard({
       : 'justify-start chat-message-assistant'
   }`;
 
-  const messageClasses = `flex flex-col message-bubble overflow-x-auto ${
+  const messageClasses = `flex flex-col message-bubble overflow-x-auto p-4 ${
     isUser
-      ? 'bg-blue-600 text-white rounded-2xl rounded-tr-md px-4 py-3'
-      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-md px-4 py-3 shadow-sm'
+      ? 'bg-blue-600 text-white rounded-2xl rounded-tr-md '
+      : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-md  shadow-sm'
   }`;
 
   const formatTime = (timestamp: string) => {
