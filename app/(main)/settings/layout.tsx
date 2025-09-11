@@ -42,10 +42,10 @@ export default function SettingsLayout({ children }: SettingsLayoutProps) {
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header - only show on overview page */}
         {isOverviewPage && (
-          <div className='mb-6 sm:mb-8'>
+          <div className='space-y-3 pb-6'>
             <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
               <div className='flex-1'>
-                <h1 className='mb-2 text-2xl font-bold text-gray-900 dark:text-white'>
+                <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>
                   Settings
                 </h1>
                 <p className='text-sm text-gray-500 sm:text-base dark:text-gray-400'>

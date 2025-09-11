@@ -553,7 +553,7 @@ export default function DocumentsPage() {
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Header Section - Responsive layout */}
-        <div className='mb-6 sm:mb-8'>
+        <div className='space-y-3 pb-6'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <DocumentsHeader />
           </div>

@@ -88,7 +88,7 @@ export default function KnowledgeBase() {
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
-        <div className='mb-6 sm:mb-8'>
+        <div className='space-y-3 pb-3 '>
           <PageHeader
             title='Knowledge Base'
             subtitle='Manage your enterprise knowledge repositories'

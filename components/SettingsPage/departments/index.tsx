@@ -248,37 +248,6 @@ export default function DepartmentsPage() {
 
   return (
     <div className='space-y-6'>
-      {/* Header */}
-      <div className='flex w-full flex-col space-y-4 lg:flex-row lg:items-center lg:justify-between lg:space-y-0'>
-        <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 w-full lg:w-[80%]'>
-          <div className='sm:col-span-2 lg:col-span-1'>
-            <Label htmlFor='statusFilter'>Filter by Status</Label>
-            <select
-              id='statusFilter'
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-              className='mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 text-sm shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white'
-            >
-              <option value=''>All Statuses</option>
-              <option value='active'>Active Only</option>
-              <option value='inactive'>Inactive Only</option>
-            </select>
-          </div>
-
-          <div className='flex items-end'>
-            <Button
-              color='gray'
-              onClick={() => {
-                setStatusFilter('');
-                setSearchTerm('');
-              }}
-              className='w-full sm:w-auto'
-            >
-              Clear Filters
-            </Button>
-          </div>
-        </div>
-      </div>
 
       {/* Search and Filters */}
       <div className='mb-6'>
@@ -304,15 +273,6 @@ export default function DepartmentsPage() {
                 <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
                   <thead className='bg-gray-50 dark:bg-gray-700'>
                     <tr>
-                      <th
-                        scope='col'
-                        className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
-                      >
-                        <input
-                          type='checkbox'
-                          className='h-4 w-4 rounded border-gray-300 bg-gray-100 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-indigo-600'
-                        />
-                      </th>
                       <th
                         scope='col'
                         className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'
@@ -397,12 +357,12 @@ export default function DepartmentsPage() {
                           key={department.id}
                           className='transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
                         >
-                          <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
+                          {/* <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                             <input
                               type='checkbox'
                               className='h-4 w-4 rounded border-gray-300 bg-gray-100 text-indigo-600 focus:ring-2 focus:ring-indigo-500 dark:border-gray-600 dark:bg-gray-700 dark:ring-offset-gray-800 dark:focus:ring-indigo-600'
                             />
-                          </td>
+                          </td> */}
                           <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                             <div className='flex items-center'>
                               <div className='h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0'>
