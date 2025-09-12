@@ -58,22 +58,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const refreshToken = useCallback(async (): Promise<Session | null> => {
     // If there's already a refresh in progress, return that promise
     if (refreshPromise) {
-      console.log('Token refresh already in progress, waiting...');
       return refreshPromise;
     }
 
     const promise = (async () => {
       try {
-        console.log('Refreshing session token...');
         const { data, error } = await supabase.auth.refreshSession();
 
         if (error) {
-          console.error('Token refresh failed:', error);
+          console.error('Token refresh error:', error);
           return null;
         }
 
         if (data.session) {
-          console.log('Token refreshed successfully');
           setSession(data.session);
           setUser(data.session.user);
           return data.session;
@@ -111,7 +108,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       // Check if current token is expiring soon
       if (isTokenExpiring()) {
-        console.log('Token is expiring soon, refreshing...');
         const newSession = await refreshToken();
         return newSession?.access_token || null;
       }
@@ -119,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Return current token if still valid
       return session?.access_token || null;
     } catch (error) {
-      console.error('Error getting access token:', error);
+      console.error('Get access token error:', error);
       return null;
     }
   }, [session, isTokenExpiring, refreshToken]);
@@ -127,29 +123,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Handle auth state changes
   const handleAuthStateChange = useCallback(
     (event: AuthChangeEvent, session: Session | null) => {
-      const wasSignedIn = !!user;
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
 
       switch (event) {
         case 'SIGNED_IN':
-          console.log('User signed in');
           // Only redirect to dashboard for NEW logins, not session restoration
-          // If user was already signed in (wasSignedIn = true), this is likely a page refresh or token refresh
-          if (!wasSignedIn && session?.user) {
-            console.log('New login detected - redirecting to dashboard');
+          if (session?.user) {
             setTimeout(() => {
               if (window.location.pathname === '/login' || window.location.pathname === '/') {
                 window.location.href = '/dashboard';
               }
             }, 0);
-          } else {
-            console.log('Session restored from refresh or token refresh - maintaining current page');
           }
           break;
         case 'SIGNED_OUT':
-          console.log('User signed out');
           // Redirect to login page after hydration
           setTimeout(() => {
             if (window.location.pathname !== '/login') {
@@ -158,24 +147,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }, 0);
           break;
         case 'TOKEN_REFRESHED':
-          console.log('Token refreshed automatically by Supabase');
           break;
         case 'USER_UPDATED':
-          console.log('User updated');
           break;
         default:
           break;
       }
     },
-    [user], // Include user in dependencies to track previous sign-in state
+    [], // No dependencies - this callback doesn't depend on external state
   );
 
-  // Set up automatic token refresh with improved logic
+  // Set up auth initialization and token refresh
   useEffect(() => {
     let refreshTimer: NodeJS.Timeout;
+    let mounted = true;
 
     const setupTokenRefresh = (session: Session) => {
-      if (!session.expires_at) return;
+      // Clear any existing timer
+      if (refreshTimer) {
+        clearTimeout(refreshTimer);
+      }
+
+      if (!session.expires_at || !mounted) return;
 
       const expiresAt = session.expires_at * 1000; // Convert to milliseconds
       const now = Date.now();
@@ -184,21 +177,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Refresh token 5 minutes before expiry, but at least 1 minute from now
       const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60 * 1000);
 
-      // Only set timer if we have enough time left
-      if (refreshTime > 0) {
+      // Only set timer if we have enough time left and component is mounted
+      if (refreshTime > 0 && refreshTime < 24 * 60 * 60 * 1000 && mounted) { // Max 24 hours
         refreshTimer = setTimeout(async () => {
-          const newSession = await refreshToken();
-          if (newSession) {
-            setupTokenRefresh(newSession); // Set up next refresh
-          } else {
-            await signOut();
+          if (!mounted) return;
+          
+          try {
+            const newSession = await refreshToken();
+            if (newSession && mounted) {
+              setupTokenRefresh(newSession); // Set up next refresh
+            } else if (mounted) {
+              await signOut();
+            }
+          } catch (error) {
+            console.error('Auto refresh failed:', error);
+            if (mounted) {
+              await signOut();
+            }
           }
         }, refreshTime);
-      } else {
+      } else if (timeUntilExpiry <= 5 * 60 * 1000 && mounted) {
+        // Token is expiring soon, refresh immediately
         refreshToken().then((newSession) => {
-          if (newSession) {
+          if (newSession && mounted) {
             setupTokenRefresh(newSession);
-          } else {
+          } else if (mounted) {
+            signOut();
+          }
+        }).catch((error) => {
+          console.error('Immediate refresh failed:', error);
+          if (mounted) {
             signOut();
           }
         });
@@ -207,6 +215,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     // Initial session check and setup
     const initializeAuth = async () => {
+      if (!mounted) return;
+      
       try {
         setLoading(true);
         const {
@@ -214,8 +224,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           error,
         } = await supabase.auth.getSession();
 
+        if (!mounted) return;
+
         if (error) {
-          console.error('Error getting session:', error);
           setLoading(false);
           return;
         }
@@ -230,7 +241,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       } catch (error) {
         console.error('Auth initialization error:', error);
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
@@ -239,44 +252,26 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!mounted) return;
+      
+      handleAuthStateChange(event, session);
+      
+      // Set up token refresh for new sessions
+      if (session && event === 'TOKEN_REFRESHED') {
+        setupTokenRefresh(session);
+      }
+    });
 
-    // Clean up timer on unmount
+    // Clean up on unmount
     return () => {
+      mounted = false;
       subscription.unsubscribe();
       if (refreshTimer) {
         clearTimeout(refreshTimer);
       }
     };
-  }, [supabase.auth, handleAuthStateChange, refreshToken, signOut]);
-
-  // Update token refresh timer when session changes
-  useEffect(() => {
-    setLoading(true);
-    let refreshTimer: NodeJS.Timeout;
-    if (session && session.expires_at) {
-      const expiresAt = session.expires_at * 1000;
-      const now = Date.now();
-      const timeUntilExpiry = expiresAt - now;
-      const refreshTime = Math.max(timeUntilExpiry - 5 * 60 * 1000, 60 * 1000);
-
-      if (refreshTime > 0) {
-        refreshTimer = setTimeout(async () => {
-          const newSession = await refreshToken();
-          if (!newSession) {
-            await signOut();
-          }
-          setLoading(false);
-        }, refreshTime);
-      }
-    }
-
-    return () => {
-      if (refreshTimer) {
-        clearTimeout(refreshTimer);
-      }
-    };
-  }, [session, refreshToken, signOut]);
+  }, [supabase.auth, handleAuthStateChange, refreshToken, signOut]); // Include dependencies
 
   const value: AuthContextType = {
     user,

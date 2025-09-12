@@ -1,5 +1,5 @@
-import React from 'react';
 import { getFileIcon } from '@/utils/documentsUtils';
+import React from 'react';
 // Interface that matches the expected document structure for the table
 
 interface DocumentTableItem {

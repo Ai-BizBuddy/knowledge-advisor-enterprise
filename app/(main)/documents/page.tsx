@@ -1,31 +1,31 @@
 'use client';
 import {
-  DocumentDeleteModal,
-  DocumentsHeader,
-  DocumentsPagination,
-  DocumentsSearch,
-  DocumentsTable,
-  NoDocuments,
-  TableSkeleton,
+    DocumentDeleteModal,
+    DocumentsHeader,
+    DocumentsPagination,
+    DocumentsSearch,
+    DocumentsTable,
+    NoDocuments,
+    TableSkeleton,
 } from '@/components';
 import {
-  DeepSearchLayout,
-  DocumentPreview,
-  MiniDocumentPreview,
+    DeepSearchLayout,
+    DocumentPreview,
+    MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
 import { useLoading } from '@/contexts/LoadingContext';
 import { mockSearchResults } from '@/data/deepSearch';
 import {
-  useAllUserDocuments,
-  useDocumentsManagement,
-  useKnowledgeBase,
-  useSorting,
+    useAllUserDocuments,
+    useDocumentsManagement,
+    useKnowledgeBase,
+    useSorting,
 } from '@/hooks';
 import { useDeepSearch } from '@/hooks/useDeepSarch';
 import {
-  DeepSearchData,
-  DocumentSearchResult,
+    DeepSearchData,
+    DocumentSearchResult,
 } from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
