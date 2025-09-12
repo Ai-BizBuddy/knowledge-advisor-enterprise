@@ -3,10 +3,10 @@
 import { BaseButton } from '@/components/ui/BaseButton';
 import { BaseModal } from '@/components/ui/BaseModal';
 import { useAsyncOperation, useReactHookForm, useUserManagement } from '@/hooks';
-import type { CreateUserFormProps } from './CreateUserForm.types';
 import type { CreateUserInput } from '@/interfaces/UserManagement';
 import { Alert, Label, Select, TextInput } from 'flowbite-react';
 import React, { useEffect, useState } from 'react';
+import type { CreateUserFormProps } from './CreateUserForm.types';
 
 type CreateUserFormSimplifiedData = {
   email: string;

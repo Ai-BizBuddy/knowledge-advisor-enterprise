@@ -3,7 +3,6 @@
 import { FileUploadModal } from '@/components/ui/FileUploadModal';
 import { useDocuments } from '@/hooks';
 import { useParams } from 'next/navigation';
-import React from 'react';
 
 interface UploadDocumentProps {
   isOpen: boolean;

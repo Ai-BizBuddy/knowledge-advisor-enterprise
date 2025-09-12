@@ -7,6 +7,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react';
 
@@ -39,8 +40,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [supabase] = useState(() => createClient());
-  const [refreshPromise, setRefreshPromise] =
-    useState<Promise<Session | null> | null>(null);
+  const refreshPromiseRef = useRef<Promise<Session | null> | null>(null);
 
   // Check if token is expiring soon (within 5 minutes)
   const isTokenExpiring = useCallback((): boolean => {
@@ -57,9 +57,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   // Refresh token function with deduplication
   const refreshToken = useCallback(async (): Promise<Session | null> => {
     // If there's already a refresh in progress, return that promise
-    if (refreshPromise) {
+    if (refreshPromiseRef.current) {
       console.log('Token refresh already in progress, waiting...');
-      return refreshPromise;
+      return refreshPromiseRef.current;
     }
 
     const promise = (async () => {
@@ -84,13 +84,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         console.error('Token refresh error:', error);
         return null;
       } finally {
-        setRefreshPromise(null);
+        // Clear the promise reference
+        refreshPromiseRef.current = null;
       }
     })();
 
-    setRefreshPromise(promise);
+    refreshPromiseRef.current = promise;
     return promise;
-  }, [supabase.auth, refreshPromise]);
+  }, [supabase.auth]);
 
   // Sign out function
   const signOut = useCallback(async (): Promise<void> => {
