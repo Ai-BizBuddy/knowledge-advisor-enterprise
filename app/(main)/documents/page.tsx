@@ -279,8 +279,9 @@ export default function DocumentsPage() {
     handleDocumentPreview(pageRelativeIndex);
   };
 
-  const adaptedDocuments = documents.map((doc: Document) =>
-    adaptDocumentToTableFormat(doc),
+  const adaptedDocuments = useMemo(() => 
+    documents.map((doc: Document) => adaptDocumentToTableFormat(doc)),
+    [documents]
   );
 
   // Delete functions

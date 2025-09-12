@@ -164,17 +164,19 @@ export default function KnowledgeBaseDetail() {
 
   // Transform documents to DocumentsTable-compatible format
   // Add a flag to disable sync button based on document status
-  const adaptedDocuments = documents.map((doc) => {
-    const tableDoc = adaptDocumentToTableFormat(doc);
-    // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
-    tableDoc.disableSync = (
-      doc.status === 'ready' || 
-      doc.status === 'processing' || 
-      doc.status === 'archived' || 
-      doc.rag_status === 'synced'
-    );
-    return tableDoc;
-  });
+  const adaptedDocuments = useMemo(() => {
+    return documents.map((doc) => {
+      const tableDoc = adaptDocumentToTableFormat(doc);
+      // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
+      tableDoc.disableSync = (
+        doc.status === 'ready' || 
+        doc.status === 'processing' || 
+        doc.status === 'archived' || 
+        doc.rag_status === 'synced'
+      );
+      return tableDoc;
+    });
+  }, [documents]);
 
   // Clear selection เมื่อ documents เปลี่ยน (เช่น search, filter)
   useEffect(() => {
@@ -215,7 +217,7 @@ export default function KnowledgeBaseDetail() {
     currentPageSelectedCount > 0 && currentPageSelectedCount < documents.length;
 
   // Handle document selection by pageIndex (DocumentsTable ส่ง pageIndex มา)
-  const handleSelectDocument = (pageIndex: number) => {
+  const handleSelectDocument = useCallback((pageIndex: number) => {
     // แปลง pageIndex เป็น actualIndex เพื่อให้ตรงกับสิ่งที่ DocumentsTable คาดหวัง
     const actualIndex = zeroBasedStartIndex + pageIndex;
     console.log(
@@ -233,10 +235,10 @@ export default function KnowledgeBaseDetail() {
         ? prev.filter((i) => i !== actualIndex)
         : [...prev, actualIndex],
     );
-  };
+  }, [zeroBasedStartIndex, startIndex]);
 
   // Handle select all documents (แก้ไขให้ select เฉพาะในหน้าปัจจุบัน)
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     if (isAllSelected) {
       setSelectedDocuments([]);
     } else {
@@ -246,38 +248,38 @@ export default function KnowledgeBaseDetail() {
       );
       setSelectedDocuments(currentPageIndices);
     }
-  };
+  }, [isAllSelected, documents, zeroBasedStartIndex]);
 
   // Clear selection เมื่อเปลี่ยนหน้า
-  const handlePageChangeWithClearSelection = (page: number) => {
+  const handlePageChangeWithClearSelection = useCallback((page: number) => {
     setSelectedDocuments([]); // Clear selection เมื่อเปลี่ยนหน้า
     handlePageChange(page);
-  };
+  }, [handlePageChange]);
 
   // Handle clear selection
-  const handleClearSelection = () => {
+  const handleClearSelection = useCallback(() => {
     setSelectedDocuments([]);
-  };
+  }, []);
 
   // Handle sort
-  const handleSort = (column: string) => {
+  const handleSort = useCallback((column: string) => {
     if (sortBy === column) {
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
       setSortBy(column);
       setSortOrder('asc');
     }
-  };
+  }, [sortBy, sortOrder, setSortBy, setSortOrder]);
 
   // Handle document click
-  const handleDocumentTableClick = (index: number) => {
+  const handleDocumentTableClick = useCallback((index: number) => {
     setSelectedDocumentIndex(index);
     // You can add navigation logic here if needed
     // const documentId = documents[index]?.id;
     // if (documentId) {
     //   router.push(`/knowledge-base/${id}/documents/${documentId}`);
     // }
-  };
+  }, []);
 
   const handleBackButtonClick = () => {
     setLoading(true);

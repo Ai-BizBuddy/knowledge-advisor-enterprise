@@ -1,3 +1,4 @@
+import React from 'react';
 import { getFileIcon } from '@/utils/documentsUtils';
 // Interface that matches the expected document structure for the table
 
@@ -189,7 +190,7 @@ const getSyncButton = (
   );
 };
 
-export const DocumentsTable: React.FC<DocumentsTableProps> = ({
+export const DocumentsTable = React.memo<DocumentsTableProps>(({
   documents,
   selectedDocuments,
   selectedDocument,
@@ -506,4 +507,6 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
       </div>
     </div>
   );
-};
+});
+
+DocumentsTable.displayName = 'DocumentsTable';
