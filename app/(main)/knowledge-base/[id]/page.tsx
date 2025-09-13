@@ -12,24 +12,7 @@ import { Breadcrumb, BreadcrumbItem } from 'flowbite-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-// Interface for document table compatibility
-interface DocumentTableItem {
-  name: string;
-  size: string;
-  type: string;
-  date: string;
-  rag_status?: string;
-  status: string;
-  uploadedBy: string;
-  avatar: string;
-  project: string[];
-  source: string;
-  uploadDate: string;
-  chunk?: number;
-  syncStatus?: string;
-  lastUpdated?: string;
-  disableSync?: boolean;
-}
+
 
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
@@ -55,39 +38,12 @@ export default function KnowledgeBaseDetail() {
     [knowledgeBaseState.data?.visibility]
   );
 
-  // Document state (moved from TabsContainer)
-  const [documentState, setDocumentStateRaw] = useState({
-    selectedDocumentIndex: 0,
-    selectedDocuments: [] as number[],
-    sortBy: 'created_at',
-    sortOrder: 'desc' as 'asc' | 'desc'
-  });
 
-  // Memoized setter to prevent re-renders
-  const setDocumentState = useCallback((
-    value: typeof documentState | ((prev: typeof documentState) => typeof documentState)
-  ) => {
-    setDocumentStateRaw(value);
-  }, []);
 
-  // Modal states (moved from TabsContainer)
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState<DocumentTableItem | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Chat state (moved from TabsContainer)
-  const [message, setMessage] = useState('');
-  const [openHistory, setOpenHistory] = useState(false);
-
-  // Handle tab changes and clear document selection
+  // Handle tab changes
   const handleTabChange = useCallback((newTab: string) => {
-    // Clear document selection when switching tabs
-    if (currentTab === 'Documents' && newTab !== 'Documents') {
-      setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
-    }
     setCurrentTab(newTab);
-  }, [currentTab, setDocumentState]);
+  }, []);
 
   const { getKnowledgeBase } = useKnowledgeBase();
 
@@ -217,23 +173,6 @@ export default function KnowledgeBaseDetail() {
         currentTab={currentTab}
         setCurrentTab={handleTabChange}
         tabsList={tabsList}
-        // Document state
-        documentState={documentState}
-        setDocumentState={setDocumentState}
-        // Modal states
-        isUploadModalOpen={isUploadModalOpen}
-        setIsUploadModalOpen={setIsUploadModalOpen}
-        isDeleteModalOpen={isDeleteModalOpen}
-        setIsDeleteModalOpen={setIsDeleteModalOpen}
-        documentToDelete={documentToDelete}
-        setDocumentToDelete={setDocumentToDelete}
-        isDeleting={isDeleting}
-        setIsDeleting={setIsDeleting}
-        // Chat state
-        message={message}
-        setMessage={setMessage}
-        openHistory={openHistory}
-        setOpenHistory={setOpenHistory}
       />
     </div>
   );

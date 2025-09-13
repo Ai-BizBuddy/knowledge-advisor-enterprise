@@ -6,63 +6,88 @@ import {
   ChatHistoryList
 } from '@/components';
 import { useToast } from '@/components/toast';
+import { useAdkChat } from '@/hooks';
+import { Project } from '@/interfaces/Project';
 import type { ChatSession } from '@/services/DashboardService';
 import Image from 'next/image';
-import React from 'react';
+import React, { useRef, useState } from 'react';
 
-interface Message {
-  id: string;
-  type: 'user' | 'assistant';
-  content: string;
-  timestamp: string;
-  selectedKnowledgeBase?: string[];
-  sessionId?: string;
-  responseTime?: number;
-  isStreaming?: boolean;
-  onlineMode?: boolean;
-}
+
 
 interface ChatTabProps {
-  // Chat state
-  messages: Message[];
-  isTyping: boolean;
-  message: string;
-  openHistory: boolean;
-  
-  // Knowledge base data (for future use)
-  // knowledgeBase: {
-  //   id: string;
-  //   name: string;
-  // } | null;
-  
-  // Event handlers
-  onMessageChange: (message: string) => void;
-  onSendMessage: () => Promise<void>;
-  onCreateNewChat: () => void;
-  onSetOpenHistory: (open: boolean) => void;
-  onLoadChatSession: (session: ChatSession) => void;
-  
-  // Refs
-  chatMessagesRef: React.RefObject<HTMLDivElement | null>;
+  // Knowledge base info for context
+  knowledgeBase: Project | null;
+  knowledgeBaseId: string;
 }
 
 export const ChatTab: React.FC<ChatTabProps> = ({
-  messages,
-  isTyping,
-  message,
-  openHistory,
-  onMessageChange,
-  onSendMessage,
-  onSetOpenHistory,
-  onLoadChatSession,
-  chatMessagesRef,
+  knowledgeBase,
+  knowledgeBaseId,
 }) => {
   const { showToast } = useToast();
+
+  // Internal state management
+  const [message, setMessage] = useState('');
+  const [openHistory, setOpenHistory] = useState(false);
+
+  // Chat scroll ref
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom of chat
+  const scrollToBottom = () => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  };
+
+  // Chat hooks and handlers
+  const {
+    messages,
+    isTyping,
+    sendMessage,
+    createNewChat,
+  } = useAdkChat();
+
+  const handleSendMessage = async () => {
+    try {
+      if (!message.trim()) return;
+
+      const kbSelection = knowledgeBaseId
+        ? [
+            {
+              id: knowledgeBaseId,
+              name: knowledgeBase?.name || 'Unknown',
+              selected: true,
+              documentCount: 0, // This will be updated by the real-time table
+            },
+          ]
+        : [];
+
+      await sendMessage(message, kbSelection);
+      setMessage('');
+
+      // Small delay to ensure message is added to state, then scroll
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
+    } catch (err) {
+      console.error('[ChatTab] Chat error:', err);
+      showToast('Failed to send message. Please try again.', 'error', 4000);
+    }
+  };
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleLoadChatSession = (session: ChatSession) => {
+    // ChatSession doesn't have messages property - need to fetch messages separately
+    // For now, create a new chat session since we don't have the messages
+    createNewChat();
+    setOpenHistory(false);
+  };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await onSendMessage();
+      await handleSendMessage();
     } catch (err) {
       console.error('[ChatTab] Chat error:', err);
       showToast('Failed to send message. Please try again.', 'error', 4000);
@@ -78,7 +103,53 @@ export const ChatTab: React.FC<ChatTabProps> = ({
 
   return (
     <div className='space-y-4 sm:space-y-6'>
-     
+      {/* Chat Actions */}
+      <div className='flex justify-end gap-2'>
+        <button
+          type='button'
+          onClick={() => {
+            createNewChat();
+          }}
+          className='flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+        >
+          <svg
+            className='h-4 w-4'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth={2}
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              d='M12 4v16m8-8H4'
+            />
+          </svg>
+          <span>New Chat</span>
+        </button>
+
+        <button
+          type='button'
+          onClick={() => setOpenHistory(!openHistory)}
+          className='flex items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition-colors duration-200 hover:bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+        >
+          <svg
+            className='h-4 w-4'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth={2}
+            viewBox='0 0 24 24'
+          >
+            <path
+              strokeLinecap='round'
+              strokeLinejoin='round'
+              d='M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z'
+            />
+          </svg>
+          <span>History</span>
+        </button>
+      </div>
+
       {/* Chat Interface */}
       <div className='flex h-[70vh] flex-col overflow-hidden rounded-lg border border-gray-200 bg-gray-50 shadow-sm dark:border-gray-700 dark:bg-gray-900'>
         {/* Chat Messages Area */}
@@ -176,7 +247,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
             <div className='flex-1'>
               <textarea
                 value={message}
-                onChange={(e) => onMessageChange(e.target.value)}
+                onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={handleKeyDown}
                 placeholder='Type your message...'
                 className='w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400 dark:focus:border-blue-400'
@@ -213,8 +284,8 @@ export const ChatTab: React.FC<ChatTabProps> = ({
       {/* Chat History Modal */}
       <ChatHistoryList
         isOpen={openHistory}
-        onClose={() => onSetOpenHistory(false)}
-        onLoadSession={onLoadChatSession}
+        onClose={() => setOpenHistory(false)}
+        onLoadSession={handleLoadChatSession}
       />
     </div>
   );
