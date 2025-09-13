@@ -30,6 +30,7 @@ interface DocumentTableItem {
   syncStatus?: string;
   lastUpdated?: string;
   disableSync?: boolean;
+  error_message?: string; // Error message for error status tooltips
 }
 
 // Helper function to map rag_status to user-friendly display status
@@ -67,6 +68,8 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   chunk: doc.chunk_count,
   syncStatus: mapRagStatusToDisplayStatus(doc.rag_status),
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
+  error_message: (doc?.error_message as string) || 
+    (doc.status === 'error' ? 'An error occurred while processing this document' : undefined),
 });
 
 interface DocumentListProps {

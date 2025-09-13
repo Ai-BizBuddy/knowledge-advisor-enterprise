@@ -97,31 +97,31 @@ const renderStatusBadge = (status: string | null | undefined, errorMessage?: str
 
   if (isError && errorMessage) {
     return (
-      <div className="relative inline-flex group">
+      <div className='relative inline-flex group'>
         <span
           className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium cursor-help ${statusClasses}`}
         >
           {displayStatus}
           <svg
-            className="ml-1 h-3 w-3"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-            aria-hidden="true"
+            className='ml-1 h-3 w-3'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+            aria-hidden='true'
           >
             <path
-              fillRule="evenodd"
-              d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z"
-              clipRule="evenodd"
+              fillRule='evenodd'
+              d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z'
+              clipRule='evenodd'
             />
           </svg>
         </span>
         
         {/* Tooltip */}
-        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none min-w-max max-w-xs z-50 dark:bg-gray-700">
-          <div className="font-medium mb-1">Error Details:</div>
+        <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none min-w-max max-w-xs z-50 dark:bg-gray-700'>
+          <div className='font-medium mb-1'>Error Details:</div>
           <div>{errorMessage}</div>
           {/* Tooltip arrow */}
-          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 dark:bg-gray-700"></div>
+          <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 dark:bg-gray-700'></div>
         </div>
       </div>
     );
@@ -357,11 +357,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                       <div className='flex items-center space-x-2'>
                         {isOpenSync && (
                           <>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
-                            >
-                              {doc.syncStatus || doc.status || 'Unknown'}
-                            </span>
+                            {renderStatusBadge(doc.syncStatus || doc.status || 'Unknown', doc.error_message)}
                             {getSyncButton(
                               doc.syncStatus,
                               syncingDocuments.has(pageIndex),
@@ -498,11 +494,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                         {doc.lastUpdated || doc.date}
                       </td>
                       <td className='w-[10%] px-3 py-4 whitespace-nowrap sm:px-6'>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || 'Unknown')}`}
-                        >
-                          {doc.status || 'Unknown'}
-                        </span>
+                        {renderStatusBadge(doc.status || 'Unknown', doc.error_message)}
                       </td>
                       <td className='w-[15%] px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         <span className='font-medium'>

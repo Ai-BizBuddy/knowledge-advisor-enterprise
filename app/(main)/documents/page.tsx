@@ -1,31 +1,31 @@
 'use client';
 import {
-    DocumentDeleteModal,
-    DocumentsHeader,
-    DocumentsPagination,
-    DocumentsSearch,
-    DocumentsTable,
-    NoDocuments,
-    TableSkeleton,
+  DocumentDeleteModal,
+  DocumentsHeader,
+  DocumentsPagination,
+  DocumentsSearch,
+  DocumentsTable,
+  NoDocuments,
+  TableSkeleton,
 } from '@/components';
 import {
-    DeepSearchLayout,
-    DocumentPreview,
-    MiniDocumentPreview,
+  DeepSearchLayout,
+  DocumentPreview,
+  MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
 import { useLoading } from '@/contexts/LoadingContext';
 import { mockSearchResults } from '@/data/deepSearch';
 import {
-    useAllUserDocuments,
-    useDocumentsManagement,
-    useKnowledgeBase,
-    useSorting,
+  useAllUserDocuments,
+  useDocumentsManagement,
+  useKnowledgeBase,
+  useSorting,
 } from '@/hooks';
 import { useDeepSearch } from '@/hooks/useDeepSarch';
 import {
-    DeepSearchData,
-    DocumentSearchResult,
+  DeepSearchData,
+  DocumentSearchResult,
 } from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
@@ -49,6 +49,7 @@ export interface DocumentTableItem {
   chunk?: number;
   syncStatus?: string;
   lastUpdated?: string;
+  error_message?: string; // Error message for error status tooltips
 }
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
@@ -70,6 +71,8 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   chunk: doc.chunk_count,
   syncStatus: doc.rag_status === 'synced' ? 'Synced' : 'Not Synced',
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
+  error_message: (doc?.error_message as string) || 
+    (doc.rag_status === 'error' ? 'An error occurred while processing this document' : undefined),
 });
 
 // Adapter function to convert Document to DeepSearchData format for preview components

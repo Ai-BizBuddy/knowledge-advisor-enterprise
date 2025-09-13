@@ -27,6 +27,7 @@ interface DocumentTableItem {
   syncStatus?: string;
   lastUpdated?: string;
   disableSync?: boolean;
+  error_message?: string; // Error message for error status tooltips
 }
 
 interface TabsContainerProps {
