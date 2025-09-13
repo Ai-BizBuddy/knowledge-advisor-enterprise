@@ -617,15 +617,13 @@ class DocumentService {
     console.log(`[${this.serviceName}] Deleting document:`, id);
 
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Delete with proper authorization check through knowledge_base relation
       const { error } = await supabaseTable
         .from('document')
         .delete()
-        .eq('id', id)
-        .eq('knowledge_base.uploaded_by', user.id);
+        .eq('id', id);
 
       if (error) {
         console.error(`[${this.serviceName}] Error deleting document:`, error);

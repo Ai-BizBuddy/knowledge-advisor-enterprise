@@ -224,12 +224,25 @@ export function transformDocumentForDisplay(
 export function getStatusColor(status: string): string {
   switch (status.toLowerCase()) {
     case 'processed':
+    case 'ready':
+    case 'completed':
+    case 'synced':
+    case 'success':
       return 'bg-green-500/20 text-green-400 border-green-500/30';
     case 'processing':
+    case 'syncing':
+    case 'pending':
+    case 'in-progress':
       return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
     case 'failed':
     case 'error':
       return 'bg-red-500/20 text-red-400 border-red-500/30';
+    case 'uploaded':
+      return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    case 'archived':
+    case 'not synced':
+    case 'not_synced':
+      return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
     default:
       return 'bg-gray-500/20 text-gray-400 border-gray-500/30';
   }

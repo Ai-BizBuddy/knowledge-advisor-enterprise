@@ -1,2 +1,1 @@
-export { DocumentDeleteModal, default } from './DocumentDeleteModal';
-
+export { default, DocumentDeleteModal } from './DocumentDeleteModal';

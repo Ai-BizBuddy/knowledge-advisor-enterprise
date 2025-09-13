@@ -541,15 +541,14 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   /**
-   * Sync document
+   * Internal sync document function without auto-refresh
    */
-  const syncDocument = useCallback(
+  const syncDocumentInternal = useCallback(
     async (documentId: string): Promise<void> => {
       try {
-        setSyncError(null);
         addSyncingDocument(documentId);
 
-        const token = 'await getAccessToken()';
+        const token = await getAccessToken();
         if (!token) {
           throw new Error('No access token available. Please log in again.');
         }
@@ -593,7 +592,27 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         removeSyncingDocument(documentId);
       }
     },
-    [addSyncingDocument, removeSyncingDocument, 'getAccessToken'],
+    [addSyncingDocument, removeSyncingDocument, getAccessToken],
+  );
+
+  /**
+   * Sync document with auto-refresh
+   */
+  const syncDocument = useCallback(
+    async (documentId: string): Promise<void> => {
+      try {
+        setSyncError(null);
+        await syncDocumentInternal(documentId);
+        
+        // Refresh documents list to reflect updated sync status
+        console.log('[DocumentSync] Refreshing documents list after sync completion');
+        await loadDocuments(currentPage, true);
+      } catch (err) {
+        // Error already handled in syncDocumentInternal
+        throw err;
+      }
+    },
+    [syncDocumentInternal, loadDocuments, currentPage],
   );
 
   /**
@@ -605,8 +624,19 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setSyncLoading(true);
         setSyncError(null);
 
-        const promises = documentIds.map((id) => syncDocument(id));
-        await Promise.allSettled(promises);
+        // Use internal sync function to avoid multiple refreshes
+        const promises = documentIds.map((id) => syncDocumentInternal(id));
+        const results = await Promise.allSettled(promises);
+        
+        // Check if any syncs failed
+        const failedSyncs = results.filter(result => result.status === 'rejected');
+        if (failedSyncs.length > 0) {
+          console.warn(`[DocumentSync] ${failedSyncs.length} document(s) failed to sync`);
+        }
+        
+        // Refresh documents list once after all sync operations complete
+        console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
+        await loadDocuments(currentPage, true);
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to sync documents';
@@ -617,7 +647,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setSyncLoading(false);
       }
     },
-    [syncDocument],
+    [syncDocumentInternal, loadDocuments, currentPage],
   );
 
   /**
