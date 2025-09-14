@@ -316,8 +316,7 @@ export default function DocumentsPage() {
       // Refresh documents using hook's refresh function
       await refresh();
     } catch (error) {
-      console.error('[DocumentsPage] Error deleting document:', error);
-
+      
       // Show error notification
       const errorMessage =
         error instanceof Error
@@ -382,8 +381,7 @@ export default function DocumentsPage() {
       // Refresh documents using hook's refresh function
       await refresh();
     } catch (error) {
-      console.error('[DocumentsPage] Error deleting documents:', error);
-
+      
       // Show error notification
       const errorMessage =
         error instanceof Error
@@ -404,8 +402,7 @@ export default function DocumentsPage() {
     setDeepCurrentPage(1); // Reset to first page on new search
 
     try {
-      console.log('Searching for:', searchQuery);
-
+      
       // Simulate API delay
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
@@ -420,8 +417,7 @@ export default function DocumentsPage() {
       setAllSearchResults(filteredResults);
       setIsNoResults(filteredResults.length === 0);
 
-      console.log('Search results:', filteredResults);
-
+      
       // Original API code (commented out for testing) ห้ามลบ
 
       const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
@@ -454,9 +450,7 @@ export default function DocumentsPage() {
       const docRes = await getDocumentById(documentIds);
       const kbRes = await getKnowledgeBaseByIDs(KBIds);
 
-      console.log('Raw search results:', docRes);
-      console.log('Knowledge Base results:', kbRes);
-
+            
       // Map document and knowledge base results to search results
       // Build a lookup from document_id -> first matching chunk content
       const contentByDocId = new Map<string, string>();
@@ -487,9 +481,8 @@ export default function DocumentsPage() {
 
       // Feed mapped results into the paginated array state
       setAllSearchResults(mappedResults);
-    } catch (error) {
-      console.error('Search error:', error);
-      setIsNoResults(true);
+    } catch {
+            setIsNoResults(true);
     } finally {
       setIsSearching(false);
       setDeepSearchLoad(false);
@@ -508,8 +501,7 @@ export default function DocumentsPage() {
   };
 
   const handleResultClick = (result: DocumentSearchResult) => {
-    console.log('Document clicked:', result);
-    // In real implementation, this would open the document or navigate to document detail
+        // In real implementation, this would open the document or navigate to document detail
   };
 
   const handlePageChanges = (page: number) => {
@@ -565,7 +557,7 @@ export default function DocumentsPage() {
       {/* Main Container with consistent responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Header Section - Responsive layout */}
-        <div className='mb-6 sm:mb-8'>
+        <div className='space-y-3 pb-6'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
             <DocumentsHeader />
           </div>
@@ -610,11 +602,7 @@ export default function DocumentsPage() {
                   startIndex={startIndex}
                   onDeleteDocument={(dataIndex: number) => {
                     const document = adaptedDocuments[dataIndex];
-                    console.log(
-                      '[DocumentsPage] Delete document clicked:',
-                      document,
-                    );
-
+                    
                     setDocumentToDelete(document);
                     setIsDeleteModalOpen(true);
                   }}

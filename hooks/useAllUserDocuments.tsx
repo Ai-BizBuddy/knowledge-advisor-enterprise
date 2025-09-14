@@ -172,8 +172,7 @@ export function useAllUserDocuments(
     async (page = 1, forceRefresh = false) => {
       // Prevent redundant calls when already loading (unless forced)
       if (loadingRef.current && !forceRefresh) {
-        console.log('[useAllUserDocuments] Already loading, skipping call');
-        return;
+                return;
       }
 
       try {
@@ -205,14 +204,10 @@ export function useAllUserDocuments(
         setTotalPages(Math.ceil(result.count / itemsPerPage));
         setCurrentPage(page);
 
-        console.log(
-          `[useAllUserDocuments] Loaded ${result.data.length} documents (Total: ${result.count})`,
-        );
-      } catch (err) {
+              } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
-        console.error('[useAllUserDocuments] Error loading documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
       } finally {
         loadingRef.current = false;
         setLoading(false);
@@ -257,8 +252,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to search documents';
-        console.error('[useAllUserDocuments] Error searching documents:', err);
-        setError(errorMessage);
+                setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -278,8 +272,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-        console.error('[useAllUserDocuments] Error getting document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         return null;
       }
     },
@@ -296,8 +289,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-        console.error('[useAllUserDocuments] Error getting document:', err);
-        setError(errorMessage);
+                setError(errorMessage);
         return null;
       }
     },
@@ -353,13 +345,11 @@ export function useAllUserDocuments(
   );
 
   const handleDocumentClick = useCallback((id: string) => {
-    console.log('[useAllUserDocuments] Document clicked:', id);
-    // This can be extended for navigation or state changes
+        // This can be extended for navigation or state changes
   }, []);
 
   //   const handleDeleteDocument = useCallback((id: string) => {
-  //     console.log('[useAllUserDocuments] Document delete clicked:', id);
-  //     setDocumentToDelete(id);
+  //       //     setDocumentToDelete(id);
   //     setIsDeleteModalOpen(true);
   //   }, []);
 

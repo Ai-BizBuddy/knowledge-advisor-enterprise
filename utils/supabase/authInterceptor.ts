@@ -18,6 +18,9 @@ export class SupabaseAuthClient {
   private static instance: SupabaseAuthClient;
   private supabase: SupabaseClient;
   private refreshPromise: Promise<Session | null> | null = null;
+  private cachedSession: Session | null = null;
+  private lastSessionFetch: number = 0;
+  private readonly SESSION_CACHE_TTL = 30000; // 30 seconds cache
 
   private constructor() {
     this.supabase = createClient();
@@ -42,15 +45,7 @@ export class SupabaseAuthClient {
    */
   private async ensureValidToken(): Promise<void> {
     try {
-      const {
-        data: { session },
-        error,
-      } = await this.supabase.auth.getSession();
-
-      if (error) {
-        console.error('Error getting session:', error);
-        return;
-      }
+      const session = await this.getSession();
 
       if (!session) {
         // Session not found - will be handled by auth error
@@ -62,12 +57,12 @@ export class SupabaseAuthClient {
       const now = Date.now();
       const timeUntilExpiry = expiresAt - now;
 
-      if (timeUntilExpiry <= 5 * 60 * 1000) {
-        // 5 minutes
+      // Only refresh if expiring within 5 minutes and no refresh in progress
+      if (timeUntilExpiry <= 5 * 60 * 1000 && !this.refreshPromise) {
         await this.refreshToken();
       }
-    } catch (error) {
-      console.error('Error ensuring valid token:', error);
+    } catch {
+      // Silently handle errors - auth failures will be caught elsewhere
     }
   }
 
@@ -85,8 +80,6 @@ export class SupabaseAuthClient {
         const { data, error } = await this.supabase.auth.refreshSession();
 
         if (error) {
-          console.error('Token refresh failed:', error);
-
           // If refresh fails with specific errors, handle auth failure
           if (
             error.message.includes('refresh_token_not_found') ||
@@ -98,12 +91,14 @@ export class SupabaseAuthClient {
         }
 
         if (data.session) {
+          // Update cached session with fresh data
+          this.cachedSession = data.session;
+          this.lastSessionFetch = Date.now();
           return data.session;
         }
 
         return null;
-      } catch (error) {
-        console.error('Token refresh error:', error);
+      } catch {
         return null;
       } finally {
         this.refreshPromise = null;
@@ -117,6 +112,10 @@ export class SupabaseAuthClient {
    * Handle authentication failure
    */
   private handleAuthFailure(): void {
+    // Clear cached session
+    this.cachedSession = null;
+    this.lastSessionFetch = 0;
+    
     // Clear any stored session data
     this.supabase.auth.signOut();
 
@@ -130,9 +129,18 @@ export class SupabaseAuthClient {
   }
 
   /**
-   * Get the current session
+   * Get the current session with caching
    */
   public async getSession(): Promise<Session | null> {
+    // Return cached session if still valid
+    const now = Date.now();
+    if (
+      this.cachedSession && 
+      (now - this.lastSessionFetch) < this.SESSION_CACHE_TTL
+    ) {
+      return this.cachedSession;
+    }
+
     try {
       const {
         data: { session },
@@ -140,13 +148,15 @@ export class SupabaseAuthClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session:', error);
         return null;
       }
 
+      // Update cache
+      this.cachedSession = session;
+      this.lastSessionFetch = now;
+      
       return session;
-    } catch (error) {
-      console.error('Error getting session:', error);
+    } catch {
       return null;
     }
   }
@@ -174,6 +184,14 @@ export class SupabaseAuthClient {
     const now = Date.now();
 
     return expiresAt > now;
+  }
+
+  /**
+   * Clear cached session (useful for testing or forced refresh)
+   */
+  public clearSessionCache(): void {
+    this.cachedSession = null;
+    this.lastSessionFetch = 0;
   }
 
   /**

@@ -27,9 +27,9 @@ export const useKnowledgeBaseSelection = () => {
         }),
       );
       setKnowledgeBases(kbSelection);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error loading knowledge bases:', error);
+    } catch {
+      // Handle error silently
+    } finally {
       setLoading(false);
     }
   }, []);

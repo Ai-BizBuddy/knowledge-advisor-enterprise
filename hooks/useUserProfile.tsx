@@ -75,8 +75,7 @@ export function useUserProfile(): UseUserProfileReturn {
 
         setUserProfile(profile);
       } catch (err) {
-        console.error('Error fetching user profile:', err);
-        setError(err instanceof Error ? err.message : 'Failed to fetch profile');
+                setError(err instanceof Error ? err.message : 'Failed to fetch profile');
 
         // Set minimal profile data from auth user
         setUserProfile({
@@ -128,8 +127,7 @@ export function useUserProfile(): UseUserProfileReturn {
 
       setUserProfile(profile);
     } catch (err) {
-      console.error('Error refreshing user profile:', err);
-      setError(err instanceof Error ? err.message : 'Failed to refresh profile');
+            setError(err instanceof Error ? err.message : 'Failed to refresh profile');
     } finally {
       setLoading(false);
     }

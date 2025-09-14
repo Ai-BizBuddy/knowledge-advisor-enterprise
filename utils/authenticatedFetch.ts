@@ -16,8 +16,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
     this.addResponseInterceptor((response) => {
       // If we get a 401, handle auth error
       if (response.status === 401) {
-        console.error('Authentication error: 401 Unauthorized');
-        if (
+                if (
           typeof window !== 'undefined' &&
           window.location.pathname !== '/login'
         ) {
@@ -30,8 +29,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
     // Add error interceptor for auth errors
     this.addErrorInterceptor((error) => {
       if (error.status === 401) {
-        console.error('Authentication error:', error);
-        if (
+                if (
           typeof window !== 'undefined' &&
           window.location.pathname !== '/login'
         ) {
@@ -56,8 +54,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-        console.error('Error getting session for API request:', error);
-        return config;
+                return config;
       }
 
       if (session?.access_token) {
@@ -73,8 +70,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
 
       return config;
     } catch (error) {
-      console.error('Auth header error:', error);
-      return config;
+            return config;
     }
   }
 
@@ -186,8 +182,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
             await this.supabase.auth.refreshSession();
             continue; // Retry the request
           } catch (refreshError) {
-            console.error('Token refresh failed:', refreshError);
-            throw error;
+                        throw error;
           }
         }
 

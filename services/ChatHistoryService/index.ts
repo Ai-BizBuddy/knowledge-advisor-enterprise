@@ -42,36 +42,32 @@ class ChatHistoryService {
     // check data output is memories not null
     const { data, error } = await supabaseTable
       .from('sessions')
-      .select(
-        `
-                id,
-                app_name,
-                user_id,
-                state,
-                last_update_time,
-                created_at,
-                updated_at,
-                session_events!inner (
-                    id,
-                    session_id,
-                    event_data,
-                    timestamp,
-                    created_at,
-                    memories:id (
-                        id,
-                        user_id,
-                        app_name,
-                        content,
-                        timestamp,
-                        created_at,
-                        updated_at
-                    )
-                )
-            `,
-      )
-      .not('session_events.memories', 'is', null);
-
-    console.log('Supabase loadHistory data:', data);
+      .select(`
+        id,
+        app_name,
+        user_id,
+        state,
+        last_update_time,
+        created_at,
+        updated_at,
+        session_events!inner (
+          id,
+          session_id,
+          event_data,
+          timestamp,
+          created_at,
+          memories:id (
+            id,
+            user_id,
+            app_name,
+            content,
+            timestamp,
+            created_at,
+            updated_at
+          )
+        )
+      `)
+      .not('session_events.memories', 'is', null)
 
     if (error) {
       console.error('Error loading chat history:', error);
@@ -80,7 +76,6 @@ class ChatHistoryService {
     }
 
     if (!data) {
-      console.warn('No chat history data found');
       return [];
     }
 
@@ -101,7 +96,6 @@ class ChatHistoryService {
           if (firstEvent.event_data) {
             const contentText = JSON.parse(firstEvent.event_data).content
               .parts[0].text;
-            console.log('Content Text:', contentText);
             title = contentText.split('\n')[0] || 'ไม่มีชื่อเรื่อง';
           }
         }
@@ -118,7 +112,6 @@ class ChatHistoryService {
           ended_at: session.updated_at || undefined,
         };
       } catch (parseError) {
-        console.error('Error parsing event data:', parseError);
         return {
           id: session.id,
           user_id: session.user_id,
@@ -172,12 +165,10 @@ class ChatHistoryService {
       .not('session_events.memories', 'is', null);
 
     if (error) {
-      console.error('Error loading old chat:', error);
       return null;
     }
 
     if (!data || data.length === 0) {
-      console.warn('No session data found for sessionId:', sessionId);
       return null;
     }
 
@@ -209,7 +200,6 @@ class ChatHistoryService {
       .delete()
       .eq('session_id', sessionId);
     if (error || eventError) {
-      console.error('Error deleting chat session:', error || eventError);
       return false;
     }
     return true;

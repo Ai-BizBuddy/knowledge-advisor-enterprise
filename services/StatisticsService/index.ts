@@ -31,8 +31,7 @@ class StatisticsService {
       }
       return session.user;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting current user:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -42,8 +41,7 @@ class StatisticsService {
    */
   async getDashboardStatistics(): Promise<DashboardStatistics> {
     try {
-      console.log(`[${this.serviceName}] Calculating dashboard statistics...`);
-
+      
   const user = await this.getCurrentUser();
 
       // Calculate all statistics in parallel
@@ -78,8 +76,7 @@ class StatisticsService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Get dashboard statistics failed:`, error);
-
+      
       // Return fallback data if calculation fails
       return {
         totalKnowledgeBases: 0,
@@ -108,14 +105,12 @@ class StatisticsService {
         .select('*', { count: 'exact', head: true })
 
       if (error) {
-        console.error(`[${this.serviceName}] Error counting knowledge bases:`, error);
-        return 0;
+                return 0;
       }
 
       return count || 0;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating total knowledge bases:`, error);
-      return 0;
+            return 0;
     }
   }
 
@@ -134,16 +129,13 @@ class StatisticsService {
         .eq('is_active', true);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error counting active documents:`, error);
-        return 0;
+                return 0;
       }
 
-      console.log('count:', count);
-
+      
       return count || 0;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating active documents:`, error);
-      return 0;
+            return 0;
     }
   }
 
@@ -159,14 +151,12 @@ class StatisticsService {
         .select('*', { count: 'exact', head: true });
 
       if (error) {
-        console.error(`[${this.serviceName}] Error counting documents:`, error);
-        return 0;
+                return 0;
       }
 
       return count || 0;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating total documents:`, error);
-      return 0;
+            return 0;
     }
   }
 
@@ -184,8 +174,7 @@ class StatisticsService {
         .limit(10000);
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching documents for storage/chunks:`, error);
-        return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
+                return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
       }
 
       const totalStorageBytes = (data || []).reduce((sum, d) => sum + (typeof d.file_size === 'number' ? d.file_size : 0), 0);
@@ -195,8 +184,7 @@ class StatisticsService {
 
       return { totalStorageBytes, totalChunks, totalStorageFormatted };
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating storage and chunks:`, error);
-      return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
+            return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
     }
   }
 
@@ -222,16 +210,13 @@ class StatisticsService {
         .select('*', { count: 'exact', head: true })
 
       if (error) {
-        console.error(`[${this.serviceName}] Error counting total queries:`, error);
-        return 0;
+                return 0;
       }
 
-      console.log('count:', count);
-
+      
       return count || 0;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating total queries:`, error);
-      return 0;
+            return 0;
     }
   }
 
@@ -255,8 +240,7 @@ class StatisticsService {
         .limit(100); // Analyze last 100 messages
 
       if (error) {
-        console.error(`[${this.serviceName}] Error fetching messages for response time:`, error);
-        return 1200; // Default response time
+                return 1200; // Default response time
       }
 
       if (!data || data.length < 2) {
@@ -286,8 +270,7 @@ class StatisticsService {
       const avgMs = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
       return Math.round(avgMs);
     } catch (error) {
-      console.error(`[${this.serviceName}] Error calculating average response time:`, error);
-      return 1200; // Default response time
+            return 1200; // Default response time
     }
   }
 
@@ -317,8 +300,7 @@ class StatisticsService {
         }
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Get all statistics failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -335,11 +317,7 @@ class StatisticsService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Get total knowledge bases failed:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -356,11 +334,7 @@ class StatisticsService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Get active documents failed:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -377,8 +351,7 @@ class StatisticsService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Get total queries failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -395,11 +368,7 @@ class StatisticsService {
         lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Get average response time failed:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -410,13 +379,8 @@ class StatisticsService {
     try {
       // Since we're calculating statistics directly from the database,
       // we don't need to record query activity separately
-      console.log(`[${this.serviceName}] Query activity recorded:`, data);
-    } catch (error) {
-      console.error(
-        `[${this.serviceName}] Record query activity failed:`,
-        error,
-      );
-      throw error;
+          } catch (error) {
+            throw error;
     }
   }
 
@@ -427,10 +391,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics in real-time from the database,
       // refreshing doesn't require any special action
-      console.log(`[${this.serviceName}] Statistics refreshed successfully`);
-    } catch (error) {
-      console.error(`[${this.serviceName}] Refresh statistics failed:`, error);
-      throw error;
+          } catch (error) {
+            throw error;
     }
   }
 
@@ -448,11 +410,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics directly from the database,
       // manual updates would require database modifications
-      console.log(`[${this.serviceName}] Manual statistic update requested:`, statisticType, data);
-      console.log(`[${this.serviceName}] Note: Statistics are calculated from database in real-time`);
-    } catch (error) {
-      console.error(`[${this.serviceName}] Update statistic failed:`, error);
-      throw error;
+                } catch (error) {
+            throw error;
     }
   }
 }

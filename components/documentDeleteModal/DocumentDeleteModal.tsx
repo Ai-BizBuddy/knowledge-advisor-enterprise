@@ -50,8 +50,7 @@ export const DocumentDeleteModal: React.FC<DocumentDeleteModalProps> = ({
       setIsDeleting(true);
       await onConfirm();
     } catch (error) {
-      console.error('Error during deletion:', error);
-    } finally {
+          } finally {
       setIsDeleting(false);
     }
   };

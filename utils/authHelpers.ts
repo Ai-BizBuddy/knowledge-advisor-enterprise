@@ -16,8 +16,7 @@ export interface RememberedCredentials {
 export const saveRememberedCredentials = (email: string, rememberMe: boolean): void => {
     if (typeof window === 'undefined') return;
 
-    console.log('Saving remembered credentials:', { email, rememberMe });
-    if (rememberMe) {
+        if (rememberMe) {
         // cookie
         document.cookie = `${REMEMBER_EMAIL_KEY}=${email}; path=/;`;
         document.cookie = `${REMEMBER_ME_KEY}=true; path=/;`;

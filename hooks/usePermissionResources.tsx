@@ -44,19 +44,13 @@ export function usePermissionResources(): UsePermissionResourcesReturn {
       setError(null);
       const data = await userManagementService.getPermissionResources();
 
-      console.log(
-        '[usePermissionResources] Fetched resources data:',
-        Object.keys(data).length,
-        data,
-      );
-      setResourcesData(data);
+            setResourcesData(data);
     } catch (err) {
       const errorMessage =
         err instanceof Error
           ? err.message
           : 'Failed to fetch permission resources';
-      console.error('[usePermissionResources] Error:', errorMessage);
-      setError(errorMessage);
+            setError(errorMessage);
 
       // Don't set fallback data - let it stay empty to force real Supabase data
       setResourcesData({});

@@ -121,8 +121,7 @@ export function usePermissionData(): UsePermissionDataReturn {
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : 'Failed to fetch permissions';
-      console.error('[usePermissionData] Error:', errorMessage);
-      setError(errorMessage);
+            setError(errorMessage);
     } finally {
       setLoading(false);
     }

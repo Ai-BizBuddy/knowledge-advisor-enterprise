@@ -56,11 +56,9 @@ class KnowledgeBaseUserService {
         throw new Error('User not authenticated');
       }
 
-      console.log(`[${this.serviceName}] Current user ID:`, session.user.id);
-      return session.user;
+            return session.user;
     } catch (error) {
-      console.error(`[${this.serviceName}] Error getting current user:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -82,11 +80,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (kbError) {
-        console.error(
-          `[${this.serviceName}] Error checking KB ownership:`,
-          kbError,
-        );
-        return false;
+                return false;
       }
 
       if (kbData?.created_by === user.id) {
@@ -103,11 +97,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (roleError && roleError.code !== 'PGRST116') {
-        console.error(
-          `[${this.serviceName}] Error checking user role:`,
-          roleError,
-        );
-        return false;
+                return false;
       }
 
       if (roleData?.role) {
@@ -120,11 +110,7 @@ class KnowledgeBaseUserService {
 
       return false;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error checking management permission:`,
-        error,
-      );
-      return false;
+            return false;
     }
   }
 
@@ -138,13 +124,7 @@ class KnowledgeBaseUserService {
     filter?: KnowledgeBaseUserFilter,
   ): Promise<TypedResponse<PaginatedKnowledgeBaseUsers>> {
     try {
-      console.log(`[${this.serviceName}] Getting KB users:`, {
-        knowledgeBaseId,
-        page,
-        limit,
-        filter,
-      });
-
+      
       const supabaseAuth = createClientAuth();
       const supabaseTable = createClientTable();
 
@@ -210,8 +190,7 @@ class KnowledgeBaseUserService {
       // Get total count
       const { count, error: countError } = await countQuery;
       if (countError) {
-        console.error(`[${this.serviceName}] Error getting count:`, countError);
-        return { success: false, error: countError.message };
+                return { success: false, error: countError.message };
       }
 
       // Get paginated data
@@ -221,11 +200,7 @@ class KnowledgeBaseUserService {
       );
 
       if (dataError) {
-        console.error(
-          `[${this.serviceName}] Error getting user roles:`,
-          dataError,
-        );
-        return { success: false, error: dataError.message };
+                return { success: false, error: dataError.message };
       }
 
       // Get user details from auth.users - get name, email and user_id only (no metadata)
@@ -244,11 +219,7 @@ class KnowledgeBaseUserService {
         .in('id', userIds);
 
       if (userError) {
-        console.error(
-          `[${this.serviceName}] Error getting user data:`,
-          userError,
-        );
-        return { success: false, error: userError.message };
+                return { success: false, error: userError.message };
       }
 
       // Get granter information - get name and email only (no metadata)
@@ -332,11 +303,7 @@ class KnowledgeBaseUserService {
         },
       };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in getKnowledgeBaseUsers:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -350,8 +317,7 @@ class KnowledgeBaseUserService {
     input: AddUserToKnowledgeBaseInput,
   ): Promise<TypedResponse<KnowledgeBaseUser>> {
     try {
-      console.log(`[${this.serviceName}] Adding user to KB:`, input);
-
+      
       const currentUser = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
@@ -375,11 +341,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
-        console.error(
-          `[${this.serviceName}] Error checking existing role:`,
-          checkError,
-        );
-        return { success: false, error: checkError.message };
+                return { success: false, error: checkError.message };
       }
 
       if (existingRole) {
@@ -416,11 +378,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (insertError) {
-        console.error(
-          `[${this.serviceName}] Error inserting user role:`,
-          insertError,
-        );
-        return { success: false, error: insertError.message };
+                return { success: false, error: insertError.message };
       }
 
       // Get user details - get name, email and user_id only (no metadata)
@@ -438,11 +396,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (userError) {
-        console.error(
-          `[${this.serviceName}] Error getting user data:`,
-          userError,
-        );
-        return { success: false, error: userError.message };
+                return { success: false, error: userError.message };
       }
 
       const knowledgeBaseUser: KnowledgeBaseUser = {
@@ -458,17 +412,9 @@ class KnowledgeBaseUserService {
         is_active: newRole.is_active,
       };
 
-      console.log(
-        `[${this.serviceName}] User added successfully:`,
-        knowledgeBaseUser.id,
-      );
-      return { success: true, data: knowledgeBaseUser };
+            return { success: true, data: knowledgeBaseUser };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in addUserToKnowledgeBase:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -484,12 +430,7 @@ class KnowledgeBaseUserService {
     updates: UpdateKnowledgeBaseUserRoleInput,
   ): Promise<TypedResponse<KnowledgeBaseUser>> {
     try {
-      console.log(`[${this.serviceName}] Updating user role:`, {
-        userId,
-        knowledgeBaseId,
-        updates,
-      });
-
+      
       const supabaseTable = createClientTable();
 
       // Verify permission
@@ -540,11 +481,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (updateError) {
-        console.error(
-          `[${this.serviceName}] Error updating user role:`,
-          updateError,
-        );
-        return { success: false, error: updateError.message };
+                return { success: false, error: updateError.message };
       }
 
       // Get user details - get name, email and user_id only (no metadata)
@@ -562,11 +499,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (userError) {
-        console.error(
-          `[${this.serviceName}] Error getting user data:`,
-          userError,
-        );
-        return { success: false, error: userError.message };
+                return { success: false, error: userError.message };
       }
 
       const knowledgeBaseUser: KnowledgeBaseUser = {
@@ -582,17 +515,9 @@ class KnowledgeBaseUserService {
         is_active: updatedRole.is_active,
       };
 
-      console.log(
-        `[${this.serviceName}] User role updated successfully:`,
-        userId,
-      );
-      return { success: true, data: knowledgeBaseUser };
+            return { success: true, data: knowledgeBaseUser };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in updateKnowledgeBaseUserRole:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -607,11 +532,7 @@ class KnowledgeBaseUserService {
     knowledgeBaseId: string,
   ): Promise<TypedResponse<void>> {
     try {
-      console.log(`[${this.serviceName}] Removing user from KB:`, {
-        userId,
-        knowledgeBaseId,
-      });
-
+      
       const supabaseTable = createClientTable();
 
       // Verify permission
@@ -631,11 +552,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (kbError) {
-        console.error(
-          `[${this.serviceName}] Error checking KB ownership:`,
-          kbError,
-        );
-        return { success: false, error: kbError.message };
+                return { success: false, error: kbError.message };
       }
 
       if (kbData?.created_by === userId) {
@@ -653,21 +570,12 @@ class KnowledgeBaseUserService {
         .eq('knowledge_base_id', knowledgeBaseId);
 
       if (deleteError) {
-        console.error(
-          `[${this.serviceName}] Error removing user role:`,
-          deleteError,
-        );
-        return { success: false, error: deleteError.message };
+                return { success: false, error: deleteError.message };
       }
 
-      console.log(`[${this.serviceName}] User removed successfully:`, userId);
-      return { success: true };
+            return { success: true };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in removeUserFromKnowledgeBase:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -683,12 +591,7 @@ class KnowledgeBaseUserService {
     limit: number = 10,
   ): Promise<TypedResponse<UserSearchResult[]>> {
     try {
-      console.log(`[${this.serviceName}] Searching users for KB assignment:`, {
-        knowledgeBaseId,
-        searchTerm,
-        limit,
-      });
-
+      
       const supabaseAuth = createClientAuth();
       const supabaseTable = createClientTable();
 
@@ -744,11 +647,7 @@ class KnowledgeBaseUserService {
       const { data: usersData, error: searchError } = await query;
 
       if (searchError) {
-        console.error(
-          `[${this.serviceName}] Error searching users:`,
-          searchError,
-        );
-        return { success: false, error: searchError.message };
+                return { success: false, error: searchError.message };
       }
 
       // Filter out users who already have access
@@ -775,16 +674,9 @@ class KnowledgeBaseUserService {
           }),
         );
 
-      console.log(
-        `[${this.serviceName}] Found ${availableUsers.length} available users`,
-      );
-      return { success: true, data: availableUsers };
+            return { success: true, data: availableUsers };
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error in searchUsersForKnowledgeBase:`,
-        error,
-      );
-      return {
+            return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };

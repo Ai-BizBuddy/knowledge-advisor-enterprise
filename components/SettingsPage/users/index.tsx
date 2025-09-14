@@ -74,8 +74,7 @@ export default function UsersPage() {
           ]);
           initialLoadDone.current = true;
         } catch (error) {
-          console.error('Error loading initial data:', error);
-        }
+                  }
       };
       loadInitialData();
     }
@@ -127,8 +126,7 @@ export default function UsersPage() {
 
   // Handle successful user creation/edit from the unified modal
   const handleUserSuccess = async (user: User) => {
-    console.log(user);
-    // Show success toast based on the current mode
+        // Show success toast based on the current mode
     const message =
       userModalMode === 'create'
         ? SUCCESS_MESSAGES.USER_CREATED
@@ -163,8 +161,7 @@ export default function UsersPage() {
         await getUserStatistics();
       }
     } catch (error) {
-      console.error('Error deleting user:', error);
-      showToast(
+            showToast(
         error instanceof Error ? error.message : 'Failed to delete user',
         'error',
       );
@@ -183,8 +180,7 @@ export default function UsersPage() {
       }
       return null;
     } catch (error) {
-      console.error('Error uploading profile picture:', error);
-      showToast(
+            showToast(
         error instanceof Error
           ? error.message
           : 'Failed to upload profile picture',
@@ -328,7 +324,7 @@ export default function UsersPage() {
       <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
         {loading ? (
           <div className='flex h-64 items-center justify-center'>
-            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600'></div>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
           </div>
         ) : (
           <>

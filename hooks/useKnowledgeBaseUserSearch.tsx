@@ -552,13 +552,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           currentPage: page,
         }));
 
-        console.log('[useKnowledgeBaseUserSearch] Searching users:', {
-          knowledgeBaseId,
-          page,
-          limit,
-          searchTerm,
-        });
-
+        
         const result = await searchUsersSupabase(
           knowledgeBaseId,
           page,
@@ -588,15 +582,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           error: null,
         }));
 
-        console.log('[useKnowledgeBaseUserSearch] Users loaded:', {
-          count: users.length,
-          total,
-          hasMore,
-          page,
-        });
-      } catch (error) {
-        console.error('[useKnowledgeBaseUserSearch] Search error:', error);
-        setState((prev) => ({
+              } catch (error) {
+                setState((prev) => ({
           ...prev,
           loading: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -622,12 +609,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           error: null,
         }));
 
-        console.log('[useKnowledgeBaseUserSearch] Searching for assignment:', {
-          knowledgeBaseId,
-          searchTerm,
-          limit,
-        });
-
+        
         const result = await searchUsersForAssignmentSupabase(
           knowledgeBaseId,
           searchTerm,
@@ -650,15 +632,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           error: null,
         }));
 
-        console.log('[useKnowledgeBaseUserSearch] Assignment results:', {
-          count: result.data?.length || 0,
-        });
-      } catch (error) {
-        console.error(
-          '[useKnowledgeBaseUserSearch] Assignment search error:',
-          error,
-        );
-        setState((prev) => ({
+              } catch (error) {
+                setState((prev) => ({
           ...prev,
           assignmentLoading: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -676,11 +651,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       try {
         setState((prev) => ({ ...prev, error: null }));
 
-        console.log(
-          '[useKnowledgeBaseUserSearch] Loading statistics for:',
-          knowledgeBaseId,
-        );
-
+        
         const result = await getUserStatisticsSupabase(knowledgeBaseId);
 
         if (!result.success) {
@@ -697,13 +668,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           error: null,
         }));
 
-        console.log(
-          '[useKnowledgeBaseUserSearch] Statistics loaded:',
-          result.data,
-        );
-      } catch (error) {
-        console.error('[useKnowledgeBaseUserSearch] Statistics error:', error);
-        setState((prev) => ({
+              } catch (error) {
+                setState((prev) => ({
           ...prev,
           error: error instanceof Error ? error.message : 'Unknown error',
         }));

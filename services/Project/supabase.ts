@@ -34,8 +34,7 @@ async function getCurrentUser() {
 
     return session.user;
   } catch (error) {
-    console.error('Error getting current user:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -61,8 +60,7 @@ export async function getProjects(): Promise<Project[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching knowledge bases:', error);
-      throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+            throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
     }
 
     // Add computed fields for display
@@ -77,19 +75,14 @@ export async function getProjects(): Promise<Project[]> {
             .eq('project_id', project.id as string);
 
           if (countError) {
-            console.warn(
-              `Error getting document count for project ${project.id}:`,
-              countError,
-            );
-          }
+                      }
 
           return {
             ...project,
             document_count: count || 0,
           } as Project;
         } catch (err) {
-          console.warn(`Error processing project ${project.id}:`, err);
-          return {
+                    return {
             ...project,
             document_count: 0,
           } as Project;
@@ -99,8 +92,7 @@ export async function getProjects(): Promise<Project[]> {
 
     return projectsWithCounts;
   } catch (error) {
-    console.error('Error in getProjects:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -133,8 +125,7 @@ export async function getProjectById(id: string): Promise<Project> {
       if (error.code === 'PGRST116') {
         throw new Error(`Knowledge base with ID ${id} not found`);
       }
-      console.error('Error fetching knowledge base:', error);
-      throw new Error(`Failed to fetch knowledge base: ${error.message}`);
+            throw new Error(`Failed to fetch knowledge base: ${error.message}`);
     }
 
     if (!data) {
@@ -149,8 +140,7 @@ export async function getProjectById(id: string): Promise<Project> {
       .eq('project_id', id);
 
     if (countError) {
-      console.warn('Error getting document count:', countError);
-    }
+          }
 
     const result = {
       ...data,
@@ -160,8 +150,7 @@ export async function getProjectById(id: string): Promise<Project> {
 
     return result;
   } catch (error) {
-    console.error('Error in getProjectById:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -201,8 +190,7 @@ export async function createProject(
     .single();
 
   if (error) {
-    console.error('Error creating knowledge base:', error);
-    throw new Error(`Failed to create knowledge base: ${error.message}`);
+        throw new Error(`Failed to create knowledge base: ${error.message}`);
   }
 
   return {
@@ -242,8 +230,7 @@ export async function updateProject(
     .single();
 
   if (error) {
-    console.error('Error updating knowledge base:', error);
-    throw new Error(`Failed to update knowledge base: ${error.message}`);
+        throw new Error(`Failed to update knowledge base: ${error.message}`);
   }
 
   // Get document count
@@ -278,8 +265,7 @@ export async function deleteProject(id: string): Promise<void> {
       try {
         await deleteDocument(id, doc.id as string, doc.url as string);
       } catch (error) {
-        console.warn(`Failed to delete document ${doc.id}:`, error);
-        // Continue with other deletions
+                // Continue with other deletions
       }
     }
   }
@@ -292,8 +278,7 @@ export async function deleteProject(id: string): Promise<void> {
     .eq('id', id);
 
   if (error) {
-    console.error('Error deleting knowledge base:', error);
-    throw new Error(`Failed to delete knowledge base: ${error.message}`);
+        throw new Error(`Failed to delete knowledge base: ${error.message}`);
   }
 
   // Clean up storage bucket if it exists
@@ -301,8 +286,7 @@ export async function deleteProject(id: string): Promise<void> {
     const supabaseStorage = createClient();
     await supabaseStorage.storage.deleteBucket(id);
   } catch (error) {
-    console.warn('Storage bucket cleanup failed:', error);
-    // Non-critical error, don't throw
+        // Non-critical error, don't throw
   }
 }
 
@@ -340,8 +324,7 @@ export async function getDocumentsByProjectId(
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching documents:', error);
-      throw new Error(`Failed to fetch documents: ${error.message}`);
+            throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
     return (
@@ -365,8 +348,7 @@ export async function getDocumentsByProjectId(
       })) as Document[]) || []
     );
   } catch (error) {
-    console.error('Error in getDocumentsByProjectId:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -477,11 +459,7 @@ export async function uploadDocument(
       try {
         await syncDocumentToRAG(projectId, documentData.id as string);
       } catch (syncError) {
-        console.warn(
-          'Auto-sync failed, document uploaded but not synced:',
-          syncError,
-        );
-      }
+              }
     }
 
     return {
@@ -490,8 +468,7 @@ export async function uploadDocument(
       signedUrl: urlData?.signedUrl,
     };
   } catch (error) {
-    console.error('Upload failed:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -527,8 +504,7 @@ export async function deleteDocument(
         .remove([document.path as string]);
 
       if (storageError) {
-        console.warn('Storage deletion failed:', storageError);
-        // Don't throw - continue with database deletion
+                // Don't throw - continue with database deletion
       }
     }
 
@@ -543,8 +519,7 @@ export async function deleteDocument(
 
     return { success: true };
   } catch (error) {
-    console.error('Delete failed:', error);
-    throw error;
+        throw error;
   }
 }
 
@@ -590,10 +565,7 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
         syncResponse.jobId,
         {
           onProgress: (status: JobStatusResponse) => {
-            console.log(
-              `[RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress || 0}%`,
-            );
-          },
+                      },
         },
       );
 
@@ -635,8 +607,7 @@ export async function syncDocumentToRAG(projectId: string, documentId: string) {
 
     return { success: true };
   } catch (error) {
-    console.error('RAG sync failed:', error);
-
+    
     // Update status to error
     const errorSupabase = createClientTable();
     await errorSupabase
@@ -696,10 +667,7 @@ export async function bulkSyncDocumentsToRAG(
           syncResponse.jobId,
           {
             onProgress: (status: JobProgress) => {
-              console.log(
-                `[Bulk RAG Sync] Job ${syncResponse.jobId} progress: ${status.progress}%`,
-              );
-            },
+                          },
           },
         );
 
@@ -707,11 +675,7 @@ export async function bulkSyncDocumentsToRAG(
           throw new Error(jobStatus.errorMessage || 'Bulk RAG sync job failed');
         }
       } catch (jobError) {
-        console.warn(
-          'Job monitoring failed, checking individual document statuses:',
-          jobError,
-        );
-      }
+              }
     }
 
     // Check status of each document and update accordingly
@@ -772,8 +736,7 @@ export async function bulkSyncDocumentsToRAG(
       errors: errors.length > 0 ? errors : undefined,
     };
   } catch (error) {
-    console.error('Bulk RAG sync failed:', error);
-
+    
     // Update all documents status to error
     const errorSupabase = createClientTable();
     await errorSupabase
@@ -801,8 +764,7 @@ export async function getProjectsCount(): Promise<number> {
   const { count, error } = result;
 
   if (error) {
-    console.error('Error counting knowledge bases:', error);
-    throw new Error(`Failed to count knowledge bases: ${error.message}`);
+        throw new Error(`Failed to count knowledge bases: ${error.message}`);
   }
 
   return count || 0;
@@ -848,8 +810,7 @@ export async function getProjectsPaginated(
   const { data, error } = result;
 
   if (error) {
-    console.error('Error fetching paginated knowledge bases:', error);
-    throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
   }
 
   // Add computed fields for display
@@ -902,8 +863,7 @@ export async function searchProjects(query: string): Promise<Project[]> {
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error searching knowledge bases:', error);
-    throw new Error(`Failed to search knowledge bases: ${error.message}`);
+        throw new Error(`Failed to search knowledge bases: ${error.message}`);
   }
 
   // Add computed fields for display
@@ -953,8 +913,7 @@ export async function getProjectsByStatus(
     .order('created_at', { ascending: false });
 
   if (error) {
-    console.error('Error fetching knowledge bases by status:', error);
-    throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
   }
 
   // Add computed fields for display
@@ -1011,8 +970,7 @@ export async function duplicateProject(
         // Here you would implement document copying logic
         // This would involve copying files in storage and creating new document records
       } catch (error) {
-        console.warn(`Failed to copy document ${doc.name}:`, error);
-      }
+              }
     }
   }
 
@@ -1048,8 +1006,7 @@ export async function batchUpdateProjects(
     `);
 
   if (error) {
-    console.error('Error batch updating knowledge bases:', error);
-    throw new Error(`Failed to update knowledge bases: ${error.message}`);
+        throw new Error(`Failed to update knowledge bases: ${error.message}`);
   }
 
   // Add computed fields for display
@@ -1097,16 +1054,11 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
               doc.url as string,
             );
           } catch (error) {
-            console.warn(`Failed to delete document ${doc.id}:`, error);
-          }
+                      }
         }
       }
     } catch (error) {
-      console.warn(
-        `Failed to clean up documents for project ${projectId}:`,
-        error,
-      );
-    }
+          }
   }
 
   // Delete the knowledge bases
@@ -1117,8 +1069,7 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
   const { error } = deleteResult;
 
   if (error) {
-    console.error('Error batch deleting knowledge bases:', error);
-    throw new Error(`Failed to delete knowledge bases: ${error.message}`);
+        throw new Error(`Failed to delete knowledge bases: ${error.message}`);
   }
 
   // Clean up storage buckets
@@ -1126,8 +1077,7 @@ export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
     try {
       await supabase.storage.deleteBucket(projectId);
     } catch (error) {
-      console.warn(`Storage bucket cleanup failed for ${projectId}:`, error);
-    }
+          }
   }
 }
 
@@ -1150,8 +1100,7 @@ export async function getProjectAnalytics(projectId: string): Promise<{
     .eq('project_id', projectId);
 
   if (error) {
-    console.error('Error fetching analytics:', error);
-    throw new Error(`Failed to fetch analytics: ${error.message}`);
+        throw new Error(`Failed to fetch analytics: ${error.message}`);
   }
 
   const totalDocuments = documents?.length || 0;
@@ -1193,8 +1142,7 @@ export async function searchDocuments(
     // Use the DocumentSearchService's hook-compatible method
     return await documentSearchService.searchDocumentsForHook(query, projectId);
   } catch (error) {
-    console.error('Failed to search documents:', error);
-    // Return error result in expected format
+        // Return error result in expected format
     return {
       success: false,
       documents: [],
@@ -1213,13 +1161,7 @@ export async function searchDocumentsInProject(
   query: string,
   projectId: string,
 ): Promise<DocumentSearchResult> {
-  console.log(
-    'Searching documents in project:',
-    projectId,
-    'with query:',
-    query,
-  );
-  return searchDocuments(query, projectId);
+    return searchDocuments(query, projectId);
 }
 
 /**
@@ -1230,20 +1172,13 @@ export async function searchDocumentsInProjects(
   query: string,
   projectIds: string[],
 ): Promise<DocumentSearchResult> {
-  console.log(
-    'Searching documents in projects:',
-    projectIds,
-    'with query:',
-    query,
-  );
-
+  
   try {
     // For multi-project search, use the first project ID or undefined for global search
     const projectId = projectIds.length > 0 ? projectIds[0] : undefined;
     return await documentSearchService.searchDocumentsForHook(query, projectId);
   } catch (error) {
-    console.error('Failed to search documents in projects:', error);
-    return {
+        return {
       success: false,
       documents: [],
       documentIds: [],
@@ -1265,8 +1200,7 @@ export async function testDocumentSearchConnection(): Promise<boolean> {
     await documentSearchService.searchDocuments('test');
     return true; // If no error thrown, service is available
   } catch (error) {
-    console.error('Error testing document search connection:', error);
-    return false;
+        return false;
   }
 }
 
@@ -1283,13 +1217,7 @@ export async function getDocumentSearchAnalytics(
   totalDocumentsScanned: number;
   totalDocumentsReturned: number;
 }> {
-  console.log(
-    'Getting document search analytics for query:',
-    query,
-    'project:',
-    projectId,
-  );
-
+  
   try {
     // Use the document search service with the projectId
     const filters = projectId ? { projectId } : {};
@@ -1305,8 +1233,7 @@ export async function getDocumentSearchAnalytics(
       totalDocumentsReturned: searchResult.totalCount,
     };
   } catch (error) {
-    console.error('Error getting document search analytics:', error);
-    return {
+        return {
       searchTime: 0,
       langflowResponseTime: 0,
       supabaseQueryTime: 0,
@@ -1355,8 +1282,7 @@ export async function getAllDocuments(): Promise<Document[]> {
       .order('created_at', { ascending: false });
 
     if (error) {
-      console.error('Error fetching all documents:', error);
-      throw new Error(`Failed to fetch documents: ${error.message}`);
+            throw new Error(`Failed to fetch documents: ${error.message}`);
     }
 
     // Transform the data to include project name in metadata
@@ -1389,7 +1315,6 @@ export async function getAllDocuments(): Promise<Document[]> {
       metadata: doc.metadata,
     })) as Document[];
   } catch (error) {
-    console.error('Error in getAllDocuments:', error);
-    throw error;
+        throw error;
   }
 }

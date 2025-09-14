@@ -8,7 +8,7 @@ export default function ChatHistoryCard({
 }: ChatHistoryProps) {
   return (
     <div
-      className='cursor-pointer rounded-lg bg-white p-4 text-white shadow transition-all hover:shadow-lg dark:bg-gray-800'
+      className='cursor-pointer rounded-lg bg-white p-4 text-white shadow-md transition-all hover:shadow-lg dark:bg-gray-900'
       onClick={onClick}
     >
       <div className='flex items-start justify-between'>

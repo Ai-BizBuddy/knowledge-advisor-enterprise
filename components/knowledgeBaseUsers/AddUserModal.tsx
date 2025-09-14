@@ -101,8 +101,7 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
         onClose();
       }
     } catch (error) {
-      console.error('Error adding user:', error);
-    } finally {
+          } finally {
       setIsSubmitting(false);
     }
   };

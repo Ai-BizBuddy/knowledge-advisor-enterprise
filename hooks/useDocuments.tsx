@@ -219,6 +219,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return;
       }
 
+
       try {
         console.log('🔄 [useDocuments.loadDocuments] Starting load process');
         loadingRef.current = true;
@@ -278,14 +279,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           error: null,
         }));
       } catch (err) {
-        // if (!mountedRef.current) return;
-
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
-        console.error(
-          '❌ [useDocuments.loadDocuments] Error loading documents:',
-          err,
-        );
         setDocumentManagementState((prev) => ({
           ...prev,
           error: errorMessage,
@@ -342,7 +337,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         return newDocument;
       } catch (err) {
-        console.error('❌ [useDocuments.createDocument] Error:', err);
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to create document';
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
       }
     },
@@ -369,7 +370,15 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         await loadDocuments(1, true);
         return newDocuments;
       } catch (err) {
-        console.error('❌ [useDocuments.createMultipleDocuments] Error:', err);
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to create multiple documents';
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
       }
     },
@@ -397,6 +406,15 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return newDocuments;
       } catch (err) {
         console.error('❌ [useDocuments.createDocumentsFromFiles] Error:', err);
+        const errorMessage =
+          err instanceof Error
+            ? err.message
+            : 'Failed to create documents from files';
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
       }
     },
@@ -427,7 +445,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         return updatedDocument;
       } catch (err) {
-        console.error('❌ [useDocuments.updateDocument] Error:', err);
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to update document';
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
       }
     },
@@ -484,7 +508,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         console.log('✅ [useDocuments.getDocument] Document retrieved');
         return result;
       } catch (err) {
-        console.error('❌ [useDocuments.getDocument] Error:', err);
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to get document';
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         return null;
       }
     },
@@ -517,7 +547,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         return updatedDocuments;
       } catch (err) {
-        console.error('❌ [useDocuments.batchUpdate] Error:', err);
         setDocumentManagementState(prev => ({ 
           ...prev, 
           error: err instanceof Error ? err.message : 'Failed to batch update documents', 

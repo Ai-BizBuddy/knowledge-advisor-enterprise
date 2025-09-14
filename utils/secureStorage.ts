@@ -125,8 +125,7 @@ class SecureStorage {
 
       sessionStorage.setItem(`${prefix}${key}`, serialized);
     } catch (error) {
-      console.error('SecureStorage: Failed to store item', error);
-    }
+          }
   }
 
   /**
@@ -156,8 +155,7 @@ class SecureStorage {
 
       return item.data;
     } catch (error) {
-      console.error('SecureStorage: Failed to retrieve item', error);
-      // Clean up corrupted data
+            // Clean up corrupted data
       this.removeItem(key, options);
       return null;
     }
@@ -174,8 +172,7 @@ class SecureStorage {
     try {
       sessionStorage.removeItem(`${prefix}${key}`);
     } catch (error) {
-      console.error('SecureStorage: Failed to remove item', error);
-    }
+          }
   }
 
   /**
@@ -193,8 +190,7 @@ class SecureStorage {
 
       keys.forEach((key) => sessionStorage.removeItem(key));
     } catch (error) {
-      console.error('SecureStorage: Failed to clear storage', error);
-    }
+          }
   }
 
   /**
@@ -210,8 +206,7 @@ class SecureStorage {
         .filter((key) => key.startsWith(prefix))
         .map((key) => key.replace(prefix, ''));
     } catch (error) {
-      console.error('SecureStorage: Failed to get keys', error);
-      return [];
+            return [];
     }
   }
 
@@ -249,8 +244,7 @@ class SafeLocalStorage {
       }
     } catch {
       this.useMemory = true;
-      console.warn('localStorage not available, using memory storage');
-    }
+          }
   }
 
   setItem(key: string, value: string): void {
@@ -261,8 +255,7 @@ class SafeLocalStorage {
         localStorage.setItem(key, value);
       }
     } catch (error) {
-      console.error('Storage error:', error);
-      // Fallback to memory
+            // Fallback to memory
       this.memoryStorage.set(key, value);
     }
   }
@@ -275,8 +268,7 @@ class SafeLocalStorage {
         return localStorage.getItem(key);
       }
     } catch (error) {
-      console.error('Storage error:', error);
-      return this.memoryStorage.get(key) || null;
+            return this.memoryStorage.get(key) || null;
     }
   }
 
@@ -288,8 +280,7 @@ class SafeLocalStorage {
         localStorage.removeItem(key);
       }
     } catch (error) {
-      console.error('Storage error:', error);
-      this.memoryStorage.delete(key);
+            this.memoryStorage.delete(key);
     }
   }
 
@@ -301,8 +292,7 @@ class SafeLocalStorage {
         localStorage.clear();
       }
     } catch (error) {
-      console.error('Storage error:', error);
-      this.memoryStorage.clear();
+            this.memoryStorage.clear();
     }
   }
 }

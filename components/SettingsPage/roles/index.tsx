@@ -30,10 +30,6 @@ const transformRoleToModalData = async (
   role: Role,
   permissionResources: string[],
 ) => {
-  console.log('=== TRANSFORMING ROLE DATA ===');
-  console.log('Role:', role);
-  console.log('Permission Resources:', permissionResources);
-
   // Create base permissions structure with all available resources
   const basePermissions: PermissionRow[] = permissionResources.map(
     (resource: string) => ({
@@ -42,20 +38,12 @@ const transformRoleToModalData = async (
     }),
   );
 
-  console.log('Base permissions structure:', basePermissions);
-
   // Map existing permissions to the new structure
   if (role.permissions && role.permissions.length > 0) {
-    console.log('Role has existing permissions:', role.permissions);
-
-    role.permissions.forEach((permission, index) => {
-      console.log(`Processing permission ${index}:`, permission);
-
+    role.permissions.forEach((permission) => {
       // Use the permission's resource and action properties directly
       const resource = permission.resource;
       const action = permission.action;
-
-      console.log(`  Resource: ${resource}, Action: ${action}`);
 
       if (resource && action) {
         // Find the permission row for this resource
@@ -68,19 +56,12 @@ const transformRoleToModalData = async (
             id: permission.id.toString(),
             value: true,
           };
-          console.log(
-            `  ✓ Added ${action} for ${resource} with ID ${permission.id}`,
-          );
-        } else {
-          console.log(`  ✗ Resource ${resource} not found in base permissions`);
         }
       } else if (permission.name) {
         // Fallback: try to parse from permission name if resource/action not available
-        console.log(`  Falling back to name parsing: ${permission.name}`);
         const parts = permission.name.split(':');
         if (parts.length === 2) {
           const [resourceName, actionName] = parts;
-          console.log(`  Parsed: ${resourceName}:${actionName}`);
           const permissionRow = basePermissions.find(
             (p) => p.resource === resourceName,
           );
@@ -89,31 +70,11 @@ const transformRoleToModalData = async (
               id: permission.id.toString(),
               value: true,
             };
-            console.log(
-              `  ✓ Added ${actionName} for ${resourceName} via name parsing`,
-            );
-          } else {
-            console.log(
-              `  ✗ Resource ${resourceName} not found in base permissions`,
-            );
           }
-        } else {
-          console.log(
-            `  ✗ Could not parse permission name: ${permission.name}`,
-          );
         }
-      } else {
-        console.log(
-          '  ✗ Permission has no resource/action or name:',
-          permission,
-        );
       }
     });
-  } else {
-    console.log('Role has no existing permissions');
   }
-
-  console.log('Final transformed permissions:', basePermissions);
 
   const result = {
     id: role.id.toString(),
@@ -122,9 +83,6 @@ const transformRoleToModalData = async (
     accessLevel: levelToAccessLevel(role.level || 50),
     permissions: basePermissions,
   };
-
-  console.log('=== TRANSFORMATION COMPLETE ===');
-  console.log('Result:', result);
 
   return result;
 };
@@ -179,8 +137,8 @@ export default function RolesPage() {
         });
         if (!initialLoadRef.current) {
         }
-      } catch (error) {
-        console.error('Error loading roles data:', error);
+      } catch {
+        // Handle error silently
       }
     };
 
@@ -203,8 +161,8 @@ export default function RolesPage() {
         try {
           await getPermissionsPaginated({ page: 1, pageSize: 100 });
           initialLoadRef.current = true;
-        } catch (error) {
-          console.error('Error loading permissions data:', error);
+        } catch {
+          // Handle error silently
         }
       };
       loadPermissionsData();
@@ -227,8 +185,6 @@ export default function RolesPage() {
   // Handle create role using new modal with enhanced error handling
   const handleCreateRoleSubmit = async (payload: CreateRolePayload) => {
     try {
-      console.log('Creating role with payload:', payload);
-      debugger;
       // Transform payload to match existing API
       const createRoleData: CreateRoleInput = {
         name: payload.roleName,
@@ -263,9 +219,7 @@ export default function RolesPage() {
             permissionRows,
           );
 
-        console.log('Converted permission IDs:', createRoleData.permission_ids);
-        console.log('Permission rows:', permissionRows);
-      }
+                      }
 
       const newRole = await createRole(createRoleData);
 
@@ -286,8 +240,6 @@ export default function RolesPage() {
         throw new Error('Failed to create role - no role returned from server');
       }
     } catch (error) {
-      console.error('Error creating role:', error);
-
       // Enhanced error handling with specific error types
       let errorMessage = 'Failed to create role';
 
@@ -329,8 +281,7 @@ export default function RolesPage() {
     if (!selectedRole) return;
 
     try {
-      console.log('Updating role with payload:', payload);
-
+      
       // Transform payload to match existing API
       const updateRoleData: UpdateRoleInput = {
         name: payload.roleName,
@@ -365,9 +316,7 @@ export default function RolesPage() {
             permissionRows,
           );
 
-        console.log('Updated permission IDs:', updateRoleData.permission_ids);
-        console.log('Permission rows:', permissionRows);
-      }
+                      }
 
       const updatedRole = await updateRole(selectedRole.id, updateRoleData);
 
@@ -389,8 +338,7 @@ export default function RolesPage() {
         throw new Error('Failed to update role - no role returned from server');
       }
     } catch (error) {
-      console.error('Error updating role:', error);
-
+      
       // Enhanced error handling with specific error types
       let errorMessage = 'Failed to update role';
 
@@ -452,8 +400,7 @@ export default function RolesPage() {
         throw new Error('Failed to delete role - operation was not successful');
       }
     } catch (error) {
-      console.error('Error deleting role:', error);
-
+      
       // Enhanced error handling with specific error types
       let errorMessage = 'Failed to delete role';
 
@@ -502,8 +449,7 @@ export default function RolesPage() {
 
     // Wait for permission resources to be loaded if they aren't already
     if (permissionResources.length === 0) {
-      console.warn('Permission resources not loaded yet, waiting...');
-      // You might want to show a loading state here
+            // You might want to show a loading state here
       // For now, we'll proceed with empty resources and they'll be filled later
     }
 
@@ -563,7 +509,7 @@ export default function RolesPage() {
       <div className='overflow-hidden rounded-lg border border-gray-200 bg-white shadow dark:border-gray-700 dark:bg-gray-800'>
         {loading ? (
           <div className='flex h-64 items-center justify-center'>
-            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-indigo-600'></div>
+            <div className='h-12 w-12 animate-spin rounded-full border-b-2 border-blue-600'></div>
           </div>
         ) : (
           <>

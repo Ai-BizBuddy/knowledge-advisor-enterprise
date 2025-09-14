@@ -86,11 +86,7 @@ class PaginatedUserManagementService extends UserManagementService {
       const { data, error, count } = await query;
 
       if (error) {
-        console.error(
-          '[PaginatedUserManagementService] Error fetching users:',
-          error,
-        );
-        throw new Error(`Failed to fetch users: ${error.message}`);
+                throw new Error(`Failed to fetch users: ${error.message}`);
       }
 
       const total = count || 0;
@@ -114,11 +110,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error in getUsersPaginated:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -222,11 +214,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error in getRolesPaginated:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -280,11 +268,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error in getPermissionsPaginated:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -338,11 +322,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error in getDepartmentsPaginated:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -377,11 +357,7 @@ class PaginatedUserManagementService extends UserManagementService {
 
       return urlData.publicUrl;
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error uploading profile picture:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -425,16 +401,11 @@ class PaginatedUserManagementService extends UserManagementService {
           })
           .eq('id', userId);
       } catch (profileError) {
-        console.warn('Could not update auth.profiles:', profileError);
-      }
+              }
 
       return data as User;
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error updating user profile:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -523,11 +494,7 @@ class PaginatedUserManagementService extends UserManagementService {
         pendingUsers: pendingUsers || 0,
       };
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error getting user statistics:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -538,11 +505,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       return await super.createRole(roleData);
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error creating role:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -553,11 +516,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       return await super.updateRole(id, updates);
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error updating role:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -568,11 +527,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       await super.deleteRole(id);
     } catch (error) {
-      console.error(
-        '[PaginatedUserManagementService] Error deleting role:',
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 }

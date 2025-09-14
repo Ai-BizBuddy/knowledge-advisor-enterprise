@@ -146,9 +146,8 @@ export const useUserService = (): UseUserService => {
         } else {
           setError(result.error || 'Failed to fetch users');
         }
-      } catch (error) {
-        console.error('Error fetching users:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+      } catch {
+        setError('Failed to fetch users');
       } finally {
         setLoading(false);
       }
@@ -184,9 +183,8 @@ export const useUserService = (): UseUserService => {
         } else {
           setError(result.error || 'Failed to search users');
         }
-      } catch (error) {
-        console.error('Error searching users:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+      } catch {
+        setError('Failed to search users');
       } finally {
         setSearchLoading(false);
       }
@@ -211,9 +209,8 @@ export const useUserService = (): UseUserService => {
           setError(result.error || 'Failed to fetch user');
           return null;
         }
-      } catch (error) {
-        console.error('Error fetching user by ID:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+      } catch {
+        setError('Failed to fetch user');
         return null;
       }
     },
@@ -237,9 +234,8 @@ export const useUserService = (): UseUserService => {
           setError(result.error || 'Failed to fetch users');
           return [];
         }
-      } catch (error) {
-        console.error('Error fetching users by IDs:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+      } catch {
+        setError('Failed to fetch users');
         return [];
       }
     },
@@ -265,9 +261,8 @@ export const useUserService = (): UseUserService => {
           setError(result.error || 'Failed to check user existence');
           return { exists: false };
         }
-      } catch (error) {
-        console.error('Error checking user existence:', error);
-        setError(error instanceof Error ? error.message : 'Unknown error');
+      } catch {
+        setError('Failed to check user existence');
         return { exists: false };
       }
     },
@@ -292,9 +287,8 @@ export const useUserService = (): UseUserService => {
       } else {
         setError(result.error || 'Failed to fetch user statistics');
       }
-    } catch (error) {
-      console.error('Error fetching user statistics:', error);
-      setError(error instanceof Error ? error.message : 'Unknown error');
+    } catch {
+      setError('Failed to fetch user statistics');
     }
   }, [setError, importServerActions]);
 

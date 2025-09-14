@@ -44,8 +44,7 @@ export class DeepSearchService {
     private async getAccessToken(): Promise<void> {
         const { data: { session }, error } = await this.supabase.auth.getSession();
         if (error) {
-            console.error('Error getting session for API request:', error);
-            return;
+                        return;
         }
 
         // Update config with new headers

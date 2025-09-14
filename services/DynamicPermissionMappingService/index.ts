@@ -38,13 +38,11 @@ export class DynamicPermissionMappingService {
       this.mappings.length > 0 &&
       now - this.lastFetch < this.CACHE_DURATION
     ) {
-      console.log('Using cached permission mappings');
-      return this.mappings;
+            return this.mappings;
     }
 
     try {
-      console.log('Fetching permissions from database...');
-      const supabase = createClientAuth();
+            const supabase = createClientAuth();
 
       const { data: permissions, error } = await supabase
         .from('permissions')
@@ -53,12 +51,10 @@ export class DynamicPermissionMappingService {
         .order('action', { ascending: true });
 
       if (error) {
-        console.error('Error fetching permissions:', error);
-        throw new Error(`Failed to fetch permissions: ${error.message}`);
+                throw new Error(`Failed to fetch permissions: ${error.message}`);
       }
 
-      console.log('Fetched permissions from database:', permissions);
-
+      
       // Convert database permissions to mapping format
       this.mappings = (permissions || []).map((permission: Permission) => {
         return {
@@ -70,12 +66,10 @@ export class DynamicPermissionMappingService {
       });
 
       this.lastFetch = now;
-      console.log('Created dynamic mappings:', this.mappings);
-
+      
       return this.mappings;
     } catch (error) {
-      console.error('Error in fetchAndCreateMappings:', error);
-      throw error;
+            throw error;
     }
   }
 
@@ -152,10 +146,7 @@ export class DynamicPermissionMappingService {
           if (mapping) {
             permissionIds.push(mapping.permissionId);
           } else {
-            console.warn(
-              `No mapping found for resource: ${permission.resource}, action: ${action}`,
-            );
-          }
+                      }
         }
       }
     }

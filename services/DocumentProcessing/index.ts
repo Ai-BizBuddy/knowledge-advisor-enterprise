@@ -49,17 +49,10 @@ class DocumentProcessingApiClient {
     // Request interceptor
     this.client.interceptors.request.use(
       (config: InternalAxiosRequestConfig) => {
-        console.log('[DocumentProcessingAPI] Request:', {
-          url: config.url,
-          method: config.method,
-          data: config.data,
-          params: config.params,
-        });
-        return config;
+                return config;
       },
       (error: Error) => {
-        console.error('[DocumentProcessingAPI] Request error:', error);
-        return Promise.reject(error);
+                return Promise.reject(error);
       },
     );
 
@@ -69,13 +62,7 @@ class DocumentProcessingApiClient {
         return response;
       },
       (error: Error & { response?: AxiosResponse; code?: string }) => {
-        console.error('[DocumentProcessingAPI] Response error:', {
-          status: error.response?.status,
-          statusText: error.response?.statusText,
-          data: error.response?.data,
-          message: error.message,
-        });
-        return Promise.reject(this.handleApiError(error));
+                return Promise.reject(this.handleApiError(error));
       },
     );
   }
@@ -127,10 +114,7 @@ class DocumentProcessingApiClient {
         throw error;
       }
 
-      console.warn(
-        `[DocumentProcessingAPI] Operation failed, retrying... (${attempts - 1} attempts left)`,
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retry
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second before retry
       return this.withRetry(operation, attempts - 1);
     }
   }
@@ -221,8 +205,7 @@ class DocumentProcessingApiClient {
       await this.client.get('/api/Documents/pending', { timeout: 5000 });
       return true;
     } catch (error) {
-      console.warn('[DocumentProcessingAPI] Health check failed:', error);
-      return false;
+            return false;
     }
   }
 
@@ -281,11 +264,7 @@ class DocumentProcessingApiClient {
         // Wait before next poll
         await new Promise((resolve) => setTimeout(resolve, interval));
       } catch (error) {
-        console.warn(
-          `[DocumentProcessingAPI] Polling error for document ${documentId}:`,
-          error,
-        );
-        // Continue polling even if a single request fails
+                // Continue polling even if a single request fails
         await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
@@ -324,11 +303,7 @@ class DocumentProcessingApiClient {
 
         await new Promise((resolve) => setTimeout(resolve, interval));
       } catch (error) {
-        console.warn(
-          `[DocumentProcessingAPI] Job monitoring error for ${jobId}:`,
-          error,
-        );
-        await new Promise((resolve) => setTimeout(resolve, interval));
+                await new Promise((resolve) => setTimeout(resolve, interval));
       }
     }
 

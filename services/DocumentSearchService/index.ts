@@ -209,8 +209,7 @@ class DocumentSearchService {
     });
 
     this.client.addErrorInterceptor((error) => {
-      console.error(`[${this.serviceName}] Search error:`, error.message);
-      return error;
+            return error;
     });
   }
   /**
@@ -284,8 +283,7 @@ class DocumentSearchService {
       );
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Langflow search failed:`, error);
-      throw new Error('Failed to perform AI search');
+            throw new Error('Failed to perform AI search');
     }
   }
 
@@ -306,20 +304,12 @@ class DocumentSearchService {
       const { data: documents, error } = await query;
 
       if (error) {
-        console.error(
-          `[${this.serviceName}] Supabase documents query error:`,
-          error,
-        );
-        throw new Error(`Failed to fetch documents: ${error.message}`);
+                throw new Error(`Failed to fetch documents: ${error.message}`);
       }
 
       return documents || [];
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error fetching documents from Supabase:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
   /**
@@ -336,10 +326,7 @@ class DocumentSearchService {
       // Extract the main response text
       const output = langflowResponse.outputs?.[0]?.outputs?.[0];
       if (!output) {
-        console.warn(
-          `[${this.serviceName}] No valid output in Langflow response`,
-        );
-        return [];
+                return [];
       }
 
       const responseText = output.results?.message?.text || '';
@@ -368,11 +355,7 @@ class DocumentSearchService {
 
       return results;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Error transforming Langflow response:`,
-        error,
-      );
-      return [];
+            return [];
     }
   }
 
@@ -441,8 +424,7 @@ class DocumentSearchService {
         filters,
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Search failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -473,8 +455,7 @@ class DocumentSearchService {
 
       return suggestions;
     } catch (error) {
-      console.error(`[${this.serviceName}] Failed to get suggestions:`, error);
-      return [];
+            return [];
     }
   }
   /**
@@ -510,8 +491,7 @@ class DocumentSearchService {
         sessionId: `search-${Date.now()}`, // Generate a session ID
       };
     } catch (error) {
-      console.error(`[${this.serviceName}] Search failed:`, error);
-      const errorMessage =
+            const errorMessage =
         error instanceof Error ? error.message : 'Search failed';
 
       return {

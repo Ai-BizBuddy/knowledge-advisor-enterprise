@@ -67,12 +67,7 @@ class DocumentIngestionService {
 
     // Error handling interceptor
     this.client.addErrorInterceptor((error) => {
-      console.error(
-        `[${this.serviceName}] Error:`,
-        error.status,
-        error.message,
-      );
-      return this.transformToApiError(error);
+            return this.transformToApiError(error);
     });
   }
 
@@ -122,8 +117,7 @@ class DocumentIngestionService {
       const response = await this.client.get('/Documents/pending');
       return response.status === 200;
     } catch (error) {
-      console.warn(`[${this.serviceName}] Health check failed:`, error);
-      return false;
+            return false;
     }
   }
 
@@ -141,8 +135,7 @@ class DocumentIngestionService {
       );
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Sync documents failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -157,8 +150,7 @@ class DocumentIngestionService {
       );
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get document status failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -170,8 +162,7 @@ class DocumentIngestionService {
     try {
       await this.client.post(`/Documents/${documentId}/process`);
     } catch (error) {
-      console.error(`[${this.serviceName}] Process document failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -207,11 +198,7 @@ class DocumentIngestionService {
 
       return data as PendingDocumentsResponse;
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Get pending documents failed:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 
@@ -226,8 +213,7 @@ class DocumentIngestionService {
       );
       return response.data;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get job status failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -264,8 +250,7 @@ class DocumentIngestionService {
 
       return data as FailedJobsResponse;
     } catch (error) {
-      console.error(`[${this.serviceName}] Get failed jobs failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -277,8 +262,7 @@ class DocumentIngestionService {
     try {
       await this.client.post(`/Jobs/${jobId}/retry`);
     } catch (error) {
-      console.error(`[${this.serviceName}] Retry job failed:`, error);
-      throw error;
+            throw error;
     }
   }
 
@@ -320,11 +304,7 @@ class DocumentIngestionService {
             (result as PromiseFulfilledResult<DocumentStatusResponse>).value,
         );
     } catch (error) {
-      console.error(
-        `[${this.serviceName}] Get multiple document statuses failed:`,
-        error,
-      );
-      throw error;
+            throw error;
     }
   }
 

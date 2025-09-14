@@ -190,8 +190,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     const arr = Array.from(fileList);
     const err = validateFiles(arr);
     if (err) {
-      console.error(err);
-      return;
+            return;
     }
     setItems((prev) => [...prev, ...arr.map(createItem)]);
   };
