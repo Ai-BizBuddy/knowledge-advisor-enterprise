@@ -431,7 +431,6 @@ export default function DocumentsPage() {
       });
 
       if (!results || results.length === 0) {
-        console.log('No results found');
         setIsNoResults(true);
         return;
       }
@@ -672,10 +671,6 @@ export default function DocumentsPage() {
         }}
         onConfirm={async () => {
           if (documentToDelete) {
-            console.log(
-              '[DocumentsPage] Confirm delete document:',
-              documentToDelete,
-            );
             if (optionBulkDelete) {
               await handleBulkDocumentDelete(selectedDocuments);
             } else {
