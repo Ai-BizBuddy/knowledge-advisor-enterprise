@@ -1,19 +1,15 @@
 'use client';
 
-import {
-  DocumentDeleteModal,
-  UploadDocument
-} from '@/components';
-import { DocumentsPagination } from '@/components/documentsPage/DocumentsPagination';
-import { DocumentsSearch } from '@/components/documentsPage/DocumentsSearch';
-import { DocumentsTable } from '@/components/documentsPage/DocumentsTable';
-import { TableSkeleton } from '@/components/LoadingCard';
-import { useToast } from '@/components/toast';
-import { useDocuments } from '@/hooks/useDocuments';
+import { useDocuments } from '@/hooks';
 import type { Document } from '@/interfaces/Project';
-import DocumentService from '@/services/DocumentService';
+import { DocumentService } from '@/services';
+import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import DocumentDeleteModal from './documentDeleteModal';
+import { DocumentsPagination, DocumentsSearch, DocumentsTable } from './documentsPage';
+import { TableSkeleton } from './LoadingCard';
+import { useToast } from './toast';
+import UploadDocument from './uploadDocuments';
 
-import React from 'react';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -80,14 +76,16 @@ interface DocumentListProps {
   isActive: boolean; // Only load data when this tab is active
 }
 
-export const DocumentList: React.FC<DocumentListProps> = ({
+const DocumentListComponent: FC<DocumentListProps> = ({
   knowledgeBaseId,
   isActive,
 }) => {
+  console.log(knowledgeBaseId, isActive)
+   
   const { showToast } = useToast();
 
   // Document state managed internally
-  const [documentState, setDocumentState] = React.useState({
+  const [documentState, setDocumentState] = useState({
     selectedDocumentIndex: 0,
     selectedDocuments: [] as number[],
     sortBy: 'created_at',
@@ -95,12 +93,13 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   });
 
   // Modal states managed internally
-  const [isUploadModalOpen, setIsUploadModalOpen] = React.useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = React.useState(false);
-  const [documentToDelete, setDocumentToDelete] = React.useState<DocumentTableItem | null>(null);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [documentToDelete, setDocumentToDelete] = useState<DocumentTableItem | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Use the new useDocuments hook with integrated sync functionality
+  // Only load data when this tab is active
   const {
     // State
     documents,
@@ -125,9 +124,12 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     syncDocument,
     syncMultipleDocuments,
     clearSyncError,
-  } = useDocuments({ knowledgeBaseId });
+  } = useDocuments({ 
+    knowledgeBaseId: isActive ? knowledgeBaseId : undefined, // Only provide knowledgeBaseId when active
+    autoLoad: isActive // Only auto-load when active
+  });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (syncError) {
       showToast(syncError, 'error', 5000);
       clearSyncError();
@@ -136,7 +138,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
 
   // Transform documents to DocumentsTable-compatible format
   // Add a flag to disable sync button based on document status
-  const adaptedDocuments = React.useMemo(() => {
+  const adaptedDocuments = useMemo(() => {
     return documents.map((doc) => {
       const tableDoc = adaptDocumentToTableFormat(doc);
       // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
@@ -150,27 +152,27 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     });
   }, [documents]);
 
-  const zeroBasedStartIndex = React.useMemo(() => startIndex - 1, [startIndex]);
+  const zeroBasedStartIndex = useMemo(() => startIndex - 1, [startIndex]);
   
-  const currentPageSelectedCount = React.useMemo(() => 
+  const currentPageSelectedCount = useMemo(() => 
     documentState.selectedDocuments.filter(
       (index) => index >= zeroBasedStartIndex && index < zeroBasedStartIndex + documents.length,
     ).length,
     [documentState.selectedDocuments, zeroBasedStartIndex, documents.length]
   );
 
-  const isAllSelected = React.useMemo(() =>
+  const isAllSelected = useMemo(() =>
     currentPageSelectedCount === documents.length && documents.length > 0,
     [currentPageSelectedCount, documents.length]
   );
   
-  const isIndeterminate = React.useMemo(() =>
+  const isIndeterminate = useMemo(() =>
     currentPageSelectedCount > 0 && currentPageSelectedCount < documents.length,
     [currentPageSelectedCount, documents.length]
   );
 
   // Handle single document sync
-  const handleDocumentSync = React.useCallback(
+  const handleDocumentSync = useCallback(
     async (pageIndex: number) => {
       try {
         // Convert page index back to actual array index
@@ -199,7 +201,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   );
 
   // Handle bulk sync for selected documents
-  const handleBulkSync = React.useCallback(
+  const handleBulkSync = useCallback(
     async () => {
       try {
         if (documentState.selectedDocuments.length === 0) {
@@ -239,7 +241,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     [documentState.selectedDocuments, zeroBasedStartIndex, documents, syncMultipleDocuments, showToast],
   );
 
-  const handleSelectDocument = React.useCallback((pageIndex: number) => {
+  const handleSelectDocument = useCallback((pageIndex: number) => {
     const actualIndex = zeroBasedStartIndex + pageIndex;
     setDocumentState(prev => ({
       ...prev,
@@ -250,7 +252,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }, [zeroBasedStartIndex]);
 
   // Handle select all documents (แก้ไขให้ select เฉพาะในหน้าปัจจุบัน)
-  const handleSelectAll = React.useCallback(() => {
+  const handleSelectAll = useCallback(() => {
     const currentIsAllSelected = currentPageSelectedCount === documents.length && documents.length > 0;
     if (currentIsAllSelected) {
       setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
@@ -264,18 +266,18 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }, [currentPageSelectedCount, documents, zeroBasedStartIndex]);
 
   // Clear selection เมื่อเปลี่ยนหน้า
-  const handlePageChangeWithClearSelection = React.useCallback((page: number) => {
+  const handlePageChangeWithClearSelection = useCallback((page: number) => {
     setDocumentState(prev => ({ ...prev, selectedDocuments: [] })); // Clear selection เมื่อเปลี่ยนหน้า
     handlePageChange(page);
   }, [handlePageChange]);
 
   // Handle clear selection
-  const handleClearSelection = React.useCallback(() => {
+  const handleClearSelection = useCallback(() => {
     setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
   }, []);
 
   // Handle sort
-  const handleSort = React.useCallback((column: string) => {
+  const handleSort = useCallback((column: string) => {
     if (documentState.sortBy === column) {
       setDocumentState(prev => ({ 
         ...prev, 
@@ -291,7 +293,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }, [documentState.sortBy]);
 
   // Handle document click
-  const handleDocumentTableClick = React.useCallback((index: number) => {
+  const handleDocumentTableClick = useCallback((index: number) => {
     setDocumentState(prev => ({ ...prev, selectedDocumentIndex: index }));
     // You can add navigation logic here if needed
     // const documentId = documents[index]?.id;
@@ -301,7 +303,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }, []);
 
     // Handle single document deletion
-  const handleDocumentDelete = React.useCallback(
+  const handleDocumentDelete = useCallback(
     async (pageIndex: number) => {
       try {
         const document = documents[pageIndex];
@@ -326,7 +328,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   );
 
   // Confirm and execute document deletion
-  const handleConfirmDelete = React.useCallback(
+  const handleConfirmDelete = useCallback(
     async () => {
       if (!documentToDelete) {
         console.error('[DocumentList] No document selected for deletion');
@@ -374,7 +376,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   );
 
   // Handle modal close
-  const handleCloseDeleteModal = React.useCallback(() => {
+  const handleCloseDeleteModal = useCallback(() => {
     if (!isDeleting) {
       setIsDeleteModalOpen(false);
       setDocumentToDelete(null);
@@ -382,7 +384,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
   }, [isDeleting]);
 
   // Convert syncingDocuments Set<string> to Set<number> for table display
-  const syncingDocumentIndices = React.useMemo(() => {
+  const syncingDocumentIndices = useMemo(() => {
     const indices = new Set<number>();
     documents.forEach((doc, index) => {
       if (syncingDocuments.has(doc.id)) {
@@ -522,7 +524,6 @@ export const DocumentList: React.FC<DocumentListProps> = ({
             isAllSelected={isAllSelected}
             isIndeterminate={isIndeterminate}
             isOpenSync={true}
-            // Pass disableSync flag for each document
           />
         )}
       </div>
@@ -564,5 +565,7 @@ export const DocumentList: React.FC<DocumentListProps> = ({
     </div>
   );
 };
+
+export const DocumentList = memo(DocumentListComponent);
 
 export default DocumentList;

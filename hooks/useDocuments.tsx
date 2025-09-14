@@ -12,7 +12,7 @@ import type {
 import DocumentService from '@/services/DocumentService';
 import { createApiError } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 export interface UseDocumentsOptions {
   knowledgeBaseId?: string;
@@ -195,6 +195,9 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     return counts;
   }, [totalItems]);
 
+  // Add a ref to prevent multiple simultaneous API calls
+  const loadingRef = useRef(false);
+
   /**
    * Internal load function that uses current state
    */
@@ -209,9 +212,16 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         );
         return;
       }
+
+      // Prevent multiple simultaneous calls
+      if (loadingRef.current) {
+        console.log('⏳ [useDocuments.loadDocuments] Already loading, skipping duplicate call');
+        return;
+      }
+
       try {
         console.log('🔄 [useDocuments.loadDocuments] Starting load process');
-        // loadingRef.current = true;
+        loadingRef.current = true;
 
         const paginationOptions: PaginationOptions = {
           currentPage: pageToLoad,
@@ -239,7 +249,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           paginationOptions,
           apiFilters,
         });
-
+        console.log()
+        debugger;
         const result = await documentService.getDocumentsByKnowledgeBase(
           knowledgeBaseId,
           paginationOptions,
@@ -280,6 +291,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           error: errorMessage,
           loading: false,
         }));
+      } finally {
+        loadingRef.current = false;
       }
     },
     [knowledgeBaseId, documentService],
@@ -499,17 +512,21 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         console.log('✅ [useDocuments.batchUpdate] Batch update completed');
 
-        // Get current page from state then refresh
-        const currentPageValue = documentManagementState.currentPage;
-        await loadDocuments(currentPageValue, true);
+        // Only refresh once at the end
+        await loadDocuments(currentPage, true);
 
         return updatedDocuments;
       } catch (err) {
         console.error('❌ [useDocuments.batchUpdate] Error:', err);
+        setDocumentManagementState(prev => ({ 
+          ...prev, 
+          error: err instanceof Error ? err.message : 'Failed to batch update documents', 
+          loading: false 
+        }));
         throw err;
       }
     },
-    [loadDocuments, documentService, documentManagementState.currentPage],
+    [loadDocuments, documentService, currentPage],
   );
 
   /**
@@ -520,7 +537,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('🗑️🗑️ [useDocuments.batchDelete] Called with ids:', ids);
 
       try {
-        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
+        setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         for (const id of ids) {
           await documentService.deleteDocument(id);
@@ -528,16 +545,19 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         console.log('✅ [useDocuments.batchDelete] Batch delete completed');
 
-        // Get current page from state then refresh
-        const currentPageValue = documentManagementState.currentPage;
-        await loadDocuments(currentPageValue, true);
+        // Only refresh once at the end
+        await loadDocuments(currentPage, true);
       } catch (err) {
         console.error('❌ [useDocuments.batchDelete] Error:', err);
-        setDocumentManagementState(prev => ({ ...prev, error: err instanceof Error ? err.message : 'Failed to batch delete documents', loading: false }));
+        setDocumentManagementState(prev => ({ 
+          ...prev, 
+          error: err instanceof Error ? err.message : 'Failed to batch delete documents', 
+          loading: false 
+        }));
         throw err;
       }
     },
-    [loadDocuments, documentService, documentManagementState.currentPage],
+    [loadDocuments, documentService, currentPage],
   );
 
   /**
@@ -596,7 +616,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   /**
-   * Sync document with auto-refresh
+   * Sync document with minimal refresh
    */
   const syncDocument = useCallback(
     async (documentId: string): Promise<void> => {
@@ -604,15 +624,17 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         setSyncError(null);
         await syncDocumentInternal(documentId);
         
-        // Refresh documents list to reflect updated sync status
-        console.log('[DocumentSync] Refreshing documents list after sync completion');
-        await loadDocuments(currentPage, true);
+        // Only refresh if there are no other sync operations in progress
+        if (syncingDocuments.size <= 1) { // <= 1 because current document is still in set
+          console.log('[DocumentSync] Refreshing documents list after sync completion');
+          await loadDocuments(currentPage, true);
+        }
       } catch (err) {
         // Error already handled in syncDocumentInternal
         throw err;
       }
     },
-    [syncDocumentInternal, loadDocuments, currentPage],
+    [syncDocumentInternal, loadDocuments, currentPage, syncingDocuments.size],
   );
 
   /**
@@ -730,9 +752,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const refresh = useCallback(async () => {
     console.log('🔄 [useDocuments.refresh] Called');
-    const currentPageValue = documentManagementState.currentPage;
-    await loadDocuments(currentPageValue, true);
-  }, [loadDocuments, documentManagementState.currentPage]);
+    await loadDocuments(currentPage, true);
+  }, [loadDocuments, currentPage]);
 
   const clearError = useCallback(() => {
     console.log('🧹 [useDocuments.clearError] Called');
@@ -759,54 +780,23 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     }));
   }, []);
 
-  // Auto-load documents when knowledgeBaseId changes
+  // Create a ref to track if we've made the initial load
+  const hasInitialLoadRef = useRef(false);
+
+  // Auto-load documents when knowledgeBaseId changes (only once)
   useEffect(() => {
-    if (autoLoad && knowledgeBaseId) {
-      console.log('🔄 [useDocuments.useEffect] Auto-loading documents for knowledgeBaseId:', knowledgeBaseId);
+    if (autoLoad && knowledgeBaseId && !hasInitialLoadRef.current) {
+      console.log('🔄 [useDocuments.useEffect] Initial auto-loading documents for knowledgeBaseId:', knowledgeBaseId);
+      hasInitialLoadRef.current = true;
       loadDocuments(1, true);
     }
-  }, [knowledgeBaseId, autoLoad, loadDocuments]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [knowledgeBaseId, autoLoad]);
 
-  // Load documents when filters change
+  // Reset initial load flag when knowledgeBaseId changes
   useEffect(() => {
-    if (knowledgeBaseId) {
-      console.log('🔄 [useDocuments.useEffect] Filters changed, reloading documents');
-      loadDocuments(currentPage);
-    }
-  }, [selectedStatus, selectedType, knowledgeBaseId, currentPage, loadDocuments]);
-
-  // Effect for filter/page changes (after initial load)
-  // useEffect(() => {
-  //   if (!hasInitialLoadRef.current || !knowledgeBaseId) {
-  //     return;
-  //   }
-
-  //   console.log('🔄 [useDocuments.useEffect] Filter/page change detected:', {
-  //     selectedStatus,
-  //     selectedType,
-  //     currentPage,
-  //     itemsPerPage
-  //   });
-
-  //   // Debounce to prevent rapid calls
-  //   // const timeoutId = setTimeout(() => {
-  //   //   loadDocuments(currentPage);
-  //   // }, 300);
-
-  //   return () => clearTimeout(timeoutId);
-  // }, [selectedStatus, selectedType, currentPage, itemsPerPage, knowledgeBaseId, loadDocuments]); // Remove loadDocuments from deps
-
-  // Reset when knowledgeBaseId changes
-  // useEffect(() => {
-  //   hasInitialLoadRef.current = false;
-  // }, [knowledgeBaseId]);
-
-  // // Cleanup on unmount
-  // useEffect(() => {
-  //   return () => {
-  //     mountedRef.current = false;
-  //   };
-  // }, []);
+    hasInitialLoadRef.current = false;
+  }, [knowledgeBaseId]);
 
   return {
     // State

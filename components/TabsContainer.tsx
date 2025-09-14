@@ -59,10 +59,12 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
 
       </div>
 
-     <DocumentTab 
-        currentTab={currentTab}
-        knowledgeBaseId={knowledgeBaseId}
-      />
+     {currentTab === 'Documents' && (
+        <DocumentList
+          knowledgeBaseId={knowledgeBaseId}
+          isActive={currentTab === 'Documents'}
+        />
+      )}
 
       {currentTab === 'Chat Assistant' && (
         <ChatTab
@@ -81,27 +83,5 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
   );
 };
 
-// DocumentTab Props Interface
-interface DocumentTabProps {
-  currentTab: string;
-  knowledgeBaseId: string;
-}
-
-const DocumentTab: React.FC<DocumentTabProps> = ({
-  currentTab,
-  knowledgeBaseId,
-}) => {
-  return (
-    <>
-      {/* Tab Content */}
-      {currentTab === 'Documents' && (
-        <DocumentList
-          knowledgeBaseId={knowledgeBaseId}
-          isActive={currentTab === 'Documents'}
-        />
-      )}
-    </>
-  );
-};
 
 export default TabsContainer;
