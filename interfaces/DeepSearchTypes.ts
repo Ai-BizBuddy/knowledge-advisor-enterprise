@@ -18,6 +18,7 @@ export interface DeepSearchData {
     uploadDate: string;
     knowledgeName: string;
     fileUrl?: string;
+    pageNumber?: number;
 }
 
 export interface DeepSearchProps {

@@ -10,6 +10,7 @@ import { dashboardService } from './DashboardService';
 import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
+import { documentViewerService } from './DocumentViewerService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
 import { statisticsService } from './StatisticsService';
 
@@ -89,6 +90,13 @@ export { dashboardService };
  * Handles dashboard statistics and metrics
  */
   export { statisticsService };
+
+/**
+ * Document Viewer Service Instance
+ * 
+ * Handles document preview for chat links and file viewing
+ */
+  export { documentViewerService };
 
 /**
  * Compatibility alias: some hooks import `langflowChatService` from services.

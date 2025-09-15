@@ -8,6 +8,7 @@ export { useDashboard } from './useDashboard';
 export { useDocuments } from './useDocuments';
 export { useDocumentSearch } from './useDocumentSearch';
 export { useDocumentsManagement } from './useDocumentsManagement';
+export { useDocumentViewer } from './useDocumentViewer';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
 export { usePermissionDataWithFallback } from './usePermissionData';

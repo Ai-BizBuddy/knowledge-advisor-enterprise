@@ -1,5 +1,8 @@
+import { DocumentPreview } from '@/components/deepSearch/DocumentPreview';
 import { UI_CONSTANTS } from '@/constants';
+import { useDocumentViewer } from '@/hooks';
 import { IChatCardProps } from '@/interfaces/ChatCard';
+import { documentViewerService } from '@/services';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
@@ -16,6 +19,50 @@ export default function ChatCard({
   status,
   isUser = false,
 }: IChatCardProps) {
+  const {
+    isViewerOpen,
+    viewerDocument,
+    isLoading,
+    error,
+    openDocumentViewer,
+    closeDocumentViewer,
+  } = useDocumentViewer();
+
+  // Ensure message is always a string to prevent [object Object] rendering
+  const safeMessage = (() => {
+    if (typeof message === 'string') return message;
+    if (message === null || message === undefined) return '';
+    
+    // Log warning for debugging in development
+    if (process.env.NODE_ENV === 'development') {
+      console.warn('ChatCard received non-string message:', {
+        type: typeof message,
+        value: message,
+        name: name,
+      });
+    }
+    
+    // Type assertion to handle cases where message might not be a string despite the interface
+    const anyMessage = message as unknown;
+    
+    if (typeof anyMessage === 'object' && anyMessage !== null) {
+      // Handle array or object cases
+      if (Array.isArray(anyMessage)) {
+        return anyMessage.join(' ');
+      }
+      // For objects, try to extract meaningful content
+      const obj = anyMessage as Record<string, unknown>;
+      if ('content' in obj && typeof obj.content === 'string') {
+        return obj.content;
+      }
+      if ('text' in obj && typeof obj.text === 'string') {
+        return obj.text;
+      }
+      // Last resort: JSON stringify but with better formatting
+      return JSON.stringify(anyMessage, null, 2);
+    }
+    return String(anyMessage);
+  })();
   const containerClasses = `flex items-start gap-3 mb-4 chat-message  ${
     isUser
       ? 'justify-end chat-message-user'
@@ -63,13 +110,110 @@ export default function ChatCard({
               h1: ({ ...props }) => (
                 <h1 className='text-3xl font-bold text-blue-600' {...props} />
               ),
-              a: ({ ...props }) => (
-                <a
-                  className='text-red-500 underline'
-                  target='_blank'
-                  {...props}
-                />
-              ),
+              a: ({ href, children, ...props }) => {
+                const url = href || '';
+                
+                // Check if this is a document link that should open in viewer
+                if (documentViewerService.isDocumentLink(url)) {
+                  return (
+                    <button
+                      type='button'
+                      className='text-blue-500 underline hover:text-blue-700 cursor-pointer bg-transparent border-none p-0 font-inherit'
+                      onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                        e.preventDefault();
+                        openDocumentViewer(url);
+                      }}
+                      disabled={isLoading}
+                    >
+                      {children}
+                      {isLoading && ' (Loading...)'}
+                    </button>
+                  );
+                }
+                
+                // Regular external link
+                return (
+                  <a
+                    className='text-red-500 underline'
+                    href={href}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                    {...props}
+                  >
+                    {children}
+                  </a>
+                );
+              },
+              // Custom component to handle document references
+              p: ({ children, ...props }) => {
+                // Convert children to string safely, handling arrays and objects
+                const getTextContent = (node: React.ReactNode): string => {
+                  if (node === null || node === undefined) return '';
+                  if (typeof node === 'string') return node;
+                  if (typeof node === 'number') return node.toString();
+                  if (typeof node === 'boolean') return '';
+                  if (Array.isArray(node)) return node.map(getTextContent).join('');
+                  if (typeof node === 'object' && 'props' in node) {
+                    const element = node as { props?: { children?: React.ReactNode } };
+                    if (element.props?.children) {
+                      return getTextContent(element.props.children);
+                    }
+                  }
+                  // Fallback for any other object types - avoid [object Object]
+                  if (typeof node === 'object') {
+                    return JSON.stringify(node);
+                  }
+                  return String(node);
+                };
+                
+                const content = getTextContent(children);
+                
+                // Check if this paragraph contains document references
+                const documentRefPattern = /\[📄 Document: ([^,]+), Page: (\d+), DocumentId: ([a-f0-9-]+)\]/g;
+                
+                if (documentRefPattern.test(content)) {
+                  // Parse document references and create clickable links
+                  const parts = content.split(documentRefPattern);
+                  const elements: React.ReactNode[] = [];
+                  
+                  for (let i = 0; i < parts.length; i += 4) {
+                    // Add text before the match
+                    if (parts[i]) {
+                      elements.push(parts[i]);
+                    }
+                    
+                    // Add clickable document link if we have a match
+                    if (parts[i + 1] && parts[i + 2] && parts[i + 3]) {
+                      const fileName = parts[i + 1];
+                      const pageNum = parts[i + 2];
+                      const docId = parts[i + 3];
+                      
+                      elements.push(
+                        <button
+                          key={`doc-${docId}-${i}`}
+                          type='button'
+                          className='inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 underline cursor-pointer bg-transparent border-none p-0 font-inherit'
+                          onClick={(e: React.MouseEvent) => {
+                            e.preventDefault();
+                            const page = parseInt(pageNum, 10);
+                            openDocumentViewer(docId, page);
+                          }}
+                          disabled={isLoading}
+                        >
+                          <span className='text-sm'>📄</span>
+                          <span>{fileName} (Page {pageNum})</span>
+                          {isLoading && <span className='text-xs'> (Loading...)</span>}
+                        </button>
+                      );
+                    }
+                  }
+                  
+                  return <p className='mb-2' {...props}>{elements}</p>;
+                }
+                
+                // Regular paragraph
+                return <p className='mb-2' {...props}>{children}</p>;
+              },
               code: ({ ...props }) => {
                 // @ts-expect-error: 'inline' is provided as a positional argument by ReactMarkdown
                 const { inline } = props;
@@ -81,7 +225,6 @@ export default function ChatCard({
                 );
               },
               br: ({ ...props }) => <br {...props} />,
-              p: ({ ...props }) => <p className='mb-2' {...props} />,
               table: ({ ...props }) => (
                 <table className='border-collapse border border-gray-300 dark:border-gray-600 mb-2' {...props} />
               ),
@@ -108,7 +251,7 @@ export default function ChatCard({
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
           >
-            {message.replace(/<br\s*>/g, '<br/>')}
+            {safeMessage.replace(/<br\s*>/g, '<br/>')}
           </ReactMarkdown>
         </div>
 
@@ -130,6 +273,28 @@ export default function ChatCard({
           )}
         </div>
       </div>
+
+      {/* Document Viewer Modal */}
+      {isViewerOpen && viewerDocument && (
+        <DocumentPreview
+          document={viewerDocument}
+          isOpen={isViewerOpen}
+          onClose={closeDocumentViewer}
+          isFullScale={true}
+        />
+      )}
+
+      {/* Error Display */}
+      {error && (
+        <div className='fixed bottom-4 right-4 z-50 max-w-sm rounded-lg bg-red-100 p-4 text-red-800 shadow-lg dark:bg-red-900 dark:text-red-200'>
+          <div className='flex items-center'>
+            <svg className='mr-2 h-5 w-5' fill='currentColor' viewBox='0 0 20 20'>
+              <path fillRule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z' clipRule='evenodd' />
+            </svg>
+            <span className='text-sm'>{error}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
