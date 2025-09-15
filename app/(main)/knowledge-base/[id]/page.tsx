@@ -885,7 +885,8 @@ export default function KnowledgeBaseDetail() {
                       />
                     );
                   }
-                  if (message.type === 'assistant') {
+                  if (message.type === 'assistant'&&
+                    message.content.trim() !== '') {
                     return (
                       <ChatCard
                         key={index}
