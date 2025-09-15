@@ -1,11 +1,11 @@
 'use client';
 
 import type {
-    CreateProjectInput,
-    Project,
-    ProjectAnalytics,
-    ProjectStatus,
-    UpdateProjectInput,
+  CreateProjectInput,
+  Project,
+  ProjectAnalytics,
+  ProjectStatus,
+  UpdateProjectInput,
 } from '@/interfaces/Project';
 import { knowledgeBaseService } from '@/services';
 import { useRouter } from 'next/navigation';
@@ -93,7 +93,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Combined state object
