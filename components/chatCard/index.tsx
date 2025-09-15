@@ -159,10 +159,6 @@ export default function ChatCard({
                       return getTextContent(element.props.children);
                     }
                   }
-                  // Fallback for any other object types - avoid [object Object]
-                  if (typeof node === 'object') {
-                    return JSON.stringify(node);
-                  }
                   return String(node);
                 };
                 
