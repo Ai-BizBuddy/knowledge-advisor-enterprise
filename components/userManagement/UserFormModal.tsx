@@ -7,21 +7,21 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Button, Label, TextInput, Select, Modal } from 'flowbite-react';
-import { useReactHookForm, useUserManagement } from '@/hooks';
-import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import { useToast } from '@/components/toast';
 import { SUCCESS_MESSAGES } from '@/constants';
+import { useReactHookForm, useUserManagement } from '@/hooks';
+import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import type {
   CreateUserInput,
-  UpdateUserInput,
-  UserManagementError,
-  User,
-  Role,
   Department,
+  Role,
+  UpdateUserInput,
+  User,
+  UserManagementError,
 } from '@/interfaces/UserManagement';
 import { UserStatus } from '@/interfaces/UserManagement';
+import { Button, Label, Modal, Select, TextInput } from 'flowbite-react';
+import React, { useEffect, useState } from 'react';
 
 interface UserFormData extends Record<string, unknown> {
   email: string;
@@ -157,7 +157,8 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         try {
           await Promise.all(promises);
         } catch (error) {
-                  }
+          console.error('Failed to load roles or departments:', error);
+        }
       }
     };
 

@@ -10,21 +10,21 @@ import { useToast } from '@/components/toast';
 import type { Permission } from '@/interfaces/UserManagement';
 import UserManagementService from '@/services/UserManagementService';
 import {
-  Badge,
-  Button,
-  Card,
-  Label,
-  Modal,
-  Table,
-  Textarea,
-  TextInput,
+    Badge,
+    Button,
+    Card,
+    Label,
+    Modal,
+    Table,
+    Textarea,
+    TextInput,
 } from 'flowbite-react';
 import { motion } from 'framer-motion';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import type {
-  PermissionModalData,
-  PermissionsTableProps,
-  PermissionTableRow,
+    PermissionModalData,
+    PermissionsTableProps,
+    PermissionTableRow,
 } from './PermissionsTable.types';
 
 // Re-export types for easier consumption
@@ -159,23 +159,6 @@ export const PermissionsTable: React.FC<PermissionsTableProps> = ({
     setSelectedPermission(permission);
     setShowDeleteModal(true);
   };
-
-  /**
-   * Calculate summary
-   */
-  const summary = useMemo(() => {
-    const activeCount = tableData.filter((row) => row.isActive).length;
-    const totalCount = tableData.length;
-    const resourceCount = new Set(
-      tableData.filter((row) => row.isActive).map((row) => row.resource),
-    ).size;
-
-    return {
-      activeCount,
-      totalCount,
-      resourceCount,
-    };
-  }, [tableData]);
 
   // Log summary for debugging
   

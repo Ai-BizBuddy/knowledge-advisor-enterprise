@@ -7,7 +7,6 @@ import {
   KnowledgeSelect,
   PageHeader,
 } from '@/components';
-import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
 import { ChatMessage } from '@/hooks/useAdkChat';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
@@ -18,7 +17,6 @@ export default function ChatPage() {
   const [isOnline] = useState(false);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
-  const { setLoading } = useLoading();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const {

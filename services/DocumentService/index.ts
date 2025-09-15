@@ -2,7 +2,6 @@
  * Document Service - Supabase Implementation
  *
  * This service handles all CRUD operations for documents using Supabase
- * with fetch API instead of Axios. Follows the project's strict TypeScript standards.
  */
 
 import type {

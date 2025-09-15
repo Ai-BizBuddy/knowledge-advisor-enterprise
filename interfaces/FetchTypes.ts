@@ -1,7 +1,8 @@
 /**
- * Fetch API TypeScript interfaces to replace Axios types
  * Following the project's strict TypeScript standards
  */
+
+import { DocumentStatus } from '@/interfaces/Project';
 
 /**
  * Enhanced fetch request configuration
@@ -120,4 +121,58 @@ export interface FetchClient {
     data?: unknown,
     config?: TypedFetchConfig,
   ): Promise<TypedFetchResponse<T>>;
+}
+
+/**
+ * Generic API Response wrapper (legacy - use ServiceResponse for new code)
+ * @deprecated Use ServiceResponse<T> instead
+ */
+export interface ApiResponse<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: ApiErrorResponse;
+  message?: string;
+}
+
+/**
+ * Upload progress callback type
+ */
+export type UploadProgressCallback = (progressEvent: {
+  loaded: number;
+  total?: number;
+  progress?: number;
+}) => void;
+
+/**
+ * Upload status callback type for file uploads
+ */
+export interface UploadStatus {
+  loaded: number;
+  total: number;
+  percentage: number;
+  status: 'uploading' | 'processing' | 'complete' | 'error';
+  message?: string;
+}
+
+/**
+ * File upload update data type
+ */
+export interface FileUploadUpdateData {
+  status?: DocumentStatus;
+  path?: string;
+  url?: string;
+  file_size?: number;
+  mime_type?: string;
+  updated_at?: string;
+}
+
+/**
+ * Document processing update data type
+ */
+export interface DocumentProcessingUpdateData {
+  rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
+  last_rag_sync?: string;
+  chunk_count?: number;
+  status?: DocumentStatus;
+  updated_at?: string;
 }

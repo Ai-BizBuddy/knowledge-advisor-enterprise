@@ -1,7 +1,7 @@
 // Enhanced type definitions for Supabase operations to replace 'any' types
 
-import type { SupabaseProjectRow } from '@/interfaces/AxiosTypes';
 import { DocumentStatus } from '@/interfaces/Project';
+import type { SupabaseProjectRow } from '@/interfaces/Supabase';
 import { createClient } from '@/utils/supabase/client';
 
 /**

@@ -60,17 +60,17 @@ export default function ChatCard({
         >
           <ReactMarkdown
             components={{
-              h1: ({ node, ...props }) => (
+              h1: ({ ...props }) => (
                 <h1 className='text-3xl font-bold text-blue-600' {...props} />
               ),
-              a: ({ node, ...props }) => (
+              a: ({ ...props }) => (
                 <a
                   className='text-red-500 underline'
                   target='_blank'
                   {...props}
                 />
               ),
-              code: ({ node, ...props }) => {
+              code: ({ ...props }) => {
                 // @ts-expect-error: 'inline' is provided as a positional argument by ReactMarkdown
                 const { inline } = props;
                 return (
@@ -80,25 +80,25 @@ export default function ChatCard({
                   />
                 );
               },
-              br: ({ node, ...props }) => <br {...props} />,
-              p: ({ node, ...props }) => <p className='mb-2' {...props} />,
-              table: ({ node, ...props }) => (
+              br: ({ ...props }) => <br {...props} />,
+              p: ({ ...props }) => <p className='mb-2' {...props} />,
+              table: ({ ...props }) => (
                 <table className='border-collapse border border-gray-300 dark:border-gray-600 mb-2' {...props} />
               ),
-              th: ({ node, ...props }) => (
+              th: ({ ...props }) => (
                 <th className='border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 font-semibold p-2' {...props} />
               ),
-              td: ({ node, ...props }) => (
+              td: ({ ...props }) => (
                 <td className='border border-gray-300 dark:border-gray-600 p-2' {...props} />
               ),
-              ul: ({ node, ...props }) => (
+              ul: ({ ...props }) => (
                 <ul className='list-disc list-inside mb-2' {...props} />
               ),
-              ol: ({ node, ...props }) => (
+              ol: ({ ...props }) => (
                 <ol className='list-decimal list-inside mb-2' {...props} />
               ),
-              li: ({ node, ...props }) => <li className='mb-1' {...props} />,
-              pre: ({ node, ...props }) => (
+              li: ({ ...props }) => <li className='mb-1' {...props} />,
+              pre: ({ ...props }) => (
                 <pre
                   className='mb-2 overflow-x-auto rounded bg-gray-100 p-2 text-sm text-gray-800 dark:bg-gray-800 dark:text-gray-200'
                   {...props}

@@ -3,24 +3,24 @@
 import { useReactHookForm } from '@/hooks';
 import { useKnowledgeBaseUsers } from '@/hooks/useKnowledgeBaseUsers';
 import {
-  KNOWLEDGE_BASE_ROLE_OPTIONS,
-  KnowledgeBaseRole,
+    KNOWLEDGE_BASE_ROLE_OPTIONS,
+    KnowledgeBaseRole,
 } from '@/interfaces/KnowledgeBaseUserRole';
 import {
-  Button,
-  Label,
-  Modal,
-  Select,
-  Spinner,
-  TextInput,
+    Button,
+    Label,
+    Modal,
+    Select,
+    Spinner,
+    TextInput,
 } from 'flowbite-react';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 import React, { useEffect, useState } from 'react';
 import type {
-  AddUserFormData,
-  AddUserModalProps,
-  SearchUserResult,
+    AddUserFormData,
+    AddUserModalProps,
+    SearchUserResult,
 } from './AddUserModal.types';
 
 export const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -101,7 +101,8 @@ export const AddUserModal: React.FC<AddUserModalProps> = ({
         onClose();
       }
     } catch (error) {
-          } finally {
+      console.error('Failed to add user to knowledge base:', error);
+    } finally {
       setIsSubmitting(false);
     }
   };

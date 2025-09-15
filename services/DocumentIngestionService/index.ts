@@ -2,21 +2,20 @@
  * Document Ingestion Service - KbIngestion.Api Client
  *
  * This service handles communication with the document ingestion API
- * for processing and syncing documents using fetch API instead of Axios.
  * Follows the project's strict TypeScript standards.
  */
 
-import { BaseFetchClient } from '@/utils/fetchClient';
 import type {
+  ApiError,
+  DocumentStatusResponse,
   DocumentSyncRequest,
   DocumentSyncResponse,
-  DocumentStatusResponse,
-  JobStatusResponse,
   FailedJobsResponse,
+  JobStatusResponse,
   PendingDocumentsResponse,
-  ApiError,
 } from '@/interfaces/DocumentIngestion';
 import type { TypedFetchError } from '@/interfaces/FetchTypes';
+import { BaseFetchClient } from '@/utils/fetchClient';
 
 /**
  * Document Ingestion Service Configuration
@@ -345,3 +344,4 @@ class DocumentIngestionService {
 
 export { DocumentIngestionService };
 export type { DocumentIngestionConfig };
+

@@ -38,7 +38,6 @@ export default function KnowledgeBase() {
     createKnowledgeBase,
   } = useKnowledgeBase();
 
-
   const formatUpdatedTime = (updatedAt: string) => {
     const date = new Date(updatedAt);
     return date.toLocaleDateString('en-US', {
@@ -49,7 +48,11 @@ export default function KnowledgeBase() {
   };
 
   const handleKnowledgeBaseSearch = async (query: string) => {
-    await searchKnowledgeBases(query);
+    try {
+      await searchKnowledgeBases(query);
+    } catch (error) {
+      console.error('Search failed:', error);
+    }
   };
 
   // Handle delete confirmation
@@ -67,7 +70,7 @@ export default function KnowledgeBase() {
         setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
       } catch {
-                setDeleteModal(false);
+        setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
       }
     }
@@ -85,8 +88,8 @@ export default function KnowledgeBase() {
 
   return (
     <div className='h-full '>
-      {/* Main Container with consistent responsive padding */}
-      <div className='p-4 sm:p-6 lg:p-8'>
+      {/* Main Container with Mac-optimized responsive padding */}
+      <div className='p-4 sm:p-6 lg:p-8 xl:p-10 2xl:px-12'>
         {/* Page Header */}
         <div className='space-y-3 pb-3 '>
           <PageHeader
@@ -128,19 +131,6 @@ export default function KnowledgeBase() {
               </Button>
             </div>
           </div>
-
-          {/* Tabs Section */}
-          {/* <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
-            <Tabs
-              currentTab={selectedTab}
-              tabList={tabList.map((tab) => `${tab.label}`)}
-              onTabChange={(value) => {
-                // Extract the tab name without the count
-                const tabName = value.split(' (')[0];
-                handleTabSelect(tabName);
-              }}
-            />
-          </div> */}
         </div>
 
         {/* Content Area */}
@@ -149,8 +139,8 @@ export default function KnowledgeBase() {
           <Loading />
         ) : projects.length > 0 ? (
           <div className='space-y-6'>
-            {/* Knowledge Base Cards Grid */}
-            <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
+            {/* Knowledge Base Cards Grid - Optimized for Mac screens */}
+            <div className='knowledge-base-grid grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5'>
               {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
