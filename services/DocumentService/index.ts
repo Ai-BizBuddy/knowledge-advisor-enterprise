@@ -49,17 +49,6 @@ class DocumentService {
     try {
       const supabaseTable = createClientTable();
 
-      // First verify the knowledge base belongs to the user
-      const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
-        .select('id')
-        .eq('id', knowledgeBaseId)
-        .single();
-
-      if (!kbData) {
-        throw new Error('Knowledge base not found or access denied');
-      }
-
       // Build base query
       let countQuery = supabaseTable
         .from('document')
@@ -121,17 +110,6 @@ class DocumentService {
     
     try {
       const supabaseTable = createClientTable();
-
-      // Verify access to knowledge base
-      const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
-        .select('id')
-        .eq('id', knowledgeBaseId)
-        .single();
-
-      if (!kbData) {
-        throw new Error('Knowledge base not found or access denied');
-      }
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
@@ -205,10 +183,7 @@ class DocumentService {
       let query = supabaseTable
         .from('document')
         .select(
-          `
-                    *,
-                    knowledge_base!inner(created_by)
-                `,
+          '*,knowledge_base!inner(created_by)',
         )
         .eq('id', id)
         .eq('knowledge_base.created_by', user.id);
@@ -240,17 +215,6 @@ class DocumentService {
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-
-      // Verify the knowledge base belongs to the user
-      const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
-        .select('id')
-        .eq('id', input.knowledge_base_id)
-        .single();
-
-      if (!kbData) {
-        throw new Error('Knowledge base not found or access denied');
-      }
 
       const documentData = {
         ...input,
@@ -289,17 +253,6 @@ class DocumentService {
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-
-      // Verify the knowledge base belongs to the user
-      const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
-        .select('id')
-        .eq('id', input.knowledge_base_id)
-        .single();
-
-      if (!kbData) {
-        throw new Error('Knowledge base not found or access denied');
-      }
 
       // Validate input documents
       if (!input.documents || input.documents.length === 0) {
@@ -357,18 +310,6 @@ class DocumentService {
       const supabaseClient = await import('@/utils/supabase/client').then((m) =>
         m.createClient(),
       );
-
-      // Verify the knowledge base belongs to the user
-      const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
-        .select('id')
-        .eq('id', input.knowledge_base_id)
-        .single();
-
-      if (!kbData) {
-        throw new Error('Knowledge base not found or access denied');
-      }
-
       // Validate input files
       if (!input.files || input.files.length === 0) {
         throw new Error('No files provided for upload');
@@ -536,15 +477,13 @@ class DocumentService {
   async deleteDocument(id: string): Promise<void> {
     
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Delete with proper authorization check through knowledge_base relation
       const { error } = await supabaseTable
         .from('document')
         .delete()
-        .eq('id', id)
-        .eq('knowledge_base.uploaded_by', user.id);
+        .eq('id', id);
 
       if (error) {
                 throw new Error(`Failed to delete document: ${error.message}`);

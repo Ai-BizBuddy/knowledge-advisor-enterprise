@@ -69,6 +69,7 @@ export interface Document {
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   metadata?: Record<string, unknown>; // Additional metadata about the document
+  error_message?: string; // Error message for documents with error status
 }
 
 // Extended interface for Knowledge Base detail page

@@ -172,7 +172,6 @@ class DashboardService {
      */
     async getRecommendedKnowledgeBases(): Promise<Project[]> {
         try {
-            const user = await this.getCurrentUser();
             const supabaseTable = createClientTable();
 
             // Get knowledge bases from other users that are public/shared

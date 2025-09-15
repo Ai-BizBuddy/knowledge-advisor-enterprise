@@ -49,6 +49,7 @@ export interface DocumentTableItem {
   chunk?: number;
   syncStatus?: string;
   lastUpdated?: string;
+  error_message?: string; // Error message for error status tooltips
 }
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
@@ -70,6 +71,8 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   chunk: doc.chunk_count,
   syncStatus: doc.rag_status === 'synced' ? 'Synced' : 'Not Synced',
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
+  error_message: (doc?.error_message as string) || 
+    (doc.rag_status === 'error' ? 'An error occurred while processing this document' : undefined),
 });
 
 // Adapter function to convert Document to DeepSearchData format for preview components
@@ -279,8 +282,9 @@ export default function DocumentsPage() {
     handleDocumentPreview(pageRelativeIndex);
   };
 
-  const adaptedDocuments = documents.map((doc: Document) =>
-    adaptDocumentToTableFormat(doc),
+  const adaptedDocuments = useMemo(() => 
+    documents.map((doc: Document) => adaptDocumentToTableFormat(doc)),
+    [documents]
   );
 
   // Delete functions
@@ -423,7 +427,7 @@ export default function DocumentsPage() {
       });
 
       if (!results || results.length === 0) {
-                setIsNoResults(true);
+        setIsNoResults(true);
         return;
       }
 
@@ -655,7 +659,7 @@ export default function DocumentsPage() {
         }}
         onConfirm={async () => {
           if (documentToDelete) {
-                        if (optionBulkDelete) {
+            if (optionBulkDelete) {
               await handleBulkDocumentDelete(selectedDocuments);
             } else {
               await handleSingleDocumentDelete(documentToDelete);

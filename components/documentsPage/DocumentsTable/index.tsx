@@ -1,4 +1,5 @@
 import { getFileIcon } from '@/utils/documentsUtils';
+import React from 'react';
 // Interface that matches the expected document structure for the table
 
 interface DocumentTableItem {
@@ -16,6 +17,7 @@ interface DocumentTableItem {
   syncStatus?: string;
   lastUpdated?: string;
   disableSync?: boolean;
+  error_message?: string; // Error message for error status tooltips
 }
 
 interface DocumentsTableProps {
@@ -46,23 +48,89 @@ const getStatusBadge = (status: string | null | undefined) => {
   }
 
   const statusConfig = {
-    Completed:
-      'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    // Capitalized versions
+    Completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     Failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    OcrinProgress:
-      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    OcrinProgress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     Processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     Synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    'Not Synced':
-      'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
-    Syncing:
-      'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    'Not Synced': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    Syncing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    Ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    
+    // Lowercase versions
+    completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    not_synced: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    'not synced': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    syncing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+    
+    // Additional status variations
+    'in-progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    success: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
   };
 
   return (
     statusConfig[status as keyof typeof statusConfig] ||
     'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
+  );
+};
+
+const isErrorStatus = (status: string | null | undefined): boolean => {
+  if (!status) return false;
+  const lowerStatus = status.toLowerCase();
+  return lowerStatus === 'error' || lowerStatus === 'failed';
+};
+
+const renderStatusBadge = (status: string | null | undefined, errorMessage?: string) => {
+  const statusClasses = getStatusBadge(status);
+  const isError = isErrorStatus(status);
+  const displayStatus = status || 'Unknown';
+
+  if (isError && errorMessage) {
+    return (
+      <div className='relative inline-flex group'>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium cursor-help ${statusClasses}`}
+        >
+          {displayStatus}
+          <svg
+            className='ml-1 h-3 w-3'
+            fill='currentColor'
+            viewBox='0 0 20 20'
+            aria-hidden='true'
+          >
+            <path
+              fillRule='evenodd'
+              d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-3a1 1 0 00-.867.5 1 1 0 11-1.731-1A3 3 0 0113 8a3.001 3.001 0 01-2 2.83V11a1 1 0 11-2 0v-1a1 1 0 011-1 1 1 0 100-2zm0 8a1 1 0 100-2 1 1 0 000 2z'
+              clipRule='evenodd'
+            />
+          </svg>
+        </span>
+        
+        {/* Tooltip */}
+        <div className='absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none min-w-max max-w-xs z-50 dark:bg-gray-700'>
+          <div className='font-medium mb-1'>Error Details:</div>
+          <div>{errorMessage}</div>
+          {/* Tooltip arrow */}
+          <div className='absolute top-full left-1/2 transform -translate-x-1/2 w-2 h-2 bg-gray-900 rotate-45 dark:bg-gray-700'></div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClasses}`}>
+      {displayStatus}
+    </span>
   );
 };
 
@@ -189,7 +257,7 @@ const getSyncButton = (
   );
 };
 
-export const DocumentsTable: React.FC<DocumentsTableProps> = ({
+export const DocumentsTable = React.memo<DocumentsTableProps>(({
   documents,
   selectedDocuments,
   selectedDocument,
@@ -289,11 +357,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                       <div className='flex items-center space-x-2'>
                         {isOpenSync && (
                           <>
-                            <span
-                              className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusBadge(doc.syncStatus || doc.status || 'Unknown')}`}
-                            >
-                              {doc.syncStatus || doc.status || 'Unknown'}
-                            </span>
+                            {renderStatusBadge(doc.syncStatus || doc.status || 'Unknown', doc.error_message)}
                             {getSyncButton(
                               doc.syncStatus,
                               syncingDocuments.has(pageIndex),
@@ -430,11 +494,7 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
                         {doc.lastUpdated || doc.date}
                       </td>
                       <td className='w-[10%] px-3 py-4 whitespace-nowrap sm:px-6'>
-                        <span
-                          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusBadge(doc.status || 'Unknown')}`}
-                        >
-                          {doc.status || 'Unknown'}
-                        </span>
+                        {renderStatusBadge(doc.status || 'Unknown', doc.error_message)}
                       </td>
                       <td className='w-[15%] px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         <span className='font-medium'>
@@ -506,4 +566,6 @@ export const DocumentsTable: React.FC<DocumentsTableProps> = ({
       </div>
     </div>
   );
-};
+});
+
+DocumentsTable.displayName = 'DocumentsTable';

@@ -1,16 +1,13 @@
 // Export all custom hooks
 export { useAdkChat } from './useAdkChat';
 export { useAllUserDocuments } from './useAllUserDocuments';
-export { useApiClient } from './useApiClient';
 export { useAuth } from './useAuth';
 export { useChat } from './useChat';
 export { useChatHistory } from './useChatHistory';
 export { useDashboard } from './useDashboard';
-export { useDocumentIngestion } from './useDocumentIngestion';
 export { useDocuments } from './useDocuments';
 export { useDocumentSearch } from './useDocumentSearch';
 export { useDocumentsManagement } from './useDocumentsManagement';
-export { useDocumentSync } from './useDocumentSync';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
 export { usePermissionDataWithFallback } from './usePermissionData';

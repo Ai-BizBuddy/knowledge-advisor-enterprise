@@ -4,10 +4,12 @@ export { default as BotTypingBubble } from './botTypingBubble';
 export { default as ChatCard } from './chatCard';
 export { default as ChatHistoryCard } from './chatHistoryCard';
 export { default as ChatHistoryList } from './chatHistoryList';
+export { default as ChatTab } from './ChatTab';
 export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
 export { default as DeleteConfirmModal } from './deleteConfirmModal';
 export { DocumentDeleteModal } from './documentDeleteModal';
 export { default as DocumentDetail } from './documentDetail';
+export { default as DocumentList } from './DocumentList';
 export { FileUploadModal } from './fileUpload';
 export type {
     FileUploadItem,
@@ -29,7 +31,9 @@ export { default as SearchBar } from './searchBar';
 export { default as SlideBar } from './sildeBar';
 export { default as StatusCard } from './statusCard';
 export { default as Tabs } from './tabs';
+export { default as TabsContainer } from './TabsContainer';
 export { default as UploadDocument } from './uploadDocuments';
+export { default as UserRole } from './UserRole';
 
 // Documents Page Components
 export * from './documentsPage';

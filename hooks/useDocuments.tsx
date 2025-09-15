@@ -1,33 +1,18 @@
 'use client';
 
+import { useAuthContext } from '@/contexts/AuthContext';
 import type {
-    CreateDocumentInput,
-    CreateDocumentsFromFilesInput,
-    CreateMultipleDocumentsInput,
-    Document,
-    PaginationOptions,
-    UpdateDocumentInput,
+  CreateDocumentInput,
+  CreateDocumentsFromFilesInput,
+  CreateMultipleDocumentsInput,
+  Document,
+  PaginationOptions,
+  UpdateDocumentInput,
 } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
+import { createApiError } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-
-// Debounce utility function
-function useDebounce<T>(value: T, delay: number): T {
-  const [debouncedValue, setDebouncedValue] = useState<T>(value);
-
-  useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
-
-    return () => {
-      clearTimeout(handler);
-    };
-  }, [value, delay]);
-
-  return debouncedValue;
-}
 
 export interface UseDocumentsOptions {
   knowledgeBaseId?: string;
@@ -49,6 +34,11 @@ export interface UseDocumentsReturn {
   searchTerm: string;
   selectedStatus: string;
   selectedType: string;
+
+  // Document Sync State
+  syncingDocuments: Set<string>;
+  syncLoading: boolean;
+  syncError: string | null;
 
   // Tab counts
   tabCounts: {
@@ -80,8 +70,14 @@ export interface UseDocumentsReturn {
   ) => Promise<Document[]>;
   batchDelete: (ids: string[]) => Promise<void>;
 
+  // Document Sync Operations
+  syncDocument: (documentId: string) => Promise<void>;
+  syncMultipleDocuments: (documentIds: string[]) => Promise<void>;
+  isSyncing: (documentId: string) => boolean;
+  clearSyncError: () => void;
+
   // Search and Filter
-  searchDocuments: (query: string) => Promise<void>;
+  // searchDocuments: (query: string) => Promise<void>;
   filterByStatus: (status: string) => Promise<Document[]>;
   filterByType: (type: string) => Promise<Document[]>;
 
@@ -101,159 +97,223 @@ export interface UseDocumentsReturn {
 
 /**
  * Custom hook for managing documents with CRUD operations and pagination
- * Similar to useKnowledgeBase but for documents within a knowledge base
  */
 export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const { knowledgeBaseId, autoLoad = true } = options;
   const router = useRouter();
+  const { getAccessToken } = useAuthContext();
+
+  console.log('[useDocuments] Hook initialized with options:', {
+    knowledgeBaseId,
+    autoLoad,
+  });
 
   // Create service instance using useMemo to prevent recreation
-  const documentService = useMemo(() => new DocumentService(), []);
-
-  // Use ref to track loading state for preventing redundant calls
-  const loadingRef = useRef(false);
+  const documentService = useMemo(() => {
+    console.log('[useDocuments] Creating DocumentService instance');
+    return new DocumentService();
+  }, []);
 
   // State
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [documentManagementState, setDocumentManagementState] = useState({
+    filteredDocuments: [] as Document[],
+    loading: false,
+    error: null as string | null,
+    currentPage: 1,
+    totalPages: 1,
+    totalItems: 0,
+    itemsPerPage: 10,
+    searchTerm: '',
+    selectedStatus: 'all',
+    selectedType: 'all',
+  });
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalItems, setTotalItems] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  // Document Sync State
+  const [syncingDocuments, setSyncingDocuments] = useState<Set<string>>(
+    new Set(),
+  );
+  const [syncLoading, setSyncLoading] = useState(false);
+  const [syncError, setSyncError] = useState<string | null>(null);
 
-  // Filter state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('all');
-  const [selectedType, setSelectedType] = useState('all');
+  // Extract state properties for easier access
+  const {
+    filteredDocuments,
+    loading,
+    error,
+    currentPage,
+    totalPages,
+    totalItems,
+    itemsPerPage,
+    searchTerm,
+    selectedStatus,
+    selectedType,
+  } = documentManagementState;
 
-  // Debounce search term to prevent excessive API calls
-  const debouncedSearchTerm = useDebounce(searchTerm, 500);
+  const addSyncingDocument = useCallback((documentId: string) => {
+    setSyncingDocuments((prev) => {
+      const newSet = new Set(prev);
+      newSet.add(documentId);
+      return newSet;
+    });
+  }, []);
+
+  const removeSyncingDocument = useCallback((documentId: string) => {
+    setSyncingDocuments((prev) => {
+      const newSet = new Set(prev);
+      newSet.delete(documentId);
+      return newSet;
+    });
+  }, []);
+
+  const isSyncing = useCallback((documentId: string): boolean => {
+    return syncingDocuments.has(documentId);
+  }, [syncingDocuments]);
+
+  const clearSyncError = useCallback(() => {
+    setSyncError(null);
+  }, []);
 
   // Calculate pagination indices
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
 
-  // Calculate tab counts (estimates for now - should be from API)
-  const tabCountsData = useMemo(
-    () => ({
+  // Calculate tab counts
+  const tabCountsData = useMemo(() => {
+    const counts = {
       all: totalItems,
       uploaded: Math.floor(totalItems * 0.2),
       processing: Math.floor(totalItems * 0.1),
       ready: Math.floor(totalItems * 0.5),
       error: Math.floor(totalItems * 0.1),
       archived: Math.floor(totalItems * 0.1),
-    }),
-    [totalItems],
-  );
+    };
+    console.log(
+      '📊 [useDocuments.tabCountsData] Calculated tab counts:',
+      counts,
+    );
+    return counts;
+  }, [totalItems]);
+
+  // Add a ref to prevent multiple simultaneous API calls
+  const loadingRef = useRef(false);
 
   /**
-   * Load documents with pagination and filters
+   * Internal load function that uses current state
    */
-  const loadDocuments = useCallback(
-    async (page = 1, forceRefresh = false) => {
+  const loadDocumentsInternal = useCallback(
+    async (
+      pageToLoad: number,
+      currentState: typeof documentManagementState,
+    ) => {
       if (!knowledgeBaseId) {
-                return;
+        console.warn(
+          '⚠️ [useDocuments.loadDocuments] No knowledge base ID provided',
+        );
+        return;
       }
 
-      // Prevent redundant calls when already loading (unless forced)
-      if (loadingRef.current && !forceRefresh) {
-                return;
+      // Prevent multiple simultaneous calls
+      if (loadingRef.current) {
+        console.log('⏳ [useDocuments.loadDocuments] Already loading, skipping duplicate call');
+        return;
       }
+
 
       try {
+        console.log('🔄 [useDocuments.loadDocuments] Starting load process');
         loadingRef.current = true;
-        setLoading(true);
-        setError(null);
 
         const paginationOptions: PaginationOptions = {
-          currentPage: page,
+          currentPage: pageToLoad,
           totalPages: 0,
-          startIndex: (page - 1) * itemsPerPage,
-          endIndex: (page - 1) * itemsPerPage + itemsPerPage - 1,
+          startIndex: (pageToLoad - 1) * currentState.itemsPerPage,
+          endIndex:
+            (pageToLoad - 1) * currentState.itemsPerPage +
+            currentState.itemsPerPage -
+            1,
           totalItems: 0,
         };
 
-        const filters = {
-          status: selectedStatus !== 'all' ? selectedStatus : undefined,
-          type: selectedType !== 'all' ? selectedType : undefined,
-          searchTerm: debouncedSearchTerm.trim() || undefined,
+        const apiFilters = {
+          status:
+            currentState.selectedStatus !== 'all'
+              ? currentState.selectedStatus
+              : undefined,
+          type:
+            currentState.selectedType !== 'all'
+              ? currentState.selectedType
+              : undefined,
         };
 
+        console.log('🌐 [useDocuments.loadDocuments] Making API call with:', {
+          paginationOptions,
+          apiFilters,
+        });
+        console.log()
+        debugger;
         const result = await documentService.getDocumentsByKnowledgeBase(
           knowledgeBaseId,
           paginationOptions,
-          filters,
+          apiFilters,
+        );
+
+        // if (!mountedRef.current) return;
+
+        console.log(
+          '✅ [useDocuments.loadDocuments] API call successful, received:',
+          {
+            dataLength: result.data.length,
+            totalCount: result.count,
+          },
         );
 
         setDocuments(result.data);
-        setFilteredDocuments(result.data);
-        setTotalItems(result.count);
-        setTotalPages(Math.ceil(result.count / itemsPerPage));
-        setCurrentPage(page);
-
-              } catch (err) {
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          filteredDocuments: result.data,
+          totalItems: result.count,
+          totalPages: Math.ceil(result.count / prev.itemsPerPage),
+          currentPage: pageToLoad,
+          loading: false,
+          error: null,
+        }));
+      } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
       } finally {
         loadingRef.current = false;
-        setLoading(false);
       }
     },
-    [
-      knowledgeBaseId,
-      itemsPerPage,
-      selectedStatus,
-      selectedType,
-      debouncedSearchTerm,
-      documentService,
-    ],
+    [knowledgeBaseId, documentService],
   );
 
   /**
-   * Search documents
+   * Public load documents function
    */
-  const searchDocuments = useCallback(
-    async (query: string) => {
-      if (!knowledgeBaseId) return;
+  const loadDocuments = useCallback(
+    async (page?: number, forceRefresh = false) => {
+      console.log('[useDocuments.loadDocuments] Called with:', {
+        page,
+        forceRefresh,
+        knowledgeBaseId,
+      });
 
-      try {
-        setLoading(true);
-        setError(null);
-        setSearchTerm(query);
+      setDocumentManagementState((prev) => {
+        const pageToLoad = page ?? prev.currentPage;
 
-        const paginationOptions: PaginationOptions = {
-          currentPage: 1,
-          totalPages: 0,
-          startIndex: 0,
-          endIndex: itemsPerPage - 1,
-          totalItems: 0,
-        };
+        // Call internal load with current state
+        loadDocumentsInternal(pageToLoad, prev);
 
-        const result = await documentService.searchDocuments(
-          knowledgeBaseId,
-          query,
-          paginationOptions,
-        );
-
-        setDocuments(result.data);
-        setFilteredDocuments(result.data);
-        setTotalItems(result.count);
-        setTotalPages(Math.ceil(result.count / itemsPerPage));
-        setCurrentPage(1);
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error ? err.message : 'Failed to search documents';
-                setError(errorMessage);
-      } finally {
-        setLoading(false);
-      }
+        return { ...prev, loading: true, error: null };
+      });
     },
-    [knowledgeBaseId, itemsPerPage, documentService],
+    [knowledgeBaseId, loadDocumentsInternal],
   );
 
   /**
@@ -261,158 +321,200 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const createDocument = useCallback(
     async (data: CreateDocumentInput): Promise<Document> => {
+      console.log('📝 [useDocuments.createDocument] Called with data:', data);
+
       try {
-        setLoading(true);
-        setError(null);
+        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         const newDocument = await documentService.createDocument(data);
+        console.log(
+          '✅ [useDocuments.createDocument] Document created successfully:',
+          newDocument,
+        );
 
-        // Refresh the list to include the new document
-        await loadDocuments(currentPage, true);
+        // Refresh the list
+        await loadDocuments(1, true);
 
         return newDocument;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to create document';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
-    [loadDocuments, currentPage, documentService],
+    [loadDocuments, documentService],
   );
 
   /**
-   * Create multiple documents in batch
+   * Create multiple documents
    */
   const createMultipleDocuments = useCallback(
     async (data: CreateMultipleDocumentsInput): Promise<Document[]> => {
+      console.log('📝📝 [useDocuments.createMultipleDocuments] Called');
+
       try {
-        setLoading(true);
-        setError(null);
+        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         const newDocuments =
           await documentService.createMultipleDocuments(data);
+        console.log(
+          '✅ [useDocuments.createMultipleDocuments] Documents created:',
+          newDocuments.length,
+        );
 
-        // Refresh the list to include all new documents
-        await loadDocuments(currentPage, true);
-
+        await loadDocuments(1, true);
         return newDocuments;
       } catch (err) {
         const errorMessage =
           err instanceof Error
             ? err.message
             : 'Failed to create multiple documents';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
-    [loadDocuments, currentPage, documentService],
+    [loadDocuments, documentService],
   );
 
   /**
-   * Create multiple documents from File objects
+   * Create documents from files
    */
   const createDocumentsFromFiles = useCallback(
     async (data: CreateDocumentsFromFilesInput): Promise<Document[]> => {
+      console.log('📁📝 [useDocuments.createDocumentsFromFiles] Called');
+
       try {
-        setLoading(true);
-        setError(null);
+        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         const newDocuments =
           await documentService.createDocumentsFromFiles(data);
+        console.log(
+          '✅ [useDocuments.createDocumentsFromFiles] Documents created:',
+          newDocuments.length,
+        );
 
-        // Refresh the list to include all new documents
-        await loadDocuments(currentPage, true);
-
+        await loadDocuments(1, true);
         return newDocuments;
       } catch (err) {
+        console.error('❌ [useDocuments.createDocumentsFromFiles] Error:', err);
         const errorMessage =
           err instanceof Error
             ? err.message
             : 'Failed to create documents from files';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
-    [loadDocuments, currentPage, documentService],
+    [loadDocuments, documentService],
   );
 
   /**
-   * Update an existing document
+   * Update document
    */
   const updateDocument = useCallback(
     async (id: string, data: UpdateDocumentInput): Promise<Document> => {
+      console.log('✏️ [useDocuments.updateDocument] Called with id:', id);
+
       try {
-        setLoading(true);
-        setError(null);
+        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         const updatedDocument = await documentService.updateDocument(id, data);
 
-        // Update the document in the current list
-        setDocuments((prev) =>
-          prev.map((doc) => (doc.id === id ? updatedDocument : doc)),
-        );
-        setFilteredDocuments((prev) =>
-          prev.map((doc) => (doc.id === id ? updatedDocument : doc)),
-        );
+        // Update local state
+        // setDocuments(prev => prev.map(doc => doc.id === id ? updatedDocument : doc));
+        // setDocumentManagementState(prev => ({
+        //   ...prev,
+        //   filteredDocuments: prev.filteredDocuments.map(doc =>
+        //     doc.id === id ? updatedDocument : doc
+        //   ),
+        //   loading: false
+        // }));
 
         return updatedDocument;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to update document';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [documentService],
   );
 
   /**
-   * Delete a document
+   * Delete document
    */
   const deleteDocument = useCallback(
     async (id: string): Promise<void> => {
+      console.log('🗑️ [useDocuments.deleteDocument] Called with id:', id);
+
       try {
-        setLoading(true);
-        setError(null);
+        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         await documentService.deleteDocument(id);
+        console.log('✅ [useDocuments.deleteDocument] Document deleted');
 
-        // Remove the document from the current list
+        // Update local state
         setDocuments((prev) => prev.filter((doc) => doc.id !== id));
-        setFilteredDocuments((prev) => prev.filter((doc) => doc.id !== id));
-        setTotalItems((prev) => prev - 1);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          filteredDocuments: prev.filteredDocuments.filter(
+            (doc) => doc.id !== id,
+          ),
+          totalItems: Math.max(0, prev.totalItems - 1),
+          loading: false,
+        }));
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to delete document';
-                setError(errorMessage);
+        console.error('❌ [useDocuments.deleteDocument] Error:', err);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
     [documentService],
   );
 
   /**
-   * Get a specific document
+   * Get document
    */
   const getDocument = useCallback(
     async (id: string): Promise<Document | null> => {
+      console.log('📄 [useDocuments.getDocument] Called with id:', id);
+
       try {
-        return await documentService.getDocument(id, knowledgeBaseId);
+        const result = await documentService.getDocument(id, knowledgeBaseId);
+        console.log('✅ [useDocuments.getDocument] Document retrieved');
+        return result;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-                setError(errorMessage);
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error: errorMessage,
+          loading: false,
+        }));
         return null;
       }
     },
@@ -420,100 +522,224 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   /**
-   * Batch update documents
+   * Batch update
    */
   const batchUpdate = useCallback(
     async (
       ids: string[],
       updates: Partial<UpdateDocumentInput>,
     ): Promise<Document[]> => {
+      console.log('🔄📝 [useDocuments.batchUpdate] Called with ids:', ids);
+
       try {
-        setLoading(true);
-        setError(null);
+        setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         const updatedDocuments: Document[] = [];
-
         for (const id of ids) {
           const updated = await documentService.updateDocument(id, updates);
           updatedDocuments.push(updated);
         }
 
-        // Refresh the list
+        console.log('✅ [useDocuments.batchUpdate] Batch update completed');
+
+        // Only refresh once at the end
         await loadDocuments(currentPage, true);
 
         return updatedDocuments;
       } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to batch update documents';
-                setError(errorMessage);
+        setDocumentManagementState(prev => ({ 
+          ...prev, 
+          error: err instanceof Error ? err.message : 'Failed to batch update documents', 
+          loading: false 
+        }));
         throw err;
-      } finally {
-        setLoading(false);
       }
     },
-    [loadDocuments, currentPage, documentService],
+    [loadDocuments, documentService, currentPage],
   );
 
   /**
-   * Batch delete documents
+   * Batch delete
    */
   const batchDelete = useCallback(
     async (ids: string[]): Promise<void> => {
+      console.log('🗑️🗑️ [useDocuments.batchDelete] Called with ids:', ids);
+
       try {
-        setLoading(true);
-        setError(null);
+        setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         for (const id of ids) {
           await documentService.deleteDocument(id);
         }
 
-        // Refresh the list
+        console.log('✅ [useDocuments.batchDelete] Batch delete completed');
+
+        // Only refresh once at the end
+        await loadDocuments(currentPage, true);
+      } catch (err) {
+        console.error('❌ [useDocuments.batchDelete] Error:', err);
+        setDocumentManagementState(prev => ({ 
+          ...prev, 
+          error: err instanceof Error ? err.message : 'Failed to batch delete documents', 
+          loading: false 
+        }));
+        throw err;
+      }
+    },
+    [loadDocuments, documentService, currentPage],
+  );
+
+  /**
+   * Internal sync document function without auto-refresh
+   */
+  const syncDocumentInternal = useCallback(
+    async (documentId: string): Promise<void> => {
+      try {
+        addSyncingDocument(documentId);
+
+        const token = await getAccessToken();
+        if (!token) {
+          throw new Error('No access token available. Please log in again.');
+        }
+
+        const ingressUrl = `${process.env.NEXT_PUBLIC_INGRESS_SERVICE}/ingress`;
+        console.log(`[DocumentSync] Calling ingress API: ${ingressUrl}`);
+
+        const response = await fetch(ingressUrl, {
+          method: 'POST',
+          headers: {
+            accept: '*/*',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            documentId: documentId,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await createApiError(
+            response,
+            'Failed to sync document',
+          );
+          throw error;
+        }
+
+        console.log(
+          `[DocumentSync] Successfully synced document: ${documentId}`,
+        );
+      } catch (err) {
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to sync document';
+        console.error(
+          `[DocumentSync] Error syncing document ${documentId}:`,
+          err,
+        );
+        setSyncError(errorMessage);
+        throw err;
+      } finally {
+        removeSyncingDocument(documentId);
+      }
+    },
+    [addSyncingDocument, removeSyncingDocument, getAccessToken],
+  );
+
+  /**
+   * Sync document with minimal refresh
+   */
+  const syncDocument = useCallback(
+    async (documentId: string): Promise<void> => {
+      try {
+        setSyncError(null);
+        await syncDocumentInternal(documentId);
+        
+        // Only refresh if there are no other sync operations in progress
+        if (syncingDocuments.size <= 1) { // <= 1 because current document is still in set
+          console.log('[DocumentSync] Refreshing documents list after sync completion');
+          await loadDocuments(currentPage, true);
+        }
+      } catch (err) {
+        // Error already handled in syncDocumentInternal
+        throw err;
+      }
+    },
+    [syncDocumentInternal, loadDocuments, currentPage, syncingDocuments.size],
+  );
+
+  /**
+   * Sync multiple documents
+   */
+  const syncMultipleDocuments = useCallback(
+    async (documentIds: string[]): Promise<void> => {
+      try {
+        setSyncLoading(true);
+        setSyncError(null);
+
+        // Use internal sync function to avoid multiple refreshes
+        const promises = documentIds.map((id) => syncDocumentInternal(id));
+        const results = await Promise.allSettled(promises);
+        
+        // Check if any syncs failed
+        const failedSyncs = results.filter(result => result.status === 'rejected');
+        if (failedSyncs.length > 0) {
+          console.warn(`[DocumentSync] ${failedSyncs.length} document(s) failed to sync`);
+        }
+        
+        // Refresh documents list once after all sync operations complete
+        console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
         await loadDocuments(currentPage, true);
       } catch (err) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
-            : 'Failed to batch delete documents';
-                setError(errorMessage);
+          err instanceof Error ? err.message : 'Failed to sync documents';
+        console.error('[DocumentSync] Error syncing multiple documents:', err);
+        setSyncError(errorMessage);
         throw err;
       } finally {
-        setLoading(false);
+        setSyncLoading(false);
       }
     },
-    [loadDocuments, currentPage, documentService],
+    [syncDocumentInternal, loadDocuments, currentPage],
   );
 
   /**
-   * Filter by status
+   * Filter by status - only updates state
    */
   const filterByStatus = useCallback(
     async (status: string): Promise<Document[]> => {
-      setSelectedStatus(status);
-      setCurrentPage(1);
-      // Don't call loadDocuments here - useEffect will handle it automatically
-      return documents; // Return current documents, the effect will update them
+      console.log('🔍 [useDocuments.filterByStatus] Setting status:', status);
+      setDocumentManagementState((prev) => ({
+        ...prev,
+        selectedStatus: status,
+        currentPage: 1,
+      }));
+      return [];
     },
-    [documents],
+    [],
   );
 
   /**
-   * Filter by type
+   * Filter by type - only updates state
    */
   const filterByType = useCallback(
     async (type: string): Promise<Document[]> => {
-      setSelectedType(type);
-      setCurrentPage(1);
-      // Don't call loadDocuments here - useEffect will handle it automatically
-      return documents; // Return current documents, the effect will update them
+      console.log('🔍 [useDocuments.filterByType] Setting type:', type);
+      setDocumentManagementState(prev => ({
+        ...prev,
+        selectedType: type,
+        currentPage: 1
+      }));
+      return [];
     },
-    [documents],
+    [],
   );
 
   // Event handlers
   const handleStatusChange = useCallback(
     (status: string) => {
+      console.log(
+        '🎛️ [useDocuments.handleStatusChange] Called with status:',
+        status,
+      );
       filterByStatus(status);
     },
     [filterByStatus],
@@ -521,20 +747,20 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handleTypeChange = useCallback(
     (type: string) => {
+      console.log('🎛️ [useDocuments.handleTypeChange] Called with type:', type);
       filterByType(type);
     },
     [filterByType],
   );
 
-  const handlePageChange = useCallback(
-    (page: number) => {
-      loadDocuments(page);
-    },
-    [loadDocuments],
-  );
+  const handlePageChange = useCallback((page: number) => {
+    console.log('📄 [useDocuments.handlePageChange] Called with page:', page);
+    setDocumentManagementState(prev => ({ ...prev, currentPage: page }));
+  }, []);
 
   const handleDocumentClick = useCallback(
     (id: string) => {
+      console.log('👆 [useDocuments.handleDocumentClick] Called with id:', id);
       router.push(`/knowledge-base/${knowledgeBaseId}/documents/${id}`);
     },
     [router, knowledgeBaseId],
@@ -542,7 +768,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handleDocumentDelete = useCallback(
     async (id: string) => {
+      console.log('🗑️ [useDocuments.handleDocumentDelete] Called with id:', id);
       if (confirm('Are you sure you want to delete this document?')) {
+        console.log(
+          '✅ [useDocuments.handleDocumentDelete] User confirmed deletion',
+        );
         await deleteDocument(id);
       }
     },
@@ -550,27 +780,52 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   const refresh = useCallback(async () => {
+    console.log('🔄 [useDocuments.refresh] Called');
     await loadDocuments(currentPage, true);
   }, [loadDocuments, currentPage]);
 
   const clearError = useCallback(() => {
-    setError(null);
+    console.log('🧹 [useDocuments.clearError] Called');
+    setDocumentManagementState(prev => ({ ...prev, error: null }));
   }, []);
 
-  // Auto-load on mount and when filters/pagination change
+  const setSearchTermHandler = useCallback((term: string) => {
+    console.log(
+      '🔍 [useDocuments.setSearchTermHandler] Called with term:',
+      term,
+    );
+    setDocumentManagementState(prev => ({ ...prev, searchTerm: term }));
+  }, []);
+
+  const setItemsPerPageHandler = useCallback((items: number) => {
+    console.log(
+      '📄 [useDocuments.setItemsPerPageHandler] Called with items:',
+      items,
+    );
+    setDocumentManagementState((prev) => ({
+      ...prev,
+      itemsPerPage: items,
+      currentPage: 1,
+    }));
+  }, []);
+
+  // Create a ref to track if we've made the initial load
+  const hasInitialLoadRef = useRef(false);
+
+  // Auto-load documents when knowledgeBaseId changes (only once)
   useEffect(() => {
-    if (autoLoad && knowledgeBaseId) {
+    if (autoLoad && knowledgeBaseId && !hasInitialLoadRef.current) {
+      console.log('🔄 [useDocuments.useEffect] Initial auto-loading documents for knowledgeBaseId:', knowledgeBaseId);
+      hasInitialLoadRef.current = true;
       loadDocuments(1, true);
     }
-  }, [
-    knowledgeBaseId,
-    autoLoad,
-    selectedStatus,
-    selectedType,
-    debouncedSearchTerm, // Use debounced search term
-    itemsPerPage,
-    loadDocuments,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [knowledgeBaseId, autoLoad]);
+
+  // Reset initial load flag when knowledgeBaseId changes
+  useEffect(() => {
+    hasInitialLoadRef.current = false;
+  }, [knowledgeBaseId]);
 
   return {
     // State
@@ -580,13 +835,18 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     error,
     currentPage,
     totalPages,
-    startIndex: startIndex + 1, // Convert to 1-based for display
+    startIndex: startIndex + 1,
     endIndex,
     totalItems,
     itemsPerPage,
     searchTerm,
     selectedStatus,
     selectedType,
+
+    // Document Sync State
+    syncingDocuments,
+    syncLoading,
+    syncError,
 
     // Tab counts
     tabCounts: tabCountsData,
@@ -604,8 +864,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     batchUpdate,
     batchDelete,
 
+    // Document Sync Operations
+    syncDocument,
+    syncMultipleDocuments,
+    isSyncing,
+    clearSyncError,
+
     // Search and Filter
-    searchDocuments,
     filterByStatus,
     filterByType,
 
@@ -615,8 +880,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     handlePageChange,
     handleDocumentClick,
     handleDocumentDelete,
-    setSearchTerm,
-    setItemsPerPage,
+    setSearchTerm: setSearchTermHandler,
+    setItemsPerPage: setItemsPerPageHandler,
 
     // Utility Functions
     refresh,

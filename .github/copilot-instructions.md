@@ -98,7 +98,7 @@ roles (id, name, description, permissions)
 
 -- Projects and Documents
 projects (id, name, description, status, owner_id, created_at, updated_at)
-documents (id, project_id, filename, file_path, status, processed_at)
+documents (id, project_id, filename, status, processed_at)
 sync_history (id, project_id, action, status, details, created_at)
 
 -- Activity Tracking

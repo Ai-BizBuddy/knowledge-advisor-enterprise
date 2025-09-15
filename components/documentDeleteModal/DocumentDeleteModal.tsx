@@ -1,8 +1,6 @@
 'use client';
 
-import { Button } from 'flowbite-react';
-import { AnimatePresence, motion } from 'framer-motion';
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface DocumentDeleteModalProps {
   isOpen: boolean;
@@ -24,6 +22,28 @@ export const DocumentDeleteModal: React.FC<DocumentDeleteModalProps> = ({
   loading = false,
 }) => {
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Handle modal visibility and animations
+  useEffect(() => {
+    if (isOpen) {
+      setIsVisible(true);
+      // Focus modal when opened
+      const timer = setTimeout(() => {
+        if (modalRef.current) {
+          modalRef.current.focus();
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      // Delay hiding to allow exit animation
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isOpen]);
 
   const handleConfirm = async () => {
     try {
@@ -62,125 +82,147 @@ export const DocumentDeleteModal: React.FC<DocumentDeleteModalProps> = ({
 
   const content = getModalContent();
 
-  if (!isOpen) return null;
+  if (!isVisible) return null;
 
   return (
-    <AnimatePresence>
-      <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.9, y: 20 }}
-          transition={{ duration: 0.2 }}
-          className='relative w-full max-w-md p-4'
-        >
-          <div className='relative rounded-lg bg-white p-6 shadow-xl dark:bg-gray-800'>
-            {/* Close button */}
-            {!isDeleting && (
-              <button
-                type='button'
-                className='absolute top-3 right-3 ml-auto inline-flex items-center rounded-lg bg-transparent p-1.5 text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white'
-                onClick={handleClose}
+    <div
+      ref={modalRef}
+      tabIndex={-1}
+      className={`fixed left-0 right-0 top-0 z-50 flex h-[calc(100%-1rem)] max-h-full w-full items-center justify-center overflow-y-auto overflow-x-hidden p-4 transition-all duration-200 ease-out md:inset-0 ${
+        isOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'
+      }`}
+      role='dialog'
+      aria-modal='true'
+      aria-labelledby='delete-modal-title'
+      aria-describedby='delete-modal-description'
+      onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+        e.stopPropagation();
+        if (e.target === e.currentTarget && !isDeleting) {
+          handleClose();
+        }
+      }}
+      onKeyDown={(e: React.KeyboardEvent<HTMLDivElement>) => {
+        if (e.key === 'Escape' && !isDeleting) {
+          e.preventDefault();
+          handleClose();
+        }
+      }}
+    >
+      <div
+        className={`relative max-h-full w-full max-w-md transition-all duration-200 ease-out ${
+          isOpen 
+            ? 'opacity-100 scale-100 translate-y-0' 
+            : 'opacity-0 scale-95 translate-y-5'
+        }`}
+        onClick={(e: React.MouseEvent<HTMLDivElement>) => {
+          e.stopPropagation();
+        }}
+      >
+        <div className='relative rounded-lg bg-white shadow dark:bg-gray-700'>
+          {/* Close button - Flowbite style */}
+          {!isDeleting && (
+            <button
+              type='button'
+              className='absolute end-2.5 top-3 ms-auto inline-flex h-8 w-8 items-center justify-center rounded-lg bg-transparent text-sm text-gray-400 hover:bg-gray-200 hover:text-gray-900 dark:hover:bg-gray-600 dark:hover:text-white'
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleClose();
+              }}
+            >
+              <svg
+                className='h-3 w-3'
+                aria-hidden='true'
+                xmlns='http://www.w3.org/2000/svg'
+                fill='none'
+                viewBox='0 0 14 14'
               >
-                <svg
-                  className='h-5 w-5'
-                  fill='currentColor'
-                  viewBox='0 0 20 20'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    fillRule='evenodd'
-                    d='M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z'
-                    clipRule='evenodd'
-                  />
-                </svg>
-                <span className='sr-only'>Close modal</span>
-              </button>
-            )}
-
-            {/* Icon */}
-            <div className='text-center'>
-              <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900'>
-                <svg
-                  className='h-6 w-6 text-red-600 dark:text-red-400'
-                  fill='none'
+                <path
                   stroke='currentColor'
-                  viewBox='0 0 24 24'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z'
-                  />
-                </svg>
-              </div>
-
-              {/* Title */}
-              <h3 className='mb-2 text-lg font-semibold text-gray-900 dark:text-white'>
-                {content.title}
-              </h3>
-
-              {/* Message */}
-              <p className='mb-2 text-gray-500 dark:text-gray-400'>
-                {content.message}
-              </p>
-
-              {/* Warning */}
-              <p className='mb-6 text-sm text-gray-400 dark:text-gray-500'>
-                {content.warning}
-              </p>
-
-              {/* Action buttons */}
-              <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
-                <Button
-                  color='gray'
-                  onClick={handleClose}
-                  disabled={isDeleting}
-                  className='w-full sm:w-auto'
-                >
-                  Cancel
-                </Button>
-                <Button
-                  color='failure'
-                  onClick={handleConfirm}
-                  disabled={isDeleting || loading}
-                  className='w-full sm:w-auto'
-                >
-                  {isDeleting ? (
-                    <div className='flex items-center justify-center'>
-                      <svg
-                        className='mr-2 h-4 w-4 animate-spin'
-                        fill='none'
-                        viewBox='0 0 24 24'
-                      >
-                        <circle
-                          className='opacity-25'
-                          cx='12'
-                          cy='12'
-                          r='10'
-                          stroke='currentColor'
-                          strokeWidth='4'
-                        />
-                        <path
-                          className='opacity-75'
-                          fill='currentColor'
-                          d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                        />
-                      </svg>
-                      Deleting...
-                    </div>
-                  ) : (
-                    'Yes, delete'
-                  )}
-                </Button>
-              </div>
-            </div>
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  strokeWidth='2'
+                  d='m1 1 6 6m0 0 6 6M7 7l6-6M7 7l-6 6'
+                />
+              </svg>
+              <span className='sr-only'>Close modal</span>
+            </button>
+          )}
+          
+          {/* Modal body - Flowbite Pop-up Modal style */}
+          <div className='p-4 text-center md:p-5'>
+            {/* Warning icon */}
+            <svg
+              className='mx-auto mb-4 h-12 w-12 text-gray-400 dark:text-gray-200'
+              aria-hidden='true'
+              xmlns='http://www.w3.org/2000/svg'
+              fill='none'
+              viewBox='0 0 20 20'
+            >
+              <path
+                stroke='currentColor'
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M10 11V6m0 8h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z'
+              />
+            </svg>
+            
+            {/* Message */}
+            <h3 
+              id='delete-modal-title'
+              className='mb-5 text-lg font-normal text-gray-500 dark:text-gray-400'
+            >
+              {content.message}
+            </h3>
+            
+            {/* Action buttons - Flowbite style */}
+            <button
+              type='button'
+              onClick={handleConfirm}
+              disabled={isDeleting || loading}
+              className='inline-flex items-center rounded-lg bg-red-600 px-5 py-2.5 text-center text-sm font-medium text-white hover:bg-red-800 focus:outline-none focus:ring-4 focus:ring-red-300 dark:focus:ring-red-800 disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              {isDeleting ? (
+                <>
+                  <svg
+                    className='mr-2 h-4 w-4 animate-spin'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle
+                      className='opacity-25'
+                      cx='12'
+                      cy='12'
+                      r='10'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    />
+                    <path
+                      className='opacity-75'
+                      fill='currentColor'
+                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                    />
+                  </svg>
+                  Deleting...
+                </>
+              ) : (
+                "Yes, I'm sure"
+              )}
+            </button>
+            
+            <button
+              type='button'
+              onClick={handleClose}
+              disabled={isDeleting}
+              className='ms-3 rounded-lg border border-gray-200 bg-white px-5 py-2.5 text-sm font-medium text-gray-900 hover:bg-gray-100 hover:text-blue-700 focus:z-10 focus:outline-none focus:ring-4 focus:ring-gray-100 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white dark:focus:ring-gray-700 disabled:opacity-50 disabled:cursor-not-allowed'
+            >
+              No, cancel
+            </button>
           </div>
-        </motion.div>
+        </div>
       </div>
-    </AnimatePresence>
+    </div>
   );
 };
 

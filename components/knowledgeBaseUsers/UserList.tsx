@@ -1,5 +1,6 @@
 'use client';
 
+import { useToast } from '@/components/toast';
 import { useKnowledgeBaseUsers } from '@/hooks/useKnowledgeBaseUsers';
 import {
   KNOWLEDGE_BASE_ROLE_OPTIONS,
@@ -30,23 +31,54 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   user,
   onUpdate,
 }) => {
+  const { showToast } = useToast();
   const [selectedRole, setSelectedRole] = useState<KnowledgeBaseRole>(
     user?.role || KnowledgeBaseRole.VIEWER,
   );
   const [isUpdating, setIsUpdating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleUpdate = async () => {
     if (!user) return;
 
     setIsUpdating(true);
+    setError(null);
     try {
       await onUpdate(user.id, selectedRole);
+      showToast('User role updated successfully', 'success');
       onClose();
     } catch (error) {
-          } finally {
+      let errorMessage = 'Failed to update user role. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.toLowerCase().includes('permission')) {
+          errorMessage = "You don't have permission to update this user's role";
+        } else if (error.message.toLowerCase().includes('not found')) {
+          errorMessage = 'User not found. They may have been removed from the knowledge base.';
+        } else if (error.message.toLowerCase().includes('network') || 
+                   error.message.toLowerCase().includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.toLowerCase().includes('unauthorized')) {
+          errorMessage = 'You are not authorized to perform this action';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+    } finally {
       setIsUpdating(false);
     }
   };
+
+  // Reset error when modal opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setError(null);
+      setSelectedRole(user?.role || KnowledgeBaseRole.VIEWER);
+    }
+  }, [isOpen, user?.role]);
 
   if (!user) return null;
 
@@ -61,6 +93,30 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
             Update role for {user.email}
           </p>
         </div>
+
+        {/* Error Display */}
+        {error && (
+          <div className='mb-4 rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-600 dark:bg-red-900/20'>
+            <div className='flex items-center'>
+              <div className='flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-800'>
+                <svg
+                  className='h-3 w-3 text-red-600 dark:text-red-300'
+                  fill='currentColor'
+                  viewBox='0 0 20 20'
+                >
+                  <path
+                    fillRule='evenodd'
+                    d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z'
+                    clipRule='evenodd'
+                  />
+                </svg>
+              </div>
+              <div className='ml-3'>
+                <p className='text-sm text-red-800 dark:text-red-300'>{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div className='space-y-4'>
           <div className='flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-600 dark:bg-gray-700'>
@@ -136,6 +192,7 @@ export const UserList: React.FC<UserListProps> = ({
   loading,
   onRefresh,
 }) => {
+  const { showToast } = useToast();
   const { updateUserRole, removeUser } = useKnowledgeBaseUsers();
   const [editingUser, setEditingUser] = useState<KnowledgeBaseUser | null>(
     null,
@@ -167,17 +224,45 @@ export const UserList: React.FC<UserListProps> = ({
   };
 
   const handleUpdateRole = async (userId: string, role: KnowledgeBaseRole) => {
-    await updateUserRole(userId, knowledgeBaseId, { role });
-    onRefresh();
+    try {
+      await updateUserRole(userId, knowledgeBaseId, { role });
+      onRefresh();
+    } catch (error) {
+      // Error handling is done in the EditUserModal, 
+      // but we still need to refresh to ensure UI is in sync
+      onRefresh();
+      throw error; // Re-throw to let the modal handle it
+    }
   };
 
   const handleRemoveUser = async (userId: string) => {
     setRemovingUserId(userId);
     try {
       await removeUser(userId, knowledgeBaseId);
+      showToast('User removed successfully', 'success');
       onRefresh();
     } catch (error) {
-          } finally {
+      let errorMessage = 'Failed to remove user. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.toLowerCase().includes('permission')) {
+          errorMessage = "You don't have permission to remove this user";
+        } else if (error.message.toLowerCase().includes('not found')) {
+          errorMessage = 'User not found. They may have already been removed.';
+        } else if (error.message.toLowerCase().includes('network') || 
+                   error.message.toLowerCase().includes('fetch')) {
+          errorMessage = 'Network error. Please check your connection and try again.';
+        } else if (error.message.toLowerCase().includes('unauthorized')) {
+          errorMessage = 'You are not authorized to perform this action';
+        } else if (error.message.toLowerCase().includes('last admin')) {
+          errorMessage = 'Cannot remove the last admin from the knowledge base';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      showToast(errorMessage, 'error');
+    } finally {
       setRemovingUserId(null);
     }
   };
