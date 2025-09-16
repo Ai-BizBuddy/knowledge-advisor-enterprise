@@ -855,20 +855,6 @@ export async function searchDocumentsInProjects(
 }
 
 /**
- * Test document search connectivity
- * TODO: Implement using new DocumentSearchService health check
- */
-export async function testDocumentSearchConnection(): Promise<boolean> {
-  try {
-    // Simple test by performing a basic search
-    await documentSearchService.searchDocuments('test');
-    return true; // If no error thrown, service is available
-  } catch (error) {
-        return false;
-  }
-}
-
-/**
  * Get document search analytics
  */
 export async function getDocumentSearchAnalytics(

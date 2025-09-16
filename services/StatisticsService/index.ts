@@ -14,7 +14,6 @@ import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
 class StatisticsService {
-  private serviceName = 'StatisticsService';
 
   constructor() {
     // Service initialization
