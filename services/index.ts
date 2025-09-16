@@ -13,6 +13,7 @@ import DocumentService from './DocumentService';
 import { documentViewerService } from './DocumentViewerService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
 import { statisticsService } from './StatisticsService';
+import { storageService } from './StorageService';
 
 interface ServiceConfig {
   useMockData: boolean;
@@ -76,8 +77,14 @@ export { dashboardService };
  * 
  * Handles dashboard statistics and metrics
 */
-  
-  export { statisticsService };
+    export { statisticsService };
+
+/**
+ * Storage Service Instance
+ * 
+ * Handles role-based storage usage queries
+ */
+    export { storageService };
 
 /**
  * Document Viewer Service Instance
@@ -99,10 +106,10 @@ export const langflowChatService = adkChatService;
  */
 export { default as DocumentService } from './DocumentService';
 export {
-  AdkChatService,
-  DocumentIngestionService,
-  DocumentSearchService,
-  KnowledgeBaseService
+    AdkChatService,
+    DocumentIngestionService,
+    DocumentSearchService,
+    KnowledgeBaseService
 };
 
 /**
@@ -111,9 +118,9 @@ export {
  * Export service configuration types for TypeScript support
  */
   export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
-  export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
-  export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
-  export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
+    export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
+    export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
+    export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
 export type DocumentServiceType = InstanceType<typeof DocumentService>;
 
 /**

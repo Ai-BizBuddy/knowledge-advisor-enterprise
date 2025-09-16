@@ -10,6 +10,7 @@ import type {
   ManualStatisticUpdate,
   QueryActivityRequest,
 } from '@/interfaces/Statistics';
+import { storageService } from '@/services/StorageService';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
@@ -47,28 +48,37 @@ class StatisticsService {
       const [
         totalKnowledgeBases,
         activeDocuments,
-  totalDocuments,
-  totals,
+        totalDocuments,
+        storageResponse,
+        totalChunks,
         totalQueries,
         avgResponseTimeMs
       ] = await Promise.all([
-  this.calculateTotalKnowledgeBases(),
-  this.calculateActiveDocuments(),
-  this.calculateTotalDocuments(),
-  this.calculateStorageAndChunks(),
-  this.calculateTotalQueries(),
+        this.calculateTotalKnowledgeBases(),
+        this.calculateActiveDocuments(),
+        this.calculateTotalDocuments(),
+        storageService.getStorageUsage(),
+        this.calculateTotalChunks(),
+        this.calculateTotalQueries(),
         this.calculateAverageResponseTime(user.id)
       ]);
 
       const avgResponseTime = `${avgResponseTimeMs}ms`;
 
+      // Extract storage data from response
+      const storageData = storageResponse.success ? storageResponse.data : {
+        totalStorageBytes: 0,
+        totalStorageFormatted: '0 B',
+        totalChunks: 0,
+      };
+
       return {
         totalKnowledgeBases,
         activeDocuments,
         totalDocuments,
-        totalStorageBytes: totals.totalStorageBytes,
-        totalStorageFormatted: totals.totalStorageFormatted,
-        totalChunks: totals.totalChunks,
+        totalStorageBytes: storageData?.totalStorageBytes || 0,
+        totalStorageFormatted: storageData?.totalStorageFormatted || '0 B',
+        totalChunks: totalChunks || 0,
         totalQueries,
         avgResponseTimeMs,
         avgResponseTime,
@@ -160,30 +170,25 @@ class StatisticsService {
   }
 
   /**
-   * Calculate total storage usage (bytes) and total chunks across user's documents
+   * Calculate total chunks across all documents using SUM aggregation
    */
-  private async calculateStorageAndChunks(): Promise<{ totalStorageBytes: number; totalChunks: number; totalStorageFormatted: string; }> {
+  private async calculateTotalChunks(): Promise<number> {
     try {
       const supabaseTable = createClientTable();
 
-      // Select only fields needed; join with kb if user scoping needed later
+      // Use SUM aggregation to calculate total chunks directly in the database
       const { data, error } = await supabaseTable
         .from('document')
-        .select('file_size, chunk_count')
-        .limit(10000);
+        .select('chunk_count.sum()')
+        .single();
 
       if (error) {
-                return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
+        return 0;
       }
 
-      const totalStorageBytes = (data || []).reduce((sum, d) => sum + (typeof d.file_size === 'number' ? d.file_size : 0), 0);
-      const totalChunks = (data || []).reduce((sum, d) => sum + (typeof d.chunk_count === 'number' ? d.chunk_count : 0), 0);
-
-      const totalStorageFormatted = this.formatBytes(totalStorageBytes);
-
-      return { totalStorageBytes, totalChunks, totalStorageFormatted };
+      return data?.sum || 0;
     } catch (error) {
-            return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
+      return 0;
     }
   }
 

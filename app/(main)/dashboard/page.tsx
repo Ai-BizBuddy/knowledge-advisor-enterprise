@@ -28,7 +28,6 @@ export default function DashboardPage() {
     autoRefresh: true,
     refreshInterval: 60000,
   });
-  // KPIs now rendered directly via StatusCard using statistics
 
   // Map to RecentActivityCard props
   const cardActivities = useMemo(
@@ -39,30 +38,9 @@ export default function DashboardPage() {
         description: `${a.type} • ${a.status}`,
       }));
       
-      // Add some fallback data for testing when no real activities exist
-      if (mapped.length === 0 && !activitiesLoading && !activitiesError) {
-        return [
-          {
-            title: 'Welcome to Knowledge Advisor',
-            timestamp: 'Just now',
-            description: 'system • info',
-          },
-          {
-            title: 'System initialized successfully',
-            timestamp: '1 minute ago', 
-            description: 'system • success',
-          },
-          {
-            title: 'Ready to upload documents',
-            timestamp: '2 minutes ago',
-            description: 'system • info',
-          },
-        ];
-      }
-      
       return mapped;
     },
-    [recentActivities, activitiesLoading, activitiesError],
+    [recentActivities],
   );
 
   return (
