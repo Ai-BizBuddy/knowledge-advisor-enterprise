@@ -21,7 +21,7 @@ export const PageLayout: React.FC<PageLayoutProps> = ({
 }) => {
   return (
     <div className={`page-container ${className}`}>
-      <div className='sp-4 sm:p-6 lg:p-8'>
+      <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
         <div className='space-y-3 pb-6 '>
           <div className='flex-responsive'>
