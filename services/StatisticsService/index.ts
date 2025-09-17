@@ -15,7 +15,6 @@ import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
 class StatisticsService {
-
   constructor() {
     // Service initialization
   }
@@ -31,7 +30,7 @@ class StatisticsService {
       }
       return session.user;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -41,8 +40,7 @@ class StatisticsService {
    */
   async getDashboardStatistics(): Promise<DashboardStatistics> {
     try {
-      
-  const user = await this.getCurrentUser();
+      const user = await this.getCurrentUser();
 
       // Calculate all statistics in parallel
       const [
@@ -52,7 +50,7 @@ class StatisticsService {
         storageResponse,
         totalChunks,
         totalQueries,
-        avgResponseTimeMs
+        avgResponseTimeMs,
       ] = await Promise.all([
         this.calculateTotalKnowledgeBases(),
         this.calculateActiveDocuments(),
@@ -60,17 +58,19 @@ class StatisticsService {
         storageService.getStorageUsage(),
         this.calculateTotalChunks(),
         this.calculateTotalQueries(),
-        this.calculateAverageResponseTime(user.id)
+        this.calculateAverageResponseTime(user.id),
       ]);
 
       const avgResponseTime = `${avgResponseTimeMs}ms`;
 
       // Extract storage data from response
-      const storageData = storageResponse.success ? storageResponse.data : {
-        totalStorageBytes: 0,
-        totalStorageFormatted: '0 B',
-        totalChunks: 0,
-      };
+      const storageData = storageResponse.success
+        ? storageResponse.data
+        : {
+            totalStorageBytes: 0,
+            totalStorageFormatted: '0 B',
+            totalChunks: 0,
+          };
 
       return {
         totalKnowledgeBases,
@@ -82,10 +82,9 @@ class StatisticsService {
         totalQueries,
         avgResponseTimeMs,
         avgResponseTime,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-      
       // Return fallback data if calculation fails
       return {
         totalKnowledgeBases: 0,
@@ -97,7 +96,7 @@ class StatisticsService {
         totalQueries: 0,
         avgResponseTimeMs: 0,
         avgResponseTime: '0ms',
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     }
   }
@@ -111,15 +110,15 @@ class StatisticsService {
 
       const { count, error } = await supabaseTable
         .from('knowledge_base')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true });
 
       if (error) {
-                return 0;
+        return 0;
       }
 
       return count || 0;
     } catch (error) {
-            return 0;
+      return 0;
     }
   }
 
@@ -138,13 +137,12 @@ class StatisticsService {
         .eq('is_active', true);
 
       if (error) {
-                return 0;
+        return 0;
       }
 
-      
       return count || 0;
     } catch (error) {
-            return 0;
+      return 0;
     }
   }
 
@@ -160,12 +158,12 @@ class StatisticsService {
         .select('*', { count: 'exact', head: true });
 
       if (error) {
-                return 0;
+        return 0;
       }
 
       return count || 0;
     } catch (error) {
-            return 0;
+      return 0;
     }
   }
 
@@ -211,16 +209,15 @@ class StatisticsService {
       // Count chat messages from user's sessions
       const { count, error } = await supabaseTable
         .from('chat_message')
-        .select('*', { count: 'exact', head: true })
+        .select('*', { count: 'exact', head: true });
 
       if (error) {
-                return 0;
+        return 0;
       }
 
-      
       return count || 0;
     } catch (error) {
-            return 0;
+      return 0;
     }
   }
 
@@ -234,17 +231,19 @@ class StatisticsService {
       // Get recent chat sessions to calculate average response time
       const { data, error } = await supabaseTable
         .from('chat_message')
-        .select(`
+        .select(
+          `
           timestamp,
           sender,
           chat_session!inner(user_id)
-        `)
+        `,
+        )
         .eq('chat_session.user_id', userId)
         .order('timestamp', { ascending: true })
         .limit(100); // Analyze last 100 messages
 
       if (error) {
-                return 1200; // Default response time
+        return 1200; // Default response time
       }
 
       if (!data || data.length < 2) {
@@ -259,8 +258,11 @@ class StatisticsService {
 
         // If current is user message and next is bot response
         if (current.sender === 'user' && next.sender === 'bot') {
-          const responseTime = new Date(next.timestamp).getTime() - new Date(current.timestamp).getTime();
-          if (responseTime > 0 && responseTime < 30000) { // Filter reasonable response times (0-30 seconds)
+          const responseTime =
+            new Date(next.timestamp).getTime() -
+            new Date(current.timestamp).getTime();
+          if (responseTime > 0 && responseTime < 30000) {
+            // Filter reasonable response times (0-30 seconds)
             responseTimes.push(responseTime);
           }
         }
@@ -271,10 +273,12 @@ class StatisticsService {
       }
 
       // Calculate average
-      const avgMs = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
+      const avgMs =
+        responseTimes.reduce((sum, time) => sum + time, 0) /
+        responseTimes.length;
       return Math.round(avgMs);
     } catch (error) {
-            return 1200; // Default response time
+      return 1200; // Default response time
     }
   }
 
@@ -288,23 +292,23 @@ class StatisticsService {
       return {
         totalKnowledgeBases: {
           value: dashboardStats.totalKnowledgeBases,
-          lastUpdated: dashboardStats.lastUpdated
+          lastUpdated: dashboardStats.lastUpdated,
         },
         activeDocuments: {
           value: dashboardStats.activeDocuments,
-          lastUpdated: dashboardStats.lastUpdated
+          lastUpdated: dashboardStats.lastUpdated,
         },
         totalQueries: {
           value: dashboardStats.totalQueries,
-          lastUpdated: dashboardStats.lastUpdated
+          lastUpdated: dashboardStats.lastUpdated,
         },
         avgResponseTimeMs: {
           value: dashboardStats.avgResponseTimeMs,
-          lastUpdated: dashboardStats.lastUpdated
-        }
+          lastUpdated: dashboardStats.lastUpdated,
+        },
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -313,15 +317,15 @@ class StatisticsService {
    */
   async getTotalKnowledgeBases(): Promise<IndividualStatistic> {
     try {
-  await this.getCurrentUser();
-  const count = await this.calculateTotalKnowledgeBases();
+      await this.getCurrentUser();
+      const count = await this.calculateTotalKnowledgeBases();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -330,15 +334,15 @@ class StatisticsService {
    */
   async getActiveDocuments(): Promise<IndividualStatistic> {
     try {
-  await this.getCurrentUser();
-  const count = await this.calculateActiveDocuments();
+      await this.getCurrentUser();
+      const count = await this.calculateActiveDocuments();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -347,15 +351,15 @@ class StatisticsService {
    */
   async getTotalQueries(): Promise<IndividualStatistic> {
     try {
-  await this.getCurrentUser();
-  const count = await this.calculateTotalQueries();
+      await this.getCurrentUser();
+      const count = await this.calculateTotalQueries();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -369,10 +373,10 @@ class StatisticsService {
 
       return {
         value: avgMs,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -383,8 +387,8 @@ class StatisticsService {
     try {
       // Since we're calculating statistics directly from the database,
       // we don't need to record query activity separately
-          } catch (error) {
-            throw error;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -395,8 +399,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics in real-time from the database,
       // refreshing doesn't require any special action
-          } catch (error) {
-            throw error;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -414,8 +418,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics directly from the database,
       // manual updates would require database modifications
-                } catch (error) {
-            throw error;
+    } catch (error) {
+      throw error;
     }
   }
 }

@@ -15,7 +15,6 @@ import { createClient } from '@/utils/supabase/client';
 interface StorageUsageResponse {
   totalStorageBytes: number;
   totalStorageFormatted: string;
-  totalChunks: number;
 }
 
 /**
@@ -118,8 +117,7 @@ class StorageService {
           success: true,
           data: {
             totalStorageBytes: storageBytes,
-            totalStorageFormatted: this.formatBytes(storageBytes),
-            totalChunks: 0, // Not available from storage RPC
+            totalStorageFormatted: this.formatBytes(storageBytes)
           }
         };
       } else {
@@ -141,8 +139,7 @@ class StorageService {
           success: true,
           data: {
             totalStorageBytes: storageBytes,
-            totalStorageFormatted: this.formatBytes(storageBytes),
-            totalChunks: 0, // Not available from storage RPC
+            totalStorageFormatted: this.formatBytes(storageBytes)
           }
         };
       }
@@ -153,8 +150,7 @@ class StorageService {
         error: error instanceof Error ? error.message : 'Failed to fetch storage usage',
         data: {
           totalStorageBytes: 0,
-          totalStorageFormatted: '0 B',
-          totalChunks: 0,
+          totalStorageFormatted: '0 B'
         }
       };
     }
