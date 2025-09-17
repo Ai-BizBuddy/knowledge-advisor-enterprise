@@ -21,27 +21,25 @@ export default function BotTypingBubble() {
       {/* Typing bubble */}
       <div className='typing-indicator rounded-2xl rounded-bl-md border border-gray-200 bg-white px-4 py-3 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
         <div
-          className='flex items-baseline space-x-1'
+          className='flex items-center space-x-1'
           role='status'
           aria-label='Bot is typing'
         >
-          <span className='mr-2 text-sm text-gray-500 dark:text-gray-400 leading-normal flex-shrink-0'>
+          <span className='mr-2 text-sm text-gray-500 dark:text-gray-400'>
             กำลังพิมพ์
           </span>
-          <div className='flex items-center space-x-1 mt-0.5'>
-            <span
-              className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0'
-              style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_1}ms` }}
-            />
-            <span
-              className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0'
-              style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_2}ms` }}
-            />
-            <span
-              className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500 flex-shrink-0'
-              style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_3}ms` }}
-            />
-          </div>
+          <span
+            className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500'
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_1}ms` }}
+          />
+          <span
+            className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500'
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_2}ms` }}
+          />
+          <span
+            className='h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500'
+            style={{ animationDelay: `${UI_CONSTANTS.ANIMATION_DELAY_3}ms` }}
+          />
         </div>
       </div>
     </div>

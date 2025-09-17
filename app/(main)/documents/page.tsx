@@ -500,7 +500,7 @@ export default function DocumentsPage() {
     setIsDeepSearch(false);
   };
 
-  const handleResultClick = () => {
+  const handleResultClick = (result: DocumentSearchResult) => {
         // In real implementation, this would open the document or navigate to document detail
   };
 

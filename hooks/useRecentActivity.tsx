@@ -1,8 +1,10 @@
 'use client';
 
 import { Document, DocumentStatus } from '@/interfaces/Project';
+// import { getAllDocuments } from '@/services/Project/supabase';
 import { documentService, knowledgeBaseService } from '@/services';
 import { useCallback, useEffect, useState } from 'react';
+import { useKnowledgeBase } from './useKnowledgeBase';
 
 export interface ActivityItem {
   id: string;
@@ -35,6 +37,7 @@ export const useRecentActivity = (
   const [error, setError] = useState<string | null>(null);
 
   const { limit = 10, autoRefresh = false, refreshInterval = 60000 } = options;
+  const { projects, loading: projectsLoading } = useKnowledgeBase();
 
   // Function to format relative time (e.g., "2 hours ago")
   const formatRelativeTime = (dateString: string): string => {
@@ -56,6 +59,15 @@ export const useRecentActivity = (
     }
   };
 
+  // Function to get project name by project ID
+  const getProjectName = useCallback(
+    (projectId: string): string => {
+      const project = projects?.find((p) => p.id === projectId);
+      return project?.name || 'Unknown Project';
+    },
+    [projects],
+  );
+
   // Load recent activities
   const loadActivities = useCallback(async () => {
     try {
@@ -66,12 +78,8 @@ export const useRecentActivity = (
       let documents: Document[] = [];
       try {
         documents = await documentService.getAllDocuments();
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : 'Failed to load documents',
-        );
-        throw error;
-      }
+      } catch (err) {
+              }
 
       // Process documents into activity items
       const documentActivities: ActivityItem[] = await Promise.all(
@@ -80,10 +88,7 @@ export const useRecentActivity = (
           let activityType: 'upload' | 'processing' | 'error';
           let status: 'success' | 'error' | 'info';
 
-          if (
-            doc.status === DocumentStatus.READY ||
-            doc.status === DocumentStatus.UPLOADED
-          ) {
+          if (doc.status === DocumentStatus.READY || doc.status === DocumentStatus.UPLOADED) {
             activityType = 'upload';
             status = 'success';
           } else if (doc.status === DocumentStatus.PROCESSING) {
@@ -123,8 +128,19 @@ export const useRecentActivity = (
         }),
       );
 
+      // Add activities for knowledge base creation or updates
+      const kbActivities: ActivityItem[] =
+        projects?.map((project) => ({
+          id: `kb-${project.id}`,
+          type: 'knowledgebase',
+          message: `Knowledge base "${project.name}" ${project.updated_at ? 'updated' : 'created'}`,
+          time: formatRelativeTime(project.updated_at || project.created_at),
+          status: 'info',
+          projectId: project.id,
+        })) || [];
+
       // Combine all activities
-      const allActivities = [...documentActivities];
+      const allActivities = [...documentActivities, ...kbActivities];
 
       // Sort by time (most recent first)
       allActivities.sort((a, b) => {
@@ -153,17 +169,18 @@ export const useRecentActivity = (
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to load recent activity';
       setError(errorMsg);
-    } finally {
+          } finally {
       setLoading(false);
     }
-  }, [limit]);
-
-  useEffect(() => {
-    loadActivities();
-  }, [loadActivities]);
+  }, [projects, limit, getProjectName]);
 
   // Initial load and refresh logic
   useEffect(() => {
+    if (!projectsLoading) {
+      loadActivities();
+    }
+
+    // Set up auto-refresh if enabled
     let refreshTimer: NodeJS.Timeout | null = null;
     if (autoRefresh) {
       refreshTimer = setInterval(() => {
@@ -176,7 +193,7 @@ export const useRecentActivity = (
         clearInterval(refreshTimer);
       }
     };
-  }, [loadActivities, autoRefresh, refreshInterval]);
+  }, [loadActivities, autoRefresh, refreshInterval, projectsLoading]);
 
   return {
     activities,

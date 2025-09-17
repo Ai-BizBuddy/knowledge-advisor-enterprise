@@ -7,17 +7,17 @@
 
 'use client';
 
+import React, { useState, useEffect } from 'react';
+import { Button, Label, TextInput, Select } from 'flowbite-react';
 import { useReactHookForm, useUserManagement } from '@/hooks';
 import type {
-    CreateUserInput,
-    UserManagementError,
-} from '@/interfaces/UserManagement';
-import { Button, Label, Select, TextInput } from 'flowbite-react';
-import React, { useEffect, useState } from 'react';
-import type {
-    CreateUserFormData,
-    CreateUserFormProps,
+  CreateUserFormProps,
+  CreateUserFormData,
 } from './CreateUserForm.types';
+import type {
+  CreateUserInput,
+  UserManagementError,
+} from '@/interfaces/UserManagement';
 
 export const CreateUserForm: React.FC<CreateUserFormProps> = ({
   isOpen,
@@ -85,8 +85,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
         try {
           await Promise.all(promises);
         } catch (error) {
-          console.error('Failed to load user form data:', error);
-        }
+                  }
       }
     };
 

@@ -1,18 +1,19 @@
 /**
  * Enhanced Fetch Client - Base API Client
  *
+ * A replacement for Axios using native fetch API with proper TypeScript support
  * Following the project's strict TypeScript standards
  */
 
 import type {
+  TypedFetchConfig,
+  TypedFetchResponse,
+  TypedFetchError,
   ApiClientConfig,
-  ErrorInterceptor,
-  FetchClient,
   RequestInterceptor,
   ResponseInterceptor,
-  TypedFetchConfig,
-  TypedFetchError,
-  TypedFetchResponse,
+  ErrorInterceptor,
+  FetchClient,
 } from '@/interfaces/FetchTypes';
 
 /**
@@ -294,4 +295,3 @@ class BaseFetchClient implements FetchClient {
 
 export { BaseFetchClient };
 export type { FetchClient };
-

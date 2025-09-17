@@ -5,9 +5,9 @@
  * with drag & drop support and image preview.
  */
 
+import React, { useState, useRef, useCallback } from 'react';
 import { Button, Spinner } from 'flowbite-react';
 import Image from 'next/image';
-import React, { useCallback, useRef, useState } from 'react';
 
 export interface ProfilePictureUploadProps {
   currentAvatarUrl?: string;
@@ -68,8 +68,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
           setPreviewUrl(uploadedUrl);
         }
       } catch (error) {
-        console.error('Failed to upload profile picture:', error);
-        // Revert preview on error
+                // Revert preview on error
         setPreviewUrl(currentAvatarUrl || null);
       }
     },

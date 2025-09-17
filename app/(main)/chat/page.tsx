@@ -7,27 +7,18 @@ import {
   KnowledgeSelect,
   PageHeader,
 } from '@/components';
+import { useLoading } from '@/contexts/LoadingContext';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
 import { ChatMessage } from '@/hooks/useAdkChat';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-const welcomeMessage: ChatMessage = {
-  id: Date.now().toString(),
-  type: 'assistant',
-  content:
-    'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
-  timestamp: new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  }),
-};
-
 export default function ChatPage() {
   const [isOnline] = useState(false);
   const [message, setMessage] = useState('');
   const [openHistory, setOpenHistory] = useState(false);
+  const { setLoading } = useLoading();
   const chatMessagesRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -58,23 +49,21 @@ export default function ChatPage() {
   }, [messages.length, addWelcomeMessage, messages]);
 
   // Optimized handlers using useCallback to prevent unnecessary re-renders
-  const handleLoadChatSession = useCallback(
-    async (session: ChatSession) => {
-      const sessionMessages = await getChatSessions(session.id);
-      setMessages([
-        welcomeMessage,
-        ...sessionMessages.filter((msg) =>
-          msg.content.includes('video_metadata=None') ||
-          msg.content.includes('image_metadata=None') ||
-          msg.content.includes('text_metadata=None')
-            ? false
-            : true,
-        ),
-      ]);
-      setOpenHistory(false);
-    },
-    [getChatSessions, setMessages],
-  );
+  const handleLoadChatSession = useCallback(async (session: ChatSession) => {
+    const welcomeMessage: ChatMessage = {
+          id: Date.now().toString(),
+          type: 'assistant',
+          content:
+            'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        };
+    const sessionMessages = await getChatSessions(session.id);
+    setMessages([welcomeMessage, ...sessionMessages.filter(msg => msg.content.includes('video_metadata=None') || msg.content.includes('image_metadata=None') || msg.content.includes('text_metadata=None') ? false : true)]);
+    setOpenHistory(false);
+  }, [getChatSessions, setMessages]);
 
   const handleCloseHistory = useCallback(() => {
     setOpenHistory(false);
@@ -97,7 +86,7 @@ export default function ChatPage() {
         if (element) {
           element.scrollTo({
             top: element.scrollHeight,
-            behavior: 'smooth',
+            behavior: 'smooth'
           });
         }
       });
@@ -136,7 +125,9 @@ export default function ChatPage() {
               <div className='flex flex-col gap-4 border-b border-gray-200 pb-3 sm:gap-6 lg:flex-row lg:items-center lg:justify-between dark:border-gray-700'>
                 {/* Knowledge Base Selection */}
                 <div className='flex flex-1 flex-col gap-3 sm:flex-row sm:items-center'>
-                  <span className='text-sm font-semibold whitespace-nowrap text-gray-700 dark:text-gray-200'>
+                  <span
+                    className='text-sm font-semibold whitespace-nowrap text-gray-700 dark:text-gray-200'
+                  >
                     Knowledge Base:
                   </span>
                   <div className='w-full flex-1'>
@@ -196,7 +187,7 @@ export default function ChatPage() {
                 </div>
               </div>
               {/* Chat Messages Area */}
-              <div
+              <div 
                 ref={chatMessagesRef}
                 className='h-[50vh] space-y-4 overflow-y-auto p-4 sm:h-[60vh] sm:p-6 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'
               >
@@ -258,7 +249,7 @@ export default function ChatPage() {
                             }
                           }}
                           placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                          className='auto-resize-textarea focus:ring-opacity-25 block max-h-[120px] min-h-[44px] w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                          className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 min-h-[44px] max-h-[120px]'
                           value={message}
                           onChange={(e) => {
                             setMessage(e.target.value);
@@ -352,7 +343,7 @@ export default function ChatPage() {
                           }
                         }}
                         placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                        className='auto-resize-textarea focus:ring-opacity-25 block max-h-[120px] min-h-[44px] w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                        className='auto-resize-textarea focus:ring-opacity-25 block w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400 min-h-[44px] max-h-[120px]'
                         value={message}
                         onChange={(e) => {
                           setMessage(e.target.value);

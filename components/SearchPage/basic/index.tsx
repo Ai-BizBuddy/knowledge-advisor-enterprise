@@ -16,7 +16,7 @@ export default function BasicSearchPage() {
   const [totalResults, setTotalResults] = useState(0);
   const resultsPerPage = 10;
 
-  const { loading, error, executeSearch } = useDeepSearch();
+  const { results, loading, error, executeSearch } = useDeepSearch();
   
   const {
     knowledgeBases,

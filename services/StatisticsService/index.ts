@@ -10,11 +10,12 @@ import type {
   ManualStatisticUpdate,
   QueryActivityRequest,
 } from '@/interfaces/Statistics';
-import { storageService } from '@/services/StorageService';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
 class StatisticsService {
+  private serviceName = 'StatisticsService';
+
   constructor() {
     // Service initialization
   }
@@ -30,7 +31,7 @@ class StatisticsService {
       }
       return session.user;
     } catch (error) {
-      throw error;
+            throw error;
     }
   }
 
@@ -40,63 +41,54 @@ class StatisticsService {
    */
   async getDashboardStatistics(): Promise<DashboardStatistics> {
     try {
-      const user = await this.getCurrentUser();
+      
+  const user = await this.getCurrentUser();
 
       // Calculate all statistics in parallel
       const [
         totalKnowledgeBases,
         activeDocuments,
-        totalDocuments,
-        storageResponse,
-        totalChunks,
+  totalDocuments,
+  totals,
         totalQueries,
-        avgResponseTimeMs,
+        avgResponseTimeMs
       ] = await Promise.all([
-        this.calculateTotalKnowledgeBases(),
-        this.calculateActiveDocuments(),
-        this.calculateTotalDocuments(),
-        storageService.getStorageUsage(),
-        this.calculateTotalChunks(),
-        this.calculateTotalQueries(),
-        this.calculateAverageResponseTime(user.id),
+  this.calculateTotalKnowledgeBases(),
+  this.calculateActiveDocuments(),
+  this.calculateTotalDocuments(),
+  this.calculateStorageAndChunks(),
+  this.calculateTotalQueries(),
+        this.calculateAverageResponseTime(user.id)
       ]);
 
       const avgResponseTime = `${avgResponseTimeMs}ms`;
-
-      // Extract storage data from response
-      const storageData = storageResponse.success
-        ? storageResponse.data
-        : {
-            totalStorageBytes: 0,
-            totalStorageFormatted: '0 B',
-            totalChunks: 0,
-          };
 
       return {
         totalKnowledgeBases,
         activeDocuments,
         totalDocuments,
-        totalStorageBytes: storageData?.totalStorageBytes || 0,
-        totalStorageFormatted: storageData?.totalStorageFormatted || '0 B',
-        totalChunks: totalChunks || 0,
+        totalStorageBytes: totals.totalStorageBytes,
+        totalStorageFormatted: totals.totalStorageFormatted,
+        totalChunks: totals.totalChunks,
         totalQueries,
         avgResponseTimeMs,
         avgResponseTime,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
+      
       // Return fallback data if calculation fails
       return {
         totalKnowledgeBases: 0,
         activeDocuments: 0,
-        totalDocuments: 0,
-        totalStorageBytes: 0,
-        totalStorageFormatted: '0 B',
-        totalChunks: 0,
+  totalDocuments: 0,
+  totalStorageBytes: 0,
+  totalStorageFormatted: '0 B',
+  totalChunks: 0,
         totalQueries: 0,
         avgResponseTimeMs: 0,
         avgResponseTime: '0ms',
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     }
   }
@@ -110,15 +102,15 @@ class StatisticsService {
 
       const { count, error } = await supabaseTable
         .from('knowledge_base')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
 
       if (error) {
-        return 0;
+                return 0;
       }
 
       return count || 0;
     } catch (error) {
-      throw error;
+            return 0;
     }
   }
 
@@ -137,12 +129,13 @@ class StatisticsService {
         .eq('is_active', true);
 
       if (error) {
-        return 0;
+                return 0;
       }
 
+      
       return count || 0;
     } catch (error) {
-      throw error;
+            return 0;
     }
   }
 
@@ -158,70 +151,50 @@ class StatisticsService {
         .select('*', { count: 'exact', head: true });
 
       if (error) {
-        return 0;
+                return 0;
       }
 
       return count || 0;
     } catch (error) {
-      throw error;
+            return 0;
     }
   }
 
   /**
-   * Calculate total chunks across all documents using SUM aggregation
+   * Calculate total storage usage (bytes) and total chunks across user's documents
    */
-  private async calculateTotalChunks(): Promise<number> {
+  private async calculateStorageAndChunks(): Promise<{ totalStorageBytes: number; totalChunks: number; totalStorageFormatted: string; }> {
     try {
       const supabaseTable = createClientTable();
 
-      // First, get all documents with chunk_count to sum manually
-      // This approach is more reliable than PostgreSQL aggregation functions
+      // Select only fields needed; join with kb if user scoping needed later
       const { data, error } = await supabaseTable
         .from('document')
-        .select('chunk_count')
-        .not('chunk_count', 'is', null); // Exclude null values
+        .select('file_size, chunk_count')
+        .limit(10000);
 
       if (error) {
-        console.error('Error fetching documents for chunk calculation:', error);
-        throw new Error(`Database query failed: ${error.message}`);
+                return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
       }
 
-      if (!data || data.length === 0) {
-        console.warn('No documents found with chunk_count data');
-        return 0;
-      }
+      const totalStorageBytes = (data || []).reduce((sum, d) => sum + (typeof d.file_size === 'number' ? d.file_size : 0), 0);
+      const totalChunks = (data || []).reduce((sum, d) => sum + (typeof d.chunk_count === 'number' ? d.chunk_count : 0), 0);
 
-      // Calculate sum manually for better error handling and type safety
-      const totalChunks = data.reduce((sum, doc) => {
-        const chunkCount = doc.chunk_count;
-        
-        // Validate chunk_count is a valid number
-        if (typeof chunkCount === 'number' && !isNaN(chunkCount) && chunkCount >= 0) {
-          return sum + chunkCount;
-        } else {
-          console.warn('Invalid chunk_count found in document:', chunkCount);
-          return sum;
-        }
-      }, 0);
+      const totalStorageFormatted = this.formatBytes(totalStorageBytes);
 
-      console.log(`Successfully calculated total chunks: ${totalChunks} from ${data.length} documents`);
-      return totalChunks;
-      
+      return { totalStorageBytes, totalChunks, totalStorageFormatted };
     } catch (error) {
-      // Log detailed error information for debugging
-      if (error instanceof Error) {
-        console.error('calculateTotalChunks error:', {
-          message: error.message,
-          stack: error.stack,
-          name: error.name
-        });
-      } else {
-        console.error('calculateTotalChunks unknown error:', error);
-      }
-      
-      // Return 0 as fallback value instead of throwing
-      return 0;
+            return { totalStorageBytes: 0, totalChunks: 0, totalStorageFormatted: '0 B' };
     }
+  }
+
+  private formatBytes(bytes: number): string {
+    if (!bytes) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    const value = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
+    return `${value} ${sizes[i]}`;
   }
 
   /**
@@ -234,15 +207,16 @@ class StatisticsService {
       // Count chat messages from user's sessions
       const { count, error } = await supabaseTable
         .from('chat_message')
-        .select('*', { count: 'exact', head: true });
+        .select('*', { count: 'exact', head: true })
 
       if (error) {
-        return 0;
+                return 0;
       }
 
+      
       return count || 0;
     } catch (error) {
-      return 0;
+            return 0;
     }
   }
 
@@ -256,19 +230,17 @@ class StatisticsService {
       // Get recent chat sessions to calculate average response time
       const { data, error } = await supabaseTable
         .from('chat_message')
-        .select(
-          `
+        .select(`
           timestamp,
           sender,
           chat_session!inner(user_id)
-        `,
-        )
+        `)
         .eq('chat_session.user_id', userId)
         .order('timestamp', { ascending: true })
         .limit(100); // Analyze last 100 messages
 
       if (error) {
-        return 1200; // Default response time
+                return 1200; // Default response time
       }
 
       if (!data || data.length < 2) {
@@ -283,11 +255,8 @@ class StatisticsService {
 
         // If current is user message and next is bot response
         if (current.sender === 'user' && next.sender === 'bot') {
-          const responseTime =
-            new Date(next.timestamp).getTime() -
-            new Date(current.timestamp).getTime();
-          if (responseTime > 0 && responseTime < 30000) {
-            // Filter reasonable response times (0-30 seconds)
+          const responseTime = new Date(next.timestamp).getTime() - new Date(current.timestamp).getTime();
+          if (responseTime > 0 && responseTime < 30000) { // Filter reasonable response times (0-30 seconds)
             responseTimes.push(responseTime);
           }
         }
@@ -298,12 +267,10 @@ class StatisticsService {
       }
 
       // Calculate average
-      const avgMs =
-        responseTimes.reduce((sum, time) => sum + time, 0) /
-        responseTimes.length;
+      const avgMs = responseTimes.reduce((sum, time) => sum + time, 0) / responseTimes.length;
       return Math.round(avgMs);
     } catch (error) {
-      return 1200; // Default response time
+            return 1200; // Default response time
     }
   }
 
@@ -317,23 +284,23 @@ class StatisticsService {
       return {
         totalKnowledgeBases: {
           value: dashboardStats.totalKnowledgeBases,
-          lastUpdated: dashboardStats.lastUpdated,
+          lastUpdated: dashboardStats.lastUpdated
         },
         activeDocuments: {
           value: dashboardStats.activeDocuments,
-          lastUpdated: dashboardStats.lastUpdated,
+          lastUpdated: dashboardStats.lastUpdated
         },
         totalQueries: {
           value: dashboardStats.totalQueries,
-          lastUpdated: dashboardStats.lastUpdated,
+          lastUpdated: dashboardStats.lastUpdated
         },
         avgResponseTimeMs: {
           value: dashboardStats.avgResponseTimeMs,
-          lastUpdated: dashboardStats.lastUpdated,
-        },
+          lastUpdated: dashboardStats.lastUpdated
+        }
       };
     } catch (error) {
-      throw error;
+            throw error;
     }
   }
 
@@ -342,15 +309,15 @@ class StatisticsService {
    */
   async getTotalKnowledgeBases(): Promise<IndividualStatistic> {
     try {
-      await this.getCurrentUser();
-      const count = await this.calculateTotalKnowledgeBases();
+  await this.getCurrentUser();
+  const count = await this.calculateTotalKnowledgeBases();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      throw error;
+            throw error;
     }
   }
 
@@ -359,15 +326,15 @@ class StatisticsService {
    */
   async getActiveDocuments(): Promise<IndividualStatistic> {
     try {
-      await this.getCurrentUser();
-      const count = await this.calculateActiveDocuments();
+  await this.getCurrentUser();
+  const count = await this.calculateActiveDocuments();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      throw error;
+            throw error;
     }
   }
 
@@ -376,15 +343,15 @@ class StatisticsService {
    */
   async getTotalQueries(): Promise<IndividualStatistic> {
     try {
-      await this.getCurrentUser();
-      const count = await this.calculateTotalQueries();
+  await this.getCurrentUser();
+  const count = await this.calculateTotalQueries();
 
       return {
         value: count,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      throw error;
+            throw error;
     }
   }
 
@@ -398,34 +365,10 @@ class StatisticsService {
 
       return {
         value: avgMs,
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date().toISOString()
       };
     } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Get specific statistic - Total Chunks with enhanced error handling
-   */
-  async getTotalChunks(): Promise<IndividualStatistic> {
-    try {
-      const count = await this.calculateTotalChunks();
-
-      return {
-        value: count,
-        lastUpdated: new Date().toISOString(),
-      };
-    } catch (error) {
-      // Enhanced error handling for chunk count calculation
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Unknown error occurred while calculating chunk count';
-      
-      console.error('getTotalChunks failed:', errorMessage);
-      
-      // Instead of throwing, return a failed state that can be handled by the UI
-      throw new Error(`Failed to calculate chunk count: ${errorMessage}`);
+            throw error;
     }
   }
 
@@ -436,8 +379,8 @@ class StatisticsService {
     try {
       // Since we're calculating statistics directly from the database,
       // we don't need to record query activity separately
-    } catch (error) {
-      throw error;
+          } catch (error) {
+            throw error;
     }
   }
 
@@ -448,8 +391,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics in real-time from the database,
       // refreshing doesn't require any special action
-    } catch (error) {
-      throw error;
+          } catch (error) {
+            throw error;
     }
   }
 
@@ -467,8 +410,8 @@ class StatisticsService {
     try {
       // Since we calculate statistics directly from the database,
       // manual updates would require database modifications
-    } catch (error) {
-      throw error;
+                } catch (error) {
+            throw error;
     }
   }
 }

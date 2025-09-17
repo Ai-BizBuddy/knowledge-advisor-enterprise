@@ -3,6 +3,4 @@ export interface IStatusCardProps {
   value: string;
   icon: React.ReactNode;
   color: string;
-  error?: boolean;
-  loading?: boolean;
 }

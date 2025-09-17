@@ -11,7 +11,8 @@ import type { DocumentSearchResult } from '@/services/DocumentSearchService';
 import {
   getDocumentSearchAnalytics,
   searchDocuments,
-  searchDocumentsInProjects
+  searchDocumentsInProjects,
+  testDocumentSearchConnection,
 } from '@/services/Project/supabase';
 import { useCallback, useState } from 'react';
 
@@ -317,6 +318,17 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
   }, []);
 
   /**
+   * Test search service connectivity
+   */
+  const testConnection = useCallback(async (): Promise<boolean> => {
+    try {
+      return await testDocumentSearchConnection();
+    } catch (error) {
+            return false;
+    }
+  }, []);
+
+  /**
    * Get documents from current search results
    */
   const getDocuments = useCallback((): Document[] => {
@@ -359,6 +371,7 @@ export function useDocumentSearch(options: UseDocumentSearchOptions = {}) {
     clearSearch,
     clearHistory,
     removeFromHistory,
+    testConnection,
 
     // Getters
     getDocuments,

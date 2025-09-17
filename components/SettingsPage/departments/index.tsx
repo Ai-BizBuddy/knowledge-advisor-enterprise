@@ -7,12 +7,12 @@ import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { CreateDepartmentInput, Department } from '@/interfaces/UserManagement';
 import {
-    Button,
-    Checkbox,
-    Label,
-    Modal,
-    TextInput,
-    Textarea,
+  Button,
+  Checkbox,
+  Label,
+  Modal,
+  TextInput,
+  Textarea,
 } from 'flowbite-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -49,7 +49,7 @@ export default function DepartmentsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
-  const [statusFilter] = useState<'active' | 'inactive' | ''>(''); // No filter UI implemented yet
+  const [statusFilter, setStatusFilter] = useState('');
   const initialLoadRef = useRef(false);
 
   // Load data with debouncing for search/filters, immediate for initial load
@@ -72,8 +72,7 @@ export default function DepartmentsPage() {
           initialLoadRef.current = true;
         }
       } catch (error) {
-        console.error('Failed to load departments:', error);
-      }
+              }
     };
 
     // Initial load without debouncing

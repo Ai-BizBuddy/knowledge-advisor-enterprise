@@ -10,10 +10,8 @@ import { dashboardService } from './DashboardService';
 import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
-import { documentViewerService } from './DocumentViewerService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
 import { statisticsService } from './StatisticsService';
-import { storageService } from './StorageService';
 
 interface ServiceConfig {
   useMockData: boolean;
@@ -26,6 +24,12 @@ const serviceConfig: Readonly<ServiceConfig> = {
   timeout: 30000,
   retryAttempts: 2,
 };
+
+export const documentIngestionService = new DocumentIngestionService({
+  baseURL: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'http://localhost:8000',
+  timeout: serviceConfig.timeout,
+  retryAttempts: serviceConfig.retryAttempts,
+});
 
 /**
  * Knowledge Base Service Instance
@@ -66,6 +70,13 @@ export const adkChatService = new AdkChatService({
 });
 
 /**
+ * Sorting Service Instance
+ *
+ * Centralized sorting utilities for documents
+ */
+// export const sortingService = new SortingService();
+
+/**
  * Dashboard Service Instance
  * 
  * Provides centralized dashboard data aggregation
@@ -76,22 +87,8 @@ export { dashboardService };
  * Statistics Service Instance
  * 
  * Handles dashboard statistics and metrics
-*/
-    export { statisticsService };
-
-/**
- * Storage Service Instance
- * 
- * Handles role-based storage usage queries
  */
-    export { storageService };
-
-/**
- * Document Viewer Service Instance
- * 
- * Handles document preview for chat links and file viewing
- */
-  export { documentViewerService };
+  export { statisticsService };
 
 /**
  * Compatibility alias: some hooks import `langflowChatService` from services.
@@ -106,10 +103,10 @@ export const langflowChatService = adkChatService;
  */
 export { default as DocumentService } from './DocumentService';
 export {
-    AdkChatService,
-    DocumentIngestionService,
-    DocumentSearchService,
-    KnowledgeBaseService
+  AdkChatService,
+  DocumentIngestionService,
+  DocumentSearchService,
+  KnowledgeBaseService
 };
 
 /**
@@ -118,9 +115,9 @@ export {
  * Export service configuration types for TypeScript support
  */
   export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
-    export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
-    export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
-    export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
+  export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
+  export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
+  export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
 export type DocumentServiceType = InstanceType<typeof DocumentService>;
 
 /**
@@ -129,6 +126,7 @@ export type DocumentServiceType = InstanceType<typeof DocumentService>;
  * Aliases for the most commonly used services
  */
 export interface ServicesMap {
+  documentIngestion: DocumentIngestionService;
   knowledgeBase: KnowledgeBaseService;
   documentSearch: DocumentSearchService;
   adkChat: AdkChatService;
@@ -138,6 +136,7 @@ export interface ServicesMap {
 }
 
 const services: ServicesMap = {
+  documentIngestion: documentIngestionService,
   knowledgeBase: knowledgeBaseService,
   documentSearch: documentSearchService,
   adkChat: adkChatService,
