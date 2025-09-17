@@ -78,8 +78,14 @@ export const useRecentActivity = (
       let documents: Document[] = [];
       try {
         documents = await documentService.getAllDocuments();
-      } catch (err) {
-              }
+      } catch (error) {
+        setError(
+          error instanceof Error
+            ? error.message
+            : 'Failed to load documents'
+        );
+        throw error;
+      }
 
       // Process documents into activity items
       const documentActivities: ActivityItem[] = await Promise.all(
@@ -88,7 +94,10 @@ export const useRecentActivity = (
           let activityType: 'upload' | 'processing' | 'error';
           let status: 'success' | 'error' | 'info';
 
-          if (doc.status === DocumentStatus.READY || doc.status === DocumentStatus.UPLOADED) {
+          if (
+            doc.status === DocumentStatus.READY ||
+            doc.status === DocumentStatus.UPLOADED
+          ) {
             activityType = 'upload';
             status = 'success';
           } else if (doc.status === DocumentStatus.PROCESSING) {
@@ -169,7 +178,7 @@ export const useRecentActivity = (
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to load recent activity';
       setError(errorMsg);
-          } finally {
+    } finally {
       setLoading(false);
     }
   }, [projects, limit, getProjectName]);

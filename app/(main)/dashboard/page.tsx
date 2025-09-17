@@ -5,6 +5,7 @@ import {
   StatusCard
 } from '@/components';
 import { PageLayout, Section } from '@/components/layouts';
+import { useChunkCount } from '@/hooks/useChunkCount';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useRecentActivity } from '@/hooks/useRecentActivity';
 import { useMemo } from 'react';
@@ -18,6 +19,14 @@ export default function DashboardPage() {
       autoRefresh: true,
       enableChatData: false,
     });
+  const { 
+    chunkCount, 
+    isLoading: chunksLoading, 
+    hasError: chunksHasError 
+  } = useChunkCount({
+    autoRefresh: true,
+    refreshInterval: 60000,
+  });
   const { 
     activities: recentActivities, 
     loading: activitiesLoading, 
@@ -84,8 +93,10 @@ export default function DashboardPage() {
           />
           <StatusCard
             name='Chunks'
-            value={(statistics?.totalChunks ?? 0).toLocaleString()}
+            value={(chunkCount ?? 0).toLocaleString()}
             color='bg-sky-500/10 text-sky-400'
+            loading={chunksLoading}
+            error={chunksHasError}
             icon={
               <svg
                 xmlns='http://www.w3.org/2000/svg'

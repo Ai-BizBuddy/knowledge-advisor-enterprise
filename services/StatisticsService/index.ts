@@ -174,29 +174,54 @@ class StatisticsService {
     try {
       const supabaseTable = createClientTable();
 
-      // Use SUM aggregation to calculate total chunks directly in the database
+      // First, get all documents with chunk_count to sum manually
+      // This approach is more reliable than PostgreSQL aggregation functions
       const { data, error } = await supabaseTable
         .from('document')
-        .select('chunk_count.sum()')
-        .single();
+        .select('chunk_count')
+        .not('chunk_count', 'is', null); // Exclude null values
 
       if (error) {
+        console.error('Error fetching documents for chunk calculation:', error);
+        throw new Error(`Database query failed: ${error.message}`);
+      }
+
+      if (!data || data.length === 0) {
+        console.warn('No documents found with chunk_count data');
         return 0;
       }
 
-      return data?.sum || 0;
+      // Calculate sum manually for better error handling and type safety
+      const totalChunks = data.reduce((sum, doc) => {
+        const chunkCount = doc.chunk_count;
+        
+        // Validate chunk_count is a valid number
+        if (typeof chunkCount === 'number' && !isNaN(chunkCount) && chunkCount >= 0) {
+          return sum + chunkCount;
+        } else {
+          console.warn('Invalid chunk_count found in document:', chunkCount);
+          return sum;
+        }
+      }, 0);
+
+      console.log(`Successfully calculated total chunks: ${totalChunks} from ${data.length} documents`);
+      return totalChunks;
+      
     } catch (error) {
+      // Log detailed error information for debugging
+      if (error instanceof Error) {
+        console.error('calculateTotalChunks error:', {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      } else {
+        console.error('calculateTotalChunks unknown error:', error);
+      }
+      
+      // Return 0 as fallback value instead of throwing
       return 0;
     }
-  }
-
-  private formatBytes(bytes: number): string {
-    if (!bytes) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    const value = parseFloat((bytes / Math.pow(k, i)).toFixed(1));
-    return `${value} ${sizes[i]}`;
   }
 
   /**
@@ -377,6 +402,31 @@ class StatisticsService {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  /**
+   * Get specific statistic - Total Chunks with enhanced error handling
+   */
+  async getTotalChunks(): Promise<IndividualStatistic> {
+    try {
+      await this.getCurrentUser();
+      const count = await this.calculateTotalChunks();
+
+      return {
+        value: count,
+        lastUpdated: new Date().toISOString(),
+      };
+    } catch (error) {
+      // Enhanced error handling for chunk count calculation
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : 'Unknown error occurred while calculating chunk count';
+      
+      console.error('getTotalChunks failed:', errorMessage);
+      
+      // Instead of throwing, return a failed state that can be handled by the UI
+      throw new Error(`Failed to calculate chunk count: ${errorMessage}`);
     }
   }
 
