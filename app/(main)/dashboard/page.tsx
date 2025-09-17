@@ -5,6 +5,7 @@ import {
   StatusCard
 } from '@/components';
 import { PageLayout, Section } from '@/components/layouts';
+import { useChunkCount } from '@/hooks/useChunkCount';
 import { useDashboard } from '@/hooks/useDashboard';
 import { useRecentActivity } from '@/hooks/useRecentActivity';
 import { useMemo } from 'react';
@@ -19,6 +20,14 @@ export default function DashboardPage() {
       enableChatData: false,
     });
   const { 
+    chunkCount, 
+    isLoading: chunksLoading, 
+    hasError: chunksHasError 
+  } = useChunkCount({
+    autoRefresh: true,
+    refreshInterval: 60000,
+  });
+  const { 
     activities: recentActivities, 
     loading: activitiesLoading, 
     error: activitiesError,
@@ -28,7 +37,6 @@ export default function DashboardPage() {
     autoRefresh: true,
     refreshInterval: 60000,
   });
-  // KPIs now rendered directly via StatusCard using statistics
 
   // Map to RecentActivityCard props
   const cardActivities = useMemo(
@@ -39,30 +47,9 @@ export default function DashboardPage() {
         description: `${a.type} • ${a.status}`,
       }));
       
-      // Add some fallback data for testing when no real activities exist
-      if (mapped.length === 0 && !activitiesLoading && !activitiesError) {
-        return [
-          {
-            title: 'Welcome to Knowledge Advisor',
-            timestamp: 'Just now',
-            description: 'system • info',
-          },
-          {
-            title: 'System initialized successfully',
-            timestamp: '1 minute ago', 
-            description: 'system • success',
-          },
-          {
-            title: 'Ready to upload documents',
-            timestamp: '2 minutes ago',
-            description: 'system • info',
-          },
-        ];
-      }
-      
       return mapped;
     },
-    [recentActivities, activitiesLoading, activitiesError],
+    [recentActivities],
   );
 
   return (
@@ -106,8 +93,10 @@ export default function DashboardPage() {
           />
           <StatusCard
             name='Chunks'
-            value={(statistics?.totalChunks ?? 0).toLocaleString()}
+            value={(chunkCount ?? 0).toLocaleString()}
             color='bg-sky-500/10 text-sky-400'
+            loading={chunksLoading}
+            error={chunksHasError}
             icon={
               <svg
                 xmlns='http://www.w3.org/2000/svg'

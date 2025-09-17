@@ -28,11 +28,11 @@ export const KnowledgeBaseCardSkeleton: React.FC<KnowledgeBaseCardSkeletonProps>
   const skeletonCards = Array.from({ length: count }, (_, index) => index);
 
   return (
-    <div className={`grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 ${className}`}>
+    <div className={`grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5 ${className}`}>
       {skeletonCards.map((index) => (
         <div
           key={index}
-          className='group mx-auto h-[180px] w-full max-w-sm animate-pulse rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:w-full sm:max-w-none sm:p-6 dark:border-gray-700 dark:bg-gray-800'
+          className='group mx-auto h-[200px] w-full animate-pulse rounded-lg border border-gray-200 bg-white p-4 shadow-sm sm:p-5 lg:h-[220px] lg:p-6 dark:border-gray-700 dark:bg-gray-800'
         >
           {/* Header Section Skeleton */}
           <div className='mb-4 flex items-start justify-between gap-3'>

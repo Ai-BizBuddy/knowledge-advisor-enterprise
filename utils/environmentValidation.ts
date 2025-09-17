@@ -9,7 +9,6 @@ interface EnvironmentConfig {
   supabaseAnonKey: string;
   schema: string;
   ingressService?: string;
-  langflowUrl?: string;
   langflowSearchPath?: string;
   langflowChatPath?: string;
   adkBaseUrl?: string;
@@ -36,7 +35,6 @@ export function validateEnvironment(): EnvironmentConfig {
   const urlValidation = [
     { key: 'supabaseUrl', url: requiredVars.supabaseUrl },
     { key: 'ingressService', url: process.env.NEXT_PUBLIC_INGRESS_SERVICE },
-    { key: 'langflowUrl', url: process.env.NEXT_PUBLIC_LANGFLOW_URL },
     { key: 'adkBaseUrl', url: process.env.NEXT_PUBLIC_ADK_BASE_URL },
   ];
 
@@ -51,7 +49,6 @@ export function validateEnvironment(): EnvironmentConfig {
     supabaseAnonKey: requiredVars.supabaseAnonKey!,
     schema: process.env.NEXT_PUBLIC_SUPABASE_SCHEMA || 'knowledge',
     ingressService: process.env.NEXT_PUBLIC_INGRESS_SERVICE,
-    langflowUrl: process.env.NEXT_PUBLIC_LANGFLOW_URL,
     langflowSearchPath: process.env.NEXT_PUBLIC_LANGFLOW_SEARCH_PATH,
     langflowChatPath: process.env.NEXT_PUBLIC_LANGFLOW_CHAT_PATH,
     adkBaseUrl: process.env.NEXT_PUBLIC_ADK_BASE_URL,

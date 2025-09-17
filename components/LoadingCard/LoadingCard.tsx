@@ -21,7 +21,7 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
       case 'compact':
         return 'grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4';
       default:
-        return 'grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5';
+        return 'grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5';
     }
   };
 
@@ -32,8 +32,8 @@ export const LoadingCard: React.FC<LoadingCardProps> = ({
       case 'compact':
         return 'h-32 aspect-square';
       default:
-        // Match the exact height of KnowledgeBaseCard (180px)
-        return 'h-[180px] aspect-[4/3]';
+        // Match the exact height of KnowledgeBaseCard (200px mobile, 220px desktop)
+        return 'h-[200px] lg:h-[220px]';
     }
   };
 

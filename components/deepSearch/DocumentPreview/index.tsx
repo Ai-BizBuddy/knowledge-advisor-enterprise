@@ -148,7 +148,7 @@ export const DocumentPreview = ({
           {document.fileType.toLowerCase() === 'pdf' ? (
             /* PDF Viewer */
             <iframe
-              src={`${document.fileUrl}#toolbar=1&navpanes=1&scrollbar=1`}
+              src={`${document.fileUrl}#toolbar=1&navpanes=1&scrollbar=1${document.pageNumber ? `&page=${document.pageNumber}` : ''}`}
               className='h-full w-full border-0'
               title={`Preview of ${document.name}`}
               style={{

@@ -1,23 +1,23 @@
-import UserManagementService from '../UserManagementService';
 import {
-  User,
-  Role,
-  Permission,
-  Department,
-  UserFilter,
-  CreateRoleInput,
-  UpdateRoleInput,
-} from '@/interfaces/UserManagement';
-import {
-  PaginationParams,
-  PaginatedResponse,
   DEFAULT_PAGE_SIZE,
+  PaginatedResponse,
+  PaginationParams,
 } from '@/interfaces/Pagination';
 import {
-  createClientTable,
+  CreateRoleInput,
+  Department,
+  Permission,
+  Role,
+  UpdateRoleInput,
+  User,
+  UserFilter,
+} from '@/interfaces/UserManagement';
+import {
   createClient,
   createClientAuth,
+  createClientTable,
 } from '@/utils/supabase/client';
+import UserManagementService from '../UserManagementService';
 
 class PaginatedUserManagementService extends UserManagementService {
   /**

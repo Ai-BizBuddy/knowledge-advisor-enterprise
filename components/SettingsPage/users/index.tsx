@@ -74,7 +74,8 @@ export default function UsersPage() {
           ]);
           initialLoadDone.current = true;
         } catch (error) {
-                  }
+          console.error('Failed to load initial user data:', error);
+        }
       };
       loadInitialData();
     }
@@ -125,7 +126,7 @@ export default function UsersPage() {
   }, []);
 
   // Handle successful user creation/edit from the unified modal
-  const handleUserSuccess = async (user: User) => {
+  const handleUserSuccess = async () => {
         // Show success toast based on the current mode
     const message =
       userModalMode === 'create'

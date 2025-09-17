@@ -5,6 +5,7 @@ import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
+import { useToast } from '@/components/toast';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
 import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
@@ -16,6 +17,8 @@ export default function KnowledgeBase() {
   const [knowledgeBaseToDelete, setKnowledgeBaseToDelete] = useState<
     string | null
   >(null);
+
+  const { showToast } = useToast();
 
   const {
     // State
@@ -38,7 +41,6 @@ export default function KnowledgeBase() {
     createKnowledgeBase,
   } = useKnowledgeBase();
 
-
   const formatUpdatedTime = (updatedAt: string) => {
     const date = new Date(updatedAt);
     return date.toLocaleDateString('en-US', {
@@ -49,7 +51,13 @@ export default function KnowledgeBase() {
   };
 
   const handleKnowledgeBaseSearch = async (query: string) => {
-    await searchKnowledgeBases(query);
+    try {
+      await searchKnowledgeBases(query);
+    } catch (error) {
+      console.error('Search failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Search failed. Please try again.';
+      showToast(errorMessage, 'error');
+    }
   };
 
   // Handle delete confirmation
@@ -64,10 +72,14 @@ export default function KnowledgeBase() {
         await handleKnowledgeBaseDelete(knowledgeBaseToDelete);
         // Reload the data after successful deletion
         await initialLoad();
+        showToast('Knowledge base deleted successfully', 'success');
         setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
-      } catch {
-                setDeleteModal(false);
+      } catch (error) {
+        console.error('Delete failed:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to delete knowledge base. Please try again.';
+        showToast(errorMessage, 'error');
+        setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
       }
     }
@@ -85,7 +97,7 @@ export default function KnowledgeBase() {
 
   return (
     <div className='h-full '>
-      {/* Main Container with consistent responsive padding */}
+      {/* Main Container with Mac-optimized responsive padding */}
       <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
         <div className='space-y-3 pb-3 '>
@@ -128,19 +140,6 @@ export default function KnowledgeBase() {
               </Button>
             </div>
           </div>
-
-          {/* Tabs Section */}
-          {/* <div className='rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800'>
-            <Tabs
-              currentTab={selectedTab}
-              tabList={tabList.map((tab) => `${tab.label}`)}
-              onTabChange={(value) => {
-                // Extract the tab name without the count
-                const tabName = value.split(' (')[0];
-                handleTabSelect(tabName);
-              }}
-            />
-          </div> */}
         </div>
 
         {/* Content Area */}
@@ -149,8 +148,8 @@ export default function KnowledgeBase() {
           <Loading />
         ) : projects.length > 0 ? (
           <div className='space-y-6'>
-            {/* Knowledge Base Cards Grid */}
-            <div className='grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5'>
+            {/* Knowledge Base Cards Grid - Optimized for Mac screens */}
+            <div className='knowledge-base-grid grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5'>
               {projects.map((kb) => (
                 <KnowledgeBaseCard
                   key={kb.id}
@@ -231,11 +230,14 @@ export default function KnowledgeBase() {
           onSubmit={async (data) => {
             try {
               await createKnowledgeBase(data);
+              showToast('Knowledge base created successfully', 'success');
               setOpenModal(false);
               // Force reload to show the new knowledge base
               await initialLoad();
-            } catch {
-                            // TODO: Add toast notification for error
+            } catch (error) {
+              console.error('Create knowledge base failed:', error);
+              const errorMessage = error instanceof Error ? error.message : 'Failed to create knowledge base. Please try again.';
+              showToast(errorMessage, 'error');
             }
           }}
         />

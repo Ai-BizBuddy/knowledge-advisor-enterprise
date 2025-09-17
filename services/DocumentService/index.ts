@@ -2,7 +2,6 @@
  * Document Service - Supabase Implementation
  *
  * This service handles all CRUD operations for documents using Supabase
- * with fetch API instead of Axios. Follows the project's strict TypeScript standards.
  */
 
 import type {
@@ -17,8 +16,6 @@ import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
 class DocumentService {
-  private readonly serviceName = 'Document';
-
   constructor() {
     // Service initialization
   }
@@ -31,9 +28,9 @@ class DocumentService {
         throw new Error('User not authenticated');
       }
 
-            return session.user;
+      return session.user;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -45,7 +42,6 @@ class DocumentService {
     paginationOptions: PaginationOptions,
     filters?: { status?: string; searchTerm?: string; type?: string },
   ): Promise<{ data: Document[]; count: number }> {
-    
     try {
       const supabaseTable = createClientTable();
 
@@ -81,7 +77,7 @@ class DocumentService {
       const { count, error: countError } = await countQuery;
 
       if (countError) {
-              }
+      }
 
       // Get paginated data
       const { data: documents, error } = await dataQuery
@@ -89,13 +85,12 @@ class DocumentService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to fetch documents: ${error.message}`);
+        throw new Error(`Failed to fetch documents: ${error.message}`);
       }
 
-      
       return { data: documents || [], count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -107,7 +102,6 @@ class DocumentService {
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Document[]; count: number }> {
-    
     try {
       const supabaseTable = createClientTable();
 
@@ -119,7 +113,7 @@ class DocumentService {
         .ilike('name', `%${query}%`);
 
       if (countError) {
-              }
+      }
 
       // Get paginated search results
       const { data: documents, error } = await supabaseTable
@@ -131,42 +125,36 @@ class DocumentService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to search documents: ${error.message}`);
+        throw new Error(`Failed to search documents: ${error.message}`);
       }
 
-      
-            return { data: documents || [], count: count || 0 };
-
-        } catch (error) {
-                        throw error;
-        }
+      return { data: documents || [], count: count || 0 };
+    } catch (error) {
+      throw error;
     }
+  }
 
-    async getDocumentById(id: string[]): Promise<Document[] | null> {
-        try {
-            const user = await this.getCurrentUser();
-            const supabaseTable = createClientTable();
+  async getDocumentById(id: string[]): Promise<Document[] | null> {
+    try {
+      const supabaseTable = createClientTable();
 
-            const { data: document, error } = await supabaseTable
-                .from('document')
-                .select('*')
-                .in('id', id)
+      const { data: document, error } = await supabaseTable
+        .from('document')
+        .select('*')
+        .in('id', id);
 
-
-
-            if (error) {
-                if (error.code === 'PGRST116') {
-                                        return null;
-                }
-                                throw new Error(`Failed to fetch document: ${error.message}`);
-            }
-
-            return document;
-
-        } catch (error) {
-                        throw error;
+      if (error) {
+        if (error.code === 'PGRST116') {
+          return null;
         }
+        throw new Error(`Failed to fetch document: ${error.message}`);
+      }
+
+      return document;
+    } catch (error) {
+      throw error;
     }
+  }
 
   /**
    * Get a specific document by ID
@@ -175,18 +163,13 @@ class DocumentService {
     id: string,
     knowledgeBaseId?: string,
   ): Promise<Document | null> {
-    
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       let query = supabaseTable
         .from('document')
-        .select(
-          '*,knowledge_base!inner(created_by)',
-        )
-        .eq('id', id)
-        .eq('knowledge_base.created_by', user.id);
+        .select('*,knowledge_base!inner(created_by)')
+        .eq('id', id);
 
       if (knowledgeBaseId) {
         query = query.eq('knowledge_base_id', knowledgeBaseId);
@@ -196,14 +179,14 @@ class DocumentService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-                    return null;
+          return null;
         }
-                throw new Error(`Failed to fetch document: ${error.message}`);
+        throw new Error(`Failed to fetch document: ${error.message}`);
       }
 
       return document;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -211,7 +194,6 @@ class DocumentService {
    * Create a new document
    */
   async createDocument(input: CreateDocumentInput): Promise<Document> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -233,13 +215,12 @@ class DocumentService {
         .single();
 
       if (error) {
-                throw new Error(`Failed to create document: ${error.message}`);
+        throw new Error(`Failed to create document: ${error.message}`);
       }
 
-      
       return document as Document;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -249,7 +230,6 @@ class DocumentService {
   async createMultipleDocuments(
     input: CreateMultipleDocumentsInput,
   ): Promise<Document[]> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -286,13 +266,12 @@ class DocumentService {
         .select();
 
       if (error) {
-                throw new Error(`Failed to create documents: ${error.message}`);
+        throw new Error(`Failed to create documents: ${error.message}`);
       }
 
-      
       return documents as Document[];
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -303,7 +282,6 @@ class DocumentService {
   async createDocumentsFromFiles(
     input: CreateDocumentsFromFilesInput,
   ): Promise<Document[]> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -326,10 +304,10 @@ class DocumentService {
         try {
           // Generate document ID first to use in storage path
           const documentId = crypto.randomUUID();
-          
+
           // Extract file extension from original filename
           const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
-          
+
           // Create file path using document ID instead of filename
           const filePath = `documents/${documentId}`;
 
@@ -378,7 +356,7 @@ class DocumentService {
           // Create document record in database using the 'document' table schema
           const documentData = {
             id: documentId, // Use the generated document ID
-            name: file.name, 
+            name: file.name,
             file_type: fileExtension, // Database uses 'file_type'
             knowledge_base_id: input.knowledge_base_id,
             status: 'uploaded',
@@ -411,10 +389,9 @@ class DocumentService {
             );
           }
 
-          
           return document as Document;
         } catch (error) {
-                    throw new Error(
+          throw new Error(
             `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
           );
         }
@@ -423,10 +400,9 @@ class DocumentService {
       // Wait for all uploads to complete
       const documents = await Promise.all(uploadPromises);
 
-      
       return documents;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -437,7 +413,6 @@ class DocumentService {
     id: string,
     input: UpdateDocumentInput,
   ): Promise<Document> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -461,13 +436,12 @@ class DocumentService {
         .single();
 
       if (error) {
-                throw new Error(`Failed to update document: ${error.message}`);
+        throw new Error(`Failed to update document: ${error.message}`);
       }
 
-      
       return document as Document;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -475,7 +449,6 @@ class DocumentService {
    * Delete a document
    */
   async deleteDocument(id: string): Promise<void> {
-    
     try {
       const supabaseTable = createClientTable();
 
@@ -486,11 +459,10 @@ class DocumentService {
         .eq('id', id);
 
       if (error) {
-                throw new Error(`Failed to delete document: ${error.message}`);
+        throw new Error(`Failed to delete document: ${error.message}`);
       }
-
-          } catch (error) {
-            throw error;
+    } catch (error) {
+      throw error;
     }
   }
 
@@ -501,7 +473,6 @@ class DocumentService {
     paginationOptions: PaginationOptions,
     filters?: { status?: string; searchTerm?: string; type?: string },
   ): Promise<{ data: Document[]; count: number }> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -572,7 +543,7 @@ class DocumentService {
       const { count, error: countError } = await countQuery;
 
       if (countError) {
-              }
+      }
 
       // Get paginated data
       const { data: documents, error } = await dataQuery
@@ -580,13 +551,12 @@ class DocumentService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to fetch user documents: ${error.message}`);
+        throw new Error(`Failed to fetch user documents: ${error.message}`);
       }
 
-      
       return { data: documents || [], count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -597,7 +567,6 @@ class DocumentService {
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Document[]; count: number }> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -616,7 +585,7 @@ class DocumentService {
         .ilike('name', `%${searchTerm}%`);
 
       if (countError) {
-              }
+      }
 
       // Get paginated search results
       const { data: documents, error } = await supabaseTable
@@ -633,13 +602,12 @@ class DocumentService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to search user documents: ${error.message}`);
+        throw new Error(`Failed to search user documents: ${error.message}`);
       }
 
-      
       return { data: documents || [], count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -647,7 +615,6 @@ class DocumentService {
    * Get a user document by ID (ensures user owns the document through knowledge base)
    */
   async getUserDocument(id: string): Promise<Document | null> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
@@ -666,14 +633,14 @@ class DocumentService {
 
       if (error) {
         if (error.code === 'PGRST116') {
-                    return null;
+          return null;
         }
-                throw new Error(`Failed to fetch user document: ${error.message}`);
+        throw new Error(`Failed to fetch user document: ${error.message}`);
       }
 
       return document;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -681,22 +648,22 @@ class DocumentService {
    * Legacy methods for backward compatibility
    */
   async getAllDocuments() {
-        const { data, error } = await createClientTable()
+    const { data, error } = await createClientTable()
       .from('document')
       .select('*');
     if (error) {
-            throw error;
+      throw error;
     }
     return data;
   }
 
   async getAllDocumentId(id: string) {
-        const { data, error } = await createClientTable()
+    const { data, error } = await createClientTable()
       .from('document')
       .select('*')
       .eq('knowledge_base_id', id);
     if (error) {
-            throw error;
+      throw error;
     }
     return data;
   }
@@ -705,14 +672,14 @@ class DocumentService {
     knowledgeBaseId: string,
     document: Partial<Document>,
   ) {
-        const { data, error } = await createClientTable()
+    const { data, error } = await createClientTable()
       .from('document')
       .insert({
         ...document,
         knowledge_base_id: knowledgeBaseId,
       });
     if (error) {
-            throw error;
+      throw error;
     }
     return data;
   }

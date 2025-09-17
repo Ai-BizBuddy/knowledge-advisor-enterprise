@@ -93,7 +93,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [filteredProjects, setFilteredProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Combined state object
@@ -219,8 +219,13 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
   );
 
   // Initial load function
-  const initialLoad = useCallback(() => {
-    loadKnowledgeBases(1);
+  const initialLoad = useCallback(async () => {
+    try {
+      setLoading(true);
+      await loadKnowledgeBases(1);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : 'Failed to load');
+    }
   }, [loadKnowledgeBases]);
 
   // Create knowledge base
@@ -398,13 +403,20 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Search knowledge bases
   const searchKnowledgeBases = useCallback(
-    (query: string): Promise<void> => {
-            setState((prev) => ({
-        ...prev,
-        searchTerm: query,
-        currentPage: 1, // Reset to first page for search results
-      }));
-      return loadKnowledgeBases(1, false, undefined, query);
+    async (query: string): Promise<void> => {
+      try {
+        // Ensure loading is set to true for search operations
+        setLoading(true);
+        setState((prev) => ({
+          ...prev,
+          searchTerm: query,
+          currentPage: 1, // Reset to first page for search results
+        }));
+        await loadKnowledgeBases(1, false, undefined, query);
+      } catch (error) {
+        setError(error instanceof Error ? error.message : 'Search failed');
+        throw error;
+      }
     },
     [loadKnowledgeBases],
   );
@@ -416,13 +428,13 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         setError(null);
         // Just filter from existing projects
         return projects.filter((p) => p.status === status);
-      } catch (err) {
+      } catch (error) {
         const errorMessage =
-          err instanceof Error
-            ? err.message
+          error instanceof Error
+            ? error.message
             : 'Failed to filter knowledge bases';
         setError(errorMessage);
-        throw err;
+        throw error;
       }
     },
     [projects],
@@ -468,8 +480,9 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     async (id: string) => {
       try {
         await deleteKnowledgeBase(id);
-      } catch (err) {
-              }
+      } catch (error) {
+        console.error('Delete failed:', error);
+      }
     },
     [deleteKnowledgeBase],
   );
@@ -495,11 +508,11 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         };
 
         return mockAnalytics;
-      } catch (err) {
+      } catch (error) {
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to get analytics';
+          error instanceof Error ? error.message : 'Failed to get analytics';
         setError(errorMessage);
-        throw err;
+        throw error;
       }
     },
     [],

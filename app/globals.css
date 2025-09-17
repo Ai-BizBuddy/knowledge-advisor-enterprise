@@ -185,3 +185,60 @@
     @apply shadow-lg;
   }
 }
+
+/* Mac-specific screen optimizations */
+/* MacBook Pro 13" (1280px) */
+@media (min-width: 1280px) and (max-width: 1439px) {
+  .knowledge-base-grid {
+    @apply grid-cols-4 gap-5;
+  }
+  
+  .knowledge-base-card {
+    @apply h-[210px];
+  }
+
+  .content-container {
+    @apply px-8 py-8;
+  }
+}
+
+/* MacBook Pro 14" & 15" (1440px+) */
+@media (min-width: 1440px) and (max-width: 1919px) {
+  .knowledge-base-grid {
+    @apply grid-cols-4 gap-6;
+  }
+  
+  .knowledge-base-card {
+    @apply h-[220px];
+  }
+
+  .content-container {
+    @apply px-10 py-10;
+  }
+}
+
+/* MacBook Pro 16" & iMac (1920px+) */
+@media (min-width: 1920px) {
+  .knowledge-base-grid {
+    @apply grid-cols-5 gap-6;
+  }
+  
+  .knowledge-base-card {
+    @apply h-[230px];
+  }
+
+  .content-container {
+    @apply px-12 py-12 max-w-[1600px];
+  }
+}
+
+/* Ultra-wide Mac displays (2560px+) */
+@media (min-width: 2560px) {
+  .knowledge-base-grid {
+    @apply grid-cols-6 gap-8;
+  }
+
+  .content-container {
+    @apply max-w-[2000px];
+  }
+}

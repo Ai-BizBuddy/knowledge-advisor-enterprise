@@ -65,6 +65,25 @@
   }
 }
 
+/* Text and dot alignment fixes */
+.typing-indicator .flex {
+  align-items: baseline;
+  flex-wrap: nowrap;
+}
+
+.typing-indicator span:first-child {
+  white-space: nowrap;
+  line-height: 1.25;
+}
+
+/* Ensure dots stay aligned with text baseline */
+.typing-indicator .animate-bounce {
+  align-self: center;
+  margin-top: 1px;
+  display: inline-block;
+  vertical-align: baseline;
+}
+
 /* Auto-resize textarea */
 .auto-resize-textarea {
   transition: height 0.2s ease;
@@ -81,4 +100,30 @@
 /* Smooth border radius transitions */
 .message-bubble {
   transition: all 0.2s ease;
+}
+
+/* Chat message text alignment improvements */
+.message-bubble p {
+  line-height: 1.5;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.message-bubble li {
+  line-height: 1.4;
+}
+
+/* Ensure inline elements stay properly aligned */
+.message-bubble .inline-flex {
+  align-items: baseline;
+  vertical-align: baseline;
+}
+
+/* Fix list item dot alignment */
+.message-bubble ul li::marker {
+  content: "• ";
+}
+
+.message-bubble ol li::marker {
+  font-variant-numeric: tabular-nums;
 }

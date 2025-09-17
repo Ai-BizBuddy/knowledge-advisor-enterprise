@@ -37,7 +37,7 @@ export default function AdvancedSearchPage() {
   });
   const resultsPerPage = 10;
 
-  const { results, loading, error, executeSearch } = useDeepSearch();
+  const { loading, error, executeSearch } = useDeepSearch();
   
   const {
     knowledgeBases,
