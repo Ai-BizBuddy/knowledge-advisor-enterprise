@@ -1,10 +1,8 @@
 'use client';
 
 import { Document, DocumentStatus } from '@/interfaces/Project';
-// import { getAllDocuments } from '@/services/Project/supabase';
 import { documentService, knowledgeBaseService } from '@/services';
 import { useCallback, useEffect, useState } from 'react';
-import { useKnowledgeBase } from './useKnowledgeBase';
 
 export interface ActivityItem {
   id: string;
@@ -37,7 +35,6 @@ export const useRecentActivity = (
   const [error, setError] = useState<string | null>(null);
 
   const { limit = 10, autoRefresh = false, refreshInterval = 60000 } = options;
-  const { projects, loading: projectsLoading } = useKnowledgeBase();
 
   // Function to format relative time (e.g., "2 hours ago")
   const formatRelativeTime = (dateString: string): string => {
@@ -59,15 +56,6 @@ export const useRecentActivity = (
     }
   };
 
-  // Function to get project name by project ID
-  const getProjectName = useCallback(
-    (projectId: string): string => {
-      const project = projects?.find((p) => p.id === projectId);
-      return project?.name || 'Unknown Project';
-    },
-    [projects],
-  );
-
   // Load recent activities
   const loadActivities = useCallback(async () => {
     try {
@@ -80,9 +68,7 @@ export const useRecentActivity = (
         documents = await documentService.getAllDocuments();
       } catch (error) {
         setError(
-          error instanceof Error
-            ? error.message
-            : 'Failed to load documents'
+          error instanceof Error ? error.message : 'Failed to load documents',
         );
         throw error;
       }
@@ -137,19 +123,8 @@ export const useRecentActivity = (
         }),
       );
 
-      // Add activities for knowledge base creation or updates
-      const kbActivities: ActivityItem[] =
-        projects?.map((project) => ({
-          id: `kb-${project.id}`,
-          type: 'knowledgebase',
-          message: `Knowledge base "${project.name}" ${project.updated_at ? 'updated' : 'created'}`,
-          time: formatRelativeTime(project.updated_at || project.created_at),
-          status: 'info',
-          projectId: project.id,
-        })) || [];
-
       // Combine all activities
-      const allActivities = [...documentActivities, ...kbActivities];
+      const allActivities = [...documentActivities];
 
       // Sort by time (most recent first)
       allActivities.sort((a, b) => {
@@ -181,15 +156,14 @@ export const useRecentActivity = (
     } finally {
       setLoading(false);
     }
-  }, [projects, limit, getProjectName]);
+  }, [limit]);
+
+  useEffect(() => {
+    loadActivities();
+  }, [loadActivities]);
 
   // Initial load and refresh logic
   useEffect(() => {
-    if (!projectsLoading) {
-      loadActivities();
-    }
-
-    // Set up auto-refresh if enabled
     let refreshTimer: NodeJS.Timeout | null = null;
     if (autoRefresh) {
       refreshTimer = setInterval(() => {
@@ -202,7 +176,7 @@ export const useRecentActivity = (
         clearInterval(refreshTimer);
       }
     };
-  }, [loadActivities, autoRefresh, refreshInterval, projectsLoading]);
+  }, [loadActivities, autoRefresh, refreshInterval]);
 
   return {
     activities,
