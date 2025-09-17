@@ -33,15 +33,11 @@ export default function RootLayout({
           name='description'
           content='A platform for ai agentic document knowledge.'
         />
-        <link
-          rel='icon'
-          type='image/svg+xml'
-          href='/assets/logo-ka.svg'
-        />
+        <link rel='icon' type='image/svg+xml' href='/assets/logo-ka.svg' />
         <ThemeModeScript />
       </head>
       <body
-        className={`${notoSans.variable} ${notoMono.variable} bg-gray-200 antialiased dark:bg-gray-900 overflow-hidden`}
+        className={`${notoSans.variable} ${notoMono.variable} overflow-hidden bg-gray-200 antialiased dark:bg-gray-900`}
       >
         <ThemeInit />
         <AuthProvider>
