@@ -118,7 +118,7 @@ class StatisticsService {
 
       return count || 0;
     } catch (error) {
-      return 0;
+      throw error;
     }
   }
 
@@ -142,7 +142,7 @@ class StatisticsService {
 
       return count || 0;
     } catch (error) {
-      return 0;
+      throw error;
     }
   }
 
@@ -163,7 +163,7 @@ class StatisticsService {
 
       return count || 0;
     } catch (error) {
-      return 0;
+      throw error;
     }
   }
 
@@ -410,7 +410,6 @@ class StatisticsService {
    */
   async getTotalChunks(): Promise<IndividualStatistic> {
     try {
-      await this.getCurrentUser();
       const count = await this.calculateTotalChunks();
 
       return {

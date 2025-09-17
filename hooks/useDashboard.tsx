@@ -11,7 +11,6 @@
 import type { Project } from '@/interfaces/Project';
 import type { DashboardStatistics } from '@/interfaces/Statistics';
 import {
-  dashboardService,
   type ActivityItem,
   type ChatMessage,
   type ChatSession,
@@ -50,7 +49,6 @@ interface UseDashboardReturn {
   isPageVisible: boolean; // New: Track page visibility
 
   // Actions
-  refreshDashboard: () => Promise<void>;
   refreshStatistics: () => Promise<void>;
 }
 
@@ -67,7 +65,7 @@ interface UseDashboardOptions {
 
 /**
  * Custom hook for managing complete dashboard data
- * 
+ *
  * Features:
  * - Automatic data refresh only when page/tab is visible
  * - Pauses refresh interval when user switches tabs or minimizes window
@@ -114,49 +112,9 @@ export const useDashboard = (
   const { statistics, refreshStatistics: refreshStatsOnly } = useStatistics({
     autoRefresh: false,
     onError: (error) => {
-            // Don't fail the entire dashboard if stats fail
+      // Don't fail the entire dashboard if stats fail
     },
   });
-
-  /**
-   * Fetch complete dashboard overview
-   */
-  const fetchDashboardOverview = useCallback(async (): Promise<void> => {
-    try {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      const overview = await dashboardService.getDashboardOverview();
-
-      setState({
-        overview,
-        isLoading: false,
-        error: null,
-        lastUpdated: new Date(),
-      });
-
-      onSuccessRef.current?.(overview);
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch dashboard data';
-
-      setState((prev) => ({
-        ...prev,
-        isLoading: false,
-        error: errorMessage,
-      }));
-
-      onErrorRef.current?.(errorMessage);
-    }
-  }, []);
-
-  /**
-   * Refresh complete dashboard data
-   */
-  const refreshDashboard = useCallback(async (): Promise<void> => {
-    await fetchDashboardOverview();
-  }, [fetchDashboardOverview]);
 
   /**
    * Refresh only statistics
@@ -164,11 +122,6 @@ export const useDashboard = (
   const refreshStatistics = useCallback(async (): Promise<void> => {
     await refreshStatsOnly();
   }, [refreshStatsOnly]);
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchDashboardOverview();
-  }, [fetchDashboardOverview]);
 
   // Page visibility tracking
   const [isPageVisible, setIsPageVisible] = useState(true);
@@ -189,26 +142,6 @@ export const useDashboard = (
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
-
-  // Auto-refresh setup - only when page is visible
-  useEffect(() => {
-    if (autoRefresh && refreshInterval > 0 && isPageVisible) {
-      refreshIntervalRef.current = setInterval(() => {
-        fetchDashboardOverview();
-      }, refreshInterval);
-
-      return () => {
-        if (refreshIntervalRef.current) {
-          clearInterval(refreshIntervalRef.current);
-        }
-      };
-    } else if (refreshIntervalRef.current) {
-      // Clear interval when page is not visible or autoRefresh is disabled
-      clearInterval(refreshIntervalRef.current);
-      refreshIntervalRef.current = null;
-    }
-  }, [autoRefresh, refreshInterval, isPageVisible, fetchDashboardOverview]);
-
   // Cleanup on unmount
   useEffect(() => {
     return () => {
@@ -242,7 +175,6 @@ export const useDashboard = (
     error: state.error,
     lastUpdated: state.lastUpdated,
     isPageVisible,
-    refreshDashboard,
     refreshStatistics,
   };
 };

@@ -65,8 +65,6 @@ export interface ActivityItem {
  * Provides centralized access to all dashboard-related data
  */
 class DashboardService {
-  private readonly serviceName = 'DashboardService';
-
   constructor() {
     // Service initialization
   }
@@ -81,41 +79,6 @@ class DashboardService {
         throw new Error('User not authenticated');
       }
       return session.user;
-    } catch (error) {
-      throw error;
-    }
-  }
-
-  /**
-   * Get complete dashboard overview data
-   */
-  async getDashboardOverview(): Promise<DashboardOverview> {
-    try {
-      // Fetch all data in parallel for better performance
-      const [
-        statistics,
-        recentKnowledgeBases,
-        recommendedKnowledgeBases,
-        recentActivities,
-        activeChatSessions,
-        recentChatMessages,
-      ] = await Promise.all([
-        this.getStatistics(),
-        this.getRecentKnowledgeBases(),
-        this.getRecommendedKnowledgeBases(),
-        this.getRecentActivities(),
-        this.getActiveChatSessions(),
-        this.getRecentChatMessages(),
-      ]);
-
-      return {
-        statistics,
-        recentKnowledgeBases,
-        recommendedKnowledgeBases,
-        recentActivities,
-        activeChatSessions,
-        recentChatMessages,
-      };
     } catch (error) {
       throw error;
     }
@@ -260,10 +223,6 @@ class DashboardService {
       // Get recent knowledge base activities
       const kbActivities = await this.getKnowledgeBaseActivities();
       activities.push(...kbActivities);
-
-      // Get recent document activities
-      const docActivities = await this.getDocumentActivities();
-      activities.push(...docActivities);
 
       // Get recent chat activities
       const chatActivities = await this.getChatActivities(user.id);
