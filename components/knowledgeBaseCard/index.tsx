@@ -24,7 +24,7 @@ export default function KnowledgeBaseCard({
 }: KnowledgeBaseCardProps) {
   return (
     <div
-      className='knowledge-base-card group mx-auto h-[200px] w-full transform cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-[1.02] sm:p-5 lg:h-[220px] lg:p-6 dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-2xl'
+      className='knowledge-base-card group mx-auto w-full transform cursor-pointer rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-[1.02] sm:p-5 lg:p-6 dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-2xl'
       onClick={onDetail}
       role='button'
       tabIndex={0}

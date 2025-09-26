@@ -194,7 +194,7 @@
   }
   
   .knowledge-base-card {
-    @apply h-[210px];
+    height: fit-content !important;
   }
 
   .content-container {
@@ -207,10 +207,7 @@
   .knowledge-base-grid {
     @apply grid-cols-4 gap-6;
   }
-  
-  .knowledge-base-card {
-    @apply h-[220px];
-  }
+
 
   .content-container {
     @apply px-10 py-10;
@@ -221,10 +218,6 @@
 @media (min-width: 1920px) {
   .knowledge-base-grid {
     @apply grid-cols-5 gap-6;
-  }
-  
-  .knowledge-base-card {
-    @apply h-[230px];
   }
 
   .content-container {
