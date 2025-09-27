@@ -17,7 +17,7 @@ export const useChatHistory = () => {
     setLoading(true);
     try {
       const historyData = await chatHistoryService.loadHistory();
-      setSessions(historyData);
+      setSessions(historyData.sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()));
     } catch {
       setSessions([]);
     } finally {
