@@ -11,7 +11,7 @@ const DeleteConfirmModal = ({
   if (!isOpen) return null;
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm'>
-      <div className='relative h-full w-full max-w-md p-4 md:h-auto'>
+      <div className='relative h-full w-full max-w-md p-4 md:h-auto flex items-center justify-center'>
         <div className='relative rounded-lg bg-white p-4 text-center shadow sm:p-5 dark:bg-gray-800'>
           <button
             type='button'

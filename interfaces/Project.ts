@@ -47,7 +47,9 @@ export interface CreateProjectInput {
 export interface UpdateProjectInput {
   name?: string;
   description?: string;
-  status?: ProjectStatus;
+  is_active?: ProjectStatus;
+  visibility?: 'public' | 'private' | 'department' | 'custom';
+  department_id?: string; // Optional department ID for department visibility
 }
 
 // Document interface for Supabase

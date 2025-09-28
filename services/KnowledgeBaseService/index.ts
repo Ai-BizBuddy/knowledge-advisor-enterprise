@@ -39,9 +39,9 @@ class KnowledgeBaseService {
         throw new Error('User not authenticated');
       }
 
-            return session.user;
+      return session.user;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -51,7 +51,8 @@ class KnowledgeBaseService {
       const uniqueValidIds = Array.from(
         new Set(
           (ids || []).filter(
-            (id): id is string => typeof id === 'string' && this.isValidUUID(id),
+            (id): id is string =>
+              typeof id === 'string' && this.isValidUUID(id),
           ),
         ),
       );
@@ -71,12 +72,14 @@ class KnowledgeBaseService {
         .in('id', uniqueValidIds);
 
       if (error) {
-                throw new Error(`Failed to fetch knowledge bases by IDs: ${error.message}`);
+        throw new Error(
+          `Failed to fetch knowledge bases by IDs: ${error.message}`,
+        );
       }
 
       return data as Project[];
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -87,20 +90,21 @@ class KnowledgeBaseService {
 
     const { data, error } = await supabaseTable
       .from('knowledge_base')
-      .select('id')
+      .select('id');
 
     if (error) {
-            throw new Error(`Failed to fetch KB IDs: ${error.message}`);
+      throw new Error(`Failed to fetch KB IDs: ${error.message}`);
     }
 
-  return data.map((row: { id: string }) => row.id).filter((id: string) => this.isValidUUID(id));
+    return data
+      .map((row: { id: string }) => row.id)
+      .filter((id: string) => this.isValidUUID(id));
   }
 
   async searchKnowledgeBase(
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Project[]; count: number }> {
-    
     try {
       const supabaseTable = createClientTable();
 
@@ -111,7 +115,7 @@ class KnowledgeBaseService {
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
-              }
+      }
 
       // Get paginated search results
       const { data: projects, error } = await supabaseTable
@@ -122,18 +126,17 @@ class KnowledgeBaseService {
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to search knowledge bases: ${error.message}`);
+        throw new Error(`Failed to search knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-                return { data: [], count: 0 };
+        return { data: [], count: 0 };
       }
 
-      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -144,12 +147,10 @@ class KnowledgeBaseService {
     paginationOptions?: PaginationOptions,
     filters?: { status?: string; searchTerm?: string },
   ): Promise<{ data: Project[]; count: number }> {
-    
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      
       // Build base query
       let countQuery = supabaseTable
         .from('knowledge_base')
@@ -178,7 +179,7 @@ class KnowledgeBaseService {
       const { count, error: countError } = await countQuery;
 
       if (countError) {
-              }
+      }
 
       // Get paginated data
       const { data: projects, error } = paginationOptions
@@ -188,18 +189,17 @@ class KnowledgeBaseService {
         : await dataQuery.order('created_at', { ascending: false });
 
       if (error) {
-                throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-                return { data: [], count: 0 };
+        return { data: [], count: 0 };
       }
 
-      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -220,7 +220,7 @@ class KnowledgeBaseService {
         if (error.code === 'PGRST116') {
           return null;
         }
-                throw new Error(`Failed to fetch knowledge base: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge base: ${error.message}`);
       }
 
       // Get document count for this knowledge base
@@ -241,7 +241,7 @@ class KnowledgeBaseService {
         is_active: project.is_active,
       } as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -271,52 +271,38 @@ class KnowledgeBaseService {
         .single();
 
       if (error) {
-                throw new Error(`Failed to create knowledge base: ${error.message}`);
+        throw new Error(`Failed to create knowledge base: ${error.message}`);
       }
 
       return project as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
   /**
    * Update an existing knowledge base
    */
-  async updateProject(id: string, input: UpdateProjectInput): Promise<Project> {
+  async updateProject(id: string, input: UpdateProjectInput): Promise<void> {
     try {
       const supabaseTable = createClientTable();
 
       const updateData = {
         ...input,
+        is_active: input.is_active === 1 ? true : input.is_active === 2 ? false : undefined,
         updated_at: new Date().toISOString(),
       };
 
       const { data: project, error } = await supabaseTable
         .from('knowledge_base')
         .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
-                throw new Error(`Failed to update knowledge base: ${error.message}`);
+        throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
-
-      
-      return {
-        id: project.id,
-        name: project.name,
-        is_active: project.is_active,
-        description: project.description || '',
-        document_count: 0, // Not available in current schema
-        status: project.is_active ? 1 : 2,
-        owner: project.created_by,
-        created_at: project.created_at,
-        updated_at: project.updated_at || project.created_at,
-      } as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -335,10 +321,10 @@ class KnowledgeBaseService {
         .eq('created_by', user.id);
 
       if (error) {
-                throw new Error(`Failed to delete knowledge base: ${error.message}`);
+        throw new Error(`Failed to delete knowledge base: ${error.message}`);
       }
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
