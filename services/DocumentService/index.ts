@@ -455,7 +455,7 @@ class DocumentService {
       // Delete with proper authorization check through knowledge_base relation
       const { error } = await supabaseTable
         .from('document')
-        .delete()
+        .update({ is_deleted: true })
         .eq('id', id);
 
       if (error) {

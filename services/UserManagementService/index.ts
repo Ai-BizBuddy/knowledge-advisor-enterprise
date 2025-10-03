@@ -5,34 +5,34 @@
  * with comprehensive type safety and error handling.
  */
 
-import { createClient, createClientAuth } from '@/utils/supabase/client';
-import { executeWithAuth, getAuthSession } from '@/utils/supabase/authUtils';
-import { extractUserClaims, hasRole, hasPermission } from '@/utils/jwtUtils';
 import {
-  User,
-  Role,
-  Permission,
-  Department,
-  CreateUserInput,
-  UpdateUserInput,
-  CreateRoleInput,
-  UpdateRoleInput,
-  CreatePermissionInput,
-  UpdatePermissionInput,
+  AccessLevel,
   CreateDepartmentInput,
-  UpdateDepartmentInput,
-  UserFilter,
-  UserStatus,
+  CreatePermissionInput,
+  CreateRoleInput,
+  CreateUserInput,
+  Department,
+  FeatureAccess,
+  Permission,
   PermissionAction,
   PermissionCheckResult,
-  UserSession,
-  FeatureAccess,
-  AccessLevel,
-  UserDisplayPermission,
-  UserRoleRow,
   Profile,
+  Role,
+  UpdateDepartmentInput,
+  UpdatePermissionInput,
+  UpdateRoleInput,
+  UpdateUserInput,
+  User,
+  UserDisplayPermission,
+  UserFilter,
   UserManagementError,
+  UserRoleRow,
+  UserSession,
+  UserStatus,
 } from '@/interfaces/UserManagement';
+import { extractUserClaims, hasPermission, hasRole } from '@/utils/jwtUtils';
+import { executeWithAuth, getAuthSession } from '@/utils/supabase/authUtils';
+import { createClient, createClientAuth } from '@/utils/supabase/client';
 
 /**
  * User Management Service Class
@@ -555,7 +555,7 @@ class UserManagementService {
       // Delete user profile first
       const { error: profileError } = await supabaseTable
         .from('users')
-        .delete()
+        .update({ is_deleted: true })
         .eq('id', id);
 
       if (profileError) {
@@ -925,7 +925,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      const { error } = await supabase.from('roles').delete().eq('id', id);
+      const { error } = await supabase.from('roles').update({ is_deleted: true }).eq('id', id);
 
       if (error) {
                 throw new Error(`Failed to delete role: ${error.message}`);
@@ -1100,7 +1100,7 @@ class UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      const { error } = await supabase.from('department').delete().eq('id', id);
+      const { error } = await supabase.from('department').update({ is_deleted: true }).eq('id', id);
 
       if (error) {
                 throw new Error(`Failed to delete department: ${error.message}`);

@@ -316,7 +316,7 @@ class KnowledgeBaseService {
 
       const { error } = await supabaseTable
         .from('knowledge_base')
-        .delete()
+        .update({ is_deleted: true })
         .eq('id', id)
         .eq('created_by', user.id);
 
