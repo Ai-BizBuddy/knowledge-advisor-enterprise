@@ -285,37 +285,24 @@ class KnowledgeBaseService {
   /**
    * Update an existing knowledge base
    */
-  async updateProject(id: string, input: UpdateProjectInput): Promise<Project> {
+  async updateProject(id: string, input: UpdateProjectInput): Promise<void> {
     try {
       const supabaseTable = createClientTable();
 
       const updateData = {
         ...input,
+        is_active: input.is_active === 1 ? true : input.is_active === 2 ? false : undefined,
         updated_at: new Date().toISOString(),
       };
 
       const { data: project, error } = await supabaseTable
         .from('knowledge_base')
         .update(updateData)
-        .eq('id', id)
-        .select()
-        .single();
+        .eq('id', id);
 
       if (error) {
         throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
-
-      return {
-        id: project.id,
-        name: project.name,
-        is_active: project.is_active,
-        description: project.description || '',
-        document_count: 0, // Not available in current schema
-        status: project.is_active ? 1 : 2,
-        owner: project.created_by,
-        created_at: project.created_at,
-        updated_at: project.updated_at || project.created_at,
-      } as Project;
     } catch (error) {
       throw error;
     }
@@ -332,7 +319,7 @@ class KnowledgeBaseService {
       // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabaseTable
         .from('knowledge_base')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
         .eq('id', id)
         .eq('created_by', user.id)
         .is('deleted_at', null);

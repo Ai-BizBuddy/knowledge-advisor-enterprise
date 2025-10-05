@@ -3,16 +3,20 @@
 import { KnowledgeBaseCard, PageHeader } from '@/components';
 import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
+import EditKnowledgeBaseModal from '@/components/editKnowledgeBaseModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useToast } from '@/components/toast';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
+import { Project, UpdateProjectInput } from '@/interfaces/Project';
 import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import Loading from './loading';
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
+  const [editModal, setEditModal] = useState(false);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [deleteModal, setDeleteModal] = useState(false);
   const [knowledgeBaseToDelete, setKnowledgeBaseToDelete] = useState<
     string | null
@@ -39,6 +43,7 @@ export default function KnowledgeBase() {
     handleKnowledgeBaseDelete,
     searchKnowledgeBases,
     createKnowledgeBase,
+    updateKnowledgeBase,
   } = useKnowledgeBase();
 
   const formatUpdatedTime = (updatedAt: string) => {
@@ -88,6 +93,34 @@ export default function KnowledgeBase() {
   const handleCancelDelete = () => {
     setDeleteModal(false);
     setKnowledgeBaseToDelete(null);
+  };
+
+  // Handle edit functionality
+  const handleEditClick = (project: Project) => {
+    setSelectedProject(project);
+    setEditModal(true);
+  };
+
+  const handleUpdateKnowledgeBase = async (id: string, data: UpdateProjectInput) => {
+    try {
+      await updateKnowledgeBase(id, data);
+      // Reload the data after successful update
+      await initialLoad();
+      showToast('Knowledge base updated successfully', 'success');
+      setEditModal(false);
+      setSelectedProject(null);
+    } catch (error) {
+      console.error('Update failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to update knowledge base. Please try again.';
+      showToast(errorMessage, 'error');
+      setEditModal(false);
+      setSelectedProject(null);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditModal(false);
+    setSelectedProject(null);
   };
 
   // Initialize data on component mount
@@ -157,6 +190,7 @@ export default function KnowledgeBase() {
                   title={kb.name}
                   detail={kb.description}
                   updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
+                  onEdit={() => handleEditClick(kb)}
                   onDelete={() => handleDeleteClick(kb.id)}
                   onDetail={() => {
                     handleKnowledgeBaseClick(kb.id);
@@ -240,6 +274,14 @@ export default function KnowledgeBase() {
               showToast(errorMessage, 'error');
             }
           }}
+        />
+
+        {/* Edit Knowledge Base Modal */}
+        <EditKnowledgeBaseModal
+          isOpen={editModal}
+          onClose={handleCancelEdit}
+          onSubmit={handleUpdateKnowledgeBase}
+          project={selectedProject}
         />
 
         {/* Delete Confirmation Modal */}

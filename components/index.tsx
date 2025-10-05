@@ -10,6 +10,7 @@ export { default as DeleteConfirmModal } from './deleteConfirmModal';
 export { DocumentDeleteModal } from './documentDeleteModal';
 export { default as DocumentDetail } from './documentDetail';
 export { default as DocumentList } from './DocumentList';
+export { default as EditKnowledgeBaseModal } from './editKnowledgeBaseModal';
 export { FileUploadModal } from './fileUpload';
 export type {
     FileUploadItem,

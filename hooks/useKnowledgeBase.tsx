@@ -43,7 +43,7 @@ export interface UseKnowledgeBaseReturn {
   updateKnowledgeBase: (
     id: string,
     data: UpdateProjectInput,
-  ) => Promise<Project>;
+  ) => Promise<void>;
   deleteKnowledgeBase: (id: string) => Promise<void>;
   getKnowledgeBase: (id: string) => Promise<Project | null>;
 
@@ -55,7 +55,7 @@ export interface UseKnowledgeBaseReturn {
   batchUpdate: (
     ids: string[],
     updates: Partial<UpdateProjectInput>,
-  ) => Promise<Project[]>;
+  ) => Promise<void>;
   batchDelete: (ids: string[]) => Promise<void>;
 
   // Search and Filter
@@ -292,17 +292,16 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
   // Update knowledge base
   const updateKnowledgeBase = useCallback(
-    async (id: string, data: UpdateProjectInput): Promise<Project> => {
+    async (id: string, data: UpdateProjectInput): Promise<void> => {
       try {
         setError(null);
-        const updatedProject = await knowledgeBaseService.updateProject(
+        await knowledgeBaseService.updateProject(
           id,
           data,
         );
-        setProjects((prev) =>
-          prev.map((p) => (p.id === id ? updatedProject : p)),
-        );
-        return updatedProject;
+
+        loadKnowledgeBases(stateRef.current.currentPage, true);
+        
       } catch (err) {
         const errorMessage =
           err instanceof Error
@@ -357,22 +356,14 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
     async (
       ids: string[],
       updates: Partial<UpdateProjectInput>,
-    ): Promise<Project[]> => {
+    ): Promise<void> => {
       try {
         setError(null);
         const updatePromises = ids.map((id) =>
           knowledgeBaseService.updateProject(id, updates),
         );
-        const updatedProjects = await Promise.all(updatePromises);
-        setProjects((prev) =>
-          prev.map((p) => {
-            const updated = updatedProjects.find(
-              (up: Project) => up.id === p.id,
-            );
-            return updated || p;
-          }),
-        );
-        return updatedProjects;
+        await Promise.all(updatePromises);
+        loadKnowledgeBases(stateRef.current.currentPage, true);
       } catch (err) {
         const errorMessage =
           err instanceof Error

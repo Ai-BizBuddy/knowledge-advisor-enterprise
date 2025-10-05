@@ -534,7 +534,7 @@ class UserManagementService {
       // Delete user profile first
       const { error: profileError } = await supabaseTable
         .from('users')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ deleted_at: new Date().toISOString(), is_deleted: true })
         .eq('id', id);
 
       if (profileError) {
@@ -896,7 +896,7 @@ class UserManagementService {
       // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabase
         .from('roles')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ deleted_at: new Date().toISOString(), is_deleted: true })
         .eq('id', id)
         .is('deleted_at', null);
 
@@ -1071,7 +1071,7 @@ class UserManagementService {
       // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabase
         .from('department')
-        .update({ deleted_at: new Date().toISOString() })
+        .update({ deleted_at: new Date().toISOString(), is_deleted: true })
         .eq('id', id)
         .is('deleted_at', null);
 
