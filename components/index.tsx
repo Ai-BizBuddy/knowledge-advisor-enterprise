@@ -28,6 +28,7 @@ export { default as RecentKnowledgeBasesCard } from './recentKnowledgeBasesCard'
 export { RecommendedKnowledgeBases } from './recommendedKnowledgeBases';
 export { default as SafeDarkThemeToggle } from './SafeDarkThemeToggle';
 export { default as SearchBar } from './searchBar';
+export { SettingsTab } from './settingsTab';
 export { default as SlideBar } from './sildeBar';
 export { default as StatusCard } from './statusCard';
 export { default as Tabs } from './tabs';

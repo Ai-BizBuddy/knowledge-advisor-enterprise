@@ -4,6 +4,7 @@ import { Project } from '@/interfaces/Project';
 import React from 'react';
 import ChatTab from './ChatTab';
 import DocumentList from './DocumentList';
+import { SettingsTab } from './settingsTab';
 import UserRole from './UserRole';
 
 
@@ -26,7 +27,6 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
   setCurrentTab,
   tabsList,
 }) => {
-
 
   return (
     <>
@@ -77,6 +77,13 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
         <UserRole 
           knowledgeBaseId={knowledgeBaseId} 
           isActive={currentTab === 'Users'}
+        />
+      )}
+
+      {currentTab === 'Settings' && (
+        <SettingsTab
+          knowledgeBaseId={knowledgeBaseId}
+          isActive={currentTab === 'Settings'}
         />
       )}
     </>

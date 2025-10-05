@@ -11,6 +11,7 @@ import { DocumentIngestionService } from './DocumentIngestionService';
 import { DocumentSearchService } from './DocumentSearchService';
 import DocumentService from './DocumentService';
 import { documentViewerService } from './DocumentViewerService';
+import { IntegrationService } from './IntegrationService';
 import { KnowledgeBaseService } from './KnowledgeBaseService';
 import { statisticsService } from './StatisticsService';
 import { storageService } from './StorageService';
@@ -33,6 +34,13 @@ const serviceConfig: Readonly<ServiceConfig> = {
  * Manages knowledge base CRUD operations using Supabase
  */
 export const knowledgeBaseService = new KnowledgeBaseService();
+
+/**
+ * Integration Service Instance
+ *
+ * Manages integration account CRUD operations for LINE and other platforms
+ */
+export const integrationService = new IntegrationService();
 
 /**
  * Document Service Instance
@@ -106,10 +114,11 @@ export const langflowChatService = adkChatService;
  */
 export { default as DocumentService } from './DocumentService';
 export {
-    AdkChatService,
-    DocumentIngestionService,
-    DocumentSearchService,
-    KnowledgeBaseService
+  AdkChatService,
+  DocumentIngestionService,
+  DocumentSearchService,
+  IntegrationService,
+  KnowledgeBaseService
 };
 
 /**
@@ -118,9 +127,9 @@ export {
  * Export service configuration types for TypeScript support
  */
   export type { AdkChatService as AdkChatServiceType } from './AdkChatService';
-    export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
-    export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
-    export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
+  export type { DocumentIngestionService as DocumentIngestionServiceType } from './DocumentIngestionService';
+  export type { DocumentSearchService as DocumentSearchServiceType } from './DocumentSearchService';
+  export type { KnowledgeBaseService as KnowledgeBaseServiceType } from './KnowledgeBaseService';
 export type DocumentServiceType = InstanceType<typeof DocumentService>;
 
 /**

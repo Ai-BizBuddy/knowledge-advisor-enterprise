@@ -33,7 +33,7 @@ export function useSystemStatus() {
 
         // System Roles from auth.roles
         const { count: roleCount, error: roleError } = await supabase
-          .from('roles')
+          .from('role_view')
           .select('id', { count: 'exact', head: true });
 
         // Active Sessions: users signed in within last 24 hours

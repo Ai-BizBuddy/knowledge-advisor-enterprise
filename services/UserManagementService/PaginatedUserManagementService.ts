@@ -290,7 +290,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from('department').select('*', { count: 'exact' });
+      let query = supabase.from('department_view').select('*', { count: 'exact' });
 
       if (search) {
         query = query.or(

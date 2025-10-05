@@ -74,7 +74,7 @@ class KnowledgeBaseUserService {
 
       // Check if user is the owner of the knowledge base
       const { data: kbData, error: kbError } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('created_by')
         .eq('id', knowledgeBaseId)
         .single();
@@ -546,7 +546,7 @@ class KnowledgeBaseUserService {
 
       // Check if user is the owner of the knowledge base
       const { data: kbData, error: kbError } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('created_by')
         .eq('id', knowledgeBaseId)
         .single();
@@ -616,7 +616,7 @@ class KnowledgeBaseUserService {
 
       // Also exclude the owner
       const { data: kbData } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('created_by')
         .eq('id', knowledgeBaseId)
         .single();

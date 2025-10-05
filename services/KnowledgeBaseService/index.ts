@@ -39,9 +39,9 @@ class KnowledgeBaseService {
         throw new Error('User not authenticated');
       }
 
-            return session.user;
+      return session.user;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -51,7 +51,8 @@ class KnowledgeBaseService {
       const uniqueValidIds = Array.from(
         new Set(
           (ids || []).filter(
-            (id): id is string => typeof id === 'string' && this.isValidUUID(id),
+            (id): id is string =>
+              typeof id === 'string' && this.isValidUUID(id),
           ),
         ),
       );
@@ -66,17 +67,19 @@ class KnowledgeBaseService {
 
       const supabaseTable = createClientTable();
       const { data, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .in('id', uniqueValidIds);
 
       if (error) {
-                throw new Error(`Failed to fetch knowledge bases by IDs: ${error.message}`);
+        throw new Error(
+          `Failed to fetch knowledge bases by IDs: ${error.message}`,
+        );
       }
 
       return data as Project[];
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -86,54 +89,57 @@ class KnowledgeBaseService {
     const supabaseTable = createClientTable();
 
     const { data, error } = await supabaseTable
-      .from('knowledge_base')
-      .select('id')
+      .from('knowledge_base_view')
+      .select('id');
 
     if (error) {
-            throw new Error(`Failed to fetch KB IDs: ${error.message}`);
+      throw new Error(`Failed to fetch KB IDs: ${error.message}`);
     }
 
-  return data.map((row: { id: string }) => row.id).filter((id: string) => this.isValidUUID(id));
+    return data
+      .map((row: { id: string }) => row.id)
+      .filter((id: string) => this.isValidUUID(id));
   }
 
   async searchKnowledgeBase(
     query: string,
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Project[]; count: number }> {
-    
     try {
       const supabaseTable = createClientTable();
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*', { count: 'exact', head: true })
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
-              }
+        throw new Error(
+          `Failed to count knowledge bases: ${countError.message}`,
+        );
+      }
 
       // Get paginated search results
       const { data: projects, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
-                throw new Error(`Failed to search knowledge bases: ${error.message}`);
+        throw new Error(`Failed to search knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-                return { data: [], count: 0 };
+        return { data: [], count: 0 };
       }
 
-      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -144,18 +150,15 @@ class KnowledgeBaseService {
     paginationOptions?: PaginationOptions,
     filters?: { status?: string; searchTerm?: string },
   ): Promise<{ data: Project[]; count: number }> {
-    
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      
       // Build base query
       let countQuery = supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*', { count: 'exact', head: true });
 
-      let dataQuery = supabaseTable.from('knowledge_base').select('*');
+      let dataQuery = supabaseTable.from('knowledge_base_view').select('*');
 
       // Apply filters
       if (filters?.status && filters.status !== 'all') {
@@ -178,7 +181,7 @@ class KnowledgeBaseService {
       const { count, error: countError } = await countQuery;
 
       if (countError) {
-              }
+      }
 
       // Get paginated data
       const { data: projects, error } = paginationOptions
@@ -188,18 +191,17 @@ class KnowledgeBaseService {
         : await dataQuery.order('created_at', { ascending: false });
 
       if (error) {
-                throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
       }
 
       if (!projects || projects.length === 0) {
-                return { data: [], count: 0 };
+        return { data: [], count: 0 };
       }
 
-      
       // Transform Supabase rows to Project objects
       return { data: projects, count: count || 0 };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -211,7 +213,7 @@ class KnowledgeBaseService {
       const supabaseTable = createClientTable();
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .eq('id', id)
         .single();
@@ -220,12 +222,12 @@ class KnowledgeBaseService {
         if (error.code === 'PGRST116') {
           return null;
         }
-                throw new Error(`Failed to fetch knowledge base: ${error.message}`);
+        throw new Error(`Failed to fetch knowledge base: ${error.message}`);
       }
 
       // Get document count for this knowledge base
       const { count: documentCount } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true })
         .eq('knowledge_base_id', id);
 
@@ -241,7 +243,7 @@ class KnowledgeBaseService {
         is_active: project.is_active,
       } as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -265,18 +267,18 @@ class KnowledgeBaseService {
       };
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .insert([projectData])
         .select()
         .single();
 
       if (error) {
-                throw new Error(`Failed to create knowledge base: ${error.message}`);
+        throw new Error(`Failed to create knowledge base: ${error.message}`);
       }
 
       return project as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -300,10 +302,9 @@ class KnowledgeBaseService {
         .single();
 
       if (error) {
-                throw new Error(`Failed to update knowledge base: ${error.message}`);
+        throw new Error(`Failed to update knowledge base: ${error.message}`);
       }
 
-      
       return {
         id: project.id,
         name: project.name,
@@ -316,7 +317,7 @@ class KnowledgeBaseService {
         updated_at: project.updated_at || project.created_at,
       } as Project;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -328,17 +329,19 @@ class KnowledgeBaseService {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
+      // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabaseTable
         .from('knowledge_base')
-        .delete()
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id)
-        .eq('created_by', user.id);
+        .eq('created_by', user.id)
+        .is('deleted_at', null);
 
       if (error) {
-                throw new Error(`Failed to delete knowledge base: ${error.message}`);
+        throw new Error(`Failed to delete knowledge base: ${error.message}`);
       }
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -363,4 +366,3 @@ class KnowledgeBaseService {
 }
 
 export { KnowledgeBaseService };
-

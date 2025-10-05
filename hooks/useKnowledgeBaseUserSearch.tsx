@@ -158,7 +158,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
 
         // Verify user has access to the knowledge base
         const { data: kbAccess, error: kbError } = await supabaseTable
-          .from('knowledge_base')
+          .from('knowledge_base_view')
           .select('id, created_by')
           .eq('id', knowledgeBaseId)
           .single();
@@ -284,7 +284,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
 
         // Verify user has admin access to the knowledge base
         const { data: kbAccess, error: kbError } = await supabaseTable
-          .from('knowledge_base')
+          .from('knowledge_base_view')
           .select('id, created_by')
           .eq('id', knowledgeBaseId)
           .single();
@@ -335,7 +335,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
         // Search for users excluding those who already have access
         const search = searchTerm.trim().toLowerCase();
         let query = supabase
-          .from('users')
+          .from('user_view')
           .select(
             `
             id,
@@ -420,7 +420,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
 
         // Verify user has access to the knowledge base
         const { data: kbAccess, error: kbError } = await supabaseTable
-          .from('knowledge_base')
+          .from('knowledge_base_view')
           .select('id, created_by')
           .eq('id', knowledgeBaseId)
           .single();
