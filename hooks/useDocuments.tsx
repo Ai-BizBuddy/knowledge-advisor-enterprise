@@ -250,8 +250,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           paginationOptions,
           apiFilters,
         });
-        console.log()
-        debugger;
+        
         const result = await documentService.getDocumentsByKnowledgeBase(
           knowledgeBaseId,
           paginationOptions,

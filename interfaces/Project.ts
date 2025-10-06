@@ -9,6 +9,9 @@ export interface Project {
   status: 1 | 2; // 1=Active, 2=Paused, 3=Draft (smallint in DB)
   owner: string; // UUID foreign key to auth.users
   is_active: boolean; // Boolean for active status
+  is_deleted: boolean; // Soft delete flag
+  deleted_at?: string; // Timestamp when deleted
+  deleted_by?: string; // User ID who deleted this record
   created_at: string;
   updated_at?: string;
 }
@@ -64,6 +67,9 @@ export interface Document {
   chunk_count: number;
   file_size?: number; // File size in bytes
   mime_type?: string; // MIME type of the file
+  is_deleted?: boolean; // Soft delete flag
+  deleted_at?: string; // Timestamp when deleted
+  deleted_by?: string; // User ID who deleted this record
   updated_at: string;
   created_at: string;
   path?: string; // Storage file path (optional, can be reconstructed from ID + file_type)

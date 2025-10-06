@@ -30,11 +30,11 @@ export default function KnowledgeBaseDetail() {
   // Centralized tab state management
   const [currentTab, setCurrentTab] = useState('Documents');
   
-  // Dynamic tabs list based on knowledge base visibility
+    // Dynamic tabs list based on knowledge base visibility
   const tabsList = useMemo(() => 
     knowledgeBaseState.data?.visibility === 'custom'
-      ? ['Documents', 'Chat Assistant', 'Users']
-      : ['Documents', 'Chat Assistant'], 
+      ? ['Documents', 'Chat Assistant', 'Users', 'Settings']
+      : ['Documents', 'Chat Assistant', 'Settings'], 
     [knowledgeBaseState.data?.visibility]
   );
 

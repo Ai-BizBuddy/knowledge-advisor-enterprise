@@ -67,7 +67,7 @@ class KnowledgeBaseService {
 
       const supabaseTable = createClientTable();
       const { data, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .in('id', uniqueValidIds);
 
@@ -89,7 +89,7 @@ class KnowledgeBaseService {
     const supabaseTable = createClientTable();
 
     const { data, error } = await supabaseTable
-      .from('knowledge_base')
+      .from('knowledge_base_view')
       .select('id');
 
     if (error) {
@@ -110,16 +110,19 @@ class KnowledgeBaseService {
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*', { count: 'exact', head: true })
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`);
 
       if (countError) {
+        throw new Error(
+          `Failed to count knowledge bases: ${countError.message}`,
+        );
       }
 
       // Get paginated search results
       const { data: projects, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
         .order('created_at', { ascending: false })
@@ -148,15 +151,14 @@ class KnowledgeBaseService {
     filters?: { status?: string; searchTerm?: string },
   ): Promise<{ data: Project[]; count: number }> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Build base query
       let countQuery = supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*', { count: 'exact', head: true });
 
-      let dataQuery = supabaseTable.from('knowledge_base').select('*');
+      let dataQuery = supabaseTable.from('knowledge_base_view').select('*');
 
       // Apply filters
       if (filters?.status && filters.status !== 'all') {
@@ -211,7 +213,7 @@ class KnowledgeBaseService {
       const supabaseTable = createClientTable();
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .eq('id', id)
         .single();
@@ -225,7 +227,7 @@ class KnowledgeBaseService {
 
       // Get document count for this knowledge base
       const { count: documentCount } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true })
         .eq('knowledge_base_id', id);
 
@@ -265,7 +267,7 @@ class KnowledgeBaseService {
       };
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .insert([projectData])
         .select()
         .single();
@@ -314,11 +316,13 @@ class KnowledgeBaseService {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
+      // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabaseTable
         .from('knowledge_base')
-        .update({ is_deleted: true })
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
         .eq('id', id)
-        .eq('created_by', user.id);
+        .eq('created_by', user.id)
+        .is('deleted_at', null);
 
       if (error) {
         throw new Error(`Failed to delete knowledge base: ${error.message}`);
@@ -349,4 +353,3 @@ class KnowledgeBaseService {
 }
 
 export { KnowledgeBaseService };
-

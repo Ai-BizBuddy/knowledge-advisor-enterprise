@@ -91,6 +91,9 @@ export interface SupabaseDocumentRow {
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   chunk_count?: number;
   last_rag_sync?: string;
+  is_deleted: boolean;
+  deleted_at: string | null;
+  deleted_by: string | null;
   created_at: string;
   updated_at: string;
   knowledge_base?: {
@@ -112,6 +115,9 @@ export interface DocumentWithProject {
   chunk_count?: number;
   file_size?: number;
   mime_type?: string;
+  is_deleted: boolean;
+  deleted_at?: string | null;
+  deleted_by?: string | null;
   created_at: string;
   updated_at: string;
   path?: string;
@@ -173,7 +179,9 @@ export interface AuthProfileRow {
   id: string;
   full_name: string | null;
   avatar_url: string | null;
+  is_deleted: boolean;
   deleted_at: string | null;
+  deleted_by: string | null;
   created_at: string | null;
   updated_at: string | null;
 }

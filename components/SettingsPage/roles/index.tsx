@@ -728,14 +728,19 @@ export default function RolesPage() {
             </p>
 
             <div className='mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
-              <Button color='gray' onClick={() => setShowDeleteModal(false)} className='w-full sm:w-auto'>
+              <Button 
+                color='gray' 
+                onClick={() => setShowDeleteModal(false)} 
+                className='w-full sm:w-auto'
+                disabled={loading}
+              >
                 Cancel
               </Button>
               <Button
                 color='failure'
                 onClick={handleDeleteRole}
                 disabled={loading}
-                className='w-full sm:w-auto'
+                className='w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
               >
                 {loading ? 'Deleting...' : 'Yes, delete'}
               </Button>

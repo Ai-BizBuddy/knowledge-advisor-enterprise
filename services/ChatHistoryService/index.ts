@@ -111,7 +111,7 @@ class ChatHistoryService {
           started_at: session.created_at || '',
           ended_at: session.updated_at || undefined,
         };
-      } catch (parseError) {
+      } catch {
         return {
           id: session.id,
           user_id: session.user_id,
@@ -191,14 +191,20 @@ class ChatHistoryService {
 
   async deleteSession(sessionId: string) {
     const supabaseTable = createClientTable();
+    
+    // Soft delete: Update deleted_at timestamp instead of hard delete
     const { error } = await supabaseTable
       .from('sessions')
-      .delete()
-      .eq('id', sessionId);
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', sessionId)
+      .is('deleted_at', null);
+    
     const { error: eventError } = await supabaseTable
       .from('session_events')
-      .delete()
-      .eq('session_id', sessionId);
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('session_id', sessionId)
+      .is('deleted_at', null);
+    
     if (error || eventError) {
       return false;
     }

@@ -112,7 +112,7 @@ class DashboardService {
       const supabaseTable = createClientTable();
 
       const { data, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .eq('created_by', user.id)
         .eq('is_active', true)
@@ -138,7 +138,7 @@ class DashboardService {
 
       // Get knowledge bases from other users that are public/shared
       const { data, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*')
         .eq('is_active', true)
         .eq('visibility', 'public')
@@ -248,7 +248,7 @@ class DashboardService {
       const supabaseTable = createClientTable();
 
       const { data, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('id, name, created_at, updated_at')
         .order('updated_at', { ascending: false })
         .limit(5);
@@ -278,7 +278,7 @@ class DashboardService {
 
       // Get recent documents from user's knowledge bases
       const { data, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select(
           `
           id, 

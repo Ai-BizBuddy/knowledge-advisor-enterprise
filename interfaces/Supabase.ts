@@ -24,6 +24,9 @@ export interface SupabaseProjectRow {
   description: string;
   status: number; // 1=Active, 2=Paused, 3=Draft
   owner: string;
+  is_deleted: boolean;
+  deleted_at: string | null;
+  deleted_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,6 +42,9 @@ export interface SupabaseDocumentRow {
   chunk_count: number;
   file_size: number | null;
   mime_type: string | null;
+  is_deleted: boolean;
+  deleted_at: string | null;
+  deleted_by: string | null;
   created_at: string;
   updated_at: string;
   path: string;

@@ -109,7 +109,7 @@ class StatisticsService {
       const supabaseTable = createClientTable();
 
       const { count, error } = await supabaseTable
-        .from('knowledge_base')
+        .from('knowledge_base_view')
         .select('*', { count: 'exact', head: true });
 
       if (error) {
@@ -129,11 +129,9 @@ class StatisticsService {
     try {
       const supabaseTable = createClientTable();
 
-      // Count documents from user's knowledge bases
       const { count, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true })
-        // .eq('knowledge_base.created_by', userId)
         .eq('is_active', true);
 
       if (error) {
@@ -154,7 +152,7 @@ class StatisticsService {
       const supabaseTable = createClientTable();
 
       const { count, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true });
 
       if (error) {
@@ -173,11 +171,9 @@ class StatisticsService {
   private async calculateTotalChunks(): Promise<number> {
     try {
       const supabaseTable = createClientTable();
-
-      // First, get all documents with chunk_count to sum manually
-      // This approach is more reliable than PostgreSQL aggregation functions
+      
       const { data, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('chunk_count')
         .not('chunk_count', 'is', null); // Exclude null values
 

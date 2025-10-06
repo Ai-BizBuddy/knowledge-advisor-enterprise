@@ -47,12 +47,12 @@ class DocumentService {
 
       // Build base query
       let countQuery = supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true })
         .eq('knowledge_base_id', knowledgeBaseId);
 
       let dataQuery = supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*')
         .eq('knowledge_base_id', knowledgeBaseId);
 
@@ -107,7 +107,7 @@ class DocumentService {
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*', { count: 'exact', head: true })
         .eq('knowledge_base_id', knowledgeBaseId)
         .ilike('name', `%${query}%`);
@@ -117,7 +117,7 @@ class DocumentService {
 
       // Get paginated search results
       const { data: documents, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*')
         .eq('knowledge_base_id', knowledgeBaseId)
         .ilike('name', `%${query}%`)
@@ -139,7 +139,7 @@ class DocumentService {
       const supabaseTable = createClientTable();
 
       const { data: document, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*')
         .in('id', id);
 
@@ -167,7 +167,7 @@ class DocumentService {
       const supabaseTable = createClientTable();
 
       let query = supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*,knowledge_base!inner(created_by)')
         .eq('id', id);
 
@@ -261,7 +261,7 @@ class DocumentService {
 
       // Insert all documents in batch
       const { data: documents, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .insert(documentsData)
         .select();
 
@@ -455,7 +455,7 @@ class DocumentService {
       // Delete with proper authorization check through knowledge_base relation
       const { error } = await supabaseTable
         .from('document')
-        .update({ is_deleted: true })
+        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
         .eq('id', id);
 
       if (error) {
@@ -479,7 +479,7 @@ class DocumentService {
 
       // Build base query for documents from knowledge bases owned by user
       let countQuery = supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*, knowledge_base!inner(created_by)', {
           count: 'exact',
           head: true,
@@ -487,7 +487,7 @@ class DocumentService {
         .eq('knowledge_base.created_by', user.id);
 
       let dataQuery = supabaseTable
-        .from('document')
+        .from('document_view')
         .select(
           `
           *,
@@ -576,7 +576,7 @@ class DocumentService {
 
       // Get total count for search results
       const { count, error: countError } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select('*, knowledge_base!inner(created_by)', {
           count: 'exact',
           head: true,
@@ -589,7 +589,7 @@ class DocumentService {
 
       // Get paginated search results
       const { data: documents, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select(
           `
           *,
@@ -620,7 +620,7 @@ class DocumentService {
       const supabaseTable = createClientTable();
 
       const { data: document, error } = await supabaseTable
-        .from('document')
+        .from('document_view')
         .select(
           `
           *,
@@ -649,7 +649,7 @@ class DocumentService {
    */
   async getAllDocuments() {
     const { data, error } = await createClientTable()
-      .from('document')
+      .from('document_view')
       .select('*');
     if (error) {
       throw error;
@@ -659,7 +659,7 @@ class DocumentService {
 
   async getAllDocumentId(id: string) {
     const { data, error } = await createClientTable()
-      .from('document')
+      .from('document_view')
       .select('*')
       .eq('knowledge_base_id', id);
     if (error) {

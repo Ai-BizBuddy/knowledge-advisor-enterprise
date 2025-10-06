@@ -4,15 +4,9 @@ import type {
   Project,
   UpdateProjectInput
 } from '@/interfaces/Project';
-import { ProjectStatus } from '@/interfaces/Project';
 import type {
   SupabaseProjectRow
 } from '@/interfaces/Supabase';
-import type {
-  DocumentWithProject
-} from '@/interfaces/SupabaseTypes';
-import { documentSearchService } from '@/services';
-import type { DocumentSearchResult } from '@/services/DocumentSearchService';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClient, createClientTable } from '@/utils/supabase/client';
 
@@ -48,10 +42,14 @@ export async function getProjects(): Promise<Project[]> {
         description,
         status,
         owner,
+        is_deleted,
+        deleted_at,
+        deleted_by,
         created_at,
         updated_at
       `,
       )
+      .eq('is_deleted', false)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -60,25 +58,26 @@ export async function getProjects(): Promise<Project[]> {
 
     // Add computed fields for display
     const projectsWithCounts = await Promise.all(
-      (data || []).map(async (project: SupabaseProjectRow) => {
+      (data || []).map(async (project) => {
+        const typedProject = project as SupabaseProjectRow;
         try {
           // Get document count for each project
           const supabase = createClientTable();
           const { count, error: countError } = await supabase
-            .from('documents')
+            .from('document_view')
             .select('*', { count: 'exact', head: true })
-            .eq('project_id', project.id as string);
+            .eq('project_id', typedProject.id as string);
 
           if (countError) {
-                      }
+          }
 
           return {
-            ...project,
+            ...typedProject,
             document_count: count || 0,
           } as Project;
         } catch (err) {
-                    return {
-            ...project,
+          return {
+            ...typedProject,
             document_count: 0,
           } as Project;
         }
@@ -96,8 +95,6 @@ export async function getProjects(): Promise<Project[]> {
  */
 export async function getProjectById(id: string): Promise<Project> {
   try {
-    const user = await getCurrentUser();
-
     const supabase = createClientTable();
     const { data, error } = await supabase
       .from('knowledge_base')
@@ -130,7 +127,7 @@ export async function getProjectById(id: string): Promise<Project> {
     // Get document count
     const supabaseCount = createClientTable();
     const { count, error: countError } = await supabaseCount
-      .from('documents')
+      .from('document_view')
       .select('*', { count: 'exact', head: true })
       .eq('project_id', id);
 
@@ -201,8 +198,6 @@ export async function updateProject(
   id: string,
   updates: UpdateProjectInput,
 ): Promise<Project> {
-  const user = await getCurrentUser();
-
   const supabase = createClientTable();
   const { data, error } = await supabase
     .from('knowledge_base')
@@ -231,7 +226,7 @@ export async function updateProject(
   // Get document count
   const supabaseCount = createClientTable();
   const { count } = await supabaseCount
-    .from('documents')
+    .from('document_view')
     .select('*', { count: 'exact', head: true })
     .eq('project_id', id);
 
@@ -250,7 +245,7 @@ export async function deleteProject(id: string): Promise<void> {
   // First, delete all documents associated with this project
   const supabaseDocuments = createClientTable();
   const { data: documents } = await supabaseDocuments
-    .from('documents')
+    .from('document_view')
     .select('id, url')
     .eq('project_id', id);
 
@@ -265,12 +260,17 @@ export async function deleteProject(id: string): Promise<void> {
     }
   }
 
-  // Delete the knowledge base
+  // Soft delete the knowledge base
   const supabaseDelete = createClientTable();
   const { error } = await supabaseDelete
     .from('knowledge_base')
-    .delete()
-    .eq('id', id);
+    .update({ 
+      is_deleted: true, 
+      deleted_at: new Date().toISOString(),
+      deleted_by: user.id 
+    })
+    .eq('id', id)
+    .eq('is_deleted', false);
 
   if (error) {
         throw new Error(`Failed to delete knowledge base: ${error.message}`);
@@ -281,7 +281,7 @@ export async function deleteProject(id: string): Promise<void> {
     const supabaseStorage = createClient();
     await supabaseStorage.storage.deleteBucket(id);
   } catch (error) {
-        // Non-critical error, don't throw
+    // Non-critical error, don't throw
   }
 }
 
@@ -376,6 +376,7 @@ export async function deleteDocument(
   void url;
 
   try {
+    const user = await getCurrentUser();
     const supabaseTable = createClientTable();
     const supabaseClient = createClient();
 
@@ -400,571 +401,22 @@ export async function deleteDocument(
       }
     }
 
-    // Delete from database
+    // Soft delete from database
     const { error: dbError } = await supabaseTable
       .from('documents')
-      .delete()
-      .eq('id', documentId);
+      .update({ 
+        is_deleted: true, 
+        deleted_at: new Date().toISOString(),
+        deleted_by: user.id 
+      })
+      .eq('id', documentId)
+      .eq('is_deleted', false);
 
     if (dbError)
       throw new Error(`Failed to delete document record: ${dbError.message}`);
 
     return { success: true };
   } catch (error) {
-        throw error;
-  }
-}
-
-/**
- * Get knowledge bases count for the current user
- */
-export async function getProjectsCount(): Promise<number> {
-  const supabase = createClientTable();
-
-  const result = await supabase
-    .from('knowledge_base')
-    .select('*', { count: 'exact', head: true });
-
-  const { count, error } = result;
-
-  if (error) {
-        throw new Error(`Failed to count knowledge bases: ${error.message}`);
-  }
-
-  return count || 0;
-}
-
-/**
- * Get knowledge bases with pagination
- */
-export async function getProjectsPaginated(
-  page: number = 1,
-  limit: number = 10,
-  sortBy: 'created_at' | 'updated_at' | 'name' = 'created_at',
-  sortOrder: 'asc' | 'desc' = 'desc',
-): Promise<{ data: Project[]; total: number; page: number; limit: number }> {
-  const supabase = createClientTable();
-  const user = await getCurrentUser();
-
-  const offset = (page - 1) * limit;
-
-  // Get total count
-  const countResult = await supabase
-    .from('knowledge_base')
-    .select('*', { count: 'exact', head: true })
-    .eq('owner', user.id);
-  const { count } = countResult;
-
-  // Get paginated data
-  const result = await supabase
-    .from('knowledge_base')
-    .select(
-      `
-      id,
-      name,
-      description,
-      status,
-      owner,
-      created_at,
-      updated_at
-    `,
-    )
-    .order(sortBy, { ascending: sortOrder === 'asc' })
-    .range(offset, offset + limit - 1);
-  const { data, error } = result;
-
-  if (error) {
-        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
-  }
-
-  // Add computed fields for display
-  const projectsWithCounts = await Promise.all(
-    (data || []).map(async (project: SupabaseProjectRow) => {
-      // Get document count for each project
-      const docCountResult = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      const { count: docCount } = docCountResult;
-
-      return {
-        ...project,
-        document_count: docCount || 0,
-      } as Project;
-    }),
-  );
-
-  return {
-    data: projectsWithCounts,
-    total: count || 0,
-    page,
-    limit,
-  };
-}
-
-/**
- * Search knowledge bases by name or description
- */
-export async function searchProjects(query: string): Promise<Project[]> {
-  const supabase = createClientTable();
-  const user = await getCurrentUser();
-
-  const { data, error } = await supabase
-    .from('knowledge_base')
-    .select(
-      `
-      id,
-      name,
-      description,
-      status,
-      owner,
-      created_at,
-      updated_at
-    `,
-    )
-    .eq('owner', user.id)
-    .or(`name.ilike.%${query}%,description.ilike.%${query}%`)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-        throw new Error(`Failed to search knowledge bases: ${error.message}`);
-  }
-
-  // Add computed fields for display
-  const projectsWithCounts = await Promise.all(
-    (data || []).map(async (project: SupabaseProjectRow) => {
-      // Get document count for each project
-      const docCountResult = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      const { count } = docCountResult;
-
-      return {
-        ...project,
-        document_count: count || 0,
-      } as Project;
-    }),
-  );
-
-  return projectsWithCounts;
-}
-
-/**
- * Get knowledge bases by status
- */
-export async function getProjectsByStatus(
-  status: ProjectStatus,
-): Promise<Project[]> {
-  const supabase = createClientTable();
-  const user = await getCurrentUser();
-
-  const { data, error } = await supabase
-    .from('knowledge_base')
-    .select(
-      `
-      id,
-      name,
-      description,
-      status,
-      owner,
-      created_at,
-      updated_at
-    `,
-    )
-    .eq('status', status)
-    .eq('owner', user.id)
-    .order('created_at', { ascending: false });
-
-  if (error) {
-        throw new Error(`Failed to fetch knowledge bases: ${error.message}`);
-  }
-
-  // Add computed fields for display
-  const projectsWithCounts = await Promise.all(
-    (data || []).map(async (project: SupabaseProjectRow) => {
-      // Get document count for each project
-      const docCountResult = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      const { count } = docCountResult;
-
-      return {
-        ...project,
-        document_count: count || 0,
-      } as Project;
-    }),
-  );
-
-  return projectsWithCounts;
-}
-
-/**
- * Duplicate/clone a knowledge base
- */
-export async function duplicateProject(
-  projectId: string,
-  newName: string,
-  includeDocuments: boolean = false,
-): Promise<Project> {
-  // Get the original project
-  const original = await getProjectById(projectId);
-
-  // Create the duplicate
-  const duplicateData: CreateProjectInput = {
-    visibility: original.visibility as
-      | 'public'
-      | 'private'
-      | 'department'
-      | 'custom',
-    name: newName,
-    description: `Copy of ${original.description}`,
-    status: ProjectStatus.ACTIVE,
-  };
-
-  const newProject = await createProject(duplicateData);
-
-  // Optionally copy documents
-  if (includeDocuments) {
-    const documents = await getDocumentsByProjectId(projectId);
-
-    for (const doc of documents) {
-      try {
-        // Here you would implement document copying logic
-        // This would involve copying files in storage and creating new document records
-      } catch (error) {
-              }
-    }
-  }
-
-  return newProject;
-}
-
-/**
- * Batch update multiple knowledge bases
- */
-export async function batchUpdateProjects(
-  projectIds: string[],
-  updates: Partial<UpdateProjectInput>,
-): Promise<Project[]> {
-  const supabase = createClientTable();
-  const user = await getCurrentUser();
-
-  const { data, error } = await supabase
-    .from('knowledge_base')
-    .update({
-      ...updates,
-      updated_at: new Date().toISOString(),
-    })
-    .in('id', projectIds)
-    .eq('owner', user.id)
-    .select(`
-      id,
-      name,
-      description,
-      status,
-      owner,
-      created_at,
-      updated_at
-    `);
-
-  if (error) {
-        throw new Error(`Failed to update knowledge bases: ${error.message}`);
-  }
-
-  // Add computed fields for display
-  const projectsWithCounts = await Promise.all(
-    (data || []).map(async (project: SupabaseProjectRow) => {
-      // Get document count for each project
-      const docCountResult = await supabase
-        .from('documents')
-        .select('*', { count: 'exact', head: true })
-        .eq('project_id', project.id);
-      const { count } = docCountResult;
-
-      return {
-        ...project,
-        document_count: count || 0,
-      } as Project;
-    }),
-  );
-
-  return projectsWithCounts;
-}
-
-/**
- * Batch delete multiple knowledge bases
- */
-export async function batchDeleteProjects(projectIds: string[]): Promise<void> {
-  const supabase = createClient(); // Use full client for storage access
-  const supabaseTable = createClientTable(); // Use table client for table operations
-
-  // Delete all documents for these projects first
-  for (const projectId of projectIds) {
-    try {
-      const { data: documents } = await supabaseTable
-        .from('documents')
-        .select('id, url')
-        .eq('project_id', projectId);
-
-      if (documents && documents.length > 0) {
-        // Delete files from storage and document records
-        for (const doc of documents) {
-          try {
-            await deleteDocument(
-              projectId,
-              doc.id as string,
-              doc.url as string,
-            );
-          } catch (error) {
-                      }
-        }
-      }
-    } catch (error) {
-          }
-  }
-
-  // Delete the knowledge bases
-  const deleteResult = await supabaseTable
-    .from('knowledge_base')
-    .delete()
-    .in('id', projectIds);
-  const { error } = deleteResult;
-
-  if (error) {
-        throw new Error(`Failed to delete knowledge bases: ${error.message}`);
-  }
-
-  // Clean up storage buckets
-  for (const projectId of projectIds) {
-    try {
-      await supabase.storage.deleteBucket(projectId);
-    } catch (error) {
-          }
-  }
-}
-
-/**
- * Get knowledge base statistics and analytics
- */
-export async function getProjectAnalytics(projectId: string): Promise<{
-  totalDocuments: number;
-  totalSyncedDocuments: number;
-  totalSize: number;
-  recentActivity: number;
-  averageChunkCount: number;
-}> {
-  const supabase = createClientTable();
-
-  // Get document statistics
-  const { data: documents, error } = await supabase
-    .from('documents')
-    .select('chunk_count, created_at, rag_status')
-    .eq('project_id', projectId);
-
-  if (error) {
-        throw new Error(`Failed to fetch analytics: ${error.message}`);
-  }
-
-  const totalDocuments = documents?.length || 0;
-  const totalSyncedDocuments =
-    documents?.filter((doc) => doc.rag_status === 'synced').length || 0;
-  const averageChunkCount = documents?.length
-    ? documents.reduce(
-        (sum, doc) => sum + ((doc.chunk_count as number) || 0),
-        0,
-      ) / documents.length
-    : 0;
-
-  // Calculate recent activity (documents added in last 7 days)
-  const sevenDaysAgo = new Date();
-  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-  const recentActivity =
-    documents?.filter(
-      (doc) => new Date(doc.created_at as string) > sevenDaysAgo,
-    ).length || 0;
-
-  return {
-    totalDocuments,
-    totalSyncedDocuments,
-    totalSize: totalDocuments * 2.5, // Mock calculation - 2.5MB average per document
-    recentActivity,
-    averageChunkCount: Math.round(averageChunkCount),
-  };
-}
-
-/**
- * Search documents using the new DocumentSearchService (simplified version)
- * TODO: Fully implement proper adapter for DocumentSearchService
- */
-export async function searchDocuments(
-  query: string,
-  projectId?: string,
-): Promise<DocumentSearchResult> {
-  try {
-    // Use the DocumentSearchService's hook-compatible method
-    return await documentSearchService.searchDocumentsForHook(query, projectId);
-  } catch (error) {
-        // Return error result in expected format
-    return {
-      success: false,
-      documents: [],
-      documentIds: [],
-      totalFound: 0,
-      searchQuery: query,
-      error: error instanceof Error ? error.message : 'Search failed',
-    };
-  }
-}
-
-/**
- * Search documents within a specific project
- */
-export async function searchDocumentsInProject(
-  query: string,
-  projectId: string,
-): Promise<DocumentSearchResult> {
-    return searchDocuments(query, projectId);
-}
-
-/**
- * Search documents across multiple projects
- * TODO: Implement proper adapter for new DocumentSearchService
- */
-export async function searchDocumentsInProjects(
-  query: string,
-  projectIds: string[],
-): Promise<DocumentSearchResult> {
-  
-  try {
-    // For multi-project search, use the first project ID or undefined for global search
-    const projectId = projectIds.length > 0 ? projectIds[0] : undefined;
-    return await documentSearchService.searchDocumentsForHook(query, projectId);
-  } catch (error) {
-        return {
-      success: false,
-      documents: [],
-      documentIds: [],
-      totalFound: 0,
-      searchQuery: query,
-      error:
-        error instanceof Error ? error.message : 'Multi-project search failed',
-    };
-  }
-}
-
-/**
- * Get document search analytics
- */
-export async function getDocumentSearchAnalytics(
-  query: string,
-  projectId?: string,
-): Promise<{
-  searchTime: number;
-  langflowResponseTime: number;
-  supabaseQueryTime: number;
-  totalDocumentsScanned: number;
-  totalDocumentsReturned: number;
-}> {
-  
-  try {
-    // Use the document search service with the projectId
-    const filters = projectId ? { projectId } : {};
-    const searchResult = await documentSearchService.searchDocuments(
-      query,
-      filters,
-    );
-    return {
-      searchTime: searchResult.searchTime,
-      langflowResponseTime: Math.floor(searchResult.searchTime * 0.7), // Estimate
-      supabaseQueryTime: Math.floor(searchResult.searchTime * 0.3), // Estimate
-      totalDocumentsScanned: searchResult.totalCount * 10, // Estimate
-      totalDocumentsReturned: searchResult.totalCount,
-    };
-  } catch (error) {
-        return {
-      searchTime: 0,
-      langflowResponseTime: 0,
-      supabaseQueryTime: 0,
-      totalDocumentsScanned: 0,
-      totalDocumentsReturned: 0,
-    };
-  }
-}
-
-/**
- * Fetch all documents across all projects for the current user
- */
-export async function getAllDocuments(): Promise<Document[]> {
-  try {
-    const user = await getCurrentUser();
-    const supabase = createClientTable();
-
-    // Join with knowledge_base table to get project details and filter by user
-    const { data, error } = await supabase
-      .from('documents')
-      .select(
-        `
-        id,
-        name,
-        type,
-        status,
-        project_id,
-        uploaded_by,
-        chunk_count,
-        file_size,
-        mime_type,
-        created_at,
-        updated_at,
-        path,
-        url,
-        rag_status,
-        last_rag_sync,
-        metadata,
-        knowledge_base:project_id (
-          name,
-          owner
-        )
-      `,
-      )
-      .eq('knowledge_base.owner', user.id)
-      .order('created_at', { ascending: false });
-
-    if (error) {
-            throw new Error(`Failed to fetch documents: ${error.message}`);
-    }
-
-    // Transform the data to include project name in metadata
-    const documentsWithProjectInfo = (data || []).map(
-      (doc: DocumentWithProject) => ({
-        ...doc,
-        metadata: {
-          ...doc.metadata,
-          project_name: doc.knowledge_base?.[0]?.name || 'Unknown Project',
-        },
-      }),
-    );
-
-    return documentsWithProjectInfo.map((doc) => ({
-      id: doc.id,
-      name: doc.name,
-      file_type: doc.type || '',
-      status: doc.status || '',
-      knowledge_base_id: doc.project_id,
-      uploaded_by: doc.uploaded_by,
-      chunk_count: doc.chunk_count || 0,
-      file_size: doc.file_size,
-      mime_type: doc.mime_type,
-      created_at: doc.created_at,
-      updated_at: doc.updated_at,
-      path: doc.path || '',
-      url: doc.url || '',
-      rag_status: doc.rag_status,
-      last_rag_sync: doc.last_rag_sync,
-      metadata: doc.metadata,
-    })) as Document[];
-  } catch (error) {
-        throw error;
+    throw error;
   }
 }
