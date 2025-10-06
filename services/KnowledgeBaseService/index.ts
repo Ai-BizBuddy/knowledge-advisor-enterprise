@@ -35,6 +35,13 @@ class KnowledgeBaseService {
     try {
       const session = await getAuthSession();
 
+      console.log(session?.user);
+      // 👀 check what’s inside user
+
+      console.log(session); 
+      // values under app_metadata
+
+      console.log(session); 
       if (!session?.user) {
         throw new Error('User not authenticated');
       }
@@ -254,7 +261,7 @@ class KnowledgeBaseService {
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-
+      console.log('user.user_metadata=>>>>', user);
       // Create project data according to the database schema
       const projectData = {
         name: input.name,
@@ -262,12 +269,13 @@ class KnowledgeBaseService {
         created_by: user.id,
         is_active: input.status === ProjectStatus.ACTIVE,
         visibility: input.visibility,
-        department_id: input.department_id || null,
+        department_id: input.visibility === 'department' ? 
+          user.user_metadata?.department_id : null,
         settings: {},
       };
 
       const { data: project, error } = await supabaseTable
-        .from('knowledge_base_view')
+        .from('knowledge_base')
         .insert([projectData])
         .select()
         .single();
@@ -319,7 +327,11 @@ class KnowledgeBaseService {
       // Soft delete: Update deleted_at timestamp instead of hard delete
       const { error } = await supabaseTable
         .from('knowledge_base')
-        .update({ is_deleted: true, deleted_at: new Date().toISOString() })
+        .update({ 
+          is_deleted: true, 
+          deleted_at: new Date().toISOString(), 
+          deleted_by: user.id 
+        })
         .eq('id', id)
         .eq('created_by', user.id)
         .is('deleted_at', null);

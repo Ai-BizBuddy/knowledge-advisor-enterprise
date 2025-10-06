@@ -392,8 +392,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('📁📝 [useDocuments.createDocumentsFromFiles] Called');
 
       try {
-        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
-
         const newDocuments =
           await documentService.createDocumentsFromFiles(data);
         console.log(
