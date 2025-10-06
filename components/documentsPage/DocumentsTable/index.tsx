@@ -29,16 +29,16 @@ interface DocumentsTableProps {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onSort: (column: string) => void;
-  onSelectAll: () => void;
+  onSelectAll?: () => void;
   onDeleteDocument: (index: number) => void;
-  onSelectDocument: (
+  onSelectDocument?: (
     index: number,
     event: React.ChangeEvent<HTMLInputElement>,
   ) => void;
   onDocumentClick: (index: number) => void;
   onSyncDocument?: (index: number) => void;
-  isAllSelected: boolean;
-  isIndeterminate: boolean;
+  isAllSelected?: boolean;
+  isIndeterminate?: boolean;
   syncingDocuments?: Set<number>;
 }
 
@@ -335,13 +335,13 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                 }`}
               >
                 <div className='flex items-start space-x-3'>
-                  <input
+                  {onSelectDocument && <input
                     type='checkbox'
                     className='mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
                     checked={isSelected}
-                    onChange={(e) => onSelectDocument(pageIndex, e)}
+                    onChange={(e) => onSelectDocument?.(pageIndex, e)}
                     onClick={(e) => e.stopPropagation()}
-                  />
+                  />}
                   <div className='text-2xl'>{getFileIcon(doc.type)}</div>
                   <div className='min-w-0 flex-1'>
                     <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
@@ -407,17 +407,17 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
           <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
             <thead className='bg-gray-50 dark:bg-gray-700'>
               <tr>
-                <th className='w-8 px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                {onSelectDocument && <th className='w-8 px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <input
                     type='checkbox'
                     className='rounded border-gray-300'
                     checked={isAllSelected}
                     ref={(el) => {
-                      if (el) el.indeterminate = isIndeterminate;
+                      if (el) el.indeterminate = !!isIndeterminate;
                     }}
                     onChange={onSelectAll}
                   />
-                </th>
+                </th>}
                 <th className='w-[45%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <SortableHeader column='name'>Name</SortableHeader>
                 </th>
@@ -469,7 +469,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                           : ''
                       }`}
                     >
-                      <td className='w-8 px-3 py-4 whitespace-nowrap sm:px-6'>
+                     {onSelectDocument && <td className='w-8 px-3 py-4 whitespace-nowrap sm:px-6'>
                         <input
                           type='checkbox'
                           className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
@@ -477,7 +477,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                           onChange={(e) => onSelectDocument(actualIndex, e)}
                           onClick={(e) => e.stopPropagation()}
                         />
-                      </td>
+                      </td>}
                       <td className='w-[45%] px-3 py-4 sm:px-6'>
                         <div className='flex items-center'>
                           <div className='mr-3 text-xl sm:text-2xl'>

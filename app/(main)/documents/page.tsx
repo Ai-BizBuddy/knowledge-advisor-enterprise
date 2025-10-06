@@ -14,7 +14,6 @@ import {
   MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
-import { useLoading } from '@/contexts/LoadingContext';
 import { mockSearchResults } from '@/data/deepSearch';
 import {
   useAllUserDocuments,
@@ -90,7 +89,6 @@ const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
 });
 
 export default function DocumentsPage() {
-  const { setLoading } = useLoading();
   const { showToast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [deepSearchLoad, setDeepSearchLoad] = useState(false);
@@ -217,62 +215,6 @@ export default function DocumentsPage() {
     handleClearSelection,
   } = useDocumentsManagement();
 
-  // Create wrapper functions for selection that use correct startIndex (0-based)
-  const handleSelectAllWithCorrectIndex = () => {
-    const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
-    const currentPageIndices = documents.map(
-      (_: Document, index: number) => correctStartIndex + index,
-    );
-
-    if (
-      selectedDocuments.length === currentPageIndices.length &&
-      currentPageIndices.every((index: number) =>
-        selectedDocuments.includes(index),
-      )
-    ) {
-      const filteredSelection = selectedDocuments.filter(
-        (index) => !currentPageIndices.includes(index),
-      );
-      setSelectedDocuments(filteredSelection);
-    } else {
-      const newSelection = [
-        ...new Set([...selectedDocuments, ...currentPageIndices]),
-      ];
-      setSelectedDocuments(newSelection);
-    }
-  };
-
-  const handleSelectDocumentWithCorrectIndex = (
-    pageIndex: number,
-    event: React.ChangeEvent<HTMLInputElement>,
-  ) => {
-    event.stopPropagation();
-    const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
-    const actualIndex = correctStartIndex + pageIndex;
-
-    if (selectedDocuments.includes(actualIndex)) {
-      setSelectedDocuments(selectedDocuments.filter((i) => i !== actualIndex));
-    } else {
-      setSelectedDocuments([...selectedDocuments, actualIndex]);
-    }
-  };
-
-  // Calculate selection states for current page
-  const correctStartIndex = startIndex - 1; // Convert from 1-based to 0-based
-  const currentPageIndices = documents.map(
-    (_, index) => correctStartIndex + index,
-  );
-  const selectedInCurrentPage = selectedDocuments.filter((index) =>
-    currentPageIndices.includes(index),
-  );
-
-  const isAllSelectedCorrected =
-    currentPageIndices.length > 0 &&
-    selectedInCurrentPage.length === currentPageIndices.length;
-  const isIndeterminateCorrected =
-    selectedInCurrentPage.length > 0 &&
-    selectedInCurrentPage.length < currentPageIndices.length;
-
   // Handle document click for detail view
   const handleDocumentClick = (absoluteIndex: number) => {
     // Convert absolute index to page-relative index for display
@@ -292,7 +234,6 @@ export default function DocumentsPage() {
     documentItem: DocumentTableItem,
   ) => {
     try {
-      setLoading(true);
       // Find the original document by matching the original filename from metadata
       const originalDoc = documents.find(
         (doc) => doc.metadata?.originalFileName === documentItem.name,
@@ -327,8 +268,6 @@ export default function DocumentsPage() {
       // Close modal
       setIsDeleteModalOpen(false);
       setDocumentToDelete(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -339,7 +278,6 @@ export default function DocumentsPage() {
 
   const handleBulkDocumentDelete = async (selectedIndices: number[]) => {
     try {
-      setLoading(true);
 
       // selectedIndices are absolute indices from the filteredDocuments
       // But we need to map them to the actual documents array
@@ -388,8 +326,6 @@ export default function DocumentsPage() {
           ? error.message
           : 'Failed to delete documents. Please try again.';
       showToast(errorMessage, 'error');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -578,12 +514,7 @@ export default function DocumentsPage() {
 
         {!isDeepSearch && (
           <div className='flex gap-4 pt-4'>
-            {/* Documents List or Empty State */}
-            {totalItems === 0 ? (
-              <div className='mt-8 flex w-full justify-center'>
-                <NoDocuments activeTab={activeTab} />
-              </div>
-            ) : loading ? (
+            {loading ? (
               <div className='w-full space-y-6'>
                 <TableSkeleton
                   rows={5}
@@ -591,6 +522,10 @@ export default function DocumentsPage() {
                   showHeader={true}
                   showActions={true}
                 />
+              </div>
+            ) : totalItems === 0 ? (
+              <div className='mt-8 flex w-full justify-center'>
+                <NoDocuments activeTab={activeTab} />
               </div>
             ) : (
               <div className='w-full space-y-6'>
@@ -609,11 +544,7 @@ export default function DocumentsPage() {
                   sortBy={sortField}
                   sortOrder={sortOrder}
                   onSort={handleSortByString}
-                  onSelectAll={handleSelectAllWithCorrectIndex}
-                  onSelectDocument={handleSelectDocumentWithCorrectIndex}
                   onDocumentClick={handleDocumentClick}
-                  isAllSelected={isAllSelectedCorrected}
-                  isIndeterminate={isIndeterminateCorrected}
                 />
 
                 <DocumentsPagination
