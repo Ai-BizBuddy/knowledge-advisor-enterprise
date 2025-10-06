@@ -566,7 +566,7 @@ export default function DocumentsPage() {
         {/* Main Content Layout - Responsive grid */}
 
         {/* Main Content Area */}
-        <div className='flex justify-center space-y-6 sm:max-w-md xl:col-span-3'>
+        <div className='flex w-full justify-center'>
           <DocumentsSearch
             onDeepSearchClick={handleDeepSearch}
             searchTerm={searchTerm}
