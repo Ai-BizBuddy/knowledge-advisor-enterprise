@@ -133,7 +133,7 @@ export default function KnowledgeBaseCard({
         </div>
 
         {/* Desktop hover indicator */}
-        <div className='hidden opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:block'>
+        <div className='hidden opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:block' onClick={onDetail}>
           <svg
             className='h-5 w-5 text-gray-400'
             fill='none'
@@ -150,7 +150,7 @@ export default function KnowledgeBaseCard({
         </div>
 
         {/* Mobile indicator */}
-        <div className='sm:hidden'>
+        <div className='sm:hidden' onClick={onDetail}>
           <svg
             className='h-5 w-5 text-gray-400'
             fill='none'
