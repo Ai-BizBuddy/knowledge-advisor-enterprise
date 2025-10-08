@@ -11,6 +11,8 @@ import type {
 } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { createApiError } from '@/utils/errorHelpers';
+import { createClient } from '@/utils/supabase/client';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -653,14 +655,14 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         // Only refresh if there are no other sync operations in progress
         if (syncingDocuments.size <= 1) { // <= 1 because current document is still in set
           console.log('[DocumentSync] Refreshing documents list after sync completion');
-          await loadDocuments(currentPage, true);
+          // await loadDocuments(currentPage, true);
         }
       } catch (err) {
         // Error already handled in syncDocumentInternal
         throw err;
       }
     },
-    [syncDocumentInternal, loadDocuments, currentPage, syncingDocuments.size],
+    [syncDocumentInternal, syncingDocuments.size],
   );
 
   /**
@@ -683,7 +685,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         }
         
         // Refresh documents list once after all sync operations complete
-        console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
+        // console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
         await loadDocuments(currentPage, true);
       } catch (err) {
         const errorMessage =
@@ -808,6 +810,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   // Create a ref to track if we've made the initial load
   const hasInitialLoadRef = useRef(false);
+  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
 
   // Auto-load documents when knowledgeBaseId changes (only once)
   useEffect(() => {
@@ -823,6 +826,79 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   useEffect(() => {
     hasInitialLoadRef.current = false;
   }, [knowledgeBaseId]);
+
+  // Setup Realtime subscription for document changes
+  useEffect(() => {
+    if (!knowledgeBaseId) {
+      console.log('⚠️ [useDocuments.Realtime] No knowledge base ID, skipping subscription');
+      return;
+    }
+
+    const supabase = createClient();
+    console.log('🔌 [useDocuments.Realtime] Setting up realtime subscription for knowledgeBaseId:', knowledgeBaseId);
+
+    const channel = supabase
+      .channel(`document:kb:${knowledgeBaseId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'knowledge',
+          table: 'document',
+          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+        },
+        (payload) => {
+          console.log('📡 [useDocuments.Realtime] Received change:', payload.eventType, payload);
+
+          // Handle different event types
+          if (payload.eventType === 'INSERT') {
+            console.log('➕ [useDocuments.Realtime] Document inserted');
+            // Refresh the current page to show new document
+            loadDocuments(currentPage, true);
+            return;
+          } 
+          if (payload.eventType === 'UPDATE') {
+            console.log('✏️ [useDocuments.Realtime] Document updated');
+            // Update the document in local state without full refresh
+            const updatedDoc = payload.new as Document;
+            setDocuments((prev) =>
+              prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
+            );
+            setDocumentManagementState((prev) => ({
+              ...prev,
+              filteredDocuments: prev.filteredDocuments.map((doc) =>
+                doc.id === updatedDoc.id ? updatedDoc : doc
+              ),
+            }));
+            return;
+          }  
+          if (payload.eventType === 'DELETE') {
+            console.log('🗑️ [useDocuments.Realtime] Document deleted');
+            const deletedId = payload.old.id as string;
+            // Remove from local state
+            setDocuments((prev) => prev.filter((doc) => doc.id !== deletedId));
+            setDocumentManagementState((prev) => ({
+              ...prev,
+              filteredDocuments: prev.filteredDocuments.filter(
+                (doc) => doc.id !== deletedId
+              ),
+              totalItems: Math.max(0, prev.totalItems - 1),
+              totalPages: Math.ceil(Math.max(0, prev.totalItems - 1) / prev.itemsPerPage),
+            }));
+            return;
+          }
+        }
+      )
+      .subscribe((status) => {
+        console.log('🔌 [useDocuments.Realtime] Subscription status:', status);
+      });
+
+    // Cleanup function
+    return () => {
+      console.log('🔌 [useDocuments.Realtime] Cleaning up subscription for knowledgeBaseId:', knowledgeBaseId);
+      supabase.removeChannel(channel);
+    };
+  }, [knowledgeBaseId, currentPage, loadDocuments]);
 
   return {
     // State

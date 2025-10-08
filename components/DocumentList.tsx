@@ -5,11 +5,14 @@ import type { Document } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import DocumentDeleteModal from './documentDeleteModal';
-import { DocumentsPagination, DocumentsSearch, DocumentsTable } from './documentsPage';
+import {
+  DocumentsPagination,
+  DocumentsSearch,
+  DocumentsTable,
+} from './documentsPage';
 import { TableSkeleton } from './LoadingCard';
 import { useToast } from './toast';
 import UploadDocument from './uploadDocuments';
-
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 interface DocumentTableItem {
@@ -32,7 +35,9 @@ interface DocumentTableItem {
 }
 
 // Helper function to map rag_status to user-friendly display status
-const mapRagStatusToDisplayStatus = (ragStatus: string | null | undefined): string => {
+const mapRagStatusToDisplayStatus = (
+  ragStatus: string | null | undefined,
+): string => {
   switch (ragStatus) {
     case 'synced':
       return 'Synced';
@@ -50,7 +55,7 @@ const mapRagStatusToDisplayStatus = (ragStatus: string | null | undefined): stri
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
 const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
-  name: doc.metadata?.originalFileName as string || doc.name, // Use original filename from metadata if available
+  name: (doc.metadata?.originalFileName as string) || doc.name, // Use original filename from metadata if available
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
     : 'Unknown',
@@ -66,8 +71,11 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   chunk: doc.chunk_count,
   syncStatus: mapRagStatusToDisplayStatus(doc.rag_status),
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
-  error_message: (doc?.error_message as string) || 
-    (doc.status === 'error' ? 'An error occurred while processing this document' : undefined),
+  error_message:
+    (doc?.error_message as string) ||
+    (doc.status === 'error'
+      ? 'An error occurred while processing this document'
+      : undefined),
 });
 
 interface DocumentListProps {
@@ -80,8 +88,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   knowledgeBaseId,
   isActive,
 }) => {
-  console.log(knowledgeBaseId, isActive)
-   
   const { showToast } = useToast();
 
   // Document state managed internally
@@ -89,13 +95,14 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     selectedDocumentIndex: 0,
     selectedDocuments: [] as number[],
     sortBy: 'created_at',
-    sortOrder: 'desc' as 'asc' | 'desc'
+    sortOrder: 'desc' as 'asc' | 'desc',
   });
 
   // Modal states managed internally
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [documentToDelete, setDocumentToDelete] = useState<DocumentTableItem | null>(null);
+  const [documentToDelete, setDocumentToDelete] =
+    useState<DocumentTableItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Use the new useDocuments hook with integrated sync functionality
@@ -124,9 +131,9 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     syncDocument,
     syncMultipleDocuments,
     clearSyncError,
-  } = useDocuments({ 
+  } = useDocuments({
     knowledgeBaseId: isActive ? knowledgeBaseId : undefined, // Only provide knowledgeBaseId when active
-    autoLoad: isActive // Only auto-load when active
+    autoLoad: isActive, // Only auto-load when active
   });
 
   useEffect(() => {
@@ -142,33 +149,37 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     return documents.map((doc) => {
       const tableDoc = adaptDocumentToTableFormat(doc);
       // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
-      tableDoc.disableSync = (
-        doc.status === 'ready' || 
-        doc.status === 'processing' || 
-        doc.status === 'archived' || 
-        doc.rag_status === 'synced'
-      );
+      tableDoc.disableSync =
+        doc.status === 'ready' ||
+        doc.status === 'processing' ||
+        doc.status === 'archived' ||
+        doc.rag_status === 'synced';
       return tableDoc;
     });
   }, [documents]);
 
   const zeroBasedStartIndex = useMemo(() => startIndex - 1, [startIndex]);
-  
-  const currentPageSelectedCount = useMemo(() => 
-    documentState.selectedDocuments.filter(
-      (index) => index >= zeroBasedStartIndex && index < zeroBasedStartIndex + documents.length,
-    ).length,
-    [documentState.selectedDocuments, zeroBasedStartIndex, documents.length]
+
+  const currentPageSelectedCount = useMemo(
+    () =>
+      documentState.selectedDocuments.filter(
+        (index) =>
+          index >= zeroBasedStartIndex &&
+          index < zeroBasedStartIndex + documents.length,
+      ).length,
+    [documentState.selectedDocuments, zeroBasedStartIndex, documents.length],
   );
 
-  const isAllSelected = useMemo(() =>
-    currentPageSelectedCount === documents.length && documents.length > 0,
-    [currentPageSelectedCount, documents.length]
+  const isAllSelected = useMemo(
+    () => currentPageSelectedCount === documents.length && documents.length > 0,
+    [currentPageSelectedCount, documents.length],
   );
-  
-  const isIndeterminate = useMemo(() =>
-    currentPageSelectedCount > 0 && currentPageSelectedCount < documents.length,
-    [currentPageSelectedCount, documents.length]
+
+  const isIndeterminate = useMemo(
+    () =>
+      currentPageSelectedCount > 0 &&
+      currentPageSelectedCount < documents.length,
+    [currentPageSelectedCount, documents.length],
   );
 
   // Handle single document sync
@@ -178,20 +189,28 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         // Convert page index back to actual array index
         const arrayIndex = pageIndex - zeroBasedStartIndex;
         const document = documents[arrayIndex];
-        
+
         if (!document) {
           console.error('[DocumentList] Document not found for sync');
           showToast('Error: Document not found for sync', 'error');
           return;
         }
 
-        console.log(`[DocumentList] Syncing document: ${document.name} (ID: ${document.id})`);
+        console.log(
+          `[DocumentList] Syncing document: ${document.name} (ID: ${document.id})`,
+        );
         showToast(`Syncing document: ${document.name}...`, 'info', 3000);
-        
+
         await syncDocument(document.id);
-        
-        console.log(`[DocumentList] Successfully synced document: ${document.name}`);
-        showToast(`Successfully synced document: ${document.name}`, 'success', 4000);
+
+        console.log(
+          `[DocumentList] Successfully synced document: ${document.name}`,
+        );
+        showToast(
+          `Successfully synced document: ${document.name}`,
+          'success',
+          4000,
+        );
       } catch (err) {
         console.error('[DocumentList] Single document sync error:', err);
         // Error is already handled by useDocuments hook and will show via syncError effect
@@ -201,108 +220,131 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   );
 
   // Handle bulk sync for selected documents
-  const handleBulkSync = useCallback(
-    async () => {
-      try {
-        if (documentState.selectedDocuments.length === 0) {
-          console.warn('[DocumentList] No documents selected for sync');
-          showToast('Please select documents to sync', 'warning', 3000);
-          return;
-        }
-
-        const selectedDocumentIds = documentState.selectedDocuments
-          .map(index => {
-            // Convert selected index back to actual array index
-            const arrayIndex = index - zeroBasedStartIndex;
-            return documents[arrayIndex]?.id;
-          })
-          .filter(Boolean);
-
-        if (selectedDocumentIds.length === 0) {
-          showToast('No valid documents selected for sync', 'warning', 3000);
-          return;
-        }
-
-        console.log(`[DocumentList] Bulk syncing ${selectedDocumentIds.length} documents`);
-        showToast(`Starting bulk sync for ${selectedDocumentIds.length} documents...`, 'info', 3000);
-        
-        await syncMultipleDocuments(selectedDocumentIds);
-        
-        // Clear selection after successful API calls
-        setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
-        
-        console.log(`[DocumentList] Successfully submitted ${selectedDocumentIds.length} documents for sync`);
-        showToast(`Successfully submitted ${selectedDocumentIds.length} documents for sync`, 'success', 4000);
-      } catch (err) {
-        console.error('[DocumentList] Bulk sync error:', err);
-        // Error is already handled by useDocuments hook and will show via syncError effect
+  const handleBulkSync = useCallback(async () => {
+    try {
+      if (documentState.selectedDocuments.length === 0) {
+        console.warn('[DocumentList] No documents selected for sync');
+        showToast('Please select documents to sync', 'warning', 3000);
+        return;
       }
-    },
-    [documentState.selectedDocuments, zeroBasedStartIndex, documents, syncMultipleDocuments, showToast],
-  );
 
-  const handleSelectDocument = useCallback((pageIndex: number) => {
-    const actualIndex = zeroBasedStartIndex + pageIndex;
-    setDocumentState(prev => ({
-      ...prev,
-      selectedDocuments: prev.selectedDocuments.includes(actualIndex)
-        ? prev.selectedDocuments.filter((i) => i !== actualIndex)
-        : [...prev.selectedDocuments, actualIndex]
-    }));
-  }, [zeroBasedStartIndex]);
+      const selectedDocumentIds = documentState.selectedDocuments
+        .map((index) => {
+          // Convert selected index back to actual array index
+          const arrayIndex = index - zeroBasedStartIndex;
+          return documents[arrayIndex]?.id;
+        })
+        .filter(Boolean);
+
+      if (selectedDocumentIds.length === 0) {
+        showToast('No valid documents selected for sync', 'warning', 3000);
+        return;
+      }
+
+      console.log(
+        `[DocumentList] Bulk syncing ${selectedDocumentIds.length} documents`,
+      );
+      showToast(
+        `Starting bulk sync for ${selectedDocumentIds.length} documents...`,
+        'info',
+        3000,
+      );
+
+      await syncMultipleDocuments(selectedDocumentIds);
+
+      // Clear selection after successful API calls
+      setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
+
+      console.log(
+        `[DocumentList] Successfully submitted ${selectedDocumentIds.length} documents for sync`,
+      );
+      showToast(
+        `Successfully submitted ${selectedDocumentIds.length} documents for sync`,
+        'success',
+        4000,
+      );
+    } catch (err) {
+      console.error('[DocumentList] Bulk sync error:', err);
+      // Error is already handled by useDocuments hook and will show via syncError effect
+    }
+  }, [
+    documentState.selectedDocuments,
+    zeroBasedStartIndex,
+    documents,
+    syncMultipleDocuments,
+    showToast,
+  ]);
+
+  const handleSelectDocument = useCallback(
+    (pageIndex: number) => {
+      const actualIndex = zeroBasedStartIndex + pageIndex;
+      setDocumentState((prev) => ({
+        ...prev,
+        selectedDocuments: prev.selectedDocuments.includes(actualIndex)
+          ? prev.selectedDocuments.filter((i) => i !== actualIndex)
+          : [...prev.selectedDocuments, actualIndex],
+      }));
+    },
+    [zeroBasedStartIndex],
+  );
 
   // Handle select all documents (แก้ไขให้ select เฉพาะในหน้าปัจจุบัน)
   const handleSelectAll = useCallback(() => {
-    const currentIsAllSelected = currentPageSelectedCount === documents.length && documents.length > 0;
+    const currentIsAllSelected =
+      currentPageSelectedCount === documents.length && documents.length > 0;
     if (currentIsAllSelected) {
-      setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
+      setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
     } else {
       // สร้าง actualIndex array สำหรับหน้าปัจจุบัน
       const currentPageIndices = documents.map(
         (_, pageIndex) => zeroBasedStartIndex + pageIndex,
       );
-      setDocumentState(prev => ({ ...prev, selectedDocuments: currentPageIndices }));
+      setDocumentState((prev) => ({
+        ...prev,
+        selectedDocuments: currentPageIndices,
+      }));
     }
   }, [currentPageSelectedCount, documents, zeroBasedStartIndex]);
 
   // Clear selection เมื่อเปลี่ยนหน้า
-  const handlePageChangeWithClearSelection = useCallback((page: number) => {
-    setDocumentState(prev => ({ ...prev, selectedDocuments: [] })); // Clear selection เมื่อเปลี่ยนหน้า
-    handlePageChange(page);
-  }, [handlePageChange]);
+  const handlePageChangeWithClearSelection = useCallback(
+    (page: number) => {
+      setDocumentState((prev) => ({ ...prev, selectedDocuments: [] })); // Clear selection เมื่อเปลี่ยนหน้า
+      handlePageChange(page);
+    },
+    [handlePageChange],
+  );
 
   // Handle clear selection
   const handleClearSelection = useCallback(() => {
-    setDocumentState(prev => ({ ...prev, selectedDocuments: [] }));
+    setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
   }, []);
 
   // Handle sort
-  const handleSort = useCallback((column: string) => {
-    if (documentState.sortBy === column) {
-      setDocumentState(prev => ({ 
-        ...prev, 
-        sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc' 
-      }));
-    } else {
-      setDocumentState(prev => ({ 
-        ...prev, 
-        sortBy: column, 
-        sortOrder: 'asc' 
-      }));
-    }
-  }, [documentState.sortBy]);
+  const handleSort = useCallback(
+    (column: string) => {
+      if (documentState.sortBy === column) {
+        setDocumentState((prev) => ({
+          ...prev,
+          sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
+        }));
+      } else {
+        setDocumentState((prev) => ({
+          ...prev,
+          sortBy: column,
+          sortOrder: 'asc',
+        }));
+      }
+    },
+    [documentState.sortBy],
+  );
 
   // Handle document click
   const handleDocumentTableClick = useCallback((index: number) => {
-    setDocumentState(prev => ({ ...prev, selectedDocumentIndex: index }));
-    // You can add navigation logic here if needed
-    // const documentId = documents[index]?.id;
-    // if (documentId) {
-    //   router.push(`/knowledge-base/${id}/documents/${documentId}`);
-    // }
+    setDocumentState((prev) => ({ ...prev, selectedDocumentIndex: index }));
   }, []);
 
-    // Handle single document deletion
+  // Handle single document deletion
   const handleDocumentDelete = useCallback(
     async (pageIndex: number) => {
       try {
@@ -313,8 +355,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           return;
         }
 
-        console.log(`[DocumentList] Opening delete modal for document: ${document.name} (${document.id})`);
-        
+        console.log(
+          `[DocumentList] Opening delete modal for document: ${document.name} (${document.id})`,
+        );
+
         // Set the document to delete and open modal
         const documentItem = adaptDocumentToTableFormat(document);
         setDocumentToDelete(documentItem);
@@ -328,52 +372,58 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   );
 
   // Confirm and execute document deletion
-  const handleConfirmDelete = useCallback(
-    async () => {
-      if (!documentToDelete) {
-        console.error('[DocumentList] No document selected for deletion');
-        return;
+  const handleConfirmDelete = useCallback(async () => {
+    if (!documentToDelete) {
+      console.error('[DocumentList] No document selected for deletion');
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+
+      // Find the original document by matching the original filename from metadata
+      const originalDoc = documents.find(
+        (doc) => doc.metadata?.originalFileName === documentToDelete.name,
+      );
+
+      if (!originalDoc?.id) {
+        throw new Error('Document not found');
       }
 
-      try {
-        setIsDeleting(true);
-        
-        // Find the original document by matching the original filename from metadata
-        const originalDoc = documents.find(
-          (doc) => doc.metadata?.originalFileName === documentToDelete.name,
-        );
-        
-        if (!originalDoc?.id) {
-          throw new Error('Document not found');
-        }
+      console.log(
+        `[DocumentList] Deleting document: ${documentToDelete.name} (${originalDoc.id})`,
+      );
 
-        console.log(`[DocumentList] Deleting document: ${documentToDelete.name} (${originalDoc.id})`);
-        
-        // Create an instance of DocumentService and delete the document
-        const documentService = new DocumentService();
-        await documentService.deleteDocument(originalDoc.id);
+      // Create an instance of DocumentService and delete the document
+      const documentService = new DocumentService();
+      await documentService.deleteDocument(originalDoc.id);
 
-        console.log(`[DocumentList] Successfully deleted document: ${documentToDelete.name}`);
-        showToast(`Document "${documentToDelete.name}" deleted successfully`, 'success', 4000);
+      console.log(
+        `[DocumentList] Successfully deleted document: ${documentToDelete.name}`,
+      );
+      showToast(
+        `Document "${documentToDelete.name}" deleted successfully`,
+        'success',
+        4000,
+      );
 
-        // Close modal and reset state
-        setIsDeleteModalOpen(false);
-        setDocumentToDelete(null);
+      // Close modal and reset state
+      setIsDeleteModalOpen(false);
+      setDocumentToDelete(null);
 
-        // Refresh documents list
-        refresh();
-      } catch (err) {
-        console.error('[DocumentList] Delete error:', err);
-        const errorMessage = err instanceof Error 
-          ? err.message 
+      // Refresh documents list
+      refresh();
+    } catch (err) {
+      console.error('[DocumentList] Delete error:', err);
+      const errorMessage =
+        err instanceof Error
+          ? err.message
           : 'Failed to delete document. Please try again.';
-        showToast(errorMessage, 'error', 5000);
-      } finally {
-        setIsDeleting(false);
-      }
-    },
-    [documentToDelete, documents, showToast, refresh],
-  );
+      showToast(errorMessage, 'error', 5000);
+    } finally {
+      setIsDeleting(false);
+    }
+  }, [documentToDelete, documents, showToast, refresh]);
 
   // Handle modal close
   const handleCloseDeleteModal = useCallback(() => {
@@ -444,10 +494,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
                   />
                 </svg>
               </button>
-              <button 
+              <button
                 onClick={handleBulkSync}
                 disabled={loading || syncingDocuments.size > 0}
-                className='flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed sm:px-4'
+                className='flex items-center gap-2 rounded-lg bg-purple-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-purple-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4'
               >
                 <svg
                   className='h-4 w-4'
@@ -462,8 +512,12 @@ const DocumentListComponent: FC<DocumentListProps> = ({
                     d='M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12'
                   />
                 </svg>
-                <span className='hidden sm:inline'>Sync Selected ({currentPageSelectedCount})</span>
-                <span className='sm:hidden'>Sync ({currentPageSelectedCount})</span>
+                <span className='hidden sm:inline'>
+                  Sync Selected ({currentPageSelectedCount})
+                </span>
+                <span className='sm:hidden'>
+                  Sync ({currentPageSelectedCount})
+                </span>
               </button>
             </>
           )}
@@ -543,16 +597,12 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       )}
 
       {/* Upload Modal */}
-      {isUploadModalOpen && (
-        <UploadDocument
-          isOpen={isUploadModalOpen}
-          onClose={() => {
-            setIsUploadModalOpen(false);
-            // Refresh documents after upload
-            refresh();
-          }}
-        />
-      )}
+      <UploadDocument
+        isOpen={isUploadModalOpen}
+        onClose={() => {
+          setIsUploadModalOpen(false);
+        }}
+      />
 
       {/* Delete Confirmation Modal */}
       <DocumentDeleteModal

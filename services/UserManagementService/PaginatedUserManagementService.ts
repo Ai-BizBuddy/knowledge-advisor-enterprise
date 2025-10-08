@@ -132,7 +132,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from('roles').select(
+      let query = supabase.from('role_view').select(
         `
           id,
           name,
