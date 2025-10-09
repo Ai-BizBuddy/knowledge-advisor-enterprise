@@ -283,13 +283,13 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
         {/* Table */}
         {!loading && (
           <>
-            <div className='overflow-x-auto'>
+            <div className='overflow-x-auto border border-gray-200 rounded-lg dark:border-gray-700'>
               <Table hoverable>
-                <thead>
+                <thead className='bg-gray-50 dark:bg-gray-700'>
                   <tr>
-                    <th
+                    <th 
                       scope='col'
-                      className='cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 w-1/6'
+                      className='cursor-pointer px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 w-1/6'
                       onClick={() => handleSort('timestamp')}
                     >
                       <div className='flex items-center'>
@@ -299,7 +299,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                     </th>
                     <th
                       scope='col'
-                      className='cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700 w-5/6'
+                      className='cursor-pointer px-6 py-3 hover:bg-gray-100 dark:hover:bg-gray-600 w-5/6'
                       onClick={() => handleSort('message')}
                     >
                       <div className='flex items-center'>
@@ -338,9 +338,9 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className='bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700'
+                        className='bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-600'
                       >
-                        <td className='px-6 py-4 font-mono text-sm whitespace-nowrap'>
+                        <td className='px-6 py-4 text-sm whitespace-nowrap'>
                           <div className='text-gray-900 dark:text-white'>
                             {formatTimestamp(log.timestamp)}
                           </div>
