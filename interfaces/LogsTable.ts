@@ -10,7 +10,7 @@ export interface LogEntry {
   source?: string;
   user_id?: string;
   metadata?: Record<string, unknown>;
-  created_at: string;
+  created_at?: string;
   updated_at?: string;
 }
 

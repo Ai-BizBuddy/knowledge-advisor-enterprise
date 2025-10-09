@@ -1,6 +1,7 @@
-import { LogTable, PageHeader } from '@/components';
+import { PageHeader } from '@/components';
+import { LogsTable } from '@/components/logsTable/LogsTableNew';
 
-export default function LogsPage() {
+export default function LogsPageNew() {
   return (
     <div className='h-full'>
       {/* Main Container with Mac-optimized responsive padding */}
@@ -8,12 +9,12 @@ export default function LogsPage() {
         {/* Page Header */}
         <div className='space-y-3 pb-3'>
           <PageHeader
-            title='App Logs'
-            subtitle='Manage your enterprise application logs'
+            title='Logs'
+            subtitle='View and manage system logs and activities.'
           />
         </div>
 
-        <LogTable />
+        <LogsTable />
       </div>
     </div>
   );
