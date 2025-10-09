@@ -14,20 +14,21 @@ export interface DatabaseLogEntry {
   resource_type: string | null;
   resource_id: string | null;
   details: Record<string, unknown> | null;
-  timeStamp: string;
+  timestamp: string;
 }
 
 export class LogsService {
   private supabase = createClientTable();
 
   /**
-   * Fetch logs from the activity_logs table
+   * Fetch logs from the activity_log table
    */
   async getLogs(limit: number = 50): Promise<LogEntry[]> {
     try {
       const { data, error } = await this.supabase
         .from('activity_log')
         .select('*')
+        .order('timestamp', { ascending: false })
         .limit(limit);
 
       if (error) {
@@ -88,7 +89,7 @@ export class LogsService {
 
     return {
       id: dbLog.id,
-      timestamp: dbLog.timeStamp,
+      timestamp: dbLog.timestamp,
       message,
       level,
       source: dbLog.resource_type || 'system',
@@ -106,6 +107,7 @@ export class LogsService {
         .from('activity_log')
         .select('*')
         .or(`action.ilike.%${query}%,details.ilike.%${query}%`)
+        .order('timestamp', { ascending: false })
         .limit(limit);
 
       if (error) {

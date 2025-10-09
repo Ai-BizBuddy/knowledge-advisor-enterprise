@@ -42,17 +42,38 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
    * Format timestamp to Thai locale
    */
   const formatThaiTimestamp = useCallback((timestamp: string): string => {
-    const date = new Date(timestamp);
-    return date.toLocaleString('th-TH', {
-      year: 'numeric',
-      month: 'short',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-      timeZone: 'Asia/Bangkok',
-    });
+    try {
+      // Handle different timestamp formats from database
+      let date: Date;
+      
+      // If timestamp includes timezone info (like +00), parse directly
+      if (timestamp.includes('+') || timestamp.includes('Z')) {
+        date = new Date(timestamp);
+      } else {
+        // If no timezone, assume UTC and convert
+        date = new Date(timestamp + 'Z');
+      }
+
+      // Check if date is valid
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid timestamp:', timestamp);
+        return timestamp; // Return original if parsing fails
+      }
+
+      return date.toLocaleString('th-TH', {
+        year: 'numeric',
+        month: 'short',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: 'Asia/Bangkok',
+      });
+    } catch (error) {
+      console.error('Error formatting timestamp:', error, timestamp);
+      return timestamp; // Return original if error occurs
+    }
   }, []);
 
   /**
