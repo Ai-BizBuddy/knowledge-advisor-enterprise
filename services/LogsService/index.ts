@@ -28,7 +28,7 @@ export class LogsService {
       const { data, error } = await this.supabase
         .from('activity_log')
         .select('*')
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: true });
 
       if (error) {
         throw new Error(`Failed to fetch logs: ${error.message}`);
@@ -52,7 +52,7 @@ export class LogsService {
         .from('activity_log')
         .select('*')
         .or(`table_name.ilike.%${query}%`)
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: true });
 
       if (error) {
         throw new Error(`Failed to search logs: ${error.message}`);

@@ -15,7 +15,6 @@
  */
 
 import { Pagination } from '@/components/pagination';
-import Tabs from '@/components/tabs';
 import { useLogs } from '@/hooks/useLogs';
 import type { LogEntry } from '@/interfaces/LogsTable';
 import { Badge, Button, Card, Spinner, Table } from 'flowbite-react';
@@ -174,23 +173,57 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
       className={`w-full ${className}`}
     >
       <Card>
-        {/* Header with search and refresh */}
-        <div className='mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
-          <div className='flex items-center gap-4'>
-            <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
-              Activity Logs
-            </h3>
-            <Badge color='info' size='sm'>
-              {filteredAndSortedLogs.length} entries
-            </Badge>
+        {/* Header with tabs - Mobile Optimized */}
+        <div className='mb-4 flex flex-col gap-4'>
+          <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4'>
+            <div className='flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4'>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
+                Activity Logs
+              </h3>
+              <Badge color='info' size='sm' className='self-start'>
+                {filteredAndSortedLogs.length} entries
+              </Badge>
+            </div>
+            
+            {/* Mobile Sort Controls */}
+            <div className='sm:hidden flex items-center gap-2'>
+              <select
+                value={`${sortBy}-${sortOrder}`}
+                onChange={(e) => {
+                  const [field, order] = e.target.value.split('-') as [keyof LogEntry, 'asc' | 'desc'];
+                  setSortBy(field);
+                  setSortOrder(order);
+                  setCurrentPage(1);
+                }}
+                className='text-xs bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
+              >
+                <option value='timestamp-desc'>Latest First</option>
+                <option value='timestamp-asc'>Oldest First</option>
+                <option value='action-asc'>Action A-Z</option>
+                <option value='action-desc'>Action Z-A</option>
+                <option value='table_name-asc'>Resource A-Z</option>
+                <option value='table_name-desc'>Resource Z-A</option>
+              </select>
+            </div>
           </div>
 
-          <div className='flex items-center gap-3'>
-            <Tabs
-              currentTab={activeTab}
-              tabList={tabList}
-              onTabChange={handleTabChange}
-            />
+          {/* Tab Navigation - Settings Style with Mobile Support */}
+          <div className='border-b border-gray-200 dark:border-gray-700'>
+            <nav className='-mb-px flex space-x-2 sm:space-x-8 overflow-x-auto'>
+              {tabList.map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => handleTabChange(tab)}
+                  className={`py-2 px-1 sm:px-2 border-b-2 font-medium text-xs sm:text-sm whitespace-nowrap ${
+                    activeTab === tab
+                      ? 'border-blue-500 text-blue-600 dark:text-blue-400'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </nav>
           </div>
         </div>
 
@@ -201,10 +234,11 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
           </div>
         )}
 
-        {/* Table */}
+        {/* Table - Desktop View */}
         {!loading && (
           <>
-            <div className='overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
+            {/* Desktop Table View */}
+            <div className='hidden sm:block overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700'>
               <Table hoverable>
                 <thead>
                   <tr>
@@ -253,7 +287,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                 <tbody>
                   {paginatedLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={2} className='px-6 py-4'>
+                      <td colSpan={4} className='px-6 py-4'>
                         <div className='py-8 text-center'>
                           <div className='mb-2 text-gray-500 dark:text-gray-400'>
                             {activeTab !== 'All'
@@ -265,7 +299,6 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                     </tr>
                   ) : (
                     paginatedLogs
-                      .sort((a, b) => a.timestamp < b.timestamp ? 1 : -1)
                       .map((log, index) => (
                       <motion.tr
                         key={log.id}
@@ -309,6 +342,71 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   )}
                 </tbody>
               </Table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className='block sm:hidden space-y-3'>
+              {paginatedLogs.length === 0 ? (
+                <div className='py-8 text-center'>
+                  <div className='mb-2 text-gray-500 dark:text-gray-400'>
+                    {activeTab !== 'All'
+                      ? `No ${activeTab.toLowerCase()} logs found`
+                      : 'No logs available'}
+                  </div>
+                </div>
+              ) : (
+                paginatedLogs
+                  .sort((a, b) => a.timestamp < b.timestamp ? 1 : -1)
+                  .map((log, index) => (
+                  <motion.div
+                    key={log.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                    className='bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 shadow-sm'
+                  >
+                    <div className='flex flex-col space-y-2'>
+                      {/* Header: Action and Timestamp */}
+                      <div className='flex justify-between items-start'>
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            log.action === 'INSERT' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' 
+                              : log.action === 'UPDATE' 
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300' 
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                          }`}
+                        >
+                          {log.action === 'SOFT_DELETE' ? 'DELETE' : log.action}
+                        </span>
+                        <span className='text-xs text-gray-500 dark:text-gray-400'>
+                          {log.timestamp}
+                        </span>
+                      </div>
+                      
+                      {/* Resource */}
+                      <div className='flex items-center space-x-2'>
+                        <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide'>
+                          Resource:
+                        </span>
+                        <span className='text-sm text-gray-900 dark:text-white'>
+                          {log.table_name.replace(/_/g, ' ')}
+                        </span>
+                      </div>
+                      
+                      {/* Message */}
+                      <div className=''>
+                        <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide block mb-1'>
+                          Message:
+                        </span>
+                        <p className='text-sm text-gray-900 dark:text-white break-words'>
+                          {log.message}
+                        </p>
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
             </div>
 
             {/* Pagination */}
