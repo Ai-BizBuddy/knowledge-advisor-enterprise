@@ -5,7 +5,7 @@
  *
  * A comprehensive logs table component with timestamp, message display and pagination
  * following the project's design patterns and TypeScript standards.
- * 
+ *
  * Features:
  * - Real-time data from activity_logs table
  * - Thai datetime formatting
@@ -15,7 +15,7 @@
  */
 
 import { Pagination } from '@/components/pagination';
-import { TableSearch } from '@/components/tableSearch';
+import Tabs from '@/components/tabs';
 import { useLogs } from '@/hooks/useLogs';
 import type { LogEntry } from '@/interfaces/LogsTable';
 import { Badge, Button, Card, Spinner, Table } from 'flowbite-react';
@@ -32,9 +32,12 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   pageSize = 10,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState<keyof LogEntry>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [activeTab, setActiveTab] = useState('All');
+
+  // Tab list for CRUD filtering
+  const tabList = ['All', 'Create', 'Read', 'Update', 'Delete'];
 
   // Use the logs hook to fetch real data
   const {
@@ -42,11 +45,10 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     loading: hookLoading,
     error: hookError,
     refreshLogs,
-    searchLogs,
   } = useLogs({
-    limit: 100, // Fetch more data for pagination
-    autoRefresh: true,
-    refreshInterval: 30000, // Refresh every 30 seconds
+    // limit: 999, // Fetch more data for pagination
+    autoRefresh: false,
+    // refreshInterval: 300000, // Refresh every 5 minutes
   });
 
   // Combine external and hook states
@@ -55,7 +57,20 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
 
   // Filter and sort logs
   const filteredAndSortedLogs = useMemo(() => {
-    const filtered = logs;
+    let filtered = logs;
+
+    // Filter by action type based on active tab
+    if (activeTab !== 'All') {
+      const actionMap: Record<string, string[]> = {
+        Create: ['INSERT'],
+        Read: ['SELECT'],
+        Update: ['UPDATE'],
+        Delete: ['DELETE', 'SOFT_DELETE'],
+      };
+      
+      const allowedActions = actionMap[activeTab] || [];
+      filtered = logs.filter(log => allowedActions.includes(log.action));
+    }
 
     // Apply sorting (timestamp is already formatted as Thai)
     filtered.sort((a, b) => {
@@ -70,7 +85,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     });
 
     return filtered;
-  }, [logs, sortBy, sortOrder]);
+  }, [logs, activeTab, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedLogs.length / pageSize);
@@ -80,28 +95,25 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     startIndex + pageSize,
   );
 
-  // Handle search with debounce
-  const handleSearch = useCallback(
-    (term: string) => {
-      setSearchTerm(term);
-      setCurrentPage(1); // Reset to first page when searching
-      
-      // Use the hook's search function
-      searchLogs(term);
-    },
-    [searchLogs],
-  );
+  // Handle tab change
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    setCurrentPage(1); // Reset to first page when changing tabs
+  }, []);
 
   // Handle sort
-  const handleSort = useCallback((column: keyof LogEntry) => {
-    if (sortBy === column) {
-      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
-    } else {
-      setSortBy(column);
-      setSortOrder('desc');
-    }
-    setCurrentPage(1); // Reset to first page when sorting
-  }, [sortBy, sortOrder]);
+  const handleSort = useCallback(
+    (column: keyof LogEntry) => {
+      if (sortBy === column) {
+        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      } else {
+        setSortBy(column);
+        setSortOrder('desc');
+      }
+      setCurrentPage(1); // Reset to first page when sorting
+    },
+    [sortBy, sortOrder],
+  );
 
   // Handle page change
   const handlePageChange = useCallback((page: number) => {
@@ -120,7 +132,11 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   const renderSortIcon = (column: keyof LogEntry) => {
     if (sortBy !== column) {
       return (
-        <svg className='ml-1 h-3 w-3 opacity-50' fill='currentColor' viewBox='0 0 20 20'>
+        <svg
+          className='ml-1 h-3 w-3 opacity-50'
+          fill='currentColor'
+          viewBox='0 0 20 20'
+        >
           <path d='M5 12l5-5 5 5H5z' />
         </svg>
       );
@@ -170,11 +186,10 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
           </div>
 
           <div className='flex items-center gap-3'>
-            <TableSearch
-              searchValue={searchTerm}
-              onSearchChange={handleSearch}
-              searchPlaceholder='Search message...'
-              className='w-full sm:w-64'
+            <Tabs
+              currentTab={activeTab}
+              tabList={tabList}
+              onTabChange={handleTabChange}
             />
           </div>
         </div>
@@ -195,7 +210,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   <tr>
                     <th
                       scope='col'
-                      className='w-1/6 cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      className='w-[10%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
                       onClick={() => handleSort('timestamp')}
                     >
                       <div className='flex items-center'>
@@ -205,7 +220,27 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                     </th>
                     <th
                       scope='col'
-                      className='w-5/6 cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      className='w-[10%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      onClick={() => handleSort('action')}
+                    >
+                      <div className='flex items-center'>
+                        action
+                        {renderSortIcon('action')}
+                      </div>
+                    </th>
+                    <th
+                      scope='col'
+                      className='w-[15%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      onClick={() => handleSort('table_name')}
+                    >
+                      <div className='flex items-center'>
+                        resource
+                        {renderSortIcon('table_name')}
+                      </div>
+                    </th>
+                    <th
+                      scope='col'
+                      className='w-[65%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
                       onClick={() => handleSort('message')}
                     >
                       <div className='flex items-center'>
@@ -221,24 +256,17 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                       <td colSpan={2} className='px-6 py-4'>
                         <div className='py-8 text-center'>
                           <div className='mb-2 text-gray-500 dark:text-gray-400'>
-                            {searchTerm
-                              ? 'No logs found matching your search'
+                            {activeTab !== 'All'
+                              ? `No ${activeTab.toLowerCase()} logs found`
                               : 'No logs available'}
                           </div>
-                          {searchTerm && (
-                            <Button
-                              onClick={() => handleSearch('')}
-                              color='gray'
-                              size='xs'
-                            >
-                              Clear
-                            </Button>
-                          )}
                         </div>
                       </td>
                     </tr>
                   ) : (
-                    paginatedLogs.map((log, index) => (
+                    paginatedLogs
+                      .sort((a, b) => a.timestamp < b.timestamp ? 1 : -1)
+                      .map((log, index) => (
                       <motion.tr
                         key={log.id}
                         initial={{ opacity: 0, x: -20 }}
@@ -249,6 +277,26 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                         <td className='px-6 py-4 text-sm whitespace-nowrap'>
                           <div className='text-gray-900 dark:text-white'>
                             {log.timestamp}
+                          </div>
+                        </td>
+                        <td className='px-6 py-4'>
+                          <div className='max-w-md text-sm text-gray-900 dark:text-white'>
+                            <span
+                              className={`break-words ${log.action === 'INSERT' ? 'text-green-500' : log.action === 'UPDATE' ? 'text-blue-500' : 'text-red-500'}`}
+                            >
+                              {log.action === 'SOFT_DELETE'
+                                ? 'DELETE'
+                                : log.action}
+                            </span>
+                          </div>
+                        </td>
+                        <td className='px-6 py-4'>
+                          <div className='max-w-md text-sm text-gray-900 dark:text-white'>
+                            <span
+                              className='break-words'
+                            >
+                              {log.table_name.replace(/_/g, ' ')}
+                            </span>
                           </div>
                         </td>
                         <td className='px-6 py-4'>

@@ -8,6 +8,8 @@ export interface LogEntry {
   message: string;
   level?: 'info' | 'warning' | 'error' | 'debug';
   source?: string;
+  action: string;
+  table_name: string;
   user_id?: string;
   metadata?: Record<string, unknown>;
   created_at?: string;

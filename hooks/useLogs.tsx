@@ -94,7 +94,7 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
       setLoading(true);
       setError(null);
       
-      const logEntries = await logsService.getLogs(limit);
+      const logEntries = await logsService.getLogs();
       const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
       
       setLogs(logsWithThaiTime);
@@ -105,7 +105,7 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
     } finally {
       setLoading(false);
     }
-  }, [limit, transformLogsWithThaiTime]);
+  }, [ transformLogsWithThaiTime]);
 
   /**
    * Search logs by query
@@ -116,8 +116,8 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
       setError(null);
       
       const logEntries = query.trim() 
-        ? await logsService.searchLogs(query, limit)
-        : await logsService.getLogs(limit);
+        ? await logsService.searchLogs(query )
+        : await logsService.getLogs();
       
       const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
       setLogs(logsWithThaiTime);
@@ -128,7 +128,7 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
     } finally {
       setLoading(false);
     }
-  }, [limit, transformLogsWithThaiTime]);
+  }, [ transformLogsWithThaiTime]);
 
   // Load logs on mount
   useEffect(() => {
