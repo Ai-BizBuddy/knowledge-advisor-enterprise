@@ -23,7 +23,7 @@ export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';
 export { default as KnowledgeSelect } from './knowledgeSelect';
 export { LoadingCard, TableSkeleton } from './LoadingCard';
 export { default as LoadingPage } from './loadingPage';
-export { LogsTable, default as LogTable } from './logsTable';
+export { LogsTable } from './logsTable';
 export { default as NoDocuments } from './noDocuments';
 export { default as RecentActivityCard } from './recentActivityCard';
 export { default as RecentKnowledgeBasesCard } from './recentKnowledgeBasesCard';
