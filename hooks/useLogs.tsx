@@ -116,7 +116,7 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
       setError(null);
       
       const logEntries = query.trim() 
-        ? await logsService.searchLogs(query )
+        ? await logsService.searchLogs(query)
         : await logsService.getLogs();
       
       const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
