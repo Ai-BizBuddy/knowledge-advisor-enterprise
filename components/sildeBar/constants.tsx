@@ -172,7 +172,7 @@ export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
   },
   {
     name: APP_STRINGS.NAV_ITEMS.AI_CHAT,
-    url: ROUTES.CHAT,
+    url: ROUTES.CHAT, 
     icon: <ChatIcon />,
     active: false,
   },
