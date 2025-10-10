@@ -36,7 +36,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   const [activeTab, setActiveTab] = useState('All');
 
   // Tab list for CRUD filtering
-  const tabList = ['All', 'Create', 'Read', 'Update', 'Delete'];
+  const tabList = ['All', 'Create', 'Update', 'Delete'];
 
   // Use the logs hook to fetch real data
   const {
@@ -44,6 +44,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     loading: hookLoading,
     error: hookError,
     refreshLogs,
+    searchLogs,
   } = useLogs({
     // limit: 999, // Fetch more data for pagination
     autoRefresh: false,
@@ -54,22 +55,26 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   const loading = externalLoading || hookLoading;
   const error = externalError || hookError;
 
-  // Filter and sort logs
-  const filteredAndSortedLogs = useMemo(() => {
-    let filtered = logs;
-
-    // Filter by action type based on active tab
+  // Handle search when tab changes
+  React.useEffect(() => {
     if (activeTab !== 'All') {
       const actionMap: Record<string, string[]> = {
         Create: ['INSERT'],
-        Read: ['SELECT'],
         Update: ['UPDATE'],
-        Delete: ['DELETE', 'SOFT_DELETE'],
+        Delete: ['DELETE'],
       };
       
       const allowedActions = actionMap[activeTab] || [];
-      filtered = logs.filter(log => allowedActions.includes(log.action));
+      searchLogs(allowedActions.join(' '));
+    } else {
+      // Reset search when "All" tab is selected
+      searchLogs('');
     }
+  }, [activeTab, searchLogs]);
+
+  // Filter and sort logs
+  const filteredAndSortedLogs = useMemo(() => {
+    const filtered = [...logs];
 
     // Apply sorting (timestamp is already formatted as Thai)
     filtered.sort((a, b) => {
@@ -84,7 +89,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     });
 
     return filtered;
-  }, [logs, activeTab, sortBy, sortOrder]);
+  }, [logs, sortBy, sortOrder]);
 
   // Pagination calculations
   const totalPages = Math.ceil(filteredAndSortedLogs.length / pageSize);

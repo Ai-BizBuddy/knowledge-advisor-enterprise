@@ -51,7 +51,7 @@ export class LogsService {
       const { data, error } = await this.supabase
         .from('activity_log')
         .select('*')
-        .or(`table_name.ilike.%${query}%`)
+        .or(`action.ilike.%${query}%`)
         .order('timestamp', { ascending: true });
 
       if (error) {
