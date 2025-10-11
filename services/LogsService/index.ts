@@ -26,7 +26,7 @@ export class LogsService {
   async getLogs(): Promise<LogEntry[]> {
     try {
       const { data, error } = await this.supabase
-        .from('activity_log')
+        .from('activity_log_with_profiles')
         .select('*')
         .order('timestamp', { ascending: true });
 
@@ -38,7 +38,7 @@ export class LogsService {
       return data.map((logs) => ({
         ...logs,
         // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource'),
+        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
       }));
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -49,7 +49,7 @@ export class LogsService {
   async searchLogs(query: string) {
     try {
       const { data, error } = await this.supabase
-        .from('activity_log')
+        .from('activity_log_with_profiles')
         .select('*')
         .or(`action.ilike.%${query}%`)
         .order('timestamp', { ascending: true });
@@ -61,23 +61,23 @@ export class LogsService {
       return data.map((logs) => ({
         ...logs,
         // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource'),
+        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
       }));
     } catch (error) {
       console.error('Error searching logs:', error);
       throw error;
     }
   }
-  createMessage(action: string, table: string): string {
+  createMessage(action: string, table: string, name: string, old_data?: JSON, new_data?: JSON): string {
     switch (action) {
       case 'INSERT':
-        return `Created new entry in ${table}`;
+        return `Created new entry in ${table} by ${name}` + (new_data ? ` with data: ${JSON.stringify(new_data)}` : '');
       case 'UPDATE':
-        return `Updated entry in ${table}`;
+        return `Updated entry in ${table} by ${name}` + (old_data ? ` from: ${JSON.stringify(old_data)} to: ${JSON.stringify(new_data)}` : '');
       case 'DELETE':
-        return `Deleted entry from ${table}`;
+        return `Deleted entry from ${table} by ${name} ` + (old_data ? ` with data: ${JSON.stringify(old_data)}` : '');
       default:
-        return `Performed ${action} on ${table}`;
+        return `Performed ${action} on ${table} by ${name}` + (new_data ? ` with data: ${JSON.stringify(new_data)}` : '');
     }
   }
 }
