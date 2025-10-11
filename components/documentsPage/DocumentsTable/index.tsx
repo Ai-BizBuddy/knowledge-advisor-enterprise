@@ -49,29 +49,31 @@ const getStatusBadge = (status: string | null | undefined) => {
   }
 
   const statusConfig = {
-    // Capitalized versions
+    // Capitalized versions (Display format)
+    Uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    Processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    Ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    Archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     Completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     Failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
     OcrinProgress: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    Processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     Synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     'Not Synced': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     Syncing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    Error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    Ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     
-    // Lowercase versions
+    // Lowercase versions (Database format)
+    uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    processing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+    ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+    error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+    archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     completed: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     failed: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    processing: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
     synced: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
     not_synced: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     'not synced': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     syncing: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
-    error: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-    ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-    uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-    archived: 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
     
     // Additional status variations
     'in-progress': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
@@ -94,7 +96,8 @@ const isErrorStatus = (status: string | null | undefined): boolean => {
 const renderStatusBadge = (status: string | null | undefined, errorMessage?: string) => {
   const statusClasses = getStatusBadge(status);
   const isError = isErrorStatus(status);
-  const displayStatus = status || 'Unknown';
+  // Only show 'Unknown' if status is truly null/undefined/empty, not for valid status strings
+  const displayStatus = status && status.trim() !== '' ? status : 'Unknown';
 
   if (isError && errorMessage) {
     return (
@@ -359,7 +362,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                       <div className='flex items-center space-x-2'>
                         {isOpenSync && (
                           <>
-                            {renderStatusBadge(doc.syncStatus || doc.status || 'Unknown', doc.error_message)}
+                            {renderStatusBadge(doc.status, doc.error_message)}
                             {getSyncButton(
                               doc.syncStatus,
                               syncingDocuments.has(pageIndex),
@@ -515,7 +518,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                         {doc.lastUpdated || doc.date}
                       </td>
                       <td className='w-[10%] px-3 py-4 whitespace-nowrap sm:px-6'>
-                        {renderStatusBadge(doc.status || 'Unknown', doc.error_message)}
+                        {renderStatusBadge(doc.status, doc.error_message)}
                       </td>
                       <td className='w-[15%] px-3 py-4 text-sm whitespace-nowrap text-gray-500 sm:px-6 dark:text-gray-400'>
                         <span className='font-medium'>

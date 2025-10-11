@@ -51,6 +51,19 @@ export interface DocumentTableItem {
   error_message?: string; // Error message for error status tooltips
 }
 
+// Helper function to format document status for display (matching knowledge base pattern)
+const formatDocumentStatus = (status: string): string => {
+  const statusMap: Record<string, string> = {
+    uploaded: 'Uploaded',
+    processing: 'Processing',
+    ready: 'Ready',
+    error: 'Error',
+    archived: 'Archived',
+  };
+  
+  return statusMap[status.toLowerCase()] || status;
+};
+
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
 const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   name: (doc.metadata?.originalFileName as string) || doc.name, // Use original filename from metadata if available
@@ -61,7 +74,7 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   date: new Date(doc.created_at).toLocaleDateString(),
   fileUrl: doc.url,
   rag_status: doc.rag_status || 'not_synced',
-  status: doc.rag_status || '',
+  status: formatDocumentStatus(doc.status), // Use the document status field with proper formatting
   uploadedBy: 'User', // This field doesn't exist in new interface
   avatar: '/avatars/default.png', // Default avatar
   project: [], // This field doesn't exist in new interface
