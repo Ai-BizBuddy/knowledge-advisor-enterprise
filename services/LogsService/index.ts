@@ -26,7 +26,7 @@ export class LogsService {
   async getLogs(): Promise<LogEntry[]> {
     try {
       const { data, error } = await this.supabase
-        .from('activity_log')
+        .from('activity_log_with_profiles')
         .select('*')
         .order('timestamp', { ascending: true });
 
@@ -38,7 +38,7 @@ export class LogsService {
       return data.map((logs) => ({
         ...logs,
         // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource'),
+        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
       }));
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -49,7 +49,7 @@ export class LogsService {
   async searchLogs(query: string) {
     try {
       const { data, error } = await this.supabase
-        .from('activity_log')
+        .from('activity_log_with_profiles')
         .select('*')
         .or(`action.ilike.%${query}%`)
         .order('timestamp', { ascending: true });
@@ -61,23 +61,26 @@ export class LogsService {
       return data.map((logs) => ({
         ...logs,
         // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource'),
+        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
       }));
     } catch (error) {
       console.error('Error searching logs:', error);
       throw error;
     }
   }
-  createMessage(action: string, table: string): string {
+  createMessage(action: string, table: string, name: string, old_data?: Record<string, unknown>, new_data?: Record<string, unknown>): string {
+    const oldDataStr = old_data ? old_data.name : '';
+    const newDataStr = new_data ? new_data.name : '';
+
     switch (action) {
       case 'INSERT':
-        return `Created new entry in ${table}`;
+        return `Created new entry in ${table} by ${name ? name : 'System'}` + (new_data ? ` with data: ${newDataStr}` : '');
       case 'UPDATE':
-        return `Updated entry in ${table}`;
+        return `Updated entry in ${table} by ${name ? name : 'System'}` + (old_data ? ` with data: ${oldDataStr}` : '');
       case 'DELETE':
-        return `Deleted entry from ${table}`;
+        return `Deleted entry from ${table} by ${name ? name : 'System'}` + (old_data ? ` with data: ${oldDataStr}` : '');
       default:
-        return `Performed ${action} on ${table}`;
+        return `Performed ${action} on ${table} by ${name ? name : 'System'}` + (old_data ? ` with data: ${oldDataStr}` : '');
     }
   }
 }
