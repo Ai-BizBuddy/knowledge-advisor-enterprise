@@ -61,14 +61,14 @@ export class LogsService {
       return data.map((logs) => ({
         ...logs,
         // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
+        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data.name, logs.new_data.name),
       }));
     } catch (error) {
       console.error('Error searching logs:', error);
       throw error;
     }
   }
-  createMessage(action: string, table: string, name: string, old_data?: JSON, new_data?: JSON): string {
+  createMessage(action: string, table: string, name: string, old_data?: string, new_data?: string): string {
     switch (action) {
       case 'INSERT':
         return `Created new entry in ${table} by ${name}` + (new_data ? ` with data: ${JSON.stringify(new_data)}` : '');
@@ -77,7 +77,7 @@ export class LogsService {
       case 'DELETE':
         return `Deleted entry from ${table} by ${name} ` + (old_data ? ` with data: ${JSON.stringify(old_data)}` : '');
       default:
-        return `Performed ${action} on ${table} by ${name}` + (new_data ? ` with data: ${JSON.stringify(new_data)}` : '');
+        return `Performed ${action} on ${table} by ${name}` + (old_data ? ` with data: ${JSON.stringify(old_data)}` : '');
     }
   }
 }
