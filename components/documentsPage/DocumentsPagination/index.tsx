@@ -166,9 +166,9 @@ export const DocumentsPagination: React.FC<DocumentsPaginationProps> = ({
               'No documents found'
             ) : (
               <>
-                Showing <span className='font-medium'>{startIndex + 1}</span> to{' '}
+                Showing <span className='font-medium'>{startIndex}</span> to{' '}
                 <span className='font-medium'>
-                  {Math.min(endIndex + 1, totalDocuments)}
+                  {Math.min(endIndex, totalDocuments)}
                 </span>{' '}
                 of <span className='font-medium'>{totalDocuments}</span> results
               </>

@@ -170,12 +170,8 @@ const DocumentListComponent: FC<DocumentListProps> = ({
 
   const currentPageSelectedCount = useMemo(
     () =>
-      documentState.selectedDocuments.filter(
-        (index) =>
-          index >= zeroBasedStartIndex &&
-          index < zeroBasedStartIndex + documents.length,
-      ).length,
-    [documentState.selectedDocuments, zeroBasedStartIndex, documents.length],
+      documentState.selectedDocuments.length,
+    [documentState.selectedDocuments],
   );
 
   const isAllSelected = useMemo(
@@ -285,15 +281,15 @@ const DocumentListComponent: FC<DocumentListProps> = ({
 
   const handleSelectDocument = useCallback(
     (pageIndex: number) => {
-      const actualIndex = zeroBasedStartIndex + pageIndex;
+      console.log(`[DocumentList] Toggling selection for document at page index: ${pageIndex}`);
       setDocumentState((prev) => ({
         ...prev,
-        selectedDocuments: prev.selectedDocuments.includes(actualIndex)
-          ? prev.selectedDocuments.filter((i) => i !== actualIndex)
-          : [...prev.selectedDocuments, actualIndex],
+        selectedDocuments: prev.selectedDocuments.includes(pageIndex)
+          ? prev.selectedDocuments.filter((i) => i !== pageIndex)
+          : [...prev.selectedDocuments, pageIndex],
       }));
     },
-    [zeroBasedStartIndex],
+    [],
   );
 
   // Handle select all documents (แก้ไขให้ select เฉพาะในหน้าปัจจุบัน)
@@ -317,7 +313,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   // Clear selection เมื่อเปลี่ยนหน้า
   const handlePageChangeWithClearSelection = useCallback(
     (page: number) => {
-      setDocumentState((prev) => ({ ...prev, selectedDocuments: [] })); // Clear selection เมื่อเปลี่ยนหน้า
+      setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
       handlePageChange(page);
     },
     [handlePageChange],
