@@ -967,13 +967,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
             onStatusChange: (status, error) => {
               if (status === 'SUBSCRIBED') {
                 console.log('[Realtime] ✅ SUBSCRIBED successfully');
-              } else if (
-                status === 'CLOSED' ||
-                status === 'CHANNEL_ERROR' ||
-                status === 'TIMED_OUT'
-              ) {
-                console.error('[Realtime] ❌ Connection error:', status, error);              
-              }
+                return;
+              } 
             },
           }
         );
