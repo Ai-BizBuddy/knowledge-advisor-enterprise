@@ -43,6 +43,7 @@ export const APP_STRINGS = {
     KNOWLEDGE_BASE: 'Knowledge Base',
     DOCUMENTS: 'Documents',
     USER_SETTINGS: 'Settings',
+    LOGS: 'Logs',
   },
 
   // Common Actions
@@ -120,6 +121,7 @@ export const ROUTES = {
   DOCUMENTS: '/documents',
   LOGIN: '/login',
   SETTINGS: '/settings',
+  LOGS: '/logs',
 } as const;
 
 // Error Messages
