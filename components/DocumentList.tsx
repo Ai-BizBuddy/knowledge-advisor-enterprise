@@ -1,7 +1,7 @@
 'use client';
 
 import { useDocuments } from '@/hooks';
-import type { Document } from '@/interfaces/Project';
+import type { Document as ProjectDocument } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import DocumentDeleteModal from './documentDeleteModal';
@@ -55,7 +55,7 @@ const mapRagStatusToDisplayStatus = (
 };
 
 // Adapter function to convert new Document interface to DocumentsTable-compatible format
-const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
+const adaptDocumentToTableFormat = (doc: ProjectDocument): DocumentTableItem => ({
   name: (doc.metadata?.originalFileName as string) || doc.name, // Use original filename from metadata if available
   size: doc.file_size
     ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
@@ -80,7 +80,6 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
 });
 
 interface DocumentListProps {
-  // Only essential props needed from parent
   knowledgeBaseId: string;
   isActive: boolean; // Only load data when this tab is active
 }
@@ -104,8 +103,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     useState<DocumentTableItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
-  // Bulk delete removed per requirements
+  const [editingDocument, setEditingDocument] = useState<ProjectDocument | null>(null);
 
   // Use the new useDocuments hook with integrated sync functionality
   // Only load data when this tab is active
@@ -139,6 +137,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     updateDocument,
     // Sorting handlers
     handleSort: hookHandleSort,
+    createDocumentsFromFiles,
   } = useDocuments({
     knowledgeBaseId: isActive ? knowledgeBaseId : undefined, // Only provide knowledgeBaseId when active
     autoLoad: isActive, // Only auto-load when active
@@ -634,6 +633,8 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       {/* Upload Modal */}
       <UploadDocument
         isOpen={isUploadModalOpen}
+        loading={loading}
+        createDocumentsFromFiles={createDocumentsFromFiles}
         onClose={() => {
           setIsUploadModalOpen(false);
         }}

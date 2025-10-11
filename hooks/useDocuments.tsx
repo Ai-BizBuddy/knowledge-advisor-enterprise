@@ -885,13 +885,19 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   }, [knowledgeBaseId, autoLoad, loadDocuments, currentPage]);
 
   useEffect(() => {
-    if (!knowledgeBaseId) return;
+    if (!knowledgeBaseId || !autoLoad) {
+      console.log(
+        '[Realtime] Skipping subscription:',
+        !knowledgeBaseId ? 'No knowledge base ID' : 'autoLoad is false',
+      );
+      return;
+    }
 
-    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
     let unsubscribe: (() => void) | null = null;
 
     // Helper to update a document in state
     const updateDocumentInState = (updatedDoc: Document) => {
+      console.log({updatedDoc})
       setDocuments((prev) =>
         prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
       );
@@ -915,13 +921,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         let newCurrentPage = prev.currentPage;
         if (newFilteredDocs.length === 0 && prev.currentPage > 1) {
           newCurrentPage = prev.currentPage - 1;
-          // Load the previous page
-          setTimeout(() => loadDocuments(newCurrentPage, true), 100);
-        } else if (newFilteredDocs.length === 0 && prev.currentPage === 1) {
-          // If we're on page 1 and it's now empty, reload to get fresh data
-          setTimeout(() => loadDocuments(1, true), 100);
         }
-
+        loadDocuments(newCurrentPage, true);
         return {
           ...prev,
           filteredDocuments: newFilteredDocs,
@@ -940,14 +941,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         } catch {}
         unsubscribe = null;
       }
-      
-      if (retryTimeout) {
-        clearTimeout(retryTimeout);
-        retryTimeout = null;
-      }
 
       try {
-        // Subscribe using DocumentService
+        console.log('[Realtime] Starting subscription for knowledge base:', knowledgeBaseId);
+        
         unsubscribe = await documentService.subscribeToDocumentChanges(
           knowledgeBaseId,
           {
@@ -969,29 +966,34 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
             },
             onStatusChange: (status, error) => {
               if (status === 'SUBSCRIBED') {
-                console.log('[Realtime] SUBSCRIBED successfully');
+                console.log('[Realtime] ✅ SUBSCRIBED successfully');
               } else if (
                 status === 'CLOSED' ||
                 status === 'CHANNEL_ERROR' ||
                 status === 'TIMED_OUT'
               ) {
-                console.log(error);
+                console.error('[Realtime] ❌ Connection error:', status, error);              
               }
             },
           }
         );
+        
+        console.log('[Realtime] Subscription setup completed');
       } catch (err) {
         console.error('[Realtime] Subscription error:', err);
       }
     };
 
-    subscribeToRealtime();
+    const timeoutId = setTimeout(() => {
+      subscribeToRealtime();
+    }, 1000);
 
     return () => {
-      if (retryTimeout) clearTimeout(retryTimeout);
+      console.log('[Realtime] Cleaning up subscription');
+      clearTimeout(timeoutId);
       if (unsubscribe) unsubscribe();
     };
-  }, [knowledgeBaseId, loadDocuments, currentPage, documentService]);
+  }, [knowledgeBaseId, autoLoad, loadDocuments, currentPage, documentService]);
 
   return {
     // State

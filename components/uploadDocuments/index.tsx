@@ -1,11 +1,15 @@
 'use client';
-import { useDocuments } from '@/hooks';
+import { CreateDocumentsFromFilesInput, Document as ProjectDocument } from '@/interfaces/Project';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface UploadDocumentProps {
   isOpen: boolean;
   onClose: () => void;
+  createDocumentsFromFiles: (
+    data: CreateDocumentsFromFilesInput,
+  ) => Promise<ProjectDocument[]>;
+  loading: boolean;
 }
 
 export interface FileUploadState {
@@ -31,6 +35,8 @@ const maxSize = 10 * 1024 * 1024; // 10MB
 export default function UploadDocument({
   isOpen,
   onClose,
+  createDocumentsFromFiles, 
+  loading
 }: UploadDocumentProps) {
   const [fileStates, setFileStates] = useState<FileUploadState[]>([]);
   const [error, setError] = useState<string>('');
@@ -38,10 +44,6 @@ export default function UploadDocument({
   const inputRef = useRef<HTMLInputElement>(null);
   const params = useParams();
   const id = params.id as string;
-
-  const { createDocumentsFromFiles, loading } = useDocuments({
-    knowledgeBaseId: id,
-  });
 
   // Enhanced file type icons matching the design
   const getFileIcon = (fileName: string) => {

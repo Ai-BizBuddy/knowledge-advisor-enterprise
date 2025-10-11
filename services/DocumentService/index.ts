@@ -703,7 +703,17 @@ class DocumentService {
     }
   ): Promise<() => void> {
     const supabase = createClient();
-    await supabase.realtime.setAuth();
+    
+    // Verify authentication before subscribing
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      console.error('[DocumentService] No active session for realtime subscription');
+      throw new Error('Authentication required for realtime subscription');
+    }
+    
+    // Set auth token for realtime connection
+    await supabase.realtime.setAuth(session.access_token);
+    console.log('[DocumentService] Realtime auth token set');
     
     const channelName = `document:kb:${knowledgeBaseId}`;
     console.log('[DocumentService] Subscribing to channel:', channelName);
@@ -776,10 +786,14 @@ class DocumentService {
       .subscribe(async (status, error) => {
         console.log('[DocumentService] Subscription status:', status, 'channel:', channelName);
         
-        // Set auth after subscription is established
         if (status === 'SUBSCRIBED') {
-          await supabase.realtime.setAuth();
-          console.log('[DocumentService] Realtime auth set after subscription');
+          console.log('[DocumentService] ✅ Successfully subscribed to realtime changes');
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error('[DocumentService] ❌ Channel error:', error);
+        } else if (status === 'TIMED_OUT') {
+          console.error('[DocumentService] ⏱️ Subscription timed out');
+        } else if (status === 'CLOSED') {
+          console.warn('[DocumentService] ⚠️ Channel closed');
         }
         
         if (callbacks.onStatusChange) {
@@ -790,6 +804,7 @@ class DocumentService {
     // Return cleanup function
     return () => {
       console.log('[DocumentService] Unsubscribing from channel:', channelName);
+      channel.unsubscribe();
       supabase.removeChannel(channel);
     };
   }
