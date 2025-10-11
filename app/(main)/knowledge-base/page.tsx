@@ -73,12 +73,12 @@ export default function KnowledgeBase() {
 
   const handleConfirmDelete = async () => {
     if (knowledgeBaseToDelete) {
+      setDeleteModal(false);
       try {
         await handleKnowledgeBaseDelete(knowledgeBaseToDelete);
         // Reload the data after successful deletion
         await initialLoad();
         showToast('Knowledge base deleted successfully', 'success');
-        setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
       } catch (error) {
         console.error('Delete failed:', error);
