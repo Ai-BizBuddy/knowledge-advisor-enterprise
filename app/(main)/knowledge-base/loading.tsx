@@ -4,7 +4,7 @@ export default function Loading() {
   return (
     <div className='h-full'>
       {/* Main Container with Mac-optimized responsive padding */}
-      <div className='p-4 sm:p-6 lg:p-8 xl:p-10 2xl:px-12'>
+      <div className='space-y-6'>
 
         {/* Loading Cards Grid - Mac optimized */}
         <LoadingCard 
