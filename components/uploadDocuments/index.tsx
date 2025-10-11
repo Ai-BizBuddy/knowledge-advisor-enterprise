@@ -16,6 +16,18 @@ export interface FileUploadState {
   id: string;
 }
 
+const supportedTypes = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'text/markdown',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+];
+const maxFiles = 10;
+const maxSize = 10 * 1024 * 1024; // 10MB
+
 export default function UploadDocument({
   isOpen,
   onClose,
@@ -26,18 +38,6 @@ export default function UploadDocument({
   const inputRef = useRef<HTMLInputElement>(null);
   const params = useParams();
   const id = params.id as string;
-
-  const supportedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'text/markdown',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-excel',
-  ];
-  const maxFiles = 10;
-  const maxSize = 10 * 1024 * 1024; // 10MB
 
   const { createDocumentsFromFiles, loading } = useDocuments({
     knowledgeBaseId: id,
@@ -422,7 +422,7 @@ export default function UploadDocument({
                     Click to upload or drag and drop
                   </h3>
                   <p className='text-sm text-gray-600 dark:text-slate-400'>
-                    SVG, PNG, JPG or GIF (MAX. 800x400px)
+                    PDF, CSV, Word, TXT, MD
                   </p>
                 </div>
               </div>

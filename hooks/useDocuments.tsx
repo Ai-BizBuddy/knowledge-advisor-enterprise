@@ -11,8 +11,6 @@ import type {
 } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { createApiError } from '@/utils/errorHelpers';
-import { createClient } from '@/utils/supabase/client';
-import type { RealtimeChannel } from '@supabase/supabase-js';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -36,6 +34,8 @@ export interface UseDocumentsReturn {
   searchTerm: string;
   selectedStatus: string;
   selectedType: string;
+  sortBy: 'name' | 'updated_at' | 'created_at' | 'status' | 'file_type' | 'chunk_count';
+  sortOrder: 'asc' | 'desc';
 
   // Document Sync State
   syncingDocuments: Set<string>;
@@ -91,6 +91,8 @@ export interface UseDocumentsReturn {
   handleDocumentDelete: (id: string) => void;
   setSearchTerm: (term: string) => void;
   setItemsPerPage: (items: number) => void;
+  setSort: (field: UseDocumentsReturn['sortBy'], order: UseDocumentsReturn['sortOrder']) => void;
+  handleSort: (field: UseDocumentsReturn['sortBy']) => void;
 
   // Utility Functions
   refresh: () => Promise<void>;
@@ -118,7 +120,20 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   // State
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [documentManagementState, setDocumentManagementState] = useState({
+  const [documentManagementState, setDocumentManagementState] = useState<{
+    filteredDocuments: Document[];
+    loading: boolean;
+    error: string | null;
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+    itemsPerPage: number;
+    searchTerm: string;
+    selectedStatus: string;
+    selectedType: string;
+    sortBy: UseDocumentsReturn['sortBy'];
+    sortOrder: UseDocumentsReturn['sortOrder'];
+  }>({
     filteredDocuments: [] as Document[],
     loading: false,
     error: null as string | null,
@@ -129,6 +144,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     searchTerm: '',
     selectedStatus: 'all',
     selectedType: 'all',
+    sortBy: 'updated_at',
+    sortOrder: 'desc',
   });
 
   // Document Sync State
@@ -150,6 +167,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     searchTerm,
     selectedStatus,
     selectedType,
+    sortBy,
+    sortOrder,
   } = documentManagementState;
 
   const addSyncingDocument = useCallback((documentId: string) => {
@@ -168,9 +187,12 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     });
   }, []);
 
-  const isSyncing = useCallback((documentId: string): boolean => {
-    return syncingDocuments.has(documentId);
-  }, [syncingDocuments]);
+  const isSyncing = useCallback(
+    (documentId: string): boolean => {
+      return syncingDocuments.has(documentId);
+    },
+    [syncingDocuments],
+  );
 
   const clearSyncError = useCallback(() => {
     setSyncError(null);
@@ -217,10 +239,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
       // Prevent multiple simultaneous calls
       if (loadingRef.current) {
-        console.log('⏳ [useDocuments.loadDocuments] Already loading, skipping duplicate call');
+        console.log(
+          '⏳ [useDocuments.loadDocuments] Already loading, skipping duplicate call',
+        );
         return;
       }
-
 
       try {
         console.log('🔄 [useDocuments.loadDocuments] Starting load process');
@@ -246,20 +269,20 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
             currentState.selectedType !== 'all'
               ? currentState.selectedType
               : undefined,
+          searchTerm: currentState.searchTerm || undefined,
         };
 
         console.log('🌐 [useDocuments.loadDocuments] Making API call with:', {
           paginationOptions,
           apiFilters,
         });
-        
+
         const result = await documentService.getDocumentsByKnowledgeBase(
           knowledgeBaseId,
           paginationOptions,
           apiFilters,
+          { field: currentState.sortBy, order: currentState.sortOrder },
         );
-
-        // if (!mountedRef.current) return;
 
         console.log(
           '✅ [useDocuments.loadDocuments] API call successful, received:',
@@ -325,8 +348,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('📝 [useDocuments.createDocument] Called with data:', data);
 
       try {
-        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
-
         const newDocument = await documentService.createDocument(data);
         console.log(
           '✅ [useDocuments.createDocument] Document created successfully:',
@@ -359,8 +380,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('📝📝 [useDocuments.createMultipleDocuments] Called');
 
       try {
-        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
-
         const newDocuments =
           await documentService.createMultipleDocuments(data);
         console.log(
@@ -426,22 +445,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const updateDocument = useCallback(
     async (id: string, data: UpdateDocumentInput): Promise<Document> => {
       console.log('✏️ [useDocuments.updateDocument] Called with id:', id);
-
       try {
-        // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
-
         const updatedDocument = await documentService.updateDocument(id, data);
-
-        // Update local state
-        // setDocuments(prev => prev.map(doc => doc.id === id ? updatedDocument : doc));
-        // setDocumentManagementState(prev => ({
-        //   ...prev,
-        //   filteredDocuments: prev.filteredDocuments.map(doc =>
-        //     doc.id === id ? updatedDocument : doc
-        //   ),
-        //   loading: false
-        // }));
-
         return updatedDocument;
       } catch (err) {
         const errorMessage =
@@ -531,7 +536,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('🔄📝 [useDocuments.batchUpdate] Called with ids:', ids);
 
       try {
-        setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          loading: true,
+          error: null,
+        }));
 
         const updatedDocuments: Document[] = [];
         for (const id of ids) {
@@ -546,10 +555,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         return updatedDocuments;
       } catch (err) {
-        setDocumentManagementState(prev => ({ 
-          ...prev, 
-          error: err instanceof Error ? err.message : 'Failed to batch update documents', 
-          loading: false 
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Failed to batch update documents',
+          loading: false,
         }));
         throw err;
       }
@@ -565,7 +577,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       console.log('🗑️🗑️ [useDocuments.batchDelete] Called with ids:', ids);
 
       try {
-        setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          loading: true,
+          error: null,
+        }));
 
         for (const id of ids) {
           await documentService.deleteDocument(id);
@@ -577,10 +593,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         await loadDocuments(currentPage, true);
       } catch (err) {
         console.error('❌ [useDocuments.batchDelete] Error:', err);
-        setDocumentManagementState(prev => ({ 
-          ...prev, 
-          error: err instanceof Error ? err.message : 'Failed to batch delete documents', 
-          loading: false 
+        setDocumentManagementState((prev) => ({
+          ...prev,
+          error:
+            err instanceof Error
+              ? err.message
+              : 'Failed to batch delete documents',
+          loading: false,
         }));
         throw err;
       }
@@ -651,10 +670,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       try {
         setSyncError(null);
         await syncDocumentInternal(documentId);
-        
+
         // Only refresh if there are no other sync operations in progress
-        if (syncingDocuments.size <= 1) { // <= 1 because current document is still in set
-          console.log('[DocumentSync] Refreshing documents list after sync completion');
+        if (syncingDocuments.size <= 1) {
+          // <= 1 because current document is still in set
+          console.log(
+            '[DocumentSync] Refreshing documents list after sync completion',
+          );
           // await loadDocuments(currentPage, true);
         }
       } catch (err) {
@@ -677,13 +699,17 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         // Use internal sync function to avoid multiple refreshes
         const promises = documentIds.map((id) => syncDocumentInternal(id));
         const results = await Promise.allSettled(promises);
-        
+
         // Check if any syncs failed
-        const failedSyncs = results.filter(result => result.status === 'rejected');
+        const failedSyncs = results.filter(
+          (result) => result.status === 'rejected',
+        );
         if (failedSyncs.length > 0) {
-          console.warn(`[DocumentSync] ${failedSyncs.length} document(s) failed to sync`);
+          console.warn(
+            `[DocumentSync] ${failedSyncs.length} document(s) failed to sync`,
+          );
         }
-        
+
         // Refresh documents list once after all sync operations complete
         // console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
         await loadDocuments(currentPage, true);
@@ -722,10 +748,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const filterByType = useCallback(
     async (type: string): Promise<Document[]> => {
       console.log('🔍 [useDocuments.filterByType] Setting type:', type);
-      setDocumentManagementState(prev => ({
+      setDocumentManagementState((prev) => ({
         ...prev,
         selectedType: type,
-        currentPage: 1
+        currentPage: 1,
       }));
       return [];
     },
@@ -754,7 +780,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handlePageChange = useCallback((page: number) => {
     console.log('📄 [useDocuments.handlePageChange] Called with page:', page);
-    setDocumentManagementState(prev => ({ ...prev, currentPage: page }));
+    setDocumentManagementState((prev) => ({ ...prev, currentPage: page }));
   }, []);
 
   const handleDocumentClick = useCallback(
@@ -785,7 +811,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const clearError = useCallback(() => {
     console.log('🧹 [useDocuments.clearError] Called');
-    setDocumentManagementState(prev => ({ ...prev, error: null }));
+    setDocumentManagementState((prev) => ({ ...prev, error: null }));
   }, []);
 
   const setSearchTermHandler = useCallback((term: string) => {
@@ -793,7 +819,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       '🔍 [useDocuments.setSearchTermHandler] Called with term:',
       term,
     );
-    setDocumentManagementState(prev => ({ ...prev, searchTerm: term }));
+    setDocumentManagementState((prev) => ({ ...prev, searchTerm: term }));
   }, []);
 
   const setItemsPerPageHandler = useCallback((items: number) => {
@@ -808,97 +834,164 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     }));
   }, []);
 
-  // Create a ref to track if we've made the initial load
-  const hasInitialLoadRef = useRef(false);
-  const realtimeChannelRef = useRef<RealtimeChannel | null>(null);
-
-  // Auto-load documents when knowledgeBaseId changes (only once)
-  useEffect(() => {
-    if (autoLoad && knowledgeBaseId && !hasInitialLoadRef.current) {
-      console.log('🔄 [useDocuments.useEffect] Initial auto-loading documents for knowledgeBaseId:', knowledgeBaseId);
-      hasInitialLoadRef.current = true;
-      loadDocuments(1, true);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [knowledgeBaseId, autoLoad]);
-
-  // Reset initial load flag when knowledgeBaseId changes
-  useEffect(() => {
-    hasInitialLoadRef.current = false;
-  }, [knowledgeBaseId]);
-
-  // Setup Realtime subscription for document changes
-  useEffect(() => {
-    if (!knowledgeBaseId) {
-      console.log('⚠️ [useDocuments.Realtime] No knowledge base ID, skipping subscription');
-      return;
-    }
-
-    const supabase = createClient();
-    console.log('🔌 [useDocuments.Realtime] Setting up realtime subscription for knowledgeBaseId:', knowledgeBaseId);
-
-    const channel = supabase
-      .channel(`document:kb:${knowledgeBaseId}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'knowledge',
-          table: 'document',
-          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
-        },
-        (payload) => {
-          console.log('📡 [useDocuments.Realtime] Received change:', payload.eventType, payload);
-
-          // Handle different event types
-          if (payload.eventType === 'INSERT') {
-            console.log('➕ [useDocuments.Realtime] Document inserted');
-            // Refresh the current page to show new document
-            loadDocuments(currentPage, true);
-            return;
-          } 
-          if (payload.eventType === 'UPDATE') {
-            console.log('✏️ [useDocuments.Realtime] Document updated');
-            // Update the document in local state without full refresh
-            const updatedDoc = payload.new as Document;
-            setDocuments((prev) =>
-              prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
-            );
-            setDocumentManagementState((prev) => ({
-              ...prev,
-              filteredDocuments: prev.filteredDocuments.map((doc) =>
-                doc.id === updatedDoc.id ? updatedDoc : doc
-              ),
-            }));
-            return;
-          }  
-          if (payload.eventType === 'DELETE') {
-            console.log('🗑️ [useDocuments.Realtime] Document deleted');
-            const deletedId = payload.old.id as string;
-            // Remove from local state
-            setDocuments((prev) => prev.filter((doc) => doc.id !== deletedId));
-            setDocumentManagementState((prev) => ({
-              ...prev,
-              filteredDocuments: prev.filteredDocuments.filter(
-                (doc) => doc.id !== deletedId
-              ),
-              totalItems: Math.max(0, prev.totalItems - 1),
-              totalPages: Math.ceil(Math.max(0, prev.totalItems - 1) / prev.itemsPerPage),
-            }));
-            return;
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log('🔌 [useDocuments.Realtime] Subscription status:', status);
+  // Sorting controls
+  const setSort = useCallback(
+    (
+      field: UseDocumentsReturn['sortBy'],
+      order: UseDocumentsReturn['sortOrder'],
+    ) => {
+      setDocumentManagementState((prev) => {
+        const nextState = {
+          ...prev,
+          sortBy: field,
+          sortOrder: order,
+          currentPage: 1,
+        };
+        // Load with the new sort applied
+        void loadDocumentsInternal(1, nextState);
+        return nextState;
       });
+    },
+    [loadDocumentsInternal],
+  );
 
-    // Cleanup function
-    return () => {
-      console.log('🔌 [useDocuments.Realtime] Cleaning up subscription for knowledgeBaseId:', knowledgeBaseId);
-      supabase.removeChannel(channel);
+  const handleSort = useCallback(
+    (field: UseDocumentsReturn['sortBy']) => {
+      setDocumentManagementState((prev) => {
+        const nextOrder: UseDocumentsReturn['sortOrder'] =
+          prev.sortBy === field && prev.sortOrder === 'asc' ? 'desc' : 'asc';
+        const nextState: typeof prev = {
+          ...prev,
+          sortBy: field,
+          sortOrder: nextOrder,
+          currentPage: 1,
+        };
+        // Load with the new sort applied
+        void loadDocumentsInternal(1, nextState);
+        return nextState;
+      });
+    },
+    [loadDocumentsInternal],
+  );
+
+  useEffect(() => {
+    if (autoLoad && knowledgeBaseId) {
+      console.log(
+        '🔄 [useDocuments.useEffect] Initial auto-loading documents for knowledgeBaseId:',
+        knowledgeBaseId,
+      );
+      loadDocuments(currentPage, true);
+    }
+  }, [knowledgeBaseId, autoLoad, loadDocuments, currentPage]);
+
+  useEffect(() => {
+    if (!knowledgeBaseId) return;
+
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let unsubscribe: (() => void) | null = null;
+
+    // Helper to update a document in state
+    const updateDocumentInState = (updatedDoc: Document) => {
+      setDocuments((prev) =>
+        prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
+      );
+      setDocumentManagementState((prev) => ({
+        ...prev,
+        filteredDocuments: prev.filteredDocuments.map((doc) =>
+          doc.id === updatedDoc.id ? updatedDoc : doc
+        ),
+      }));
     };
-  }, [knowledgeBaseId, currentPage, loadDocuments]);
+
+    // Helper to remove a document from state
+    const removeDocumentFromState = (id: string) => {
+      setDocuments((prev) => prev.filter((d) => d.id !== id));
+      setDocumentManagementState((prev) => {
+        const newFilteredDocs = prev.filteredDocuments.filter((d) => d.id !== id);
+        const newTotalItems = Math.max(0, prev.totalItems - 1);
+        const newTotalPages = Math.ceil(newTotalItems / prev.itemsPerPage);
+        
+        // If current page is now empty and not the first page, go back one page
+        let newCurrentPage = prev.currentPage;
+        if (newFilteredDocs.length === 0 && prev.currentPage > 1) {
+          newCurrentPage = prev.currentPage - 1;
+          // Load the previous page
+          setTimeout(() => loadDocuments(newCurrentPage, true), 100);
+        } else if (newFilteredDocs.length === 0 && prev.currentPage === 1) {
+          // If we're on page 1 and it's now empty, reload to get fresh data
+          setTimeout(() => loadDocuments(1, true), 100);
+        }
+
+        return {
+          ...prev,
+          filteredDocuments: newFilteredDocs,
+          totalItems: newTotalItems,
+          totalPages: newTotalPages,
+          currentPage: newCurrentPage,
+        };
+      });
+    };
+
+    const subscribeToRealtime = async () => {
+      // Cleanup previous subscription if exists
+      if (unsubscribe) {
+        try {
+          unsubscribe();
+        } catch {}
+        unsubscribe = null;
+      }
+      
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+
+      try {
+        // Subscribe using DocumentService
+        unsubscribe = await documentService.subscribeToDocumentChanges(
+          knowledgeBaseId,
+          {
+            onInsert: () => {
+              console.log('[Realtime] INSERT: Reloading documents');
+              loadDocuments(currentPage, true);
+            },
+            onUpdate: (updatedDoc) => {
+              console.log('[Realtime] UPDATE: Updating document in state');
+              updateDocumentInState(updatedDoc);
+            },
+            onSoftDelete: (deletedId) => {
+              console.log('[Realtime] SOFT DELETE: Removing from state');
+              removeDocumentFromState(deletedId);
+            },
+            onDelete: (deletedId) => {
+              console.log('[Realtime] HARD DELETE: Removing from state');
+              removeDocumentFromState(deletedId);
+            },
+            onStatusChange: (status, error) => {
+              if (status === 'SUBSCRIBED') {
+                console.log('[Realtime] SUBSCRIBED successfully');
+              } else if (
+                status === 'CLOSED' ||
+                status === 'CHANNEL_ERROR' ||
+                status === 'TIMED_OUT'
+              ) {
+                console.log(error);
+              }
+            },
+          }
+        );
+      } catch (err) {
+        console.error('[Realtime] Subscription error:', err);
+      }
+    };
+
+    subscribeToRealtime();
+
+    return () => {
+      if (retryTimeout) clearTimeout(retryTimeout);
+      if (unsubscribe) unsubscribe();
+    };
+  }, [knowledgeBaseId, loadDocuments, currentPage, documentService]);
 
   return {
     // State
@@ -915,6 +1008,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     searchTerm,
     selectedStatus,
     selectedType,
+    sortBy,
+    sortOrder,
 
     // Document Sync State
     syncingDocuments,
@@ -955,6 +1050,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     handleDocumentDelete,
     setSearchTerm: setSearchTermHandler,
     setItemsPerPage: setItemsPerPageHandler,
+  setSort,
+  handleSort,
 
     // Utility Functions
     refresh,

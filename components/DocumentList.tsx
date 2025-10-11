@@ -12,6 +12,7 @@ import {
 } from './documentsPage';
 import { TableSkeleton } from './LoadingCard';
 import { useToast } from './toast';
+import UpdateDocumentModal from './updateDocument/UpdateDocumentModal';
 import UploadDocument from './uploadDocuments';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
@@ -94,8 +95,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const [documentState, setDocumentState] = useState({
     selectedDocumentIndex: 0,
     selectedDocuments: [] as number[],
-    sortBy: 'created_at',
-    sortOrder: 'desc' as 'asc' | 'desc',
   });
 
   // Modal states managed internally
@@ -104,6 +103,9 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const [documentToDelete, setDocumentToDelete] =
     useState<DocumentTableItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [editingDocument, setEditingDocument] = useState<Document | null>(null);
+  // Bulk delete removed per requirements
 
   // Use the new useDocuments hook with integrated sync functionality
   // Only load data when this tab is active
@@ -117,6 +119,9 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     searchTerm,
     totalItems,
     loading,
+    // Sorting state (server-side)
+    sortBy,
+    sortOrder,
 
     // Sync state
     syncingDocuments,
@@ -131,6 +136,9 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     syncDocument,
     syncMultipleDocuments,
     clearSyncError,
+    updateDocument,
+    // Sorting handlers
+    handleSort: hookHandleSort,
   } = useDocuments({
     knowledgeBaseId: isActive ? knowledgeBaseId : undefined, // Only provide knowledgeBaseId when active
     autoLoad: isActive, // Only auto-load when active
@@ -159,6 +167,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   }, [documents]);
 
   const zeroBasedStartIndex = useMemo(() => startIndex - 1, [startIndex]);
+  const { selectedDocuments } = documentState;
 
   const currentPageSelectedCount = useMemo(
     () =>
@@ -222,13 +231,13 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   // Handle bulk sync for selected documents
   const handleBulkSync = useCallback(async () => {
     try {
-      if (documentState.selectedDocuments.length === 0) {
+      if (selectedDocuments.length === 0) {
         console.warn('[DocumentList] No documents selected for sync');
         showToast('Please select documents to sync', 'warning', 3000);
         return;
       }
 
-      const selectedDocumentIds = documentState.selectedDocuments
+      const selectedDocumentIds = selectedDocuments
         .map((index) => {
           // Convert selected index back to actual array index
           const arrayIndex = index - zeroBasedStartIndex;
@@ -268,7 +277,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       // Error is already handled by useDocuments hook and will show via syncError effect
     }
   }, [
-    documentState.selectedDocuments,
+    selectedDocuments,
     zeroBasedStartIndex,
     documents,
     syncMultipleDocuments,
@@ -320,29 +329,55 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
   }, []);
 
-  // Handle sort
-  const handleSort = useCallback(
-    (column: string) => {
-      if (documentState.sortBy === column) {
-        setDocumentState((prev) => ({
-          ...prev,
-          sortOrder: prev.sortOrder === 'asc' ? 'desc' : 'asc',
-        }));
-      } else {
-        setDocumentState((prev) => ({
-          ...prev,
-          sortBy: column,
-          sortOrder: 'asc',
-        }));
-      }
-    },
-    [documentState.sortBy],
+  // Map UI columns to backend fields and delegate sorting to hook
+  const uiToBackendMap = useMemo(
+    () => ({
+      name: 'name',
+      lastUpdated: 'updated_at',
+      status: 'status',
+      type: 'file_type',
+      chunk: 'chunk_count',
+    } as const),
+    [],
   );
 
-  // Handle document click
-  const handleDocumentTableClick = useCallback((index: number) => {
-    setDocumentState((prev) => ({ ...prev, selectedDocumentIndex: index }));
-  }, []);
+  const backendToUiMap = useMemo(
+    () => ({
+      name: 'name',
+      updated_at: 'lastUpdated',
+      created_at: 'lastUpdated',
+      status: 'status',
+      file_type: 'type',
+      chunk_count: 'chunk',
+    } as const),
+    [],
+  );
+
+  const onSortHeader = useCallback(
+    (column: string) => {
+      const key = column as keyof typeof uiToBackendMap;
+      if (!uiToBackendMap[key]) return;
+      const backendField = uiToBackendMap[key];
+      hookHandleSort(backendField);
+    },
+    [hookHandleSort, uiToBackendMap],
+  );
+
+  // Handle open Update modal
+  const handleDocumentEdit = useCallback(
+    (pageIndex: number) => {
+      // Convert page index back to actual array index
+      const arrayIndex = pageIndex;
+      const doc = documents[arrayIndex];
+      if (!doc) {
+        showToast('Error: Document not found for edit', 'error');
+        return;
+      }
+      setEditingDocument(doc);
+      setIsUpdateModalOpen(true);
+    },
+    [documents, showToast],
+  );
 
   // Handle single document deletion
   const handleDocumentDelete = useCallback(
@@ -494,6 +529,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
                   />
                 </svg>
               </button>
+              {/* Bulk delete button removed */}
               <button
                 onClick={handleBulkSync}
                 disabled={loading || syncingDocuments.size > 0}
@@ -558,7 +594,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             columns={6}
             showHeader={true}
             showActions={true}
-            // message='Loading documents...'
           />
         ) : (
           <DocumentsTable
@@ -566,13 +601,13 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             selectedDocuments={documentState.selectedDocuments}
             selectedDocument={documentState.selectedDocumentIndex}
             startIndex={startIndex}
-            sortBy={documentState.sortBy}
-            sortOrder={documentState.sortOrder}
-            onSort={handleSort}
+            sortBy={backendToUiMap[sortBy as keyof typeof backendToUiMap]}
+            sortOrder={sortOrder}
+            onSort={onSortHeader}
             onSelectAll={handleSelectAll}
             onSelectDocument={handleSelectDocument}
-            onDocumentClick={handleDocumentTableClick}
             onDeleteDocument={handleDocumentDelete}
+            onEditDocument={handleDocumentEdit}
             onSyncDocument={handleDocumentSync}
             syncingDocuments={syncingDocumentIndices}
             isAllSelected={isAllSelected}
@@ -611,6 +646,18 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         onConfirm={handleConfirmDelete}
         documentName={documentToDelete?.name}
         loading={isDeleting}
+      />
+
+      {/* Update Document Modal */}
+      <UpdateDocumentModal
+        isOpen={isUpdateModalOpen}
+        onClose={() => setIsUpdateModalOpen(false)}
+        knowledgeBaseId={knowledgeBaseId}
+        document={editingDocument}
+        onUpdate={updateDocument}
+        onSuccess={async () => {
+          await refresh();
+        }}
       />
     </div>
   );

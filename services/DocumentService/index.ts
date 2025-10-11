@@ -1,9 +1,3 @@
-/**
- * Document Service - Supabase Implementation
- *
- * This service handles all CRUD operations for documents using Supabase
- */
-
 import type {
   CreateDocumentInput,
   CreateDocumentsFromFilesInput,
@@ -13,7 +7,7 @@ import type {
   UpdateDocumentInput,
 } from '@/interfaces/Project';
 import { getAuthSession } from '@/utils/supabase/authUtils';
-import { createClientTable } from '@/utils/supabase/client';
+import { createClient, createClientTable } from '@/utils/supabase/client';
 
 class DocumentService {
   constructor() {
@@ -41,6 +35,7 @@ class DocumentService {
     knowledgeBaseId: string,
     paginationOptions: PaginationOptions,
     filters?: { status?: string; searchTerm?: string; type?: string },
+    sort?: { field: 'name' | 'updated_at' | 'created_at' | 'status' | 'file_type' | 'chunk_count'; order: 'asc' | 'desc' },
   ): Promise<{ data: Document[]; count: number }> {
     try {
       const supabaseTable = createClientTable();
@@ -74,14 +69,21 @@ class DocumentService {
       }
 
       // Get total count first
-      const { count, error: countError } = await countQuery;
+      const { count } = await countQuery;
 
-      if (countError) {
+      // Apply sorting (default: updated_at desc then created_at desc as fallback)
+      if (sort && sort.field) {
+        dataQuery = dataQuery.order(sort.field, {
+          ascending: sort.order === 'asc',
+          nullsFirst: sort.order === 'asc',
+        });
+      } else {
+        dataQuery = dataQuery.order('updated_at', { ascending: false, nullsFirst: false })
+                             .order('created_at', { ascending: false });
       }
 
       // Get paginated data
       const { data: documents, error } = await dataQuery
-        .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);
 
       if (error) {
@@ -682,6 +684,114 @@ class DocumentService {
       throw error;
     }
     return data;
+  }
+
+  /**
+   * Subscribe to realtime document changes for a knowledge base
+   * @param knowledgeBaseId - The knowledge base ID to subscribe to
+   * @param callbacks - Callback functions for different events
+   * @returns Cleanup function to unsubscribe
+   */
+  async subscribeToDocumentChanges(
+    knowledgeBaseId: string,
+    callbacks: {
+      onInsert?: () => void;
+      onUpdate?: (updatedDoc: Document) => void;
+      onSoftDelete?: (deletedId: string) => void;
+      onDelete?: (deletedId: string) => void;
+      onStatusChange?: (status: string, error?: unknown) => void;
+    }
+  ): Promise<() => void> {
+    const supabase = createClient();
+    await supabase.realtime.setAuth();
+    
+    const channelName = `document:kb:${knowledgeBaseId}`;
+    console.log('[DocumentService] Subscribing to channel:', channelName);
+
+    const channel = supabase
+      .channel(channelName)
+      // INSERT: Notify to reload data
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'knowledge',
+          table: 'document',
+          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+        },
+        (payload) => {
+          console.log('[DocumentService] INSERT payload received:', payload);
+          const newDoc = (payload.new ?? null) as Partial<Document> | null;
+          const isSoftDeleted = newDoc?.is_deleted === true || !!newDoc?.deleted_at;
+          
+          if (!isSoftDeleted && callbacks.onInsert) {
+            callbacks.onInsert();
+          }
+        },
+      )
+      // UPDATE: Update document in state or handle soft delete
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'knowledge',
+          table: 'document',
+          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+        },
+        (payload) => {
+          console.log('[DocumentService] UPDATE payload received:', payload);
+          const docNew = (payload.new ?? null) as Partial<Document> | null;
+          const docId = docNew?.id;
+          const isSoftDeleted = docNew?.is_deleted === true || !!docNew?.deleted_at;
+          
+          if (isSoftDeleted && docId && callbacks.onSoftDelete) {
+            console.log('[DocumentService] Soft DELETE detected:', docId);
+            callbacks.onSoftDelete(docId);
+          } else if (docNew && docId && callbacks.onUpdate) {
+            console.log('[DocumentService] UPDATE detected:', docId);
+            callbacks.onUpdate(docNew as Document);
+          }
+        },
+      )
+      // DELETE: Handle hard delete
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'knowledge',
+          table: 'document',
+          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+        },
+        (payload) => {
+          console.log('[DocumentService] DELETE payload received:', payload);
+          const oldDoc = (payload.old ?? null) as Partial<Document> | null;
+          const deletedId = oldDoc?.id;
+          
+          if (deletedId && callbacks.onDelete) {
+            console.log('[DocumentService] HARD DELETE detected:', deletedId);
+            callbacks.onDelete(deletedId);
+          }
+        },
+      )
+      .subscribe(async (status, error) => {
+        console.log('[DocumentService] Subscription status:', status, 'channel:', channelName);
+        
+        // Set auth after subscription is established
+        if (status === 'SUBSCRIBED') {
+          await supabase.realtime.setAuth();
+          console.log('[DocumentService] Realtime auth set after subscription');
+        }
+        
+        if (callbacks.onStatusChange) {
+          callbacks.onStatusChange(status, error);
+        }
+      });
+
+    // Return cleanup function
+    return () => {
+      console.log('[DocumentService] Unsubscribing from channel:', channelName);
+      supabase.removeChannel(channel);
+    };
   }
 }
 
