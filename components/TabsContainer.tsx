@@ -7,8 +7,6 @@ import DocumentList from './DocumentList';
 import { SettingsTab } from './settingsTab';
 import UserRole from './UserRole';
 
-
-
 interface TabsContainerProps {
   knowledgeBase: Project | null;
   knowledgeBaseId: string;

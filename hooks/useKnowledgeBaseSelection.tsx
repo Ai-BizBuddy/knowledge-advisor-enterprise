@@ -61,6 +61,10 @@ export const useKnowledgeBaseSelection = () => {
     return knowledgeBases.filter((kb) => kb.selected).length;
   }, [knowledgeBases]);
 
+  const getSelectedList = useCallback(() => {
+    return knowledgeBases.filter((kb) => kb.selected).map((kb) => kb.name);
+  }, [knowledgeBases]);
+
   const getTotalDocuments = useCallback(() => {
     return knowledgeBases
       .filter((kb) => kb.selected)
@@ -76,5 +80,6 @@ export const useKnowledgeBaseSelection = () => {
     getSelectedKnowledgeBases,
     getSelectedCount,
     getTotalDocuments,
+    getSelectedList
   };
 };

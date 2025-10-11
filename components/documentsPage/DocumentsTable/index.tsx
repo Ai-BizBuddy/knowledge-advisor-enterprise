@@ -29,16 +29,17 @@ interface DocumentsTableProps {
   sortBy: string;
   sortOrder: 'asc' | 'desc';
   onSort: (column: string) => void;
-  onSelectAll: () => void;
-  onDeleteDocument: (index: number) => void;
-  onSelectDocument: (
+  onSelectAll?: () => void;
+  onDeleteDocument?: (index: number) => void;
+  onEditDocument?: (index: number) => void;
+  onSelectDocument?: (
     index: number,
     event: React.ChangeEvent<HTMLInputElement>,
   ) => void;
-  onDocumentClick: (index: number) => void;
+  onDocumentClick?: (index: number) => void;
   onSyncDocument?: (index: number) => void;
-  isAllSelected: boolean;
-  isIndeterminate: boolean;
+  isAllSelected?: boolean;
+  isIndeterminate?: boolean;
   syncingDocuments?: Set<number>;
 }
 
@@ -269,6 +270,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
   onSelectDocument,
   onDocumentClick,
   onDeleteDocument,
+  onEditDocument,
   onSyncDocument,
   isAllSelected,
   isIndeterminate,
@@ -325,7 +327,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
             return (
               <div
                 key={actualIndex}
-                onClick={() => onDocumentClick(actualIndex)}
+                onClick={() => onDocumentClick?.(actualIndex)}
                 className={`cursor-pointer p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                   isCurrentDocument ? 'bg-blue-50 dark:bg-blue-900/20' : ''
                 } ${
@@ -335,13 +337,13 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                 }`}
               >
                 <div className='flex items-start space-x-3'>
-                  <input
+                  {onSelectDocument && <input
                     type='checkbox'
                     className='mt-1 rounded border-gray-300 text-blue-600 focus:ring-blue-500'
                     checked={isSelected}
-                    onChange={(e) => onSelectDocument(pageIndex, e)}
+                    onChange={(e) => onSelectDocument?.(pageIndex, e)}
                     onClick={(e) => e.stopPropagation()}
-                  />
+                  />}
                   <div className='text-2xl'>{getFileIcon(doc.type)}</div>
                   <div className='min-w-0 flex-1'>
                     <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
@@ -366,10 +368,29 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                               doc.disableSync,
                             )}
                             <button
+                              className='inline-flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400'
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEditDocument?.(pageIndex);
+                              }}
+                              title='Edit document'
+                              aria-label='Edit document'
+                            >
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                                aria-hidden='true'
+                              >
+                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5h2m-1 14v-6m7-3l-6 6-2 1 1-2 6-6a2.828 2.828 0 10-4-4l-6 6-2 6 6-2 6-6' />
+                              </svg>
+                            </button>
+                            <button
                               className='inline-flex items-center justify-center rounded-lg p-1.5 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
                               onClick={(e) => {
                                 e.stopPropagation();
-                                onDeleteDocument(pageIndex);
+                                onDeleteDocument?.(pageIndex);
                               }}
                               title='Delete document'
                               aria-label='Delete document'
@@ -407,17 +428,17 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
           <table className='min-w-full divide-y divide-gray-200 dark:divide-gray-700'>
             <thead className='bg-gray-50 dark:bg-gray-700'>
               <tr>
-                <th className='w-8 px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
+                {onSelectDocument && <th className='w-8 px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <input
                     type='checkbox'
                     className='rounded border-gray-300'
                     checked={isAllSelected}
                     ref={(el) => {
-                      if (el) el.indeterminate = isIndeterminate;
+                      if (el) el.indeterminate = !!isIndeterminate;
                     }}
                     onChange={onSelectAll}
                   />
-                </th>
+                </th>}
                 <th className='w-[45%] px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                   <SortableHeader column='name'>Name</SortableHeader>
                 </th>
@@ -458,7 +479,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                   return (
                     <tr
                       key={actualIndex}
-                      onClick={() => onDocumentClick(actualIndex)}
+                      onClick={() => onDocumentClick?.(actualIndex)}
                       className={`cursor-pointer transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700 ${
                         isCurrentDocument
                           ? 'bg-blue-50 dark:bg-blue-900/20'
@@ -469,7 +490,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                           : ''
                       }`}
                     >
-                      <td className='w-8 px-3 py-4 whitespace-nowrap sm:px-6'>
+                     {onSelectDocument && <td className='w-8 px-3 py-4 whitespace-nowrap sm:px-6'>
                         <input
                           type='checkbox'
                           className='rounded border-gray-300 text-blue-600 focus:ring-blue-500'
@@ -477,7 +498,7 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                           onChange={(e) => onSelectDocument(actualIndex, e)}
                           onClick={(e) => e.stopPropagation()}
                         />
-                      </td>
+                      </td>}
                       <td className='w-[45%] px-3 py-4 sm:px-6'>
                         <div className='flex items-center'>
                           <div className='mr-3 text-xl sm:text-2xl'>
@@ -522,10 +543,29 @@ export const DocumentsTable = React.memo<DocumentsTableProps>(({
                       {isOpenSync && (
                         <td className='px-3 py-4 text-right text-sm font-medium whitespace-nowrap sm:px-6'>
                           <button
+                            className='mr-2 inline-flex items-center justify-center rounded-lg p-2 text-gray-400 transition-colors hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-900/20 dark:hover:text-blue-400'
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onEditDocument?.(pageIndex);
+                            }}
+                            title='Edit document'
+                            aria-label='Edit document'
+                          >
+                            <svg
+                              className='h-4 w-4'
+                              fill='none'
+                              stroke='currentColor'
+                              viewBox='0 0 24 24'
+                              aria-hidden='true'
+                            >
+                              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5h2m-1 14v-6m7-3l-6 6-2 1 1-2 6-6a2.828 2.828 0 10-4-4l-6 6-2 6 6-2 6-6' />
+                            </svg>
+                          </button>
+                          <button
                             className='inline-flex items-center justify-center rounded-lg p-2 text-gray-400 transition-colors hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-900/20 dark:hover:text-red-400'
                             onClick={(e) => {
                               e.stopPropagation();
-                              onDeleteDocument(pageIndex);
+                              onDeleteDocument?.(pageIndex);
                             }}
                             title='Delete document'
                             aria-label='Delete document'

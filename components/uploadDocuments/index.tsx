@@ -1,11 +1,15 @@
 'use client';
-import { useDocuments } from '@/hooks';
+import { CreateDocumentsFromFilesInput, Document as ProjectDocument } from '@/interfaces/Project';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
 interface UploadDocumentProps {
   isOpen: boolean;
   onClose: () => void;
+  createDocumentsFromFiles: (
+    data: CreateDocumentsFromFilesInput,
+  ) => Promise<ProjectDocument[]>;
+  loading: boolean;
 }
 
 export interface FileUploadState {
@@ -16,9 +20,23 @@ export interface FileUploadState {
   id: string;
 }
 
+const supportedTypes = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'text/markdown',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-excel',
+];
+const maxFiles = 10;
+const maxSize = 10 * 1024 * 1024; // 10MB
+
 export default function UploadDocument({
   isOpen,
   onClose,
+  createDocumentsFromFiles, 
+  loading
 }: UploadDocumentProps) {
   const [fileStates, setFileStates] = useState<FileUploadState[]>([]);
   const [error, setError] = useState<string>('');
@@ -26,22 +44,6 @@ export default function UploadDocument({
   const inputRef = useRef<HTMLInputElement>(null);
   const params = useParams();
   const id = params.id as string;
-
-  const supportedTypes = [
-    'application/pdf',
-    'application/msword',
-    'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    'text/plain',
-    'text/markdown',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/vnd.ms-excel',
-  ];
-  const maxFiles = 10;
-  const maxSize = 10 * 1024 * 1024; // 10MB
-
-  const { createDocumentsFromFiles, loading } = useDocuments({
-    knowledgeBaseId: id,
-  });
 
   // Enhanced file type icons matching the design
   const getFileIcon = (fileName: string) => {
@@ -422,7 +424,7 @@ export default function UploadDocument({
                     Click to upload or drag and drop
                   </h3>
                   <p className='text-sm text-gray-600 dark:text-slate-400'>
-                    SVG, PNG, JPG or GIF (MAX. 800x400px)
+                    PDF, CSV, Word, TXT, MD
                   </p>
                 </div>
               </div>

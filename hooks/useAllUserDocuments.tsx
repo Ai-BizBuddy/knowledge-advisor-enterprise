@@ -85,7 +85,7 @@ export function useAllUserDocuments(
 
   // Core state
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Pagination state
@@ -172,7 +172,7 @@ export function useAllUserDocuments(
     async (page = 1, forceRefresh = false) => {
       // Prevent redundant calls when already loading (unless forced)
       if (loadingRef.current && !forceRefresh) {
-                return;
+        return;
       }
 
       try {
@@ -203,11 +203,10 @@ export function useAllUserDocuments(
         setTotalItems(result.count);
         setTotalPages(Math.ceil(result.count / itemsPerPage));
         setCurrentPage(page);
-
-              } catch (err) {
+      } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to load documents';
-                setError(errorMessage);
+        setError(errorMessage);
       } finally {
         loadingRef.current = false;
         setLoading(false);
@@ -252,7 +251,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to search documents';
-                setError(errorMessage);
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -272,7 +271,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-                setError(errorMessage);
+        setError(errorMessage);
         return null;
       }
     },
@@ -289,7 +288,7 @@ export function useAllUserDocuments(
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to get document';
-                setError(errorMessage);
+        setError(errorMessage);
         return null;
       }
     },
@@ -345,7 +344,7 @@ export function useAllUserDocuments(
   );
 
   const handleDocumentClick = useCallback((id: string) => {
-        // This can be extended for navigation or state changes
+    // This can be extended for navigation or state changes
   }, []);
 
   //   const handleDeleteDocument = useCallback((id: string) => {

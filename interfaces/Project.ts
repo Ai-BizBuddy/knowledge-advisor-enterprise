@@ -124,6 +124,10 @@ export interface UpdateDocumentInput {
   rag_status?: 'not_synced' | 'syncing' | 'synced' | 'error';
   last_rag_sync?: string;
   metadata?: Record<string, unknown>;
+  // Optional fields for updating file/version info
+  url?: string;
+  file_size?: number;
+  mime_type?: string;
 }
 
 // Knowledge base analytics interface

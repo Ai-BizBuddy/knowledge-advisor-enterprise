@@ -12,8 +12,6 @@ import { Breadcrumb, BreadcrumbItem } from 'flowbite-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-
-
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
   const params = useParams();
@@ -37,8 +35,6 @@ export default function KnowledgeBaseDetail() {
       : ['Documents', 'Chat Assistant', 'Settings'], 
     [knowledgeBaseState.data?.visibility]
   );
-
-
 
   // Handle tab changes
   const handleTabChange = useCallback((newTab: string) => {

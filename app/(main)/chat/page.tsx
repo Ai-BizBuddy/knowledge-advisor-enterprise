@@ -47,6 +47,7 @@ export default function ChatPage() {
     handleSelectAllKB,
     getSelectedKnowledgeBases,
     getSelectedCount,
+    getSelectedList
   } = useKnowledgeBaseSelection();
 
   // Combine both effects into one for better performance
@@ -126,7 +127,7 @@ export default function ChatPage() {
               title='AI Chat Assistant'
               subtitle={
                 getSelectedCount() !== 0
-                  ? `Searching from ${getSelectedCount()} Knowledge Base${getSelectedCount() > 1 ? 's' : ''}`
+                  ? `Searching from ${getSelectedCount()} Knowledge Base${getSelectedCount() > 1 ? 's' : ''} (${getSelectedList()})`
                   : 'Please select a Knowledge Base to start chatting'
               }
             />
