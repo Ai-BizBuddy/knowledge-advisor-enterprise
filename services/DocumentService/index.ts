@@ -193,6 +193,34 @@ class DocumentService {
   }
 
   /**
+   * Get latest document version by knowledge base ID and tag
+   * Returns the highest version number found in documents with the specified tag
+   */
+  async getLatestVersionByTag(
+    knowledgeBaseId: string,
+    tag: string,
+  ): Promise<number> {
+    try {
+      const supabaseTable = createClientTable();
+      const { data, error } = await supabaseTable
+        .from('document_view')
+        .select('version')
+        .eq('knowledge_base_id', knowledgeBaseId)
+        .eq('tag', tag)
+        .single();
+
+      if (error) {
+        return 0;
+      }
+
+      return data.version;
+    } catch (error) {
+      console.error('Error fetching latest version by tag:', error);
+      return 0; // Return 0 on error as fallback
+    }
+  }
+
+  /**
    * Create a new document
    */
   async createDocument(input: CreateDocumentInput): Promise<Document> {
