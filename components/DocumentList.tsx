@@ -103,8 +103,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     useState<DocumentTableItem | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
-  const [editingDocument, setEditingDocument] = useState<ProjectDocument | null>(null);
-
+  const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
   // Use the new useDocuments hook with integrated sync functionality
   // Only load data when this tab is active
   const {
@@ -368,7 +367,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         showToast('Error: Document not found for edit', 'error');
         return;
       }
-      setEditingDocument(doc);
+      setEditingDocumentId(doc.id);
       setIsUpdateModalOpen(true);
     },
     [documents, showToast],
@@ -650,7 +649,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         isOpen={isUpdateModalOpen}
         onClose={() => setIsUpdateModalOpen(false)}
         knowledgeBaseId={knowledgeBaseId}
-        document={editingDocument}
+        documentId={editingDocumentId}
         onUpdate={updateDocument}
         onSuccess={async () => {
           await refresh();

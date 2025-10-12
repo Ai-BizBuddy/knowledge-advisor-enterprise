@@ -78,6 +78,9 @@ export interface Document {
   last_rag_sync?: string;
   metadata?: Record<string, unknown>; // Additional metadata about the document
   error_message?: string; // Error message for documents with error status
+  tag?: string; // Optional tag for versioning
+  version?: number; // Optional version number for versioning 
+  description?: string; // Optional description of the document
 }
 
 // Extended interface for Knowledge Base detail page

@@ -195,18 +195,24 @@ class DocumentService {
   /**
    * Get latest document version by knowledge base ID and tag
    * Returns the highest version number found in documents with the specified tag
+   * Returns 1 as default if tag is null or empty string
    */
   async getLatestVersionByTag(
-    knowledgeBaseId: string,
+    { knowledgeBaseId, id }: { knowledgeBaseId: string; id: string },
     tag: string,
   ): Promise<number> {
     try {
+      if (!tag || tag.trim() === '') {
+        return 1;
+      }
+
       const supabaseTable = createClientTable();
       const { data, error } = await supabaseTable
         .from('document_view')
         .select('version')
         .eq('knowledge_base_id', knowledgeBaseId)
         .eq('tag', tag)
+        .not('id', 'eq', id)
         .single();
 
       if (error) {

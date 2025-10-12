@@ -1,2 +1,2 @@
-export { UpdateDocumentModal, default } from './UpdateDocumentModal';
+export { default, UpdateDocumentModal } from './UpdateDocumentModal';
 

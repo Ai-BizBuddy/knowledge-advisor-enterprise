@@ -4,26 +4,16 @@ import { useToast } from '@/components/toast';
 import { useReactHookForm } from '@/hooks';
 import type { Document, UpdateDocumentInput } from '@/interfaces/Project';
 import { documentService } from '@/services';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface UpdateDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   knowledgeBaseId: string;
-  document: Document | null;
   onUpdate: (id: string, input: UpdateDocumentInput) => Promise<Document>;
   onSuccess?: (doc: Document) => void;
+  documentId: string | null;
 }
-
-type VersionHistoryItem = {
-  version: number;
-  path: string;
-  size?: number;
-  mime?: string;
-  uploadedAt: string;
-  url?: string;
-  originalFileName?: string;
-};
 
 type UpdateDocumentForm = {
   tag: string;
@@ -34,7 +24,8 @@ type UpdateDocumentForm = {
 export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
   isOpen,
   onClose,
-  document,
+  documentId,
+  knowledgeBaseId,
   onUpdate,
   onSuccess,
 }) => {
@@ -51,88 +42,58 @@ export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
   });
   const { register, handleSubmit, watch, setValue, getValues, reset } = form;
 
-  const existingMetadata = useMemo(
-    () => (document?.metadata as Record<string, unknown>) || {},
-    [document],
-  );
-  const currentVersion = useMemo(() => {
-    const v = (existingMetadata?.currentVersion as number | undefined) ?? 1;
-    return typeof v === 'number' && v > 0 ? v : 1;
-  }, [existingMetadata]);
+  const onNotFound = useCallback(() => {
+    onClose();
+    showToast('Error: Document not found', 'error');
+  }, [onClose, showToast]);
 
   useEffect(() => {
-    if (isOpen && document) {
-      const meta = (document.metadata || {}) as Record<string, unknown>;
-      const tag = typeof meta.tag === 'string' ? meta.tag : '';
-      const desc = (meta.description as string) || '';
-      const latestVersion = currentVersion;
-      reset({
-        tag: tag,
-        description: typeof desc === 'string' ? desc : '',
-        version: latestVersion + 1,
-      });
-    }
-  }, [isOpen, document, reset, currentVersion]);
+    const initializeForm = async () => {
+      if (isOpen && documentId) {
+        if (!documentId) {
+          onClose();
+          showToast('Error: Document ID is missing', 'error');
+          return;
+        }
+        const document = await documentService.getDocumentById([documentId]);
+        if (!document) {
+          onNotFound();
+          return;
+        }
+        const tag = typeof document[0].tag === 'string' ? document[0].tag : '';
+        const desc = (document[0].description as string) || '';
 
-  const processVersionUrl = useCallback(async (): Promise<{
-    signedUrl?: string;
-    versionItem?: VersionHistoryItem;
-  }> => {
-    const version = getValues('version');
-    if (!version || version <= currentVersion) return {};
-
-    const versionItem: VersionHistoryItem = {
-      version: version,
-      path: document?.url || '',
-      uploadedAt: new Date().toISOString(),
-      url: document?.url,
+        reset({
+          tag: tag,
+          description: typeof desc === 'string' ? desc : '',
+          version: document[0].version ?? 1,
+        });
+      }
     };
 
-    return { signedUrl: document?.url, versionItem };
-  }, [getValues, currentVersion, document]);
+    initializeForm();
+  }, [isOpen, reset, documentId, onClose, showToast, onNotFound]);
 
   const onValid = useCallback(
     async (values: UpdateDocumentForm) => {
+      setSubmitting(true);
+
       if (submitting || validatingTag) return;
       try {
-        setSubmitting(true);
-
-        const result = await processVersionUrl();
-
-        if (!document) throw new Error('No document to update');
-        const meta = (document.metadata || {}) as Record<string, unknown>;
-        const versionHistory: VersionHistoryItem[] = Array.isArray(
-          meta.versionHistory,
-        )
-          ? (meta.versionHistory as VersionHistoryItem[])
-          : [];
-
-        if (result.versionItem) {
-          versionHistory.push(result.versionItem);
+        if (!documentId) {
+          onNotFound();
+          return;
         }
+        const document = await documentService.getDocumentById([documentId]);
+        if (!document) {
+          onNotFound();
+          return;
+        }
+        document[0].tag = values.tag.trim();
+        document[0].description = values.description.trim();
+        document[0].version = values.version ?? document[0].version;
+        const updated = await onUpdate(documentId, document[0]);
 
-        const nextVersion = result.versionItem
-          ? result.versionItem.version
-          : currentVersion;
-
-        const updateInput: UpdateDocumentInput = {
-          url: result.signedUrl ? result.signedUrl : document!.url,
-          file_size: result.versionItem
-            ? result.versionItem.size
-            : document!.file_size,
-          mime_type: result.versionItem
-            ? result.versionItem.mime
-            : document!.mime_type,
-          metadata: {
-            ...meta,
-            tag: values.tag,
-            description: values.description,
-            currentVersion: nextVersion,
-            versionHistory,
-          },
-        } as unknown as UpdateDocumentInput;
-
-        const updated = await onUpdate(document!.id, updateInput);
         showToast('Document updated successfully', 'success');
         onSuccess?.(updated);
         onClose();
@@ -144,45 +105,35 @@ export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
         setSubmitting(false);
       }
     },
-    [
-      submitting,
-      validatingTag,
-      processVersionUrl,
-      document,
-      onUpdate,
-      onSuccess,
-      onClose,
-      showToast,
-      currentVersion,
-    ],
+    [submitting, validatingTag, documentId, onUpdate, showToast, onSuccess, onClose, onNotFound],
   );
 
   const handleTagBlur = async () => {
-    // Fetch latest version on blur based on kb_id and tag
     const tagValue = (getValues('tag') as string).trim();
-    if (document && tagValue) {
+    if (tagValue) {
       setValidatingTag(true);
       try {
+        if (!documentId) {
+          onNotFound();
+          return;
+        }
         const latestVersion = await documentService.getLatestVersionByTag(
-          document.knowledge_base_id,
+          { knowledgeBaseId: knowledgeBaseId, id: documentId },
           tagValue,
         );
         setValue('version', latestVersion + 1);
-        showToast('Version updated based on tag', 'success');
       } catch (error) {
         console.error('Failed to fetch latest version:', error);
         const errorMessage = error instanceof Error ? error.message : 'Failed to validate tag';
         showToast(errorMessage, 'error');
-        setValue('version', currentVersion + 1);
+        setValue('version', 1);
       } finally {
         setValidatingTag(false);
       }
-    } else if (document) {
-      setValue('version', currentVersion + 1);
     }
   };
 
-  const hidden = !isOpen || !document;
+  const hidden = !isOpen || !documentId;
 
   if (hidden) return null;
 
@@ -314,25 +265,12 @@ export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
               type='number'
               {...register('version', {
                 required: 'Version is required',
-                min: {
-                  value: currentVersion + 1,
-                  message: `Version must be greater than ${currentVersion}`,
-                },
                 valueAsNumber: true,
               })}
+              disabled
               placeholder='Enter version number'
-              className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700'
-              min={currentVersion + 1}
+              className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-700'
             />
-            {form.formState.errors.version && (
-              <p className='mt-1 text-xs text-red-500'>
-                {form.formState.errors.version.message}
-              </p>
-            )}
-            <p className='mt-1 text-xs text-gray-500 dark:text-slate-400'>
-              Current version: {currentVersion}. New version must be{' '}
-              {currentVersion + 1} or higher.
-            </p>
           </div>
         </form>
 
