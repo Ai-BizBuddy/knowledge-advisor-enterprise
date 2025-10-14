@@ -28,7 +28,7 @@ export function useSystemStatus() {
 
         // Total Users from auth.users
         const { count: userCount, error: userError } = await supabase
-          .from('users')
+          .from('user_view')
           .select('id', { count: 'exact', head: true });
 
         // System Roles from auth.roles
@@ -39,7 +39,7 @@ export function useSystemStatus() {
         // Active Sessions: users signed in within last 24 hours
         const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { count: activeCount, error: activeError } = await supabase
-          .from('users')
+          .from('user_view')
           .select('id', { count: 'exact', head: true })
           .gte('last_sign_in_at', since);
 

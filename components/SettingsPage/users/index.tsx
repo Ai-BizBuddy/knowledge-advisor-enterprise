@@ -127,7 +127,7 @@ export default function UsersPage() {
 
   // Handle successful user creation/edit from the unified modal
   const handleUserSuccess = async () => {
-        // Show success toast based on the current mode
+    // Show success toast based on the current mode
     const message =
       userModalMode === 'create'
         ? SUCCESS_MESSAGES.USER_CREATED
@@ -162,7 +162,7 @@ export default function UsersPage() {
         await getUserStatistics();
       }
     } catch (error) {
-            showToast(
+      showToast(
         error instanceof Error ? error.message : 'Failed to delete user',
         'error',
       );
@@ -181,7 +181,7 @@ export default function UsersPage() {
       }
       return null;
     } catch (error) {
-            showToast(
+      showToast(
         error instanceof Error
           ? error.message
           : 'Failed to upload profile picture',
@@ -252,7 +252,7 @@ export default function UsersPage() {
         return 'No Role';
       }
       const role = allRoles.find((r) => r.id === roleIds[0].role.id);
-      return role?.name || 'Unknown';
+      return role?.name || null;
     }
     const role = allRoles.find((r) => r.id === roleIds[0].role.id);
     const roleName = role?.name || 'Unknown';
@@ -335,7 +335,7 @@ export default function UsersPage() {
                 {users?.data.map((user) => (
                   <div
                     key={user.id}
-                    className='cursor-pointer p-3 sm:p-4 transition-colors duration-150 hover:bg-gray-50 dark:hover:bg-gray-700'
+                    className='cursor-pointer p-3 transition-colors duration-150 hover:bg-gray-50 sm:p-4 dark:hover:bg-gray-700'
                   >
                     <div className='flex items-start space-x-3'>
                       <Avatar
@@ -349,13 +349,15 @@ export default function UsersPage() {
                         <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                           {user.display_name || user.email}
                         </div>
-                        <div className='mt-1 text-xs text-gray-500 dark:text-gray-400 truncate'>
+                        <div className='mt-1 truncate text-xs text-gray-500 dark:text-gray-400'>
                           {user.email}
                         </div>
                         <div className='mt-2 flex flex-wrap items-center gap-2'>
-                          <Badge color='purple' size='sm'>
-                            {getRoleName(user.user_roles ?? [])}
-                          </Badge>
+                          {user.user_roles.length > 0 ? (
+                            <Badge color='purple' size='sm'>
+                              {getRoleName(user.user_roles ?? [])}
+                            </Badge>
+                          ) : null}
                           <Badge
                             color={getStatusBadgeColor(user.status)}
                             size='sm'
@@ -371,7 +373,7 @@ export default function UsersPage() {
                           <div className='flex items-center space-x-1'>
                             <button
                               onClick={() => openProfileModal(user)}
-                              className='p-1.5 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 rounded-full hover:bg-blue-50 dark:hover:bg-blue-900'
+                              className='rounded-full p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-900 dark:hover:text-blue-300'
                               title='View user'
                             >
                               <svg
@@ -390,7 +392,7 @@ export default function UsersPage() {
                             </button>
                             <button
                               onClick={() => openEditModal(user)}
-                              className='p-1.5 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 rounded-full hover:bg-gray-50 dark:hover:bg-gray-700'
+                              className='rounded-full p-1.5 text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300'
                               title='Edit user'
                             >
                               <svg
@@ -409,7 +411,7 @@ export default function UsersPage() {
                             </button>
                             <button
                               onClick={() => openDeleteModal(user)}
-                              className='p-1.5 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 rounded-full hover:bg-red-50 dark:hover:bg-red-900'
+                              className='rounded-full p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300'
                               title='Delete user'
                             >
                               <svg
@@ -447,13 +449,13 @@ export default function UsersPage() {
                       <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         Role
                       </th>
-                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell sm:px-6 dark:text-gray-400'>
+                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 md:table-cell dark:text-gray-400'>
                         Department
                       </th>
                       <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                         Status
                       </th>
-                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase xl:table-cell sm:px-6 dark:text-gray-400'>
+                      <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 xl:table-cell dark:text-gray-400'>
                         Created
                       </th>
                       <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
@@ -474,31 +476,33 @@ export default function UsersPage() {
                               alt={user.display_name || user.email}
                               rounded
                               size='sm'
-                              className='mr-2 sm:mr-3 flex-shrink-0'
+                              className='mr-2 flex-shrink-0 sm:mr-3'
                             />
                             <div className='min-w-0'>
                               <div className='truncate text-sm font-medium text-gray-900 dark:text-white'>
                                 {user.display_name || user.email}
                               </div>
-                              <div className='truncate text-xs sm:text-sm text-gray-500 dark:text-gray-400'>
+                              <div className='truncate text-xs text-gray-500 sm:text-sm dark:text-gray-400'>
                                 {user.email}
                               </div>
                             </div>
                           </div>
                         </td>
                         <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                          <span className='inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-purple-800 dark:bg-purple-900 dark:text-purple-300'>
-                            {getRoleName(user.user_roles ?? [])}
-                          </span>
+                          {getRoleName(user.user_roles ?? []) !== null ? (
+                            <span className='inline-flex items-center rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-800 sm:px-2.5 dark:bg-purple-900 dark:text-purple-300'>
+                              {getRoleName(user.user_roles ?? [])}
+                            </span>
+                          ) : null}
                         </td>
-                        <td className='hidden px-3 py-4 whitespace-nowrap md:table-cell sm:px-6'>
+                        <td className='hidden px-3 py-4 whitespace-nowrap sm:px-6 md:table-cell'>
                           <span className='text-sm text-gray-900 dark:text-white'>
                             {getDepartmentName(user.department_id)}
                           </span>
                         </td>
                         <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                           <span
-                            className={`inline-flex items-center rounded-full px-2 py-0.5 sm:px-2.5 text-xs font-medium ${
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium sm:px-2.5 ${
                               user.status === UserStatus.ACTIVE
                                 ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
                                 : user.status === UserStatus.INACTIVE
@@ -511,7 +515,7 @@ export default function UsersPage() {
                             {getStatusDisplayName(user.status)}
                           </span>
                         </td>
-                        <td className='hidden px-3 py-4 whitespace-nowrap xl:table-cell sm:px-6'>
+                        <td className='hidden px-3 py-4 whitespace-nowrap sm:px-6 xl:table-cell'>
                           <span className='text-sm text-gray-500 dark:text-gray-400'>
                             {new Date(user.created_at).toLocaleDateString()}
                           </span>
@@ -523,9 +527,24 @@ export default function UsersPage() {
                               className='inline-flex items-center justify-center rounded-md bg-blue-100 p-2 text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
                               title='View user'
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M15 12a3 3 0 11-6 0 3 3 0 016 0z' />
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z' />
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+                                />
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                                />
                               </svg>
                             </button>
                             <button
@@ -533,8 +552,18 @@ export default function UsersPage() {
                               className='inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                               title='Edit user'
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                                />
                               </svg>
                             </button>
                             <button
@@ -542,8 +571,18 @@ export default function UsersPage() {
                               className='inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
                               title='Delete user'
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                />
                               </svg>
                             </button>
                           </div>
@@ -558,7 +597,7 @@ export default function UsersPage() {
                         >
                           <div className='flex flex-col items-center'>
                             <svg
-                              className='mb-4 h-8 w-8 sm:h-12 sm:w-12 text-gray-400'
+                              className='mb-4 h-8 w-8 text-gray-400 sm:h-12 sm:w-12'
                               fill='none'
                               stroke='currentColor'
                               viewBox='0 0 24 24'
@@ -640,7 +679,7 @@ export default function UsersPage() {
                 <h3 className='mt-4 text-lg font-medium text-gray-900 dark:text-white'>
                   {selectedUser.display_name || selectedUser.email}
                 </h3>
-                <p className='text-gray-500 dark:text-gray-400 break-words'>
+                <p className='break-words text-gray-500 dark:text-gray-400'>
                   {selectedUser.email}
                 </p>
               </div>
@@ -676,11 +715,18 @@ export default function UsersPage() {
                 </div>
               </div>
 
-              <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-x-2 sm:space-y-0'>
-                <Button color='gray' onClick={() => setShowProfileModal(false)} className='w-full sm:w-auto'>
+              <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end sm:space-y-0 sm:space-x-2'>
+                <Button
+                  color='gray'
+                  onClick={() => setShowProfileModal(false)}
+                  className='w-full sm:w-auto'
+                >
                   Close
                 </Button>
-                <Button onClick={() => openEditModal(selectedUser)} className='w-full sm:w-auto'>
+                <Button
+                  onClick={() => openEditModal(selectedUser)}
+                  className='w-full sm:w-auto'
+                >
                   Edit User
                 </Button>
               </div>
@@ -698,9 +744,9 @@ export default function UsersPage() {
       >
         <div className='relative p-4 sm:p-8'>
           <div className='text-center'>
-            <div className='mx-auto mb-4 flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full bg-red-100 dark:bg-red-900'>
+            <div className='mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 sm:h-14 sm:w-14 dark:bg-red-900'>
               <svg
-                className='h-6 w-6 sm:h-8 sm:w-8 text-red-600 dark:text-red-400'
+                className='h-6 w-6 text-red-600 sm:h-8 sm:w-8 dark:text-red-400'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
@@ -714,13 +760,13 @@ export default function UsersPage() {
               </svg>
             </div>
 
-            <h3 className='mb-2 text-lg sm:text-xl font-semibold text-gray-900 dark:text-white'>
+            <h3 className='mb-2 text-lg font-semibold text-gray-900 sm:text-xl dark:text-white'>
               Delete User
             </h3>
 
             <p className='mb-2 text-gray-500 dark:text-gray-400'>
               Are you sure you want to delete{' '}
-              <span className='font-semibold text-gray-900 dark:text-white break-words'>
+              <span className='font-semibold break-words text-gray-900 dark:text-white'>
                 {selectedUser?.display_name || selectedUser?.email}
               </span>
               ?
@@ -756,9 +802,9 @@ export default function UsersPage() {
             </div>
 
             <div className='mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
-              <Button 
-                color='gray' 
-                onClick={() => setShowDeleteModal(false)} 
+              <Button
+                color='gray'
+                onClick={() => setShowDeleteModal(false)}
                 className='w-full sm:w-auto'
                 disabled={loading}
               >
@@ -768,7 +814,7 @@ export default function UsersPage() {
                 color='failure'
                 onClick={handleDeleteUser}
                 disabled={loading}
-                className='w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
+                className='w-full bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 sm:w-auto dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
               >
                 {loading ? (
                   <div className='flex items-center justify-center'>

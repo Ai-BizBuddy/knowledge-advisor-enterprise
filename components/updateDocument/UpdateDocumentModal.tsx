@@ -3,168 +3,137 @@
 import { useToast } from '@/components/toast';
 import { useReactHookForm } from '@/hooks';
 import type { Document, UpdateDocumentInput } from '@/interfaces/Project';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { documentService } from '@/services';
+import React, { useCallback, useEffect, useState } from 'react';
 
 interface UpdateDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   knowledgeBaseId: string;
-  document: Document | null;
   onUpdate: (id: string, input: UpdateDocumentInput) => Promise<Document>;
   onSuccess?: (doc: Document) => void;
+  documentId: string | null;
 }
 
-type VersionHistoryItem = {
-  version: number;
-  path: string;
-  size?: number;
-  mime?: string;
-  uploadedAt: string;
-  url?: string;
-  originalFileName?: string;
+type UpdateDocumentForm = {
+  tag: string;
+  description: string;
+  version: number | null;
 };
 
 export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
   isOpen,
   onClose,
-  document,
+  documentId,
+  knowledgeBaseId,
   onUpdate,
   onSuccess,
 }) => {
   const { showToast } = useToast();
   const [submitting, setSubmitting] = useState(false);
-
-  type UpdateDocumentForm = {
-    tags: string[];
-    tagInput: string;
-    description: string;
-    versionUrl: string;
-  };
+  const [validatingTag, setValidatingTag] = useState(false);
 
   const form = useReactHookForm<UpdateDocumentForm>({
     defaultValues: {
-      tags: [],
-      tagInput: '',
+      tag: '',
       description: '',
-      versionUrl: '',
+      version: null,
     },
   });
   const { register, handleSubmit, watch, setValue, getValues, reset } = form;
 
-  const existingMetadata = useMemo(() => (document?.metadata as Record<string, unknown>) || {}, [document]);
-  const currentVersion = useMemo(() => {
-    const v = (existingMetadata?.currentVersion as number | undefined) ?? 1;
-    return typeof v === 'number' && v > 0 ? v : 1;
-  }, [existingMetadata]);
+  const onNotFound = useCallback(() => {
+    onClose();
+    showToast('Error: Document not found', 'error');
+  }, [onClose, showToast]);
 
   useEffect(() => {
-    if (isOpen && document) {
-      const meta = (document.metadata || {}) as Record<string, unknown>;
-      const t = (meta.tags as string[]) || [];
-      const desc = (meta.description as string) || '';
-      reset({
-        tags: Array.isArray(t) ? t : [],
-        description: typeof desc === 'string' ? desc : '',
-        tagInput: '',
-        versionUrl: '',
-      });
-    }
-  }, [isOpen, document, reset]);
+    const initializeForm = async () => {
+      if (isOpen && documentId) {
+        if (!documentId) {
+          onClose();
+          showToast('Error: Document ID is missing', 'error');
+          return;
+        }
+        const document = await documentService.getDocumentById([documentId]);
+        if (!document) {
+          onNotFound();
+          return;
+        }
+        const tag = typeof document[0].tag === 'string' ? document[0].tag : '';
+        const desc = (document[0].description as string) || '';
 
-  const addTag = useCallback((value: string) => {
-    const trimmed = value.trim();
-    if (!trimmed) return;
-    const current = getValues('tags');
-    if (current.includes(trimmed)) return;
-    setValue('tags', [...current, trimmed], { shouldDirty: true });
-  }, [getValues, setValue]);
+        reset({
+          tag: tag,
+          description: typeof desc === 'string' ? desc : '',
+          version: document[0].version ?? 1,
+        });
+      }
+    };
 
-  const removeTag = useCallback((tag: string) => {
-    const current = getValues('tags');
-    setValue('tags', current.filter((t) => t !== tag), { shouldDirty: true });
-  }, [getValues, setValue]);
+    initializeForm();
+  }, [isOpen, reset, documentId, onClose, showToast, onNotFound]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',' ) {
-      e.preventDefault();
-      const currentInput = getValues('tagInput');
-      addTag(currentInput);
-      setValue('tagInput', '');
-    }
-    const currentTags = getValues('tags');
-    const currentInput = getValues('tagInput');
-    if (e.key === 'Backspace' && !currentInput && currentTags.length > 0) {
-      // remove last
-      setValue('tags', currentTags.slice(0, -1), { shouldDirty: true });
+  const onValid = useCallback(
+    async (values: UpdateDocumentForm) => {
+      setSubmitting(true);
+
+      if (submitting || validatingTag) return;
+      try {
+        if (!documentId) {
+          onNotFound();
+          return;
+        }
+        const document = await documentService.getDocumentById([documentId]);
+        if (!document) {
+          onNotFound();
+          return;
+        }
+        document[0].tag = values.tag.trim();
+        document[0].description = values.description.trim();
+        document[0].version = values.version ?? document[0].version;
+        const updated = await onUpdate(documentId, document[0]);
+
+        showToast('Document updated successfully', 'success');
+        onSuccess?.(updated);
+        onClose();
+      } catch (err) {
+        const message =
+          err instanceof Error ? err.message : 'Failed to update document';
+        showToast(message, 'error');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+    [submitting, validatingTag, documentId, onUpdate, showToast, onSuccess, onClose, onNotFound],
+  );
+
+  const handleTagBlur = async () => {
+    const tagValue = (getValues('tag') as string).trim();
+    if (tagValue) {
+      setValidatingTag(true);
+      try {
+        if (!documentId) {
+          onNotFound();
+          return;
+        }
+        const latestVersion = await documentService.getLatestVersionByTag(
+          { knowledgeBaseId: knowledgeBaseId, id: documentId },
+          tagValue,
+        );
+        setValue('version', latestVersion + 1);
+      } catch (error) {
+        console.error('Failed to fetch latest version:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to validate tag';
+        showToast(errorMessage, 'error');
+        setValue('version', 1);
+      } finally {
+        setValidatingTag(false);
+      }
     }
   };
 
-  const processVersionUrl = useCallback(async (): Promise<{
-    signedUrl?: string;
-    versionItem?: VersionHistoryItem;
-  }> => {
-    const versionUrl = getValues('versionUrl')?.trim();
-    if (!versionUrl) return {};
-
-    const nextVersion = currentVersion + 1;
-
-    const versionItem: VersionHistoryItem = {
-      version: nextVersion,
-      path: versionUrl,
-      uploadedAt: new Date().toISOString(),
-      url: versionUrl,
-    };
-
-    return { signedUrl: versionUrl, versionItem };
-  }, [getValues, currentVersion]);
-
-  const onValid = useCallback(async (values: UpdateDocumentForm) => {
-    if (submitting) return;
-    try {
-      setSubmitting(true);
-
-      const result = await processVersionUrl();
-
-      // Prepare metadata updates
-  if (!document) throw new Error('No document to update');
-  const meta = (document.metadata || {}) as Record<string, unknown>;
-      const versionHistory: VersionHistoryItem[] = Array.isArray(meta.versionHistory)
-        ? (meta.versionHistory as VersionHistoryItem[])
-        : [];
-
-      if (result.versionItem) {
-        versionHistory.push(result.versionItem);
-      }
-
-      const nextVersion = result.versionItem ? result.versionItem.version : currentVersion;
-
-      const updateInput: UpdateDocumentInput = {
-  url: result.signedUrl ? result.signedUrl : document!.url,
-  file_size: result.versionItem ? result.versionItem.size : document!.file_size,
-  mime_type: result.versionItem ? result.versionItem.mime : document!.mime_type,
-        metadata: {
-          ...meta,
-          tags: values.tags,
-          description: values.description,
-          currentVersion: nextVersion,
-          versionHistory,
-        },
-      } as unknown as UpdateDocumentInput;
-
-      // We extend UpdateDocumentInput shape by casting to allow file_size/url updates
-  const updated = await onUpdate(document!.id, updateInput);
-      showToast('Document updated successfully', 'success');
-      onSuccess?.(updated);
-      onClose();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to update document';
-      showToast(message, 'error');
-    } finally {
-      setSubmitting(false);
-    }
-  }, [submitting, processVersionUrl, document, onUpdate, onSuccess, onClose, showToast, currentVersion]);
-
-  const hidden = !isOpen || !document;
+  const hidden = !isOpen || !documentId;
 
   if (hidden) return null;
 
@@ -173,87 +142,154 @@ export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
       <div className='w-full max-w-2xl rounded-xl border border-gray-200 bg-white text-gray-900 shadow-2xl dark:border-gray-700 dark:bg-gray-800 dark:text-white'>
         <div className='flex items-center justify-between border-b border-gray-200 p-4 sm:p-6 dark:border-gray-700'>
           <div>
-            <h2 className='text-lg font-bold text-gray-900 dark:text-white'>Update Document</h2>
-            <p className='text-sm text-gray-600 dark:text-slate-400'>Edit tags, upload a new version, or update description</p>
+            <h2 className='text-lg font-bold text-gray-900 dark:text-white'>
+              Update Document
+            </h2>
+            <p className='text-sm text-gray-600 dark:text-slate-400'>
+              Edit tags, upload a new version, or update description
+            </p>
           </div>
           <button
             className='rounded-lg p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-700 disabled:cursor-not-allowed disabled:opacity-50 dark:text-slate-400 dark:hover:bg-gray-700 dark:hover:text-slate-200'
-            disabled={submitting}
+            disabled={submitting || validatingTag}
             onClick={onClose}
             aria-label='Close update modal'
           >
-            <svg className='h-6 w-6' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12'></path>
+            <svg
+              className='h-6 w-6'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth='2'
+                d='M6 18L18 6M6 6l12 12'
+              ></path>
             </svg>
           </button>
         </div>
 
-        <form onSubmit={handleSubmit(onValid)} className='max-h-[70vh] space-y-6 overflow-y-auto p-4 sm:p-6'>
-          {/* Tags input */}
+        <form
+          onSubmit={handleSubmit(onValid)}
+          className='max-h-[70vh] space-y-6 overflow-y-auto p-4 sm:p-6'
+        >
+          {/* Tag input */}
           <div>
-            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>Tags</label>
-            <div className='flex flex-wrap items-center gap-2 rounded-lg border border-gray-300 bg-white p-2 dark:border-slate-600 dark:bg-slate-700'>
-              {watch('tags').map((tag) => (
-                <span key={tag} className='inline-flex items-center gap-1 rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'>
-                  {tag}
-                  <button className='rounded-full p-0.5 hover:bg-blue-200 dark:hover:bg-blue-900/50' onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`}>
-                    <svg className='h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                      <path strokeLinecap='round' strokeLinejoin='round' strokeWidth='2' d='M6 18L18 6M6 6l12 12' />
-                    </svg>
-                  </button>
-                </span>
-              ))}
+            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>
+              Tag
+            </label>
+            <div className='relative'>
               <input
                 type='text'
-                {...register('tagInput')}
-                onKeyDown={handleKeyDown}
-                placeholder='Type a tag and press Enter'
-                className='flex-1 min-w-[120px] border-none bg-transparent p-2 text-sm outline-none placeholder:text-gray-400 dark:placeholder:text-slate-400'
+                {...register('tag', {
+                  maxLength: {
+                    value: 55,
+                    message: 'Tag must be 55 characters or less',
+                  },
+                })}
+                onBlur={handleTagBlur}
+                disabled={validatingTag}
+                placeholder='Enter a tag (max 55 chars)'
+                className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-700'
+                maxLength={55}
               />
+              {validatingTag && (
+                <div className='absolute right-3 top-1/2 -translate-y-1/2'>
+                  <svg
+                    className='h-5 w-5 animate-spin text-blue-600 dark:text-blue-400'
+                    xmlns='http://www.w3.org/2000/svg'
+                    fill='none'
+                    viewBox='0 0 24 24'
+                  >
+                    <circle
+                      className='opacity-25'
+                      cx='12'
+                      cy='12'
+                      r='10'
+                      stroke='currentColor'
+                      strokeWidth='4'
+                    ></circle>
+                    <path
+                      className='opacity-75'
+                      fill='currentColor'
+                      d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                    ></path>
+                  </svg>
+                </div>
+              )}
             </div>
-            <p className='mt-1 text-xs text-gray-500 dark:text-slate-400'>Press Enter or comma to add tags</p>
-          </div>
-
+            {form.formState.errors.tag && (
+              <p className='mt-1 text-xs text-red-500'>
+                {form.formState.errors.tag.message}
+              </p>
+            )}
+            {validatingTag ? (
+              <p className='mt-1 text-xs text-blue-600 dark:text-blue-400'>
+                Validating tag and fetching latest version...
+              </p>
+            ) : (
+              <p className='mt-1 text-xs text-gray-500 dark:text-slate-400'>
+                Maximum 55 characters
+              </p>
+            )}
+          </div>{' '}
           {/* Description */}
           <div>
-            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>Description</label>
+            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>
+              Description
+            </label>
             <textarea
               rows={4}
-              {...register('description')}
-              placeholder='Add a short description for this document'
+              {...register('description', {
+                maxLength: {
+                  value: 500,
+                  message: 'Description must be 500 characters or less',
+                },
+              })}
+              placeholder='Add a short description for this document (max 500 chars)'
               className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700'
+              maxLength={500}
             />
+            <p className='mt-1 text-xs text-gray-500 dark:text-slate-400'>
+              {watch('description').length}/500 characters
+            </p>
           </div>
-
-          {/* Version upload */}
+          {/* Version number */}
           <div>
-            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>New Version URL (optional)</label>
+            <label className='mb-2 block text-sm font-medium text-gray-700 dark:text-slate-200'>
+              Version <span className='text-red-500'>*</span>
+            </label>
             <input
-              type='text'
-              {...register('versionUrl')}
-              placeholder='Enter document URL for new version'
-              className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700'
+              type='number'
+              {...register('version', {
+                required: 'Version is required',
+                valueAsNumber: true,
+              })}
+              disabled
+              placeholder='Enter version number'
+              className='w-full rounded-lg border border-gray-300 bg-white p-3 text-sm outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-600 dark:bg-slate-700'
             />
-            <p className='mt-1 text-xs text-gray-500 dark:text-slate-400'>Current version: {currentVersion}. Entering a URL will create version {currentVersion + 1}.</p>
           </div>
         </form>
 
         <div className='flex items-center justify-end gap-3 border-t border-gray-200 p-4 sm:p-6 dark:border-gray-700'>
           <button
             className='rounded-lg border border-gray-300 bg-gray-50 px-5 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-300 dark:hover:bg-slate-600 dark:focus:ring-offset-slate-800'
-            disabled={submitting}
+            disabled={submitting || validatingTag}
             onClick={onClose}
           >
             Cancel
           </button>
           <button
             className='rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50'
-            disabled={submitting}
+            disabled={submitting || validatingTag}
             type='submit'
             form={undefined}
             onClick={handleSubmit(onValid)}
           >
-            {submitting ? 'Saving...' : 'Save changes'}
+            {submitting ? 'Saving...' : validatingTag ? 'Validating...' : 'Save changes'}
           </button>
         </div>
       </div>
