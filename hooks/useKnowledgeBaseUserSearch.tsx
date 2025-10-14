@@ -552,7 +552,6 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           currentPage: page,
         }));
 
-        
         const result = await searchUsersSupabase(
           knowledgeBaseId,
           page,
@@ -581,9 +580,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           hasMore,
           error: null,
         }));
-
-              } catch (error) {
-                setState((prev) => ({
+      } catch (error) {
+        setState((prev) => ({
           ...prev,
           loading: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -609,7 +607,6 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           error: null,
         }));
 
-        
         const result = await searchUsersForAssignmentSupabase(
           knowledgeBaseId,
           searchTerm,
@@ -631,9 +628,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           assignmentResults: result.data || [],
           error: null,
         }));
-
-              } catch (error) {
-                setState((prev) => ({
+      } catch (error) {
+        setState((prev) => ({
           ...prev,
           assignmentLoading: false,
           error: error instanceof Error ? error.message : 'Unknown error',
@@ -651,7 +647,6 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       try {
         setState((prev) => ({ ...prev, error: null }));
 
-        
         const result = await getUserStatisticsSupabase(knowledgeBaseId);
 
         if (!result.success) {
@@ -667,9 +662,8 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
           statistics: result.data || null,
           error: null,
         }));
-
-              } catch (error) {
-                setState((prev) => ({
+      } catch (error) {
+        setState((prev) => ({
           ...prev,
           error: error instanceof Error ? error.message : 'Unknown error',
         }));
