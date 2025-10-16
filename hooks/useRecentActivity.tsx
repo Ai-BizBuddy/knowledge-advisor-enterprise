@@ -2,7 +2,7 @@
 
 import { Document, DocumentStatus } from '@/interfaces/Project';
 import { documentService, knowledgeBaseService } from '@/services';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface ActivityItem {
   id: string;
@@ -34,10 +34,16 @@ export const useRecentActivity = (
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const { limit = 10, autoRefresh = false, refreshInterval = 60000 } = options;
+  const { limit = 10, } = options;
+
+  // Use ref to store the latest limit value to avoid stale closures
+  const limitRef = useRef(limit);
+  useEffect(() => {
+    limitRef.current = limit;
+  }, [limit]);
 
   // Function to format relative time (e.g., "2 hours ago")
-  const formatRelativeTime = (dateString: string): string => {
+  const formatRelativeTime = useCallback((dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
@@ -54,9 +60,9 @@ export const useRecentActivity = (
     } else {
       return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
-  };
+  }, []);
 
-  // Load recent activities
+  // Load recent activities - stable reference with no dependencies
   const loadActivities = useCallback(async () => {
     try {
       setLoading(true);
@@ -147,7 +153,7 @@ export const useRecentActivity = (
       });
 
       // Apply limit
-      const limitedActivities = allActivities.slice(0, limit);
+      const limitedActivities = allActivities.slice(0, limitRef.current);
       setActivities(limitedActivities);
     } catch (err) {
       const errorMsg =
@@ -156,27 +162,12 @@ export const useRecentActivity = (
     } finally {
       setLoading(false);
     }
-  }, [limit]);
+  }, [formatRelativeTime]); // Stable dependency
 
+  // Load on mount and when limit changes
   useEffect(() => {
     loadActivities();
-  }, [loadActivities]);
-
-  // Initial load and refresh logic
-  useEffect(() => {
-    let refreshTimer: NodeJS.Timeout | null = null;
-    if (autoRefresh) {
-      refreshTimer = setInterval(() => {
-        loadActivities();
-      }, refreshInterval);
-    }
-
-    return () => {
-      if (refreshTimer) {
-        clearInterval(refreshTimer);
-      }
-    };
-  }, [loadActivities, autoRefresh, refreshInterval]);
+  }, [loadActivities, limit]);
 
   return {
     activities,
