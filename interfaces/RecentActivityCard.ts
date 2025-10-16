@@ -9,6 +9,14 @@ interface IRecentActivityCardProps {
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
+  pagination?: {
+    currentPage: number;
+    totalPages: number;
+    pageSize: number;
+    total: number;
+    onPageChange: (page: number) => void;
+  };
+  showPagination?: boolean;
 }
 
 export type { IActivity, IRecentActivityCardProps };

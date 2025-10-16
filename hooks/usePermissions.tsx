@@ -103,7 +103,9 @@ export const usePermissions = (): UsePermissions => {
           } finally {
       setLoading(false);
     }
-  }, [setLoading, setError]);
+    // Remove setLoading and setError from dependencies as they're state setters and stable
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   /**
    * Check if user has a specific permission
@@ -213,10 +215,11 @@ export const usePermissions = (): UsePermissions => {
     await loadUserPermissions();
   }, [loadUserPermissions]);
 
-  // Load permissions on mount and when authentication changes
+  // Load permissions on mount only - don't re-run when loadUserPermissions changes
   useEffect(() => {
     loadUserPermissions();
-  }, [loadUserPermissions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return {
     // State

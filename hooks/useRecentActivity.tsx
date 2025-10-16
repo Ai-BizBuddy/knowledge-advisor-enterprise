@@ -1,7 +1,7 @@
 'use client';
 
-import { Document, DocumentStatus } from '@/interfaces/Project';
-import { documentService, knowledgeBaseService } from '@/services';
+import { activityLogService } from '@/services';
+import type { ActivityLogWithProfile } from '@/services/ActivityLogService';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 export interface ActivityItem {
@@ -18,6 +18,8 @@ export interface UseRecentActivityOptions {
   limit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface UseRecentActivityReturn {
@@ -25,6 +27,16 @@ export interface UseRecentActivityReturn {
   loading: boolean;
   error: string | null;
   refresh: () => Promise<void>;
+  pagination: {
+    currentPage: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrevious: boolean;
+  };
+  setPage: (page: number) => void;
+  setPageSize: (pageSize: number) => void;
 }
 
 export const useRecentActivity = (
@@ -33,14 +45,22 @@ export const useRecentActivity = (
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(options.page || 1);
+  const [pageSize, setPageSize] = useState(options.pageSize || options.limit || 10);
+  const [totalActivities, setTotalActivities] = useState(0);
 
-  const { limit = 10, } = options;
+  const { limit = 10 } = options;
 
   // Use ref to store the latest limit value to avoid stale closures
   const limitRef = useRef(limit);
+  const pageSizeRef = useRef(pageSize);
+  const currentPageRef = useRef(currentPage);
+  
   useEffect(() => {
     limitRef.current = limit;
-  }, [limit]);
+    pageSizeRef.current = pageSize;
+    currentPageRef.current = currentPage;
+  }, [limit, pageSize, currentPage]);
 
   // Function to format relative time (e.g., "2 hours ago")
   const formatRelativeTime = useCallback((dateString: string): string => {
@@ -53,13 +73,15 @@ export const useRecentActivity = (
 
     if (diffMinutes < 1) {
       return 'Just now';
-    } else if (diffMinutes < 60) {
+    } 
+    if (diffMinutes < 60) {
       return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
-    } else if (diffHours < 24) {
+    } 
+    if (diffHours < 24) {
       return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    } else {
-      return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
     }
+
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   }, []);
 
   // Load recent activities - stable reference with no dependencies
@@ -68,93 +90,28 @@ export const useRecentActivity = (
       setLoading(true);
       setError(null);
 
-      // Fetch all documents (which have timestamps we can use for activity)
-      let documents: Document[] = [];
-      try {
-        documents = await documentService.getAllDocuments();
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : 'Failed to load documents',
-        );
-        throw error;
-      }
+      const offset = (currentPageRef.current - 1) * pageSizeRef.current;
 
-      // Process documents into activity items
-      const documentActivities: ActivityItem[] = await Promise.all(
-        documents.map(async (doc) => {
-          // Determine activity type based on document status
-          let activityType: 'upload' | 'processing' | 'error';
-          let status: 'success' | 'error' | 'info';
-
-          if (
-            doc.status === DocumentStatus.READY ||
-            doc.status === DocumentStatus.UPLOADED
-          ) {
-            activityType = 'upload';
-            status = 'success';
-          } else if (doc.status === DocumentStatus.PROCESSING) {
-            activityType = 'processing';
-            status = 'info';
-          } else if (doc.status === DocumentStatus.ERROR) {
-            activityType = 'error';
-            status = 'error';
-          } else {
-            activityType = 'upload';
-            status = 'info';
-          }
-
-          const projectName = await knowledgeBaseService.getProject(
-            doc.knowledge_base_id,
-          );
-
-          // Create message based on activity type
-          let message = '';
-          if (activityType === 'upload') {
-            message = `Document "${doc.name}" uploaded to ${projectName?.name}`;
-          } else if (activityType === 'processing') {
-            message = `Processing document "${doc.name}" in ${projectName?.name}`;
-          } else {
-            message = `Error processing document "${doc.name}" in ${projectName?.name}`;
-          }
-
-          return {
-            id: `doc-${doc.id}`,
-            type: activityType,
-            message,
-            time: formatRelativeTime(doc.updated_at || doc.created_at),
-            status,
-            projectId: doc.knowledge_base_id,
-            documentId: doc.id,
-          };
-        }),
-      );
-
-      // Combine all activities
-      const allActivities = [...documentActivities];
-
-      // Sort by time (most recent first)
-      allActivities.sort((a, b) => {
-        // Extract time information from strings like "2 hours ago"
-        const getTimeValue = (timeStr: string) => {
-          if (timeStr === 'Just now') return 0;
-
-          const match = timeStr.match(/(\d+)\s+(minute|hour|day)s?\s+ago/);
-          if (!match) return Number.MAX_SAFE_INTEGER;
-
-          const [, value, unit] = match;
-          const numValue = parseInt(value, 10);
-
-          if (unit === 'minute') return numValue;
-          if (unit === 'hour') return numValue * 60; // Convert hours to minutes
-          return numValue * 60 * 24; // Convert days to minutes
-        };
-
-        return getTimeValue(a.time) - getTimeValue(b.time);
+      // Fetch activity logs from the service with pagination
+      const result = await activityLogService.getActivityLogs({
+        limit: pageSizeRef.current,
+        offset,
+        ascending: false,
       });
 
-      // Apply limit
-      const limitedActivities = allActivities.slice(0, limitRef.current);
-      setActivities(limitedActivities);
+      // Transform activity logs to ActivityItem format
+      const activities: ActivityItem[] = result.data.map((log: ActivityLogWithProfile) => ({
+        id: log.id,
+        type: activityLogService.getActivityType(log.table_name, log.action),
+        message: activityLogService.formatActivityMessage(log),
+        time: formatRelativeTime(log.timestamp),
+        status: activityLogService.getActivityStatus(log.action),
+        projectId: log.knowledge_base_id || undefined,
+        documentId: log.record_id || undefined,
+      }));
+
+      setActivities(activities);
+      setTotalActivities(result.total);
     } catch (err) {
       const errorMsg =
         err instanceof Error ? err.message : 'Failed to load recent activity';
@@ -162,18 +119,39 @@ export const useRecentActivity = (
     } finally {
       setLoading(false);
     }
-  }, [formatRelativeTime]); // Stable dependency
+  }, [formatRelativeTime]);
 
   // Load on mount and when limit changes
   useEffect(() => {
     loadActivities();
-  }, [loadActivities, limit]);
+  }, [loadActivities, limit, currentPage, pageSize]);
+
+  const totalPages = Math.ceil(totalActivities / pageSize);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+  }, []);
+
+  const handlePageSizeChange = useCallback((newPageSize: number) => {
+    setPageSize(newPageSize);
+    setCurrentPage(1); // Reset to first page when page size changes
+  }, []);
 
   return {
     activities,
     loading,
     error,
     refresh: loadActivities,
+    pagination: {
+      currentPage,
+      pageSize,
+      total: totalActivities,
+      totalPages,
+      hasNext: currentPage < totalPages,
+      hasPrevious: currentPage > 1,
+    },
+    setPage: handlePageChange,
+    setPageSize: handlePageSizeChange,
   };
 };
 

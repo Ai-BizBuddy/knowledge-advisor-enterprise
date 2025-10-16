@@ -5,6 +5,7 @@
  * following the project's service architecture standards.
  */
 
+import { activityLogService } from './ActivityLogService';
 import { AdkChatService } from './AdkChatService';
 import { dashboardService } from './DashboardService';
 import { DocumentIngestionService } from './DocumentIngestionService';
@@ -100,6 +101,13 @@ export { dashboardService };
  * Handles document preview for chat links and file viewing
  */
   export { documentViewerService };
+
+/**
+ * Activity Log Service Instance
+ * 
+ * Handles read-only activity log queries with user profiles
+ */
+  export { activityLogService };
 
 /**
  * Compatibility alias: some hooks import `langflowChatService` from services.

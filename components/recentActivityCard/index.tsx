@@ -1,4 +1,5 @@
 'use client';
+import { Pagination } from '@/components/pagination';
 import { IRecentActivityCardProps } from '@/interfaces/RecentActivityCard';
 import { Button, Card } from 'flowbite-react';
 import { useEffect, useState } from 'react';
@@ -8,6 +9,8 @@ export default function RecentActivityCard({
   loading = false,
   error = null,
   onRetry,
+  pagination,
+  showPagination = false,
 }: IRecentActivityCardProps) {
   const [hydrated, setHydrated] = useState(false);
   useEffect(() => {
@@ -165,6 +168,19 @@ export default function RecentActivityCard({
             : activities.length === 0
               ? renderEmptyState()
               : renderActivityList()}
+
+        {/* Pagination Controls */}
+        {showPagination && pagination && pagination.totalPages > 1 && !loading && !error && (
+          <div className='mt-6 border-t border-gray-200 pt-4 dark:border-gray-700'>
+            <Pagination
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
+              pageSize={pagination.pageSize}
+              total={pagination.total}
+              onPageChange={pagination.onPageChange}
+            />
+          </div>
+        )}
       </div>
     </Card>
   );

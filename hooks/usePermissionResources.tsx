@@ -83,10 +83,11 @@ export function usePermissionResources(): UsePermissionResourcesReturn {
     return Array.from(allActions).sort();
   }, [resourcesData]);
 
-  // Fetch resources on mount
+  // Fetch resources on mount only
   useEffect(() => {
     fetchResources();
-  }, [fetchResources]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
   return {
     resourcesData,

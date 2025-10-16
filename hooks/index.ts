@@ -5,7 +5,6 @@ export { useAuth } from './useAuth';
 export { useChat } from './useChat';
 export { useChatHistory } from './useChatHistory';
 export { useChunkCount } from './useChunkCount';
-export { useDashboard } from './useDashboard';
 export { useDocuments } from './useDocuments';
 export { useDocumentsManagement } from './useDocumentsManagement';
 export { useDocumentViewer } from './useDocumentViewer';

@@ -182,7 +182,6 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
           searchTerm: currentSearchTerm,
         };
 
-                
         const results = await knowledgeBaseService.getProjects(
           paginationOptions,
           filters,

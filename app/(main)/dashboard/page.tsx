@@ -5,20 +5,19 @@ import {
   StatusCard
 } from '@/components';
 import { PageLayout, Section } from '@/components/layouts';
+import { useRecentActivity, useStatistics } from '@/hooks';
 import { useChunkCount } from '@/hooks/useChunkCount';
-import { useDashboard } from '@/hooks/useDashboard';
-import { useRecentActivity } from '@/hooks/useRecentActivity';
 import { useMemo } from 'react';
-
-// Removed legacy KPI types in favor of shared StatusCard tiles
 
 export default function DashboardPage() {
   // Data hooks
-  const { statistics } =
-    useDashboard({
-      autoRefresh: true,
-      enableChatData: false,
-    });
+  const { statistics, refreshStatistics: refreshStatsOnly } = useStatistics({
+    autoRefresh: false,
+    onError: (error) => {
+      // Don't fail the entire dashboard if stats fail
+    },
+  });
+  
   const { 
     chunkCount, 
     isLoading: chunksLoading, 
@@ -31,9 +30,11 @@ export default function DashboardPage() {
     activities: recentActivities, 
     loading: activitiesLoading, 
     error: activitiesError,
-    refresh: refreshActivities 
+    refresh: refreshActivities,
+    pagination,
+    setPage,
   } = useRecentActivity({
-    limit: 10,
+    pageSize: 5,
     autoRefresh: true,
     refreshInterval: 60000,
   });
@@ -128,6 +129,14 @@ export default function DashboardPage() {
         loading={activitiesLoading}
         error={activitiesError}
         onRetry={refreshActivities}
+        showPagination={true}
+        pagination={{
+          currentPage: pagination.currentPage,
+          totalPages: pagination.totalPages,
+          pageSize: pagination.pageSize,
+          total: pagination.total,
+          onPageChange: setPage,
+        }}
       />
     </PageLayout>
   );
