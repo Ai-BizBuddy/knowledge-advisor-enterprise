@@ -29,7 +29,7 @@ export default function UploadDocumentModal({
   const id = params.id as string;
 
   // Constants
-  const { supportedTypes, maxFiles, maxSize } = React.useMemo(
+  const { supportedTypes, maxFiles, maxSize, allowedExtensions } = React.useMemo(
     () => ({
       supportedTypes: [
         'application/pdf',
@@ -40,6 +40,7 @@ export default function UploadDocumentModal({
         'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         'application/vnd.ms-excel',
       ],
+      allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'md', 'xlsx', 'xls'],
       maxFiles: 10,
       maxSize: 10 * 1024 * 1024, // 10MB
     }),
@@ -182,18 +183,31 @@ export default function UploadDocumentModal({
   // File validation
   const validateFile = useCallback(
     (file: File): string | null => {
+      // Get file extension
+      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+      
+      // Strict validation: Check if extension is in allowed list
+      if (!allowedExtensions.includes(fileExtension)) {
+        return `Invalid file type: ${file.name}. Only PDF, DOC, DOCX, TXT, MD, XLSX, XLS are allowed.`;
+      }
+
+      // Additional MIME type check if available
       if (
+        file.type &&
         !supportedTypes.includes(file.type) &&
-        !/\.(pdf|doc|docx|txt|md|xlsx|xls)$/i.test(file.name)
+        !allowedExtensions.includes(fileExtension)
       ) {
-        return `Unsupported file type: ${file.name}`;
+        return `Invalid file type: ${file.name}. Only PDF, DOC, DOCX, TXT, MD, XLSX, XLS are allowed.`;
       }
+
+      // File size check
       if (file.size > maxSize) {
-        return `File ${file.name} exceeds ${maxSize / 1024 / 1024}MB limit`;
+        return `File ${file.name} exceeds ${maxSize / 1024 / 1024}MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`;
       }
+
       return null;
     },
-    [maxSize, supportedTypes],
+    [maxSize, supportedTypes, allowedExtensions],
   );
 
   // File handling
@@ -243,30 +257,9 @@ export default function UploadDocumentModal({
         updateFileState(state.id, { status: 'uploading', progress: 0 });
       });
 
-      // Simulate upload progress for each file
-      const uploadPromises = filesToUpload.map(async (state) => {
-        try {
-          // Simulate progress updates
-          for (let progress = 0; progress <= 100; progress += 20) {
-            if (state.status === 'cancelled') return;
-
-            updateFileState(state.id, { progress });
-            await new Promise((resolve) => setTimeout(resolve, 200));
-          }
-
-          updateFileState(state.id, { status: 'success', progress: 100 });
-        } catch (error) {
-          updateFileState(state.id, {
-            status: 'error',
-            error: error instanceof Error ? error.message : 'Upload failed',
-          });
-        }
-      });
-
-      // Actual file upload
-      await Promise.all([
-        ...uploadPromises,
-        createDocumentsFromFiles({
+      // Actual file upload with real progress tracking
+      await createDocumentsFromFiles(
+        {
           knowledge_base_id: id,
           files: filesToUpload.map((state) => state.file),
           metadata: {
@@ -274,20 +267,28 @@ export default function UploadDocumentModal({
             uploadedAt: new Date().toISOString(),
             totalFiles: filesToUpload.length,
           },
-        }),
-      ]);
-
-      // Check if all uploads were successful
-      const allSuccessful = fileStates.every(
-        (state) => state.status === 'success' || state.status === 'cancelled',
+        },
+        (documentId, progress) => {
+          // Update progress for all uploading files
+          // Since we upload in parallel, distribute progress across files
+          filesToUpload.forEach((state) => {
+            if (state.status === 'uploading' || fileStates.find(s => s.id === state.id)?.status === 'uploading') {
+              updateFileState(state.id, { progress });
+            }
+          });
+        },
       );
 
-      if (allSuccessful) {
-        setTimeout(() => {
-          setFileStates([]);
-          onClose();
-        }, 1500);
-      }
+      // Mark all as successful
+      filesToUpload.forEach((state) => {
+        updateFileState(state.id, { status: 'success', progress: 100 });
+      });
+
+      // Close modal after short delay
+      setTimeout(() => {
+        setFileStates([]);
+        onClose();
+      }, 1500);
     } catch (err) {
       const errorMessage =
         err instanceof Error

@@ -60,6 +60,7 @@ export interface UseDocumentsReturn {
   ) => Promise<Document[]>;
   createDocumentsFromFiles: (
     data: CreateDocumentsFromFilesInput,
+    onProgress?: (fileId: string, progress: number) => void,
   ) => Promise<Document[]>;
   updateDocument: (id: string, data: UpdateDocumentInput) => Promise<Document>;
   deleteDocument: (id: string) => Promise<void>;
@@ -409,12 +410,15 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    * Create documents from files
    */
   const createDocumentsFromFiles = useCallback(
-    async (data: CreateDocumentsFromFilesInput): Promise<Document[]> => {
+    async (
+      data: CreateDocumentsFromFilesInput,
+      onProgress?: (fileId: string, progress: number) => void,
+    ): Promise<Document[]> => {
       console.log('📁📝 [useDocuments.createDocumentsFromFiles] Called');
 
       try {
         const newDocuments =
-          await documentService.createDocumentsFromFiles(data);
+          await documentService.createDocumentsFromFiles(data, onProgress);
         console.log(
           '✅ [useDocuments.createDocumentsFromFiles] Documents created:',
           newDocuments.length,

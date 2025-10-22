@@ -317,6 +317,7 @@ class DocumentService {
    */
   async createDocumentsFromFiles(
     input: CreateDocumentsFromFilesInput,
+    onProgress?: (fileId: string, progress: number) => void,
   ): Promise<Document[]> {
     try {
       const user = await this.getCurrentUser();
@@ -324,9 +325,58 @@ class DocumentService {
       const supabaseClient = await import('@/utils/supabase/client').then((m) =>
         m.createClient(),
       );
+
+      // Strict file validation - only allowed extensions
+      const allowedExtensions = ['pdf', 'doc', 'docx', 'txt', 'md', 'xlsx', 'xls'];
+      const allowedMimeTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'text/plain',
+        'text/markdown',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-excel',
+      ];
+
       // Validate input files
       if (!input.files || input.files.length === 0) {
         throw new Error('No files provided for upload');
+      }
+
+      // Validate each file before processing
+      for (const file of input.files) {
+        const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+        
+        if (!allowedExtensions.includes(fileExtension)) {
+          throw new Error(
+            `Invalid file type: ${file.name}. Only PDF, DOC, DOCX, TXT, MD, XLSX, XLS are allowed.`
+          );
+        }
+
+        // Double check MIME type if available
+        if (file.type && !allowedMimeTypes.includes(file.type)) {
+          // Allow if extension is valid even if MIME type is generic
+          if (!allowedExtensions.includes(fileExtension)) {
+            throw new Error(
+              `Invalid file type: ${file.name}. Only PDF, DOC, DOCX, TXT, MD, XLSX, XLS are allowed.`
+            );
+          }
+        }
+
+        // Check file size (10MB limit)
+        if (file.size > 10 * 1024 * 1024) {
+          throw new Error(
+            `File ${file.name} exceeds 10MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+          );
+        }
+      }
+
+      // Get Supabase credentials for XHR upload
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+      if (!supabaseUrl || !supabaseAnonKey) {
+        throw new Error('Supabase credentials not configured');
       }
 
       // Upload each file to Supabase Storage and create document records
@@ -372,17 +422,61 @@ class DocumentService {
             }
           }
 
-          // Upload file to Supabase Storage using document ID in path
-          const { error: uploadError } = await supabaseClient.storage
-            .from(input.knowledge_base_id)
-            .upload(filePath, file, {
-              upsert: true,
-              cacheControl: '3600',
-            });
+          // Upload file with real progress tracking using XMLHttpRequest
+          await new Promise<void>((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            const uploadUrl = `${supabaseUrl}/storage/v1/object/${input.knowledge_base_id}/${filePath}`;
 
-          if (uploadError) {
-            throw new Error(`Failed to upload file: ${uploadError.message}`);
-          }
+            xhr.open('PUT', uploadUrl, true);
+
+            // Required auth header
+            xhr.setRequestHeader('Authorization', `Bearer ${supabaseAnonKey}`);
+            // Tell Supabase we want to upsert
+            xhr.setRequestHeader('x-upsert', 'true');
+            // Content type
+            xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+            // Cache control
+            xhr.setRequestHeader('Cache-Control', '3600');
+
+            // Progress handler - real upload progress
+            xhr.upload.onprogress = (event) => {
+              if (event.lengthComputable) {
+                const percent = Math.round((event.loaded / event.total) * 100);
+                if (onProgress) {
+                  onProgress(documentId, percent);
+                }
+              }
+            };
+
+            xhr.onload = () => {
+              if (xhr.status >= 200 && xhr.status < 300) {
+                if (onProgress) {
+                  onProgress(documentId, 100);
+                }
+                resolve();
+              } else {
+                reject(
+                  new Error(
+                    `Upload failed with status ${xhr.status}: ${xhr.responseText}`
+                  )
+                );
+              }
+            };
+
+            xhr.onerror = () => {
+              reject(new Error(`Upload error: ${xhr.statusText || 'Network error'}`));
+            };
+
+            xhr.ontimeout = () => {
+              reject(new Error('Upload timeout'));
+            };
+
+            // Set timeout to 5 minutes
+            xhr.timeout = 5 * 60 * 1000;
+
+            // Send the raw file as the body
+            xhr.send(file);
+          });
 
           // Get signed URL for the uploaded file
           const { data: urlData } = await supabaseClient.storage
