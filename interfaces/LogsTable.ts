@@ -11,6 +11,7 @@ export interface LogEntry {
   action: string;
   table_name: string;
   user_id?: string;
+  user_full_name?: string;
   metadata?: Record<string, unknown>;
   created_at?: string;
   updated_at?: string;

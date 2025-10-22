@@ -16,10 +16,9 @@
 
 import { Pagination } from '@/components/pagination';
 import { useLogs } from '@/hooks/useLogs';
-import type { LogEntry } from '@/interfaces/LogsTable';
 import { Badge, Button, Card, Spinner, Table } from 'flowbite-react';
 import { motion } from 'framer-motion';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 import type { LogsTableComponentProps } from './LogsTable.types';
 
 // Main LogsTable component
@@ -31,14 +30,14 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   pageSize = 10,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<keyof LogEntry>('timestamp');
+  const [sortBy, setSortBy] = useState<'timestamp' | 'action' | 'table_name' | 'user_full_name'>('timestamp');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [activeTab, setActiveTab] = useState('All');
 
   // Tab list for CRUD filtering
   const tabList = ['All', 'Create', 'Update', 'Delete'];
 
-  // Use the logs hook to fetch real data
+  // Use the logs hook to fetch real data with server-side sorting
   const {
     logs,
     loading: hookLoading,
@@ -46,55 +45,43 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     refreshLogs,
     searchLogs,
   } = useLogs({
-    // limit: 999, // Fetch more data for pagination
     autoRefresh: false,
-    // refreshInterval: 300000, // Refresh every 5 minutes
+    sortBy,
+    sortOrder,
   });
 
   // Combine external and hook states
   const loading = externalLoading || hookLoading;
   const error = externalError || hookError;
 
-  // Handle search when tab changes
+  // Handle search and sorting when tab or sort changes
   React.useEffect(() => {
-    if (activeTab !== 'All') {
-      const actionMap: Record<string, string[]> = {
-        Create: ['INSERT'],
-        Update: ['UPDATE'],
-        Delete: ['DELETE'],
-      };
-      
-      const allowedActions = actionMap[activeTab] || [];
-      searchLogs(allowedActions.join(' '));
-    } else {
-      // Reset search when "All" tab is selected
-      searchLogs('');
-    }
-  }, [activeTab, searchLogs]);
-
-  // Filter and sort logs
-  const filteredAndSortedLogs = useMemo(() => {
-    const filtered = [...logs];
-
-    // Apply sorting (timestamp is already formatted as Thai)
-    filtered.sort((a, b) => {
-      const aValue = a[sortBy] || '';
-      const bValue = b[sortBy] || '';
-
-      if (sortOrder === 'asc') {
-        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+    const fetchData = async () => {
+      if (activeTab !== 'All') {
+        const actionMap: Record<string, string[]> = {
+          Create: ['INSERT'],
+          Update: ['UPDATE'],
+          Delete: ['DELETE'],
+        };
+        
+        const allowedActions = actionMap[activeTab] || [];
+        await searchLogs(allowedActions.join(' '), sortBy, sortOrder);
       } else {
-        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+        // Fetch all logs with current sorting
+        await refreshLogs(sortBy, sortOrder);
       }
-    });
+    };
 
-    return filtered;
-  }, [logs, sortBy, sortOrder]);
+    fetchData();
+  }, [activeTab, sortBy, sortOrder, refreshLogs, searchLogs]);
+
+  // Data comes pre-sorted from database
+  const filteredLogs = logs;
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredAndSortedLogs.length / pageSize);
+  const totalPages = Math.ceil(filteredLogs.length / pageSize);
   const startIndex = (currentPage - 1) * pageSize;
-  const paginatedLogs = filteredAndSortedLogs.slice(
+  const paginatedLogs = filteredLogs.slice(
     startIndex,
     startIndex + pageSize,
   );
@@ -107,7 +94,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
 
   // Handle sort
   const handleSort = useCallback(
-    (column: keyof LogEntry) => {
+    (column: 'timestamp' | 'action' | 'table_name' | 'user_full_name') => {
       if (sortBy === column) {
         setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
       } else {
@@ -133,7 +120,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   }, [refreshLogs, onRefresh]);
 
   // Render sort icon
-  const renderSortIcon = (column: keyof LogEntry) => {
+  const renderSortIcon = (column: 'timestamp' | 'action' | 'table_name' | 'user_full_name') => {
     if (sortBy !== column) {
       return (
         <svg
@@ -186,7 +173,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                 Activity Logs
               </h3>
               <Badge color='info' size='sm' className='self-start'>
-                {filteredAndSortedLogs.length} entries
+                {filteredLogs.length} entries
               </Badge>
             </div>
             
@@ -195,7 +182,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
               <select
                 value={`${sortBy}-${sortOrder}`}
                 onChange={(e) => {
-                  const [field, order] = e.target.value.split('-') as [keyof LogEntry, 'asc' | 'desc'];
+                  const [field, order] = e.target.value.split('-') as ['timestamp' | 'action' | 'table_name' | 'user_full_name', 'asc' | 'desc'];
                   setSortBy(field);
                   setSortOrder(order);
                   setCurrentPage(1);
@@ -204,6 +191,8 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
               >
                 <option value='timestamp-desc'>Latest First</option>
                 <option value='timestamp-asc'>Oldest First</option>
+                <option value='user_full_name-asc'>User A-Z</option>
+                <option value='user_full_name-desc'>User Z-A</option>
                 <option value='action-asc'>Action A-Z</option>
                 <option value='action-desc'>Action Z-A</option>
                 <option value='table_name-asc'>Resource A-Z</option>
@@ -249,12 +238,22 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   <tr>
                     <th
                       scope='col'
-                      className='w-[10%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      className='w-[12%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
                       onClick={() => handleSort('timestamp')}
                     >
                       <div className='flex items-center'>
                         timestamp
                         {renderSortIcon('timestamp')}
+                      </div>
+                    </th>
+                    <th
+                      scope='col'
+                      className='w-[12%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      onClick={() => handleSort('user_full_name')}
+                    >
+                      <div className='flex items-center'>
+                        user
+                        {renderSortIcon('user_full_name')}
                       </div>
                     </th>
                     <th
@@ -269,7 +268,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                     </th>
                     <th
                       scope='col'
-                      className='w-[15%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
+                      className='w-[13%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
                       onClick={() => handleSort('table_name')}
                     >
                       <div className='flex items-center'>
@@ -279,12 +278,10 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                     </th>
                     <th
                       scope='col'
-                      className='w-[65%] cursor-pointer px-6 py-3 hover:bg-gray-50 dark:hover:bg-gray-700'
-                      onClick={() => handleSort('message')}
+                      className='w-[53%] px-6 py-3'
                     >
                       <div className='flex items-center'>
                         message
-                        {renderSortIcon('message')}
                       </div>
                     </th>
                   </tr>
@@ -292,7 +289,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                 <tbody>
                   {paginatedLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={4} className='px-6 py-4'>
+                      <td colSpan={5} className='px-6 py-4'>
                         <div className='py-8 text-center'>
                           <div className='mb-2 text-gray-500 dark:text-gray-400'>
                             {activeTab !== 'All'
@@ -310,11 +307,27 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: index * 0.03 }}
-                        className='border-b border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-600 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700'
+                        className='border-b border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800 dark:hover:bg-gray-700'
                       >
                         <td className='px-6 py-4 text-sm whitespace-nowrap'>
                           <div className='text-gray-900 dark:text-white'>
                             {log.timestamp}
+                          </div>
+                        </td>
+                        <td className='px-6 py-4 text-sm whitespace-nowrap'>
+                          <div className='flex items-center gap-2'>
+                            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-xs font-medium text-blue-700 dark:text-blue-300'>
+                              {log.user_full_name
+                                ? log.user_full_name
+                                    .split(' ')
+                                    .map((n) => n[0])
+                                    .join('')
+                                    .toUpperCase()
+                                : 'SYS'}
+                            </div>
+                            <span className='text-gray-900 dark:text-white'>
+                              {log.user_full_name || 'System'}
+                            </span>
                           </div>
                         </td>
                         <td className='px-6 py-4'>
@@ -389,6 +402,22 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                         </span>
                       </div>
                       
+                      {/* User */}
+                      <div className='flex items-center space-x-2'>
+                        <div className='flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900 text-xs font-medium text-blue-700 dark:text-blue-300'>
+                          {log.user_full_name
+                            ? log.user_full_name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .toUpperCase()
+                            : 'SYS'}
+                        </div>
+                        <span className='text-sm text-gray-900 dark:text-white'>
+                          {log.user_full_name || 'System'}
+                        </span>
+                      </div>
+                      
                       {/* Resource */}
                       <div className='flex items-center space-x-2'>
                         <span className='text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide'>
@@ -421,7 +450,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   currentPage={currentPage}
                   totalPages={totalPages}
                   pageSize={pageSize}
-                  total={filteredAndSortedLogs.length}
+                  total={filteredLogs.length}
                   onPageChange={handlePageChange}
                 />
               </div>

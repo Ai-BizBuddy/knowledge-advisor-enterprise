@@ -17,18 +17,46 @@ export interface DatabaseLogEntry {
   timestamp: string;
 }
 
+export interface LogsQueryOptions {
+  sortBy?: 'timestamp' | 'action' | 'table_name' | 'user_full_name';
+  sortOrder?: 'asc' | 'desc';
+  filterAction?: string;
+  limit?: number;
+}
+
 export class LogsService {
   private supabase = createClientTable();
 
   /**
-   * Fetch logs from the activity_log table
+   * Fetch logs from the activity_log table with sorting and filtering
    */
-  async getLogs(): Promise<LogEntry[]> {
+  async getLogs(options: LogsQueryOptions = {}): Promise<LogEntry[]> {
     try {
-      const { data, error } = await this.supabase
+      const {
+        sortBy = 'timestamp',
+        sortOrder = 'desc',
+        filterAction,
+        limit,
+      } = options;
+
+      let query = this.supabase
         .from('activity_log_with_profiles')
-        .select('*')
-        .order('timestamp', { ascending: true });
+        .select('*');
+
+      // Apply action filter if provided
+      if (filterAction) {
+        query = query.or(`action.ilike.%${filterAction}%`);
+      }
+
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortOrder === 'asc' });
+
+      // Apply limit if provided
+      if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
 
       if (error) {
         throw new Error(`Failed to fetch logs: ${error.message}`);
@@ -37,8 +65,13 @@ export class LogsService {
       // Transform database entries to LogEntry format
       return data.map((logs) => ({
         ...logs,
-        // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
+        message: this.createMessage(
+          logs.action,
+          logs.table_name || 'resource',
+          logs.user_full_name,
+          logs.old_data,
+          logs.new_data,
+        ),
       }));
     } catch (error) {
       console.error('Error fetching logs:', error);
@@ -46,29 +79,20 @@ export class LogsService {
     }
   }
 
-  async searchLogs(query: string) {
-    try {
-      const { data, error } = await this.supabase
-        .from('activity_log_with_profiles')
-        .select('*')
-        .or(`action.ilike.%${query}%`)
-        .order('timestamp', { ascending: true });
-
-      if (error) {
-        throw new Error(`Failed to search logs: ${error.message}`);
-      }
-
-      return data.map((logs) => ({
-        ...logs,
-        // If createMessage is async, you need to await it; otherwise, call directly
-        message: this.createMessage(logs.action, logs.table_name || 'resource', logs.user_full_name, logs.old_data, logs.new_data),
-      }));
-    } catch (error) {
-      console.error('Error searching logs:', error);
-      throw error;
-    }
+  /**
+   * @deprecated Use getLogs with filterAction option instead
+   */
+  async searchLogs(query: string, options: LogsQueryOptions = {}): Promise<LogEntry[]> {
+    return this.getLogs({ ...options, filterAction: query });
   }
-  createMessage(action: string, table: string, name: string, old_data?: Record<string, unknown>, new_data?: Record<string, unknown>): string {
+  
+  createMessage(
+    action: string,
+    table: string,
+    name: string,
+    old_data?: Record<string, unknown>,
+    new_data?: Record<string, unknown>,
+  ): string {
     const oldDataStr = old_data ? old_data.name : '';
     const newDataStr = new_data ? new_data.name : '';
 

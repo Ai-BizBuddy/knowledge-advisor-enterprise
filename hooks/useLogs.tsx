@@ -14,14 +14,16 @@ export interface UseLogsOptions {
   limit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
+  sortBy?: 'timestamp' | 'action' | 'table_name' | 'user_full_name';
+  sortOrder?: 'asc' | 'desc';
 }
 
 export interface UseLogsReturn {
   logs: LogEntry[];
   loading: boolean;
   error: string | null;
-  refreshLogs: () => Promise<void>;
-  searchLogs: (query: string) => Promise<void>;
+  refreshLogs: (sortBy?: string, sortOrder?: 'asc' | 'desc') => Promise<void>;
+  searchLogs: (query: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => Promise<void>;
 }
 
 /**
@@ -29,9 +31,11 @@ export interface UseLogsReturn {
  */
 export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
   const {
-    limit = 50,
+    limit,
     autoRefresh = false,
     refreshInterval = 30000, // 30 seconds
+    sortBy: defaultSortBy = 'timestamp',
+    sortOrder: defaultSortOrder = 'desc',
   } = options;
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -87,14 +91,21 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
   }, [formatThaiTimestamp]);
 
   /**
-   * Fetch logs from the database
+   * Fetch logs from the database with sorting
    */
-  const refreshLogs = useCallback(async () => {
+  const refreshLogs = useCallback(async (
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+  ) => {
     try {
       setLoading(true);
       setError(null);
       
-      const logEntries = await logsService.getLogs();
+      const logEntries = await logsService.getLogs({
+        sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
+        sortOrder: sortOrder || defaultSortOrder,
+        limit,
+      });
       const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
       
       setLogs(logsWithThaiTime);
@@ -105,19 +116,31 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
     } finally {
       setLoading(false);
     }
-  }, [ transformLogsWithThaiTime]);
+  }, [transformLogsWithThaiTime, defaultSortBy, defaultSortOrder, limit]);
 
   /**
-   * Search logs by query
+   * Search logs by query with sorting
    */
-  const searchLogs = useCallback(async (query: string) => {
+  const searchLogs = useCallback(async (
+    query: string,
+    sortBy?: string,
+    sortOrder?: 'asc' | 'desc',
+  ) => {
     try {
       setLoading(true);
       setError(null);
       
       const logEntries = query.trim() 
-        ? await logsService.searchLogs(query)
-        : await logsService.getLogs();
+        ? await logsService.searchLogs(query, {
+            sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
+            sortOrder: sortOrder || defaultSortOrder,
+            limit,
+          })
+        : await logsService.getLogs({
+            sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
+            sortOrder: sortOrder || defaultSortOrder,
+            limit,
+          });
       
       const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
       setLogs(logsWithThaiTime);
@@ -128,7 +151,7 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
     } finally {
       setLoading(false);
     }
-  }, [ transformLogsWithThaiTime]);
+  }, [transformLogsWithThaiTime, defaultSortBy, defaultSortOrder, limit]);
 
   // Load logs on mount
   useEffect(() => {
