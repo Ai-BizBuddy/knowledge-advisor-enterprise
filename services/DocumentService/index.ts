@@ -613,13 +613,8 @@ class DocumentService {
 
       let dataQuery = supabaseTable
         .from('document_view')
-        .select(
-          `
-          *,
-          knowledge_base!inner(id, name, created_by)
-        `,
-        )
-        .eq('knowledge_base.created_by', user.id);
+        .select('*,knowledge_base!inner(id, name, created_by)',
+        );
 
       // Apply status filters
       if (filters?.status && filters.status !== 'all') {
@@ -715,12 +710,8 @@ class DocumentService {
       const { data: documents, error } = await supabaseTable
         .from('document_view')
         .select(
-          `
-          *,
-          knowledge_base!inner(id, name, created_by)
-        `,
+          '*,knowledge_base!inner(id, name, created_by)',
         )
-        .eq('knowledge_base.created_by', user.id)
         .ilike('name', `%${searchTerm}%`)
         .order('created_at', { ascending: false })
         .range(paginationOptions.startIndex, paginationOptions.endIndex);

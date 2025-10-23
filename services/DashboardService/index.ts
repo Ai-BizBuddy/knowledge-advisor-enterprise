@@ -114,7 +114,6 @@ class DashboardService {
       const { data, error } = await supabaseTable
         .from('knowledge_base_view')
         .select('*')
-        .eq('created_by', user.id)
         .eq('is_active', true)
         .order('updated_at', { ascending: false })
         .limit(5);

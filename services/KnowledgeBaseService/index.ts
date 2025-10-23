@@ -333,7 +333,6 @@ class KnowledgeBaseService {
           deleted_by: user.id 
         })
         .eq('id', id)
-        .eq('created_by', user.id)
         .is('deleted_at', null);
 
       if (error) {
