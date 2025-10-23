@@ -883,29 +883,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     [loadDocumentsInternal],
   );
 
-  // Debounced search effect - wait 3 seconds after user stops typing
-  useEffect(() => {
-    if (!knowledgeBaseId || !autoLoad) {
-      return;
-    }
-
-    // Set a timeout to call the API after 3 seconds
-    const searchTimeout = setTimeout(() => {
-      console.log(
-        '🔍 [useDocuments.searchEffect] Executing debounced search with term:',
-        searchTerm,
-      );
-      // Reset to page 1 and load documents with the new search term
-      loadDocumentsInternal(1, documentManagementState);
-    }, 3000);
-
-    // Cleanup function to clear timeout if searchTerm changes before 3 seconds
-    return () => {
-      console.log('🔍 [useDocuments.searchEffect] Clearing search timeout');
-      clearTimeout(searchTimeout);
-    };
-  }, [searchTerm, knowledgeBaseId, autoLoad, loadDocumentsInternal, documentManagementState]);
-
   useEffect(() => {
     if (autoLoad && knowledgeBaseId) {
       console.log(
