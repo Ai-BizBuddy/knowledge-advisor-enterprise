@@ -556,12 +556,8 @@ class DocumentService {
         .from('document')
         .update(updateData)
         .eq('id', id)
-        .eq('knowledge_base.created_by', user.id)
         .select(
-          `
-                    *,
-                    knowledge_base!inner(created_by)
-                `,
+          '*,knowledge_base!inner(created_by)',
         )
         .single();
 
@@ -613,8 +609,7 @@ class DocumentService {
         .select('*, knowledge_base!inner(created_by)', {
           count: 'exact',
           head: true,
-        })
-        .eq('knowledge_base.created_by', user.id);
+        });
 
       let dataQuery = supabaseTable
         .from('document_view')
@@ -711,7 +706,6 @@ class DocumentService {
           count: 'exact',
           head: true,
         })
-        .eq('knowledge_base.created_by', user.id)
         .ilike('name', `%${searchTerm}%`);
 
       if (countError) {

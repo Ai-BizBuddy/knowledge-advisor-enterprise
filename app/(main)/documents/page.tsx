@@ -14,7 +14,6 @@ import {
   MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
-import { mockSearchResults } from '@/data/deepSearch';
 import {
   useAllUserDocuments,
   useDocumentsManagement,
@@ -60,7 +59,7 @@ const formatDocumentStatus = (status: string): string => {
     error: 'Error',
     archived: 'Archived',
   };
-  
+
   return statusMap[status.toLowerCase()] || status;
 };
 
@@ -83,8 +82,11 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
   chunk: doc.chunk_count,
   syncStatus: doc.rag_status === 'synced' ? 'Synced' : 'Not Synced',
   lastUpdated: new Date(doc.updated_at).toLocaleDateString(),
-  error_message: (doc?.error_message as string) || 
-    (doc.rag_status === 'error' ? 'An error occurred while processing this document' : undefined),
+  error_message:
+    (doc?.error_message as string) ||
+    (doc.rag_status === 'error'
+      ? 'An error occurred while processing this document'
+      : undefined),
 });
 
 // Adapter function to convert Document to DeepSearchData format for preview components
@@ -237,9 +239,9 @@ export default function DocumentsPage() {
     handleDocumentPreview(pageRelativeIndex);
   };
 
-  const adaptedDocuments = useMemo(() => 
-    documents.map((doc: Document) => adaptDocumentToTableFormat(doc)),
-    [documents]
+  const adaptedDocuments = useMemo(
+    () => documents.map((doc: Document) => adaptDocumentToTableFormat(doc)),
+    [documents],
   );
 
   // Delete functions
@@ -270,7 +272,6 @@ export default function DocumentsPage() {
       // Refresh documents using hook's refresh function
       await refresh();
     } catch (error) {
-      
       // Show error notification
       const errorMessage =
         error instanceof Error
@@ -291,7 +292,6 @@ export default function DocumentsPage() {
 
   const handleBulkDocumentDelete = async (selectedIndices: number[]) => {
     try {
-
       // selectedIndices are absolute indices from the filteredDocuments
       // But we need to map them to the actual documents array
       const documentIds: string[] = [];
@@ -332,7 +332,6 @@ export default function DocumentsPage() {
       // Refresh documents using hook's refresh function
       await refresh();
     } catch (error) {
-      
       // Show error notification
       const errorMessage =
         error instanceof Error
@@ -351,22 +350,6 @@ export default function DocumentsPage() {
     setDeepCurrentPage(1); // Reset to first page on new search
 
     try {
-      
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
-      // Use mock data for testing
-      const filteredResults = mockSearchResults.filter(
-        (doc) =>
-          doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          doc.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          doc.knowledgeName?.toLowerCase().includes(searchQuery.toLowerCase()),
-      );
-
-      setAllSearchResults(filteredResults);
-      setIsNoResults(filteredResults.length === 0);
-
-      
       // Original API code (commented out for testing) ห้ามลบ
 
       const kbId = await getKnowledgeBaseIDs().then((ids) => ids);
@@ -385,27 +368,34 @@ export default function DocumentsPage() {
         new Set(
           results
             .map((res: DeepSearchRes) => res.metadata.document_id)
-            .filter((id): id is string => typeof id === 'string' && id.length > 0),
+            .filter(
+              (id): id is string => typeof id === 'string' && id.length > 0,
+            ),
         ),
       );
       const KBIds = Array.from(
         new Set(
           results
             .map((res: DeepSearchRes) => res.metadata.knowledge_id)
-            .filter((id): id is string => typeof id === 'string' && id.length > 0),
+            .filter(
+              (id): id is string => typeof id === 'string' && id.length > 0,
+            ),
         ),
       );
 
       const docRes = await getDocumentById(documentIds);
       const kbRes = await getKnowledgeBaseByIDs(KBIds);
 
-            
       // Map document and knowledge base results to search results
       // Build a lookup from document_id -> first matching chunk content
       const contentByDocId = new Map<string, string>();
       for (const r of results) {
         const docId = r?.metadata?.document_id;
-        if (typeof docId === 'string' && docId.length > 0 && !contentByDocId.has(docId)) {
+        if (
+          typeof docId === 'string' &&
+          docId.length > 0 &&
+          !contentByDocId.has(docId)
+        ) {
           contentByDocId.set(docId, r.content || '');
         }
       }
@@ -431,7 +421,7 @@ export default function DocumentsPage() {
       // Feed mapped results into the paginated array state
       setAllSearchResults(mappedResults);
     } catch {
-            setIsNoResults(true);
+      setIsNoResults(true);
     } finally {
       setIsSearching(false);
       setDeepSearchLoad(false);
@@ -450,7 +440,7 @@ export default function DocumentsPage() {
   };
 
   const handleResultClick = () => {
-        // In real implementation, this would open the document or navigate to document detail
+    // In real implementation, this would open the document or navigate to document detail
   };
 
   const handlePageChanges = (page: number) => {
@@ -550,7 +540,7 @@ export default function DocumentsPage() {
                   startIndex={startIndex}
                   onDeleteDocument={(dataIndex: number) => {
                     const document = adaptedDocuments[dataIndex];
-                    
+
                     setDocumentToDelete(document);
                     setIsDeleteModalOpen(true);
                   }}
