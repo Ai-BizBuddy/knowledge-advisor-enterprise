@@ -11,11 +11,8 @@ import { useMemo } from 'react';
 
 export default function DashboardPage() {
   // Data hooks
-  const { statistics, refreshStatistics: refreshStatsOnly } = useStatistics({
-    autoRefresh: false,
-    onError: (error) => {
-      // Don't fail the entire dashboard if stats fail
-    },
+  const { statistics } = useStatistics({
+    autoRefresh: false
   });
   
   const { 

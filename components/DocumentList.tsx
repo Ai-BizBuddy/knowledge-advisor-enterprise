@@ -1,9 +1,14 @@
 'use client';
 
 import { useDocuments } from '@/hooks';
+import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
 import type { Document as ProjectDocument } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  DocumentPreview,
+  MiniDocumentPreview,
+} from './deepSearch';
 import DocumentDeleteModal from './documentDeleteModal';
 import {
   DocumentsPagination,
@@ -79,6 +84,20 @@ const adaptDocumentToTableFormat = (doc: ProjectDocument): DocumentTableItem => 
       : undefined),
 });
 
+// Adapter function to convert Document to DeepSearchData format for preview components
+const adaptDocumentToPreviewFormat = (doc: ProjectDocument): DeepSearchData => ({
+  id: doc.id.toString(),
+  name: (doc.metadata?.originalFileName as string) || doc.name,
+  content: doc.content || '',
+  fileType: doc.file_type,
+  fileSize: doc.file_size
+    ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
+    : 'Unknown',
+  uploadDate: new Date(doc.created_at).toLocaleDateString(),
+  knowledgeName: doc.knowledge_base_id || 'Documents',
+  fileUrl: doc.url,
+});
+
 interface DocumentListProps {
   knowledgeBaseId: string;
   isActive: boolean; // Only load data when this tab is active
@@ -104,6 +123,13 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+  
+  // Preview modal states
+  const [isMiniPreviewOpen, setIsMiniPreviewOpen] = useState(false);
+  const [isFullPreviewOpen, setIsFullPreviewOpen] = useState(false);
+  const [isFullScale, setIsFullScale] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<DeepSearchData | null>(null);
+  
   // Use the new useDocuments hook with integrated sync functionality
   // Only load data when this tab is active
   const {
@@ -473,6 +499,43 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     return indices;
   }, [documents, syncingDocuments]);
 
+  // Handle document click for preview
+  const handleDocumentClick = useCallback(
+    (absoluteIndex: number) => {
+      // Convert absoluteIndex (which includes startIndex offset) to actual array index
+      const arrayIndex = absoluteIndex - (startIndex - 1);
+      const document = documents[arrayIndex];
+      if (document) {
+        const previewData = adaptDocumentToPreviewFormat(document);
+        setPreviewDocument(previewData);
+        setIsMiniPreviewOpen(true);
+      }
+    },
+    [documents, startIndex],
+  );
+
+  // Preview handlers
+  const handleExpandToFullScale = useCallback(() => {
+    setIsMiniPreviewOpen(false);
+    setIsFullPreviewOpen(true);
+    setIsFullScale(true);
+  }, []);
+
+  const handleToggleFullScale = useCallback(() => {
+    setIsFullScale((prev) => !prev);
+  }, []);
+
+  const handleCloseMiniPreview = useCallback(() => {
+    setIsMiniPreviewOpen(false);
+    setPreviewDocument(null);
+  }, []);
+
+  const handleCloseFullPreview = useCallback(() => {
+    setIsFullPreviewOpen(false);
+    setIsFullScale(false);
+    setPreviewDocument(null);
+  }, []);
+
   // Only render content when the tab is active
   if (!isActive) {
     return (
@@ -603,6 +666,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             onDeleteDocument={handleDocumentDelete}
             onEditDocument={handleDocumentEdit}
             onSyncDocument={handleDocumentSync}
+            onDocumentClick={handleDocumentClick}
             syncingDocuments={syncingDocumentIndices}
             isAllSelected={isAllSelected}
             isIndeterminate={isIndeterminate}
@@ -655,6 +719,25 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           await refresh();
         }}
       />
+
+      {/* Preview Modals */}
+      {previewDocument && (
+        <>
+          <MiniDocumentPreview
+            document={previewDocument}
+            isOpen={isMiniPreviewOpen}
+            onClose={handleCloseMiniPreview}
+            onExpandToFullScale={handleExpandToFullScale}
+          />
+          <DocumentPreview
+            document={previewDocument}
+            isOpen={isFullPreviewOpen}
+            onClose={handleCloseFullPreview}
+            isFullScale={isFullScale}
+            onToggleFullScale={handleToggleFullScale}
+          />
+        </>
+      )}
     </div>
   );
 };

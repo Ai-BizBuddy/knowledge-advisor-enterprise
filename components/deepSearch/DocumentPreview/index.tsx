@@ -1,5 +1,6 @@
 'use client';
 import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
+import { useEffect, useState } from 'react';
 
 interface DocumentPreviewProps {
   document: DeepSearchData;
@@ -18,6 +19,40 @@ export const DocumentPreview = ({
   onToggleFullScale,
   className = '',
 }: DocumentPreviewProps) => {
+  const [textContent, setTextContent] = useState<string>('');
+  const [isLoadingText, setIsLoadingText] = useState(false);
+
+  // Fetch text content for TXT/MD files
+  useEffect(() => {
+    const fetchTextContent = async () => {
+      if (!isOpen || !document.fileUrl) return;
+      
+      const fileType = document.fileType.toLowerCase();
+      if (!['txt', 'md'].includes(fileType)) return;
+
+      // If content is already provided, use it
+      if (document.content) {
+        setTextContent(document.content);
+        return;
+      }
+
+      // Otherwise, fetch from URL
+      setIsLoadingText(true);
+      try {
+        const response = await fetch(document.fileUrl);
+        const text = await response.text();
+        setTextContent(text);
+      } catch (error) {
+        console.error('Error fetching text content:', error);
+        setTextContent('Error loading file content');
+      } finally {
+        setIsLoadingText(false);
+      }
+    };
+
+    fetchTextContent();
+  }, [isOpen, document.fileUrl, document.fileType, document.content]);
+
   if (!isOpen || !document.fileUrl) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -177,12 +212,30 @@ export const DocumentPreview = ({
             />
           ) : ['txt', 'md'].includes(document.fileType.toLowerCase()) ? (
             /* Text and Markdown Files */
-            <div className='h-full overflow-x-auto p-4 [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'>
-              <div className='rounded-lg bg-gray-50 p-4 dark:bg-gray-700'>
-                <pre className='font-mono text-sm whitespace-pre-wrap text-gray-800 dark:text-gray-200'>
-                  {document.content || 'Content not available for preview'}
-                </pre>
-              </div>
+            <div
+              className='h-full overflow-y-auto p-6'
+              style={{
+                height: isFullScale ? 'calc(95vh - 80px)' : 'calc(70vh - 80px)',
+              }}
+            >
+              {isLoadingText ? (
+                <div className='flex items-center justify-center h-full'>
+                  <div className='flex flex-col items-center'>
+                    <div className='mb-2 h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent'></div>
+                    <p className='text-sm text-gray-600 dark:text-gray-400'>
+                      Loading content...
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className='mx-auto max-w-4xl rounded-lg bg-gray-50 p-6 shadow-sm dark:bg-gray-700'>
+                  <div className='prose prose-sm dark:prose-invert max-w-none'>
+                    <pre className='font-mono text-sm whitespace-pre-wrap break-words text-gray-800 dark:text-gray-200'>
+                      {textContent || 'Content not available for preview'}
+                    </pre>
+                  </div>
+                </div>
+              )}
             </div>
           ) : document.fileType.toLowerCase().includes('ppt') ? (
             /* PowerPoint Viewer */

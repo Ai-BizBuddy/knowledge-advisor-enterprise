@@ -1,5 +1,6 @@
 'use client';
 import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
+import { useEffect, useState } from 'react';
 
 interface MiniDocumentPreviewProps {
   document: DeepSearchData;
@@ -16,6 +17,40 @@ export const MiniDocumentPreview = ({
   onExpandToFullScale,
   className = '',
 }: MiniDocumentPreviewProps) => {
+  const [textContent, setTextContent] = useState<string>('');
+  const [isLoadingText, setIsLoadingText] = useState(false);
+
+  // Fetch text content for TXT/MD files
+  useEffect(() => {
+    const fetchTextContent = async () => {
+      if (!isOpen || !document.fileUrl) return;
+      
+      const fileType = document.fileType.toLowerCase();
+      if (!['txt', 'md'].includes(fileType)) return;
+
+      // If content is already provided, use it
+      if (document.content) {
+        setTextContent(document.content);
+        return;
+      }
+
+      // Otherwise, fetch from URL
+      setIsLoadingText(true);
+      try {
+        const response = await fetch(document.fileUrl);
+        const text = await response.text();
+        setTextContent(text);
+      } catch (error) {
+        console.error('Error fetching text content:', error);
+        setTextContent('Error loading file content');
+      } finally {
+        setIsLoadingText(false);
+      }
+    };
+
+    fetchTextContent();
+  }, [isOpen, document.fileUrl, document.fileType, document.content]);
+
   if (!isOpen || !document.fileUrl) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -125,12 +160,19 @@ export const MiniDocumentPreview = ({
             ) : ['txt', 'md'].includes(document.fileType.toLowerCase()) ? (
               /* Text and Markdown Files Mini Viewer */
               <div className='h-full overflow-hidden p-3'>
-                <div className='h-full overflow-hidden rounded bg-gray-50 p-3 dark:bg-gray-700'>
-                  <pre className='overflow-hidden font-mono text-xs text-ellipsis whitespace-pre-wrap text-gray-700 dark:text-gray-300'>
-                    {document.content?.substring(0, 300) ||
-                      'Content not available for preview'}
-                    {document.content && document.content.length > 300 && '...'}
-                  </pre>
+                <div className='h-full overflow-auto rounded bg-gray-50 p-3 dark:bg-gray-700'>
+                  {isLoadingText ? (
+                    <div className='flex items-center justify-center h-full'>
+                      <div className='text-sm text-gray-500 dark:text-gray-400'>Loading content...</div>
+                    </div>
+                  ) : (
+                    <pre className='overflow-auto font-mono text-xs whitespace-pre-wrap text-gray-700 dark:text-gray-300'>
+                      {textContent
+                        ? textContent.substring(0, 500)
+                        : 'Content not available for preview'}
+                      {textContent && textContent.length > 500 && '...'}
+                    </pre>
+                  )}
                 </div>
               </div>
             ) : document.fileType.toLowerCase().includes('ppt') ? (
