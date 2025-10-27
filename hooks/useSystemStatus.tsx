@@ -36,12 +36,9 @@ export function useSystemStatus() {
           .from('role_view')
           .select('id', { count: 'exact', head: true });
 
-        // Active Sessions: users signed in within last 24 hours
-        const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
         const { count: activeCount, error: activeError } = await supabase
           .from('user_view')
-          .select('id', { count: 'exact', head: true })
-          .gte('last_sign_in_at', since);
+          .select('id', { count: 'exact', head: true });
 
         if (!isMounted) return;
 
