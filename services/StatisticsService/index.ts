@@ -153,8 +153,11 @@ class StatisticsService {
 
       const { count, error } = await supabaseTable
         .from('document_view')
-        .select('*', { count: 'exact', head: true });
+        .select(
+          'knowledge_base!inner(id)', 
+          { count: 'exact', head: true });
 
+      console.log({count})
       if (error) {
         return 0;
       }
