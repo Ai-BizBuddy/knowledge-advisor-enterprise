@@ -17,9 +17,11 @@ import { useToast } from '@/components/toast';
 import {
   useAllUserDocuments,
   useDocumentsManagement,
+  useJWTPermissions,
   useKnowledgeBase,
   useSorting,
 } from '@/hooks';
+/* Lines 23-32 omitted */
 import { useDeepSearch } from '@/hooks/useDeepSarch';
 import {
   DeepSearchData,
@@ -105,6 +107,14 @@ const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
 
 export default function DocumentsPage() {
   const { showToast } = useToast();
+  
+  // JWT permissions for document operations
+  const { hasAnyPermission } = useJWTPermissions();
+  const canDeleteDocument = hasAnyPermission([
+    'knowledge-base-department:delete',
+    'knowledge-base-public:delete',
+  ]);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [deepSearchLoad, setDeepSearchLoad] = useState(false);
   const [searchResults, setSearchResults] = useState<DocumentSearchResult[]>(
@@ -538,12 +548,12 @@ export default function DocumentsPage() {
                   selectedDocuments={selectedDocuments}
                   selectedDocument={selectedDocument}
                   startIndex={startIndex}
-                  onDeleteDocument={(dataIndex: number) => {
+                  onDeleteDocument={canDeleteDocument ? (dataIndex: number) => {
                     const document = adaptedDocuments[dataIndex];
 
                     setDocumentToDelete(document);
                     setIsDeleteModalOpen(true);
-                  }}
+                  } : undefined}
                   sortBy={sortField}
                   sortOrder={sortOrder}
                   onSort={handleSortByString}
