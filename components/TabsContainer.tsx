@@ -60,6 +60,7 @@ export const TabsContainer: React.FC<TabsContainerProps> = ({
      {currentTab === 'Documents' && (
         <DocumentList
           knowledgeBaseId={knowledgeBaseId}
+          knowledgeBase={knowledgeBase}
           isActive={currentTab === 'Documents'}
         />
       )}

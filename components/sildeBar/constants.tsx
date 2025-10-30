@@ -183,14 +183,12 @@ export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
     url: ROUTES.KNOWLEDGE_BASE,
     icon: <KnowledgeBaseIcon />,
     active: false,
-    requiredPermissions: ['knowledge-base:read'], // Requires knowledge-base read permission
   },
   {
     name: APP_STRINGS.NAV_ITEMS.DOCUMENTS,
     url: ROUTES.DOCUMENTS,
     icon: <DocumentsIcon />,
     active: false,
-    requiredPermissions: ['knowledge-base:read'], // Documents are part of knowledge base
   },
   {
     name: APP_STRINGS.NAV_ITEMS.USER_SETTINGS,

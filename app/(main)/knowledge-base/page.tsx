@@ -7,6 +7,7 @@ import EditKnowledgeBaseModal from '@/components/editKnowledgeBaseModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useToast } from '@/components/toast';
+import { useJWTPermissions } from '@/hooks';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
 import { Project, UpdateProjectInput } from '@/interfaces/Project';
 import { Button } from 'flowbite-react';
@@ -23,6 +24,21 @@ export default function KnowledgeBase() {
   >(null);
 
   const { showToast } = useToast();
+
+  // JWT permissions for knowledge base operations
+  const { hasAnyPermission } = useJWTPermissions();
+  const canCreateKB = hasAnyPermission([
+    'knowledge-base-department:insert',
+    'knowledge-base-public:insert',
+  ]);
+  const canUpdateKB = hasAnyPermission([
+    'knowledge-base-department:update',
+    'knowledge-base-public:update',
+  ]);
+  const canDeleteKB = hasAnyPermission([
+    'knowledge-base-department:delete',
+    'knowledge-base-public:delete',
+  ]);
 
   const {
     // State
@@ -151,27 +167,29 @@ export default function KnowledgeBase() {
                 placeholder='Search knowledge bases'
               />
             </div>
-            <div>
-              <Button
-                onClick={() => setOpenModal(true)}
-                className='inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700'
-              >
-                <svg
-                  className='h-4 w-4'
-                  fill='none'
-                  stroke='currentColor'
-                  viewBox='0 0 24 24'
+            {canCreateKB && (
+              <div>
+                <Button
+                  onClick={() => setOpenModal(true)}
+                  className='inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700'
                 >
-                  <path
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                    strokeWidth={2}
-                    d='M12 4v16m8-8H4'
-                  />
-                </svg>
-                Create Knowledge Base
-              </Button>
-            </div>
+                  <svg
+                    className='h-4 w-4'
+                    fill='none'
+                    stroke='currentColor'
+                    viewBox='0 0 24 24'
+                  >
+                    <path
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                      strokeWidth={2}
+                      d='M12 4v16m8-8H4'
+                    />
+                  </svg>
+                  Create Knowledge Base
+                </Button>
+              </div>
+            )}
           </div>
         </div>
 
@@ -183,20 +201,40 @@ export default function KnowledgeBase() {
           <div className='space-y-6'>
             {/* Knowledge Base Cards Grid - Optimized for Mac screens */}
             <div className='knowledge-base-grid grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-5'>
-              {projects.map((kb) => (
-                <KnowledgeBaseCard
-                  key={kb.id}
-                  isActive={kb.is_active}
-                  title={kb.name}
-                  detail={kb.description}
-                  updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
-                  onEdit={() => handleEditClick(kb)}
-                  onDelete={() => handleDeleteClick(kb.id)}
-                  onDetail={() => {
-                    handleKnowledgeBaseClick(kb.id);
-                  }}
-                />
-              ))}
+              {projects.map((kb) => {
+                // Determine visibility-specific permissions
+                const isDepartmentKB = kb.visibility === 'department';
+                const isPublicKB = kb.visibility === 'public';
+                
+                // Check permissions based on visibility type
+                let canEdit = canUpdateKB;
+                let canDelete = canDeleteKB;
+                
+                if (isDepartmentKB) {
+                  // Department knowledge bases require department-specific permissions
+                  canEdit = hasAnyPermission(['knowledge-base-department:update']);
+                  canDelete = hasAnyPermission(['knowledge-base-department:delete']);
+                } else if (isPublicKB) {
+                  // Public knowledge bases require public-specific permissions
+                  canEdit = hasAnyPermission(['knowledge-base-public:update']);
+                  canDelete = hasAnyPermission(['knowledge-base-public:delete']);
+                }
+
+                return (
+                  <KnowledgeBaseCard
+                    key={kb.id}
+                    isActive={kb.is_active}
+                    title={kb.name}
+                    detail={kb.description}
+                    updated={`Updated ${formatUpdatedTime(kb.updated_at || kb.created_at)}`}
+                    onEdit={canEdit ? () => handleEditClick(kb) : undefined}
+                    onDelete={canDelete ? () => handleDeleteClick(kb.id) : undefined}
+                    onDetail={() => {
+                      handleKnowledgeBaseClick(kb.id);
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* Pagination */}
@@ -233,7 +271,7 @@ export default function KnowledgeBase() {
                 ? `No knowledge bases match your search "${searchTerm}"`
                 : 'Get started by creating your first knowledge base.'}
             </p>
-            {!searchTerm && (
+            {!searchTerm && canCreateKB && (
               <button
                 onClick={() => setOpenModal(true)}
                 className='mt-4 inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700'

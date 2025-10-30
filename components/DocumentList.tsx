@@ -1,8 +1,8 @@
 'use client';
 
-import { useDocuments } from '@/hooks';
+import { useDocuments, useJWTPermissions } from '@/hooks';
 import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
-import type { Document as ProjectDocument } from '@/interfaces/Project';
+import type { Project, Document as ProjectDocument } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
 import {
@@ -100,14 +100,54 @@ const adaptDocumentToPreviewFormat = (doc: ProjectDocument): DeepSearchData => (
 
 interface DocumentListProps {
   knowledgeBaseId: string;
+  knowledgeBase: Project | null;
   isActive: boolean; // Only load data when this tab is active
 }
 
 const DocumentListComponent: FC<DocumentListProps> = ({
   knowledgeBaseId,
+  knowledgeBase,
   isActive,
 }) => {
   const { showToast } = useToast();
+  
+  // JWT permissions for document operations
+  const { hasAnyPermission } = useJWTPermissions();
+  
+  // Check visibility type
+  const isDepartmentKB = knowledgeBase?.visibility === 'department';
+  const isPublicKB = knowledgeBase?.visibility === 'public';
+  
+  // Determine permissions based on visibility type
+  let canCreateDocument = false;
+  let canDeleteDocument = false;
+  let canUpdateDocument = false;
+  
+  if (isDepartmentKB) {
+    // Department knowledge bases require department-specific permissions
+    canCreateDocument = hasAnyPermission(['knowledge-base-department:insert']);
+    canDeleteDocument = hasAnyPermission(['knowledge-base-department:delete']);
+    canUpdateDocument = hasAnyPermission(['knowledge-base-department:update']);
+  } else if (isPublicKB) {
+    // Public knowledge bases require public-specific permissions
+    canCreateDocument = hasAnyPermission(['knowledge-base-public:insert']);
+    canDeleteDocument = hasAnyPermission(['knowledge-base-public:delete']);
+    canUpdateDocument = hasAnyPermission(['knowledge-base-public:update']);
+  } else {
+    // Private or custom knowledge bases use general permissions
+    canCreateDocument = hasAnyPermission([
+      'knowledge-base-department:insert',
+      'knowledge-base-public:insert',
+    ]);
+    canDeleteDocument = hasAnyPermission([
+      'knowledge-base-department:delete',
+      'knowledge-base-public:delete',
+    ]);
+    canUpdateDocument = hasAnyPermission([
+      'knowledge-base-department:update',
+      'knowledge-base-public:update',
+    ]);
+  }
 
   // Document state managed internally
   const [documentState, setDocumentState] = useState({
@@ -615,31 +655,33 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             </>
           )}
 
-          <button
-            onClick={() => {
-              if (!isUploadModalOpen) {
-                setIsUploadModalOpen(true);
-              }
-            }}
-            disabled={isUploadModalOpen}
-            className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4'
-          >
-            <svg
-              className='h-4 w-4'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth={2}
-              viewBox='0 0 24 24'
+          {canCreateDocument && (
+            <button
+              onClick={() => {
+                if (!isUploadModalOpen) {
+                  setIsUploadModalOpen(true);
+                }
+              }}
+              disabled={isUploadModalOpen}
+              className='flex items-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-medium text-white transition-colors duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 sm:px-4'
             >
-              <path
-                strokeLinecap='round'
-                strokeLinejoin='round'
-                d='M12 4v16m8-8H4'
-              />
-            </svg>
-            <span className='hidden sm:inline'>Upload Documents</span>
-            <span className='sm:hidden'>Upload</span>
-          </button>
+              <svg
+                className='h-4 w-4'
+                fill='none'
+                stroke='currentColor'
+                strokeWidth={2}
+                viewBox='0 0 24 24'
+              >
+                <path
+                  strokeLinecap='round'
+                  strokeLinejoin='round'
+                  d='M12 4v16m8-8H4'
+                />
+              </svg>
+              <span className='hidden sm:inline'>Upload Documents</span>
+              <span className='sm:hidden'>Upload</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -663,8 +705,8 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             onSort={onSortHeader}
             onSelectAll={handleSelectAll}
             onSelectDocument={handleSelectDocument}
-            onDeleteDocument={handleDocumentDelete}
-            onEditDocument={handleDocumentEdit}
+            onDeleteDocument={canDeleteDocument ? handleDocumentDelete : undefined}
+            onEditDocument={canUpdateDocument ? handleDocumentEdit : undefined}
             onSyncDocument={handleDocumentSync}
             onDocumentClick={handleDocumentClick}
             syncingDocuments={syncingDocumentIndices}
