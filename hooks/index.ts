@@ -8,6 +8,7 @@ export { useChunkCount } from './useChunkCount';
 export { useDocuments } from './useDocuments';
 export { useDocumentsManagement } from './useDocumentsManagement';
 export { useDocumentViewer } from './useDocumentViewer';
+export { useJWTPermissions } from './useJWTPermissions';
 export { useKnowledgeBase } from './useKnowledgeBase';
 export { useKnowledgeBaseSelection } from './useKnowledgeBaseSelection';
 export { usePermissionDataWithFallback } from './usePermissionData';

@@ -161,7 +161,7 @@ export const MenuIcon = () => (
 );
 
 /**
- * Default navigation menu items
+ * Default navigation menu items with permission requirements
  */
 export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
   {
@@ -169,36 +169,42 @@ export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
     url: ROUTES.DASHBOARD,
     icon: <DashboardIcon />,
     active: false,
+    // Dashboard accessible to all authenticated users
   },
   {
     name: APP_STRINGS.NAV_ITEMS.AI_CHAT,
     url: ROUTES.CHAT, 
     icon: <ChatIcon />,
     active: false,
+    // Chat accessible to all authenticated users
   },
   {
     name: APP_STRINGS.NAV_ITEMS.KNOWLEDGE_BASE,
     url: ROUTES.KNOWLEDGE_BASE,
     icon: <KnowledgeBaseIcon />,
     active: false,
+    requiredPermissions: ['knowledge-base:read'], // Requires knowledge-base read permission
   },
   {
     name: APP_STRINGS.NAV_ITEMS.DOCUMENTS,
     url: ROUTES.DOCUMENTS,
     icon: <DocumentsIcon />,
     active: false,
+    requiredPermissions: ['knowledge-base:read'], // Documents are part of knowledge base
   },
   {
     name: APP_STRINGS.NAV_ITEMS.USER_SETTINGS,
     url: ROUTES.SETTINGS,
     icon: <UserSettingsIcon />,
     active: false,
+    requiredRoles: ['admin'], // Only admins can access settings
+    requiredPermissions: ['user:read'], // And must have user read permission
   },
-
   {
     name: APP_STRINGS.NAV_ITEMS.LOGS,
     url: ROUTES.LOGS,
     icon: <LogsIcon />,
     active: false,
+    requiredRoles: ['admin'], // Only admins can see logs
   },
 ];

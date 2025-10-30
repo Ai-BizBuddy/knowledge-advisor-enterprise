@@ -8,6 +8,8 @@ export interface NavigationMenuItem {
   url: string;
   icon: ReactNode;
   active: boolean;
+  requiredPermissions?: string[];
+  requiredRoles?: string[];
 }
 
 /**

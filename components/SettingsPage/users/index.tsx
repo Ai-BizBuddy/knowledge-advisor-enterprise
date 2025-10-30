@@ -6,6 +6,7 @@ import { ProfilePictureUpload } from '@/components/profilePictureUpload';
 import { useToast } from '@/components/toast';
 import { UserFormModal } from '@/components/userManagement';
 import { SUCCESS_MESSAGES } from '@/constants';
+import { useJWTPermissions } from '@/hooks';
 import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { User, UserRoleRow, UserStatus } from '@/interfaces/UserManagement';
@@ -14,6 +15,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 export default function UsersPage() {
   const { showToast } = useToast();
+
+  // Get JWT permissions for conditional rendering
+  const { hasPermission, loading: permissionsLoading } = useJWTPermissions();
+
   const {
     users,
     allRoles,
@@ -30,6 +35,12 @@ export default function UsersPage() {
     updateUserProfile,
     clearError,
   } = usePaginatedUserManagement();
+
+  // Permission checks
+  const canCreateUser = hasPermission('user:create');
+  const canUpdateUser = hasPermission('user:update');
+  const canDeleteUser = hasPermission('user:delete');
+  const canReadUser = hasPermission('user:read');
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -316,8 +327,8 @@ export default function UsersPage() {
           searchValue={searchTerm}
           onSearchChange={handleSearchChange}
           searchPlaceholder='Search users by name or email...'
-          textButton='Add User'
-          onClickButton={openCreateModal}
+          textButton={canCreateUser ? 'Add User' : undefined}
+          onClickButton={canCreateUser ? openCreateModal : undefined}
         />
       </div>
 
@@ -371,63 +382,69 @@ export default function UsersPage() {
                             {new Date(user.created_at).toLocaleDateString()}
                           </div>
                           <div className='flex items-center space-x-1'>
-                            <button
-                              onClick={() => openProfileModal(user)}
-                              className='rounded-full p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-900 dark:hover:text-blue-300'
-                              title='View user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                            {canReadUser && (
+                              <button
+                                onClick={() => openProfileModal(user)}
+                                className='rounded-full p-1.5 text-blue-600 hover:bg-blue-50 hover:text-blue-800 dark:text-blue-400 dark:hover:bg-blue-900 dark:hover:text-blue-300'
+                                title='View user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className='rounded-full p-1.5 text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300'
-                              title='Edit user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            {canUpdateUser && (
+                              <button
+                                onClick={() => openEditModal(user)}
+                                className='rounded-full p-1.5 text-gray-600 hover:bg-gray-50 hover:text-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-gray-300'
+                                title='Edit user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(user)}
-                              className='rounded-full p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300'
-                              title='Delete user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            {canDeleteUser && (
+                              <button
+                                onClick={() => openDeleteModal(user)}
+                                className='rounded-full p-1.5 text-red-600 hover:bg-red-50 hover:text-red-800 dark:text-red-400 dark:hover:bg-red-900 dark:hover:text-red-300'
+                                title='Delete user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                                />
-                              </svg>
-                            </button>
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                  />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -522,69 +539,75 @@ export default function UsersPage() {
                         </td>
                         <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                           <div className='flex items-center space-x-2'>
-                            <button
-                              onClick={() => openProfileModal(user)}
-                              className='inline-flex items-center justify-center rounded-md bg-blue-100 p-2 text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
-                              title='View user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                            {canReadUser && (
+                              <button
+                                onClick={() => openProfileModal(user)}
+                                className='inline-flex items-center justify-center rounded-md bg-blue-100 p-2 text-blue-700 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800'
+                                title='View user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
-                                />
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openEditModal(user)}
-                              className='inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                              title='Edit user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M15 12a3 3 0 11-6 0 3 3 0 016 0z'
+                                  />
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z'
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            {canUpdateUser && (
+                              <button
+                                onClick={() => openEditModal(user)}
+                                className='inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                                title='Edit user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
-                                />
-                              </svg>
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(user)}
-                              className='inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
-                              title='Delete user'
-                            >
-                              <svg
-                                className='h-4 w-4'
-                                fill='none'
-                                stroke='currentColor'
-                                viewBox='0 0 24 24'
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                                  />
+                                </svg>
+                              </button>
+                            )}
+                            {canDeleteUser && (
+                              <button
+                                onClick={() => openDeleteModal(user)}
+                                className='inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-700 transition-colors hover:bg-red-200 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
+                                title='Delete user'
                               >
-                                <path
-                                  strokeLinecap='round'
-                                  strokeLinejoin='round'
-                                  strokeWidth={2}
-                                  d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
-                                />
-                              </svg>
-                            </button>
+                                <svg
+                                  className='h-4 w-4'
+                                  fill='none'
+                                  stroke='currentColor'
+                                  viewBox='0 0 24 24'
+                                >
+                                  <path
+                                    strokeLinecap='round'
+                                    strokeLinejoin='round'
+                                    strokeWidth={2}
+                                    d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                  />
+                                </svg>
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
@@ -723,12 +746,14 @@ export default function UsersPage() {
                 >
                   Close
                 </Button>
-                <Button
-                  onClick={() => openEditModal(selectedUser)}
-                  className='w-full sm:w-auto'
-                >
-                  Edit User
-                </Button>
+                {canUpdateUser && (
+                  <Button
+                    onClick={() => openEditModal(selectedUser)}
+                    className='w-full sm:w-auto'
+                  >
+                    Edit User
+                  </Button>
+                )}
               </div>
             </div>
           )}

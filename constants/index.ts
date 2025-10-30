@@ -1,4 +1,3 @@
-
 // Re-export types and enums for convenience
 export { DocumentStatus, ProjectStatus } from '@/interfaces/Project';
 export type { DocumentStatusDisplay, ProjectStatusDisplay } from '@/interfaces/Project';

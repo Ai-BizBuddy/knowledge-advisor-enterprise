@@ -1,4 +1,3 @@
-import type { Document } from '@/interfaces/Project';
 import { DocumentStatus, DocumentStatusDisplay } from '@/interfaces/Project';
 
 // Document status utility functions
@@ -189,36 +188,6 @@ export function formatRelativeTime(dateString: string): string {
 }
 
 /**
- * Convert Supabase Document to display format
- */
-export function transformDocumentForDisplay(
-  doc: Document,
-): DocumentDisplayItem {
-  return {
-    id: doc.id,
-    name: doc.name,
-    type: doc.file_type || 'Unknown',
-    size: formatFileSize(doc.file_size || 0),
-    project:
-      typeof doc.metadata?.project_name === 'string'
-        ? doc.metadata.project_name
-        : 'Unknown Project',
-    uploadedBy:
-      typeof doc.metadata?.uploaded_by === 'string'
-        ? doc.metadata.uploaded_by
-        : 'Unknown User',
-    uploadedAt: doc.created_at,
-    status: doc.status || 'unknown',
-    pages:
-      typeof doc.metadata?.pages === 'number'
-        ? doc.metadata.pages
-        : doc.chunk_count || 0,
-    lastAccessed: formatRelativeTime(doc.updated_at || doc.created_at),
-    url: doc.url,
-  };
-}
-
-/**
  * Get status color classes for Tailwind
  */
 export function getStatusColor(status: string): string {
@@ -249,115 +218,6 @@ export function getStatusColor(status: string): string {
 }
 
 /**
- * Sort legacy documents (backward compatibility)
- */
-export const sortDocuments = (
-  docs: LegacyDocument[],
-  sortBy: string,
-  sortOrder: 'asc' | 'desc',
-): LegacyDocument[] => {
-  return [...docs].sort((a, b) => {
-    let aValue: string | number;
-    let bValue: string | number;
-
-    switch (sortBy) {
-      case 'Name':
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-        break;
-      case 'Date':
-        aValue = new Date(a.date).getTime();
-        bValue = new Date(b.date).getTime();
-        break;
-      case 'Size':
-        // Convert size to bytes for comparison
-        aValue =
-          parseFloat(a.size) *
-          (a.size.includes('MB')
-            ? 1024 * 1024
-            : a.size.includes('KB')
-              ? 1024
-              : 1);
-        bValue =
-          parseFloat(b.size) *
-          (b.size.includes('MB')
-            ? 1024 * 1024
-            : b.size.includes('KB')
-              ? 1024
-              : 1);
-        break;
-      case 'Type':
-        aValue = a.type.toLowerCase();
-        bValue = b.type.toLowerCase();
-        break;
-      case 'Uploaded By':
-        aValue = a.uploadedBy.toLowerCase();
-        bValue = b.uploadedBy.toLowerCase();
-        break;
-      default:
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-    }
-
-    if (aValue < bValue) {
-      return sortOrder === 'asc' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortOrder === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
-};
-
-/**
- * Sort modern Document objects
- */
-export const sortModernDocuments = (
-  docs: Document[],
-  sortBy: keyof Document,
-  sortOrder: 'asc' | 'desc',
-): Document[] => {
-  return [...docs].sort((a, b) => {
-    let aValue: string | number;
-    let bValue: string | number;
-
-    switch (sortBy) {
-      case 'name':
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-        break;
-      case 'created_at':
-        aValue = new Date(a.created_at).getTime();
-        bValue = new Date(b.created_at).getTime();
-        break;
-      case 'file_size':
-        aValue = a.file_size || 0;
-        bValue = b.file_size || 0;
-        break;
-      case 'file_type':
-        aValue = (a.file_type || '').toLowerCase();
-        bValue = (b.file_type || '').toLowerCase();
-        break;
-      case 'updated_at':
-        aValue = new Date(a.updated_at || a.created_at).getTime();
-        bValue = new Date(b.updated_at || b.created_at).getTime();
-        break;
-      default:
-        aValue = a.name.toLowerCase();
-        bValue = b.name.toLowerCase();
-    }
-
-    if (aValue < bValue) {
-      return sortOrder === 'asc' ? -1 : 1;
-    }
-    if (aValue > bValue) {
-      return sortOrder === 'asc' ? 1 : -1;
-    }
-    return 0;
-  });
-};
-
-/**
  * Get tab counts (legacy function for backward compatibility)
  */
 export const getTabCounts = (documents: LegacyDocument[]) => {
@@ -371,19 +231,6 @@ export const getTabCounts = (documents: LegacyDocument[]) => {
     ).length,
     Failed: documents.filter((doc) => doc.source.toLowerCase() === 'failed')
       .length,
-  };
-  return counts;
-};
-
-/**
- * Get tab counts for modern Document objects
- */
-export const getModernTabCounts = (documents: Document[]) => {
-  const counts = {
-    All: documents.length,
-    Processed: documents.filter((doc) => doc.rag_status === 'synced').length,
-    Processing: documents.filter((doc) => doc.rag_status === 'syncing').length,
-    Failed: documents.filter((doc) => doc.rag_status === 'error').length,
   };
   return counts;
 };
@@ -403,42 +250,6 @@ export const filterDocuments = (
     const matchesTab =
       activeTab === 'All' ||
       doc.source.toLowerCase() === activeTab.toLowerCase();
-    return matchesSearch && matchesTab;
-  });
-};
-
-/**
- * Filter modern Document objects
- */
-export const filterModernDocuments = (
-  documents: Document[],
-  searchTerm: string,
-  activeTab: string,
-): Document[] => {
-  return documents.filter((doc) => {
-    const matchesSearch =
-      doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (doc.metadata?.uploaded_by as string)
-        ?.toLowerCase()
-        .includes(searchTerm.toLowerCase());
-
-    let matchesTab = true;
-    if (activeTab !== 'All') {
-      switch (activeTab.toLowerCase()) {
-        case 'processed':
-          matchesTab = doc.rag_status === 'synced';
-          break;
-        case 'processing':
-          matchesTab = doc.rag_status === 'syncing';
-          break;
-        case 'failed':
-          matchesTab = doc.rag_status === 'error';
-          break;
-        default:
-          matchesTab = true;
-      }
-    }
-
     return matchesSearch && matchesTab;
   });
 };

@@ -4,6 +4,7 @@ import { APP_STRINGS, UI_CONSTANTS } from '@/constants';
 import Image from 'next/image';
 import { useState } from 'react';
 import { SafeDarkThemeToggle } from '../SafeDarkThemeToggle';
+import { MenuSkeleton } from './MenuSkeleton';
 import { NavigationMenu } from './NavigationMenu';
 import { UserMenu } from './UserMenu';
 import { MenuIcon } from './constants';
@@ -25,6 +26,7 @@ export default function SlideBar({
     isUserMenuOpen,
     handleMenuItemClick,
     toggleUserMenu,
+    isLoadingPermissions,
   } = useSidebar();
 
   const toggleSidebar = () => {
@@ -103,14 +105,18 @@ export default function SlideBar({
       >
         <div className='bg-white dark:bg-gray-800'></div>
         <div className='h-full w-[inherit] overflow-y-auto bg-white pt-20 dark:bg-gray-800'>
-          <NavigationMenu
-            items={navigationItems}
-            onItemClick={(index) => {
-              if (onNavigate) onNavigate();
-              handleMenuItemClick(index);
-              closeSidebar();
-            }}
-          />
+          {isLoadingPermissions ? (
+            <MenuSkeleton />
+          ) : (
+            <NavigationMenu
+              items={navigationItems}
+              onItemClick={(index) => {
+                if (onNavigate) onNavigate();
+                handleMenuItemClick(index);
+                closeSidebar();
+              }}
+            />
+          )}
         </div>
       </aside>
 
