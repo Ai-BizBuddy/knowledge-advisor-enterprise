@@ -166,7 +166,10 @@ class BaseFetchClient implements FetchClient {
 
     let requestConfig: TypedFetchConfig & { url: string } = {
       method: 'GET',
-      headers: { ...this.defaultHeaders },
+      headers: { 
+        ...this.defaultHeaders,
+        ...config.headers, // Merge custom headers after defaults
+      },
       ...config,
       url: fullUrl,
     };
@@ -175,9 +178,20 @@ class BaseFetchClient implements FetchClient {
     requestConfig = this.applyRequestInterceptors(requestConfig);
 
     const controller = this.createAbortController(config.timeout);
+    
+    // Create a proper Headers object to ensure Content-Type is preserved
+    const headersObj = new Headers();
+    if (requestConfig.headers) {
+      Object.entries(requestConfig.headers).forEach(([key, value]) => {
+        if (value) {
+          headersObj.set(key, value);
+        }
+      });
+    }
+    
     const fetchConfig: RequestInit = {
       method: requestConfig.method,
-      headers: requestConfig.headers,
+      headers: headersObj,
       body: requestConfig.body,
       signal: config.signal || controller.signal,
     };

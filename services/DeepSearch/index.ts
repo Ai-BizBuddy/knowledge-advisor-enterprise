@@ -19,10 +19,10 @@ export class DeepSearchService {
         // Initialize with fetch client
         this.client = new BaseFetchClient({
             baseURL: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001',
-            timeout: 10000,
+            timeout: 30000, // Increased timeout for deep search
             defaultHeaders: {
-                Accept: '*/*',
                 'Content-Type': 'application/json',
+                Accept: 'application/json',
             },
         });
     }
@@ -71,10 +71,19 @@ export class DeepSearchService {
     async DeepSearch(query: DeepSearchRequest): Promise<DeepSearchRes[]> {
         try {
             const token = await this.getAccessToken();
-            const headers: Record<string, string> = {};
+            
+            // Validate query
+            if (!query || !query.query) {
+                throw new Error('Query is required for deep search');
+            }
+            
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+            };
             
             if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
+                headers.authorization = `Bearer ${token}`;
             }
 
             const response = await this.client.post<DeepSearchRes[]>('/deep-search', query, {
