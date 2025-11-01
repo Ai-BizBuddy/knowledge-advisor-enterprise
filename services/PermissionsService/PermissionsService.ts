@@ -1,6 +1,6 @@
-import { createClientAuth, createClient } from '@/utils/supabase/client';
-import { Permission, PermissionAction } from '@/interfaces/UserManagement';
 import { ResourceConfig } from '@/interfaces/Permissions';
+import { Permission, PermissionAction } from '@/interfaces/UserManagement';
+import { createClient, createClientAuth } from '@/utils/supabase/client';
 
 export interface PermissionMatrix {
   [resource: string]: {
@@ -39,7 +39,7 @@ class PermissionsService {
       } = await supabase.auth.getUser();
 
       if (userError || !user) {
-                return null;
+        return null;
       }
 
       // Get user's roles and permissions using auth schema client
@@ -72,31 +72,31 @@ class PermissionsService {
         .single();
 
       if (userDataError) {
-                return null;
+        return null;
       }
 
       // Transform the data to extract permissions
-      const roles =
-        userData.user_roles?.map((userRole: unknown) => {
-          const ur = userRole as {
-            role: {
-              id: number;
-              name: string;
-              role_permissions: Array<{ permissions: Permission }>;
-            };
-          };
-          const role = ur.role;
-          const permissions =
-            role.role_permissions
-              ?.map((rp) => rp.permissions)
-              .filter(Boolean) || [];
+      // const roles =
+      //   userData.user_roles?.map((userRole: unknown) => {
+      //     const ur = userRole as {
+      //       role: {
+      //         id: number;
+      //         name: string;
+      //         role_permissions: Array<{ permissions: Permission }>;
+      //       };
+      //     };
+      //     const role = ur.role;
+      //     const permissions =
+      //       role.role_permissions
+      //         ?.map((rp) => rp.permissions)
+      //         .filter(Boolean) || [];
 
-          return {
-            id: role.id,
-            name: role.name,
-            permissions,
-          };
-        }) || [];
+      //     return {
+      //       id: role.id,
+      //       name: role.name,
+      //       permissions,
+      //     };
+      //   }) || [];
 
       // Get direct permissions (if any user has direct permissions)
       const { data: directPermissions } = await authClient
@@ -130,7 +130,7 @@ class PermissionsService {
         directPermissions: directPerms,
       };
     } catch (error) {
-            return null;
+      return null;
     }
   }
 
@@ -153,7 +153,7 @@ class PermissionsService {
 
       return data || [];
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -224,7 +224,7 @@ class PermissionsService {
 
       return true;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -258,7 +258,7 @@ class PermissionsService {
 
       return data;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -307,12 +307,12 @@ class PermissionsService {
           .insert(newPermissions);
 
         if (error) {
-                    // Don't throw here, as this is non-critical
+          // Don't throw here, as this is non-critical
         } else {
-                  }
+        }
       }
     } catch (error) {
-            // Don't throw, as this is non-critical for the UI
+      // Don't throw, as this is non-critical for the UI
     }
   }
 
@@ -351,7 +351,7 @@ class PermissionsService {
 
       return hasDirectPermission;
     } catch (error) {
-            return false;
+      return false;
     }
   }
 
@@ -395,7 +395,7 @@ class PermissionsService {
         actions: Array.from(new Set(actions)),
       }));
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -436,7 +436,7 @@ class PermissionsService {
         actions,
       }));
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -481,7 +481,7 @@ class PermissionsService {
 
       return matrix;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 }

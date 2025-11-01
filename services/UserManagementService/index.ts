@@ -534,7 +534,7 @@ class UserManagementService {
       // Delete user profile first
       const { error: profileError } = await supabaseTable
         .from('users')
-        .update({ deleted_at: new Date().toISOString(), is_deleted: true })
+        .update({ deleted_at: new Date().toISOString() })
         .eq('id', id);
 
       if (profileError) {
