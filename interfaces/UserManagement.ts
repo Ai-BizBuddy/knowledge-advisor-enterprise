@@ -14,6 +14,52 @@ export interface UserManagementError extends Error {
 }
 
 /**
+ * Supabase Auth User metadata structure
+ */
+export interface AuthUserMetadata {
+  display_name?: string;
+  full_name?: string;
+  avatar_url?: string;
+  department_id?: string;
+  [key: string]: unknown;
+}
+
+/**
+ * Supabase Auth User from auth.users table
+ * This represents the raw user data returned from Supabase Auth
+ */
+export interface AuthUser {
+  id: string;
+  email?: string;
+  phone?: string;
+  email_confirmed_at?: string;
+  phone_confirmed_at?: string;
+  confirmed_at?: string;
+  last_sign_in_at?: string;
+  created_at: string;
+  updated_at?: string;
+  is_anonymous?: boolean;
+  app_metadata?: {
+    provider?: string;
+    providers?: string[];
+    [key: string]: unknown;
+  };
+  user_metadata?: AuthUserMetadata;
+  identities?: Array<{
+    id: string;
+    user_id: string;
+    identity_data?: Record<string, unknown>;
+    provider: string;
+    created_at?: string;
+    last_sign_in_at?: string;
+    updated_at?: string;
+  }>;
+  aud?: string;
+  role?: string;
+  [key: string]: unknown;
+}
+
+/**
  * Department interface for organizational structure
  */
 export interface Department {

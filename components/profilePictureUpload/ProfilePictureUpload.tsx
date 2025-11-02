@@ -6,7 +6,7 @@
  */
 
 import { Button, Spinner } from 'flowbite-react';
-import Image from 'next/image';
+import NextImage from 'next/image';
 import React, { useCallback, useRef, useState } from 'react';
 
 export interface ProfilePictureUploadProps {
@@ -125,9 +125,8 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
             <Spinner size='md' />
           </div>
         )}
-
         {previewUrl ? (
-          <Image
+          <NextImage
             src={previewUrl}
             alt='Profile'
             fill

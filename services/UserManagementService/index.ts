@@ -7,6 +7,7 @@
 
 import {
   AccessLevel,
+  AuthUser,
   CreateDepartmentInput,
   CreatePermissionInput,
   CreateRoleInput,
@@ -252,19 +253,24 @@ class UserManagementService {
   private async getUserByIdFromAuth(id: string): Promise<User> {
     try {
       const authClient = createClient();
-      const { data, error } = await authClient.auth.admin.getUserById(id);
+      const { data: user, error } = await authClient
+        .from('users')
+        .select('*')
+        .eq('id', id)
+        .single<AuthUser>();
 
       if (error) {
         throw new Error(`Failed to fetch auth user: ${error.message}`);
       }
 
-      if (!data.user) {
+      if (!user) {
         throw new Error(`User with ID ${id} not found`);
       }
 
-      const authUser = data.user;
+      const authUser: AuthUser = user;
       const displayName =
         authUser.user_metadata?.display_name || authUser.email || '';
+      
       return {
         id: authUser.id,
         email: authUser.email || '',
@@ -299,6 +305,7 @@ class UserManagementService {
           p_display_name: userData.display_name || null,
           p_department_id: userData.department_id || null,
           p_role_ids: userData.role_ids,
+          p_status: 'active',
         },
       );
 
@@ -411,7 +418,6 @@ class UserManagementService {
    */
   async updateUser(id: string, updates: UpdateUserInput): Promise<User> {
     try {
-      const supabase = createClient();
       const supabaseAuth = createClientAuth();
 
       // Use update_user RPC function to handle all user updates
@@ -422,6 +428,7 @@ class UserManagementService {
           p_email: updates.email || null,
           p_display_name: updates.display_name || null,
           p_department_id: updates.department_id || null,
+          p_status: updates.status || null,
         },
       );
 
@@ -478,10 +485,10 @@ class UserManagementService {
       }
 
       // Get display_name from auth.users metadata
-      const { data: authUser } = await supabase.auth.admin.getUserById(id);
+      const { data: authUser } = await supabaseAuth.from('users').select('*').eq('id', id).single<AuthUser>();
       const displayName =
-        authUser.user?.user_metadata?.display_name ||
-        authUser.user?.email ||
+        authUser?.user_metadata?.display_name ||
+        authUser?.email ||
         '';
 
       // Transform user_roles to match expected format
@@ -1223,9 +1230,9 @@ class UserManagementService {
   async getUserSession(userId: string): Promise<UserSession> {
     try {
       // First, get the auth user data
-      const authClient = createClient();
+      const authClient = createClientAuth();
       const { data: authData, error: authError } =
-        await authClient.auth.admin.getUserById(userId);
+        await authClient.from('users').select('*').eq('id', userId).single();
 
       if (authError) {
         throw new Error(`Failed to fetch auth user: ${authError.message}`);

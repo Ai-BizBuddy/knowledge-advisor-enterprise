@@ -82,8 +82,6 @@ export const useJWTPermissions = () => {
           return;
         }
 
-        console.log('📝 Raw JWT Access Token:', session.access_token);
-
         // Method 1: Decode JWT manually to get ALL custom claims using utility function
         const decodedPayload = decodeJWTToken(session.access_token);
         
@@ -96,7 +94,6 @@ export const useJWTPermissions = () => {
 
         // Method 2: Also check session.user (Supabase may filter some claims)
         const user = session.user as unknown as ExtendedUser;
-        console.log('👤 Supabase session.user:', JSON.stringify(user, null, 2));
         
         // Use decoded payload as primary source (has ALL claims)
         // Fallback to session.user if needed

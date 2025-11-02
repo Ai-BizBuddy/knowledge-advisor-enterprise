@@ -56,9 +56,9 @@ class KnowledgeBaseUserService {
         throw new Error('User not authenticated');
       }
 
-            return session.user;
+      return session.user;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -80,7 +80,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (kbError) {
-                return false;
+        return false;
       }
 
       if (kbData?.created_by === user.id) {
@@ -97,7 +97,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (roleError && roleError.code !== 'PGRST116') {
-                return false;
+        return false;
       }
 
       if (roleData?.role) {
@@ -110,7 +110,7 @@ class KnowledgeBaseUserService {
 
       return false;
     } catch (error) {
-            return false;
+      return false;
     }
   }
 
@@ -124,7 +124,6 @@ class KnowledgeBaseUserService {
     filter?: KnowledgeBaseUserFilter,
   ): Promise<TypedResponse<PaginatedKnowledgeBaseUsers>> {
     try {
-      
       const supabaseAuth = createClientAuth();
       const supabaseTable = createClientTable();
 
@@ -190,7 +189,7 @@ class KnowledgeBaseUserService {
       // Get total count
       const { count, error: countError } = await countQuery;
       if (countError) {
-                return { success: false, error: countError.message };
+        return { success: false, error: countError.message };
       }
 
       // Get paginated data
@@ -200,7 +199,7 @@ class KnowledgeBaseUserService {
       );
 
       if (dataError) {
-                return { success: false, error: dataError.message };
+        return { success: false, error: dataError.message };
       }
 
       // Get user details from auth.users - get name, email and user_id only (no metadata)
@@ -219,7 +218,7 @@ class KnowledgeBaseUserService {
         .in('id', userIds);
 
       if (userError) {
-                return { success: false, error: userError.message };
+        return { success: false, error: userError.message };
       }
 
       // Get granter information - get name and email only (no metadata)
@@ -303,7 +302,7 @@ class KnowledgeBaseUserService {
         },
       };
     } catch (error) {
-            return {
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -317,7 +316,6 @@ class KnowledgeBaseUserService {
     input: AddUserToKnowledgeBaseInput,
   ): Promise<TypedResponse<KnowledgeBaseUser>> {
     try {
-      
       const currentUser = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
@@ -341,7 +339,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (checkError && checkError.code !== 'PGRST116') {
-                return { success: false, error: checkError.message };
+        return { success: false, error: checkError.message };
       }
 
       if (existingRole) {
@@ -378,7 +376,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (insertError) {
-                return { success: false, error: insertError.message };
+        return { success: false, error: insertError.message };
       }
 
       // Get user details - get name, email and user_id only (no metadata)
@@ -396,7 +394,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (userError) {
-                return { success: false, error: userError.message };
+        return { success: false, error: userError.message };
       }
 
       const knowledgeBaseUser: KnowledgeBaseUser = {
@@ -412,9 +410,9 @@ class KnowledgeBaseUserService {
         is_active: newRole.is_active,
       };
 
-            return { success: true, data: knowledgeBaseUser };
+      return { success: true, data: knowledgeBaseUser };
     } catch (error) {
-            return {
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -430,7 +428,6 @@ class KnowledgeBaseUserService {
     updates: UpdateKnowledgeBaseUserRoleInput,
   ): Promise<TypedResponse<KnowledgeBaseUser>> {
     try {
-      
       const supabaseTable = createClientTable();
 
       // Verify permission
@@ -481,7 +478,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (updateError) {
-                return { success: false, error: updateError.message };
+        return { success: false, error: updateError.message };
       }
 
       // Get user details - get name, email and user_id only (no metadata)
@@ -499,7 +496,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (userError) {
-                return { success: false, error: userError.message };
+        return { success: false, error: userError.message };
       }
 
       const knowledgeBaseUser: KnowledgeBaseUser = {
@@ -515,9 +512,9 @@ class KnowledgeBaseUserService {
         is_active: updatedRole.is_active,
       };
 
-            return { success: true, data: knowledgeBaseUser };
+      return { success: true, data: knowledgeBaseUser };
     } catch (error) {
-            return {
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -532,7 +529,6 @@ class KnowledgeBaseUserService {
     knowledgeBaseId: string,
   ): Promise<TypedResponse<void>> {
     try {
-      
       const supabaseTable = createClientTable();
 
       // Verify permission
@@ -552,7 +548,7 @@ class KnowledgeBaseUserService {
         .single();
 
       if (kbError) {
-                return { success: false, error: kbError.message };
+        return { success: false, error: kbError.message };
       }
 
       if (kbData?.created_by === userId) {
@@ -570,12 +566,12 @@ class KnowledgeBaseUserService {
         .eq('knowledge_base_id', knowledgeBaseId);
 
       if (deleteError) {
-                return { success: false, error: deleteError.message };
+        return { success: false, error: deleteError.message };
       }
 
-            return { success: true };
+      return { success: true };
     } catch (error) {
-            return {
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };
@@ -591,7 +587,6 @@ class KnowledgeBaseUserService {
     limit: number = 10,
   ): Promise<TypedResponse<UserSearchResult[]>> {
     try {
-      
       const supabaseAuth = createClientAuth();
       const supabaseTable = createClientTable();
 
@@ -647,7 +642,7 @@ class KnowledgeBaseUserService {
       const { data: usersData, error: searchError } = await query;
 
       if (searchError) {
-                return { success: false, error: searchError.message };
+        return { success: false, error: searchError.message };
       }
 
       // Filter out users who already have access
@@ -674,9 +669,9 @@ class KnowledgeBaseUserService {
           }),
         );
 
-            return { success: true, data: availableUsers };
+      return { success: true, data: availableUsers };
     } catch (error) {
-            return {
+      return {
         success: false,
         error: error instanceof Error ? error.message : 'Unknown error',
       };

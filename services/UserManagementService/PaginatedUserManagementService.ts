@@ -12,11 +12,7 @@ import {
   User,
   UserFilter,
 } from '@/interfaces/UserManagement';
-import {
-  createClient,
-  createClientAuth,
-  createClientTable,
-} from '@/utils/supabase/client';
+import { createClient, createClientAuth } from '@/utils/supabase/client';
 import UserManagementService from '../UserManagementService';
 
 class PaginatedUserManagementService extends UserManagementService {
@@ -86,7 +82,7 @@ class PaginatedUserManagementService extends UserManagementService {
       const { data, error, count } = await query;
 
       if (error) {
-                throw new Error(`Failed to fetch users: ${error.message}`);
+        throw new Error(`Failed to fetch users: ${error.message}`);
       }
 
       const total = count || 0;
@@ -110,7 +106,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -214,7 +210,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -268,7 +264,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -290,7 +286,9 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       const supabase = createClientAuth();
 
-      let query = supabase.from('department_view').select('*', { count: 'exact' });
+      let query = supabase
+        .from('department_view')
+        .select('*', { count: 'exact' });
 
       if (search) {
         query = query.or(
@@ -322,7 +320,7 @@ class PaginatedUserManagementService extends UserManagementService {
         },
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -347,6 +345,16 @@ class PaginatedUserManagementService extends UserManagementService {
         });
 
       if (uploadError) {
+        // Provide more helpful error message for bucket not found
+        if (
+          uploadError.message.toLowerCase().includes('bucket') &&
+          uploadError.message.toLowerCase().includes('not found')
+        ) {
+          throw new Error(
+            'Storage bucket "avatars" not configured properly. Please run "npm run setup:storage" or ' +
+              'create the bucket in Supabase Dashboard.',
+          );
+        }
         throw new Error(`Failed to upload image: ${uploadError.message}`);
       }
 
@@ -357,7 +365,7 @@ class PaginatedUserManagementService extends UserManagementService {
 
       return urlData.publicUrl;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -373,7 +381,7 @@ class PaginatedUserManagementService extends UserManagementService {
     },
   ): Promise<User> {
     try {
-      const supabase = createClientTable();
+      const supabase = createClientAuth();
 
       const { data, error } = await supabase
         .from('users')
@@ -386,13 +394,13 @@ class PaginatedUserManagementService extends UserManagementService {
         .single();
 
       if (error) {
+        console.log('Error updating user profile:', error);
         throw new Error(`Failed to update user profile: ${error.message}`);
       }
 
       // Also update auth.profiles if it exists
       try {
-        const authClient = supabase.schema('auth');
-        await authClient
+        await supabase
           .from('profiles')
           .update({
             full_name: updates.display_name,
@@ -400,12 +408,13 @@ class PaginatedUserManagementService extends UserManagementService {
             updated_at: new Date().toISOString(),
           })
           .eq('id', userId);
-      } catch (profileError) {
-              }
+      } catch {
+        // Profile update is optional, continue if it fails
+      }
 
       return data as User;
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -494,7 +503,7 @@ class PaginatedUserManagementService extends UserManagementService {
         pendingUsers: pendingUsers || 0,
       };
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -505,7 +514,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       return await super.createRole(roleData);
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -516,7 +525,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       return await super.updateRole(id, updates);
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 
@@ -527,7 +536,7 @@ class PaginatedUserManagementService extends UserManagementService {
     try {
       await super.deleteRole(id);
     } catch (error) {
-            throw error;
+      throw error;
     }
   }
 }

@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/storage/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'api.aifactories.space',
+        port: '',
+        pathname: '/storage/**',
+      },
     ],
     minimumCacheTTL: 60,
     dangerouslyAllowSVG: false,

@@ -238,7 +238,6 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
 
         if (updatedUser) {
           // Success - close modal
-          showToast(SUCCESS_MESSAGES.USER_UPDATED, 'success');
           onSuccess?.(updatedUser);
           onClose();
         }
