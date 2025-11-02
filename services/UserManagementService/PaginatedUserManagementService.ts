@@ -36,13 +36,14 @@ class PaginatedUserManagementService extends UserManagementService {
       const supabase = createClientAuth();
 
       // Build the query
-      let query = supabase.from('users').select(
+      let query = supabase.from('user_view').select(
         `
           id,
           email,
           avatar_url,
           department_id,
           created_at,
+          raw_user_meta_data,
           updated_at,
           status,
           user_roles(
@@ -88,14 +89,16 @@ class PaginatedUserManagementService extends UserManagementService {
       const total = count || 0;
       const totalPages = Math.ceil(total / pageSize);
       return {
-        data: data.map(
-          (user) =>
-            ({
-              ...user,
-              user_roles: user.user_roles,
-              profile: user.profile,
-            }) as unknown as User,
-        ),
+        data: data.map((user) => {
+          console.log({user});
+          const prof = Array.isArray(user.raw_user_meta_data) ? user.raw_user_meta_data[0] : user.raw_user_meta_data;
+          return {
+            ...user,
+            display_name: prof?.display_name || prof?.full_name || user.email.split('@')[0],
+            user_roles: user.user_roles,
+            profile: prof,
+          } as unknown as User;
+        }),
         pagination: {
           page,
           pageSize,
