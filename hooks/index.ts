@@ -2,7 +2,6 @@
 export { useAdkChat } from './useAdkChat';
 export { useAllUserDocuments } from './useAllUserDocuments';
 export { useAuth } from './useAuth';
-export { useChat } from './useChat';
 export { useChatHistory } from './useChatHistory';
 export { useChunkCount } from './useChunkCount';
 export { useDocuments } from './useDocuments';

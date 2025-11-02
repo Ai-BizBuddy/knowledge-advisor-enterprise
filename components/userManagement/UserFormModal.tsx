@@ -107,9 +107,12 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
         const userRoleIds =
           user.user_roles?.map((userRole) => userRole.role.id) ?? [];
 
+        // Ensure display_name is properly initialized with user's display name, profile full name, or email prefix
+        const displayName = user.display_name || user.profile?.full_name || user.email.split('@')[0];
+
         form.reset({
           email: user.email,
-          display_name: user.display_name || '',
+          display_name: displayName,
           role_ids: userRoleIds,
           department_id: user.department_id || '',
           status: user.status,
@@ -340,7 +343,7 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
                   <TextInput
                     id='display_name'
                     type='text'
-                    placeholder='John Doe'
+                    placeholder='Display name'
                     {...form.register('display_name', {
                       minLength: {
                         value: 2,

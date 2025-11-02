@@ -9,14 +9,14 @@
 
 import { useReactHookForm, useUserManagement } from '@/hooks';
 import type {
-    CreateUserInput,
-    UserManagementError,
+  CreateUserInput,
+  UserManagementError,
 } from '@/interfaces/UserManagement';
 import { Button, Label, Select, TextInput } from 'flowbite-react';
 import React, { useEffect, useState } from 'react';
 import type {
-    CreateUserFormData,
-    CreateUserFormProps,
+  CreateUserFormData,
+  CreateUserFormProps,
 } from './CreateUserForm.types';
 
 export const CreateUserForm: React.FC<CreateUserFormProps> = ({
@@ -242,7 +242,7 @@ export const CreateUserForm: React.FC<CreateUserFormProps> = ({
               <TextInput
                 id='display_name'
                 type='text'
-                placeholder='John Doe'
+                placeholder='Display name'
                 {...form.register('display_name', {
                   minLength: {
                     value: 2,
