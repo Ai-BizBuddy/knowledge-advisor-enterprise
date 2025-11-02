@@ -8,7 +8,7 @@ import { useJWTPermissions } from '@/hooks';
 import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
-import { AccessLevel, PermissionRow } from '@/interfaces/RoleModal';
+import { PermissionRow } from '@/interfaces/RoleModal';
 import {
   CreateRoleInput,
   Role,
@@ -17,14 +17,6 @@ import {
 import { dynamicPermissionMappingService as permissionMappingService } from '@/services/DynamicPermissionMappingService';
 import { Button, Modal } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-// Helper function to convert role level to access level
-const levelToAccessLevel = (level: number): AccessLevel => {
-  if (level >= 100) return 'Super Admin';
-  if (level >= 90) return 'Admin';
-  if (level >= 70) return 'Manager';
-  return 'User';
-};
 
 // Helper function to transform role permissions to RoleModal format
 const transformRoleToModalData = async (
@@ -81,7 +73,6 @@ const transformRoleToModalData = async (
     id: role.id.toString(),
     roleName: role.name,
     description: role.description || '',
-    accessLevel: levelToAccessLevel(role.level || 50),
     permissions: basePermissions,
   };
 
@@ -124,7 +115,6 @@ export default function RolesPage() {
         id: string;
         roleName: string;
         description: string;
-        accessLevel: AccessLevel;
         permissions: PermissionRow[];
       }
     | undefined
@@ -198,14 +188,6 @@ export default function RolesPage() {
       const createRoleData: CreateRoleInput = {
         name: payload.roleName,
         description: payload.description || '',
-        level:
-          payload.accessLevel === 'User'
-            ? 50
-            : payload.accessLevel === 'Manager'
-              ? 70
-              : payload.accessLevel === 'Admin'
-                ? 90
-                : 100,
         permission_ids: [],
       };
 
@@ -295,14 +277,6 @@ export default function RolesPage() {
       const updateRoleData: UpdateRoleInput = {
         name: payload.roleName,
         description: payload.description || '',
-        level:
-          payload.accessLevel === 'User'
-            ? 50
-            : payload.accessLevel === 'Manager'
-              ? 70
-              : payload.accessLevel === 'Admin'
-                ? 90
-                : 100,
         permission_ids: [],
       };
 

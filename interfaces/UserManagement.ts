@@ -168,18 +168,7 @@ export enum PermissionAction {
  */
 export interface FeatureAccess {
   feature: string;
-  access_level: AccessLevel;
   permissions: PermissionAction[];
-}
-
-/**
- * Access level enum
- */
-export enum AccessLevel {
-  NONE = 'none',
-  READ = 'read',
-  WRITE = 'write',
-  ADMIN = 'admin',
 }
 
 /**

@@ -27,7 +27,6 @@ interface UsePermissionsState {
 
 interface UsePermissionsActions {
   checkPermission: (resource: string, action: string) => boolean;
-  hasFeatureAccess: (feature: string) => boolean;
   canAccessMenu: (menuItem: string) => boolean;
   refreshPermissions: () => Promise<void>;
   clearError: () => void;
@@ -124,19 +123,6 @@ export const usePermissions = (): UsePermissions => {
   );
 
   /**
-   * Check if user has access to a feature
-   */
-  const hasFeatureAccess = useCallback(
-    (feature: string): boolean => {
-      if (!state.features.length) return false;
-
-      const featureAccess = state.features.find((f) => f.feature === feature);
-      return featureAccess ? featureAccess.access_level !== 'none' : false;
-    },
-    [state.features],
-  );
-
-  /**
    * Check if user can access a specific menu item
    */
   const canAccessMenu = useCallback(
@@ -193,11 +179,6 @@ export const usePermissions = (): UsePermissions => {
         if (!hasAdminRole) return false;
       }
 
-      // Check feature access
-      if (requirements.feature && !hasFeatureAccess(requirements.feature)) {
-        return false;
-      }
-
       // Check specific permission
       if (requirements.resource && requirements.action) {
         return checkPermission(requirements.resource, requirements.action);
@@ -205,7 +186,7 @@ export const usePermissions = (): UsePermissions => {
 
       return true;
     },
-    [state.currentUser, hasFeatureAccess, checkPermission],
+    [state.currentUser, checkPermission],
   );
 
   /**
@@ -227,7 +208,6 @@ export const usePermissions = (): UsePermissions => {
 
     // Actions
     checkPermission,
-    hasFeatureAccess,
     canAccessMenu,
     refreshPermissions,
     clearError,

@@ -3,22 +3,19 @@ import { useToast } from '@/components/toast';
 import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { useReactHookForm } from '@/hooks/useReactHookForm';
 import {
-  ACCESS_LEVELS,
-  AccessLevel,
   CreateRoleFormData,
   CreateRolePayload,
   PermissionRow,
   RoleModalProps,
-  VALIDATION_RULES,
+  VALIDATION_RULES
 } from '@/interfaces/RoleModal';
 import {
   Button,
   Label,
   Modal,
-  Select,
   Spinner,
   Textarea,
-  TextInput,
+  TextInput
 } from 'flowbite-react';
 import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
@@ -69,7 +66,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     defaultValues: {
       roleName: '',
       description: '',
-      accessLevel: 'User' as AccessLevel,
       permissions: permissions,
     },
     mode: 'onChange',
@@ -84,8 +80,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     formState: { errors, isValid },
   } = form;
 
-  // Watch access level to update permissions automatically
-  const watchedAccessLevel = watch('accessLevel');
   const watchedPermissions = watch('permissions');
 
   // Load initial data for edit mode
@@ -93,7 +87,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     if (isEditMode && initialData && isOpen) {
             setValue('roleName', initialData.roleName);
       setValue('description', initialData.description || '');
-      setValue('accessLevel', initialData.accessLevel);
       setValue('permissions', initialData.permissions);
       setPermissionValidationErrors({}); // Clear validation errors when loading data
     } else if (!isEditMode && isOpen) {
@@ -116,7 +109,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       reset({
         roleName: '',
         description: '',
-        accessLevel: 'User' as AccessLevel,
         permissions: permissions,
       });
       setPermissionValidationErrors({}); // Clear validation errors for new form
@@ -130,22 +122,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     permissionResources,
     permissionResourceData,
   ]);
-
-  // Update permissions when access level changes (only in create mode or when explicitly requested)
-  useEffect(() => {
-    if (!isEditMode && watchedAccessLevel && isOpen) {
-            const allResources = [...permissionResources];
-      // actions: defaultPerm?.action
-      const updatedPermissions = allResources.map((resource) => {
-        return {
-          resource,
-          actions: {},
-        };
-      });
-
-      setValue('permissions', updatedPermissions);
-    }
-  }, [watchedAccessLevel, setValue, isEditMode, permissionResources, isOpen]);
 
   // Handle form submission with comprehensive validation
   const handleFormSubmit = async (data: CreateRoleFormData) => {
@@ -225,7 +201,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
         ...(isEditMode && initialData?.id && { id: initialData.id }),
         roleName: data.roleName.trim(),
         description: data.description?.trim(),
-        accessLevel: data.accessLevel,
         permissions: data.permissions
           .filter((p) => Object.values(p.actions).some(Boolean))
           .map((p) => ({
@@ -372,7 +347,7 @@ export const RoleModal: React.FC<RoleModalProps> = ({
               {isEditMode ? 'Edit Role' : 'Create New Role'}
             </h3>
             <p className='mt-1 text-sm text-gray-500 dark:text-gray-400 hidden sm:block'>
-              Configure role permissions and access levels for your organization
+              Configure role permissions for your organization
             </p>
           </div>
 
@@ -433,47 +408,6 @@ export const RoleModal: React.FC<RoleModalProps> = ({
                 )}
               </div>
 
-              {/* Access Level */}
-              <div className='lg:col-span-1'>
-                <Label htmlFor='accessLevel' className='mb-2 block text-sm font-medium'>
-                  Access Level <span className='text-red-500'>*</span>
-                </Label>
-                <Controller
-                  name='accessLevel'
-                  control={control}
-                  rules={VALIDATION_RULES.accessLevel}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      id='accessLevel'
-                      color={errors.accessLevel ? 'failure' : 'gray'}
-                      disabled={isSubmitting || isLoading}
-                      className='w-full text-sm sm:text-base'
-                      onChange={(e) => {
-                        field.onChange(e);
-                        // Clear form errors when user makes a selection
-                        if (errors.accessLevel) {
-                          form.clearErrors('accessLevel');
-                        }
-                        if (errors.root) {
-                          form.clearErrors('root');
-                        }
-                      }}
-                    >
-                      {Object.entries(ACCESS_LEVELS).map(([level, config]) => (
-                        <option key={level} value={level} className='text-sm'>
-                          {level} (Level {config.level}) - {config.description}
-                        </option>
-                      ))}
-                    </Select>
-                  )}
-                />
-                {errors.accessLevel && (
-                  <p className='mt-1 text-sm text-red-600 dark:text-red-400'>
-                    {errors.accessLevel.message}
-                  </p>
-                )}
-              </div>
             </div>
 
             {/* Description */}

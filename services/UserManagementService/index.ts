@@ -6,7 +6,6 @@
  */
 
 import {
-  AccessLevel,
   AuthUser,
   CreateDepartmentInput,
   CreatePermissionInput,
@@ -1097,35 +1096,13 @@ class UserManagementService {
   private mapPermissionsToFeatures(permissions: Permission[]): FeatureAccess[] {
     const featureMap = new Map<string, FeatureAccess>();
 
-    const upgradeLevel = (
-      current: AccessLevel | undefined,
-      perm: Permission,
-    ): AccessLevel => {
-      if (!perm.action) return current || AccessLevel.READ;
-      switch (perm.action) {
-        case PermissionAction.MANAGE:
-          return AccessLevel.ADMIN;
-        case PermissionAction.CREATE:
-        case PermissionAction.UPDATE:
-        case PermissionAction.DELETE:
-          return current === AccessLevel.ADMIN
-            ? AccessLevel.ADMIN
-            : AccessLevel.WRITE;
-        case PermissionAction.READ:
-        default:
-          return current || AccessLevel.READ;
-      }
-    };
-
     permissions.forEach((p) => {
       if (!p.resource) return;
       const existing = featureMap.get(p.resource);
-      const nextLevel = upgradeLevel(existing?.access_level, p);
       const actions = new Set<PermissionAction>(existing?.permissions || []);
       if (p.action) actions.add(p.action);
       featureMap.set(p.resource, {
         feature: p.resource,
-        access_level: nextLevel,
         permissions: Array.from(actions),
       });
     });

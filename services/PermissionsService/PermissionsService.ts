@@ -76,27 +76,27 @@ class PermissionsService {
       }
 
       // Transform the data to extract permissions
-      // const roles =
-      //   userData.user_roles?.map((userRole: unknown) => {
-      //     const ur = userRole as {
-      //       role: {
-      //         id: number;
-      //         name: string;
-      //         role_permissions: Array<{ permissions: Permission }>;
-      //       };
-      //     };
-      //     const role = ur.role;
-      //     const permissions =
-      //       role.role_permissions
-      //         ?.map((rp) => rp.permissions)
-      //         .filter(Boolean) || [];
+      const roles =
+        userData.user_roles?.map((userRole: unknown) => {
+          const ur = userRole as {
+            role: {
+              id: number;
+              name: string;
+              role_permissions: Array<{ permissions: Permission }>;
+            };
+          };
+          const role = ur.role;
+          const permissions =
+            role.role_permissions
+              ?.map((rp) => rp.permissions)
+              .filter(Boolean) || [];
 
-      //     return {
-      //       id: role.id,
-      //       name: role.name,
-      //       permissions,
-      //     };
-      //   }) || [];
+          return {
+            id: role.id,
+            name: role.name,
+            permissions,
+          };
+        }) || [];
 
       // Get direct permissions (if any user has direct permissions)
       const { data: directPermissions } = await authClient

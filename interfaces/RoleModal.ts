@@ -15,14 +15,10 @@ export interface PermissionRow {
   actions: Record<string, { id: string; value: boolean }>;
 }
 
-// Access level options for the dropdown
-export type AccessLevel = 'User' | 'Manager' | 'Admin' | 'Super Admin';
-
 // Form data structure using React Hook Form
 export interface CreateRoleFormData extends Record<string, unknown> {
   roleName: string;
   description?: string;
-  accessLevel: AccessLevel;
   permissions: PermissionRow[];
 }
 
@@ -34,23 +30,11 @@ export interface CreateRolePayload {
   id?: string; // For edit mode
   roleName: string;
   description?: string;
-  accessLevel: AccessLevel;
   permissions: {
     resource: string;
     actions: { action: string; id: string }[];
   }[];
 }
-
-// Access level configurations
-export const ACCESS_LEVELS: Record<
-  AccessLevel,
-  { level: number; description: string }
-> = {
-  User: { level: 50, description: 'Standard user permissions' },
-  Manager: { level: 70, description: 'Team management permissions' },
-  Admin: { level: 90, description: 'System administration permissions' },
-  'Super Admin': { level: 100, description: 'Full system access' },
-};
 
 // Form validation rules
 export const VALIDATION_RULES = {
@@ -72,10 +56,7 @@ export const VALIDATION_RULES = {
       value: 200,
       message: 'Description must be less than 200 characters',
     },
-  },
-  accessLevel: {
-    required: 'Access level is required',
-  },
+  }
 };
 
 // Component props interfaces
@@ -92,7 +73,6 @@ export interface RoleModalProps {
     id: string;
     roleName: string;
     description?: string;
-    accessLevel: AccessLevel;
     permissions: PermissionRow[];
   };
 }
