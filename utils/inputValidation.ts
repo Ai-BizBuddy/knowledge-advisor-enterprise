@@ -370,7 +370,7 @@ export const validators = {
   documentUpload: (file: File): ValidationResult => {
     const validator = new InputValidator();
     return validator.validateFile(file, {
-      maxSize: API_CONSTANTS, // 50MB
+      maxSize: API_CONSTANTS.MAX_FILE_SIZE, // 50MB
       allowedTypes: [
         'application/pdf',
         'text/plain',
