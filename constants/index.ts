@@ -77,7 +77,7 @@ export const API_CONSTANTS = {
   RETRY_DELAY: 1000,
 
   // File Upload Limits
-  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
+  MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB
   ALLOWED_FILE_TYPES: ['pdf', 'doc', 'docx', 'txt', 'md'],
 
   // Pagination
