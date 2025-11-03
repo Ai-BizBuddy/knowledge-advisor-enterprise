@@ -304,7 +304,6 @@ class UserManagementService {
           p_display_name: userData.display_name || null,
           p_department_id: userData.department_id || null,
           p_role_ids: userData.role_ids,
-          p_status: 'active',
         },
       );
 
