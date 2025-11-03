@@ -537,9 +537,15 @@ class UserManagementService {
       const supabaseTable = createClientAuth();
 
       // Delete user profile first
+      const bannedUntil = new Date();
+      bannedUntil.setFullYear(bannedUntil.getFullYear() + 100);
       const { error: profileError } = await supabaseTable
         .from('users')
-        .update({ deleted_at: new Date().toISOString(), status: UserStatus.INACTIVE })
+        .update({
+          deleted_at: new Date().toISOString(),
+          status: UserStatus.INACTIVE,
+          banned_until: bannedUntil.toISOString(),
+        })
         .eq('id', id);
 
       if (profileError) {
