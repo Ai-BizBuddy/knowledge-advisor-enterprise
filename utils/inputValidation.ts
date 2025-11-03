@@ -175,7 +175,7 @@ class InputValidator {
     } = {},
   ): ValidationResult {
     const {
-      maxSize = 10 * 1024 * 1024, // 10MB default
+      maxSize = 50 * 1024 * 1024, // 50MB default
       allowedTypes = [],
       allowedExtensions = [],
     } = options;
