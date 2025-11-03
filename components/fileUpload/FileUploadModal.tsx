@@ -1,5 +1,6 @@
 'use client';
 
+import { API_CONSTANTS } from '@/constants';
 import { AnimatePresence, motion } from 'framer-motion';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -39,7 +40,7 @@ export interface FileUploadModalProps {
 
 // Default constraints
 const DEFAULT_MAX_FILES = 10;
-const DEFAULT_MAX_SIZE = 800 * 400 * 1024; // ~320MB for images, adjustable
+const DEFAULT_MAX_SIZE = API_CONSTANTS.MAX_FILE_SIZE;
 const DEFAULT_ACCEPT =
   '.svg,.png,.jpg,.gif,.pdf,.doc,.docx,.txt,.md,.xlsx,.xls,.zip';
 
