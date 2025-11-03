@@ -67,6 +67,7 @@ class ChatHistoryService {
           )
         )
       `)
+      .order('created_at', { ascending: false })
       .not('session_events.memories', 'is', null)
 
     if (error) {

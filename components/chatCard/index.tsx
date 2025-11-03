@@ -71,38 +71,54 @@ export default function ChatCard({
 
   // Ensure message is always a string to prevent [object Object] rendering
   const safeMessage = (() => {
-    if (typeof message === 'string') return message;
-    if (message === null || message === undefined) return '';
+    let processedMessage = '';
+    
+    if (typeof message === 'string') {
+      processedMessage = message;
+    } else if (message === null || message === undefined) {
+      return '';
+    } else {
+      // Log warning for debugging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.warn('ChatCard received non-string message:', {
+          type: typeof message,
+          value: message,
+          name: name,
+        });
+      }
 
-    // Log warning for debugging in development
-    if (process.env.NODE_ENV === 'development') {
-      console.warn('ChatCard received non-string message:', {
-        type: typeof message,
-        value: message,
-        name: name,
-      });
+      // Type assertion to handle cases where message might not be a string despite the interface
+      const anyMessage = message as unknown;
+
+      if (typeof anyMessage === 'object' && anyMessage !== null) {
+        // Handle array or object cases
+        if (Array.isArray(anyMessage)) {
+          processedMessage = anyMessage.join(' ');
+        } else {
+          // For objects, try to extract meaningful content
+          const obj = anyMessage as Record<string, unknown>;
+          if ('content' in obj && typeof obj.content === 'string') {
+            processedMessage = obj.content;
+          } else if ('text' in obj && typeof obj.text === 'string') {
+            processedMessage = obj.text;
+          } else {
+            // Last resort: JSON stringify but with better formatting
+            processedMessage = JSON.stringify(anyMessage, null, 2);
+          }
+        }
+      } else {
+        processedMessage = String(anyMessage);
+      }
     }
-
-    // Type assertion to handle cases where message might not be a string despite the interface
-    const anyMessage = message as unknown;
-
-    if (typeof anyMessage === 'object' && anyMessage !== null) {
-      // Handle array or object cases
-      if (Array.isArray(anyMessage)) {
-        return anyMessage.join(' ');
-      }
-      // For objects, try to extract meaningful content
-      const obj = anyMessage as Record<string, unknown>;
-      if ('content' in obj && typeof obj.content === 'string') {
-        return obj.content;
-      }
-      if ('text' in obj && typeof obj.text === 'string') {
-        return obj.text;
-      }
-      // Last resort: JSON stringify but with better formatting
-      return JSON.stringify(anyMessage, null, 2);
-    }
-    return String(anyMessage);
+    
+    // Clean up any [object Object] text that might be in the message content
+    // This can happen if the backend sends malformed content
+    processedMessage = processedMessage.replace(/\[object Object\]/gi, '');
+    
+    // Also clean up common patterns like >>[object Object]<<
+    processedMessage = processedMessage.replace(/>>?\[object Object\]<<?/gi, '');
+    
+    return processedMessage;
   })();
   const containerClasses = `flex items-start gap-3 mb-4 chat-message  ${
     isUser
@@ -227,7 +243,9 @@ export default function ChatCard({
                       return getTextContent(element.props.children);
                     }
                   }
-                  return String(node);
+                  // For plain objects that couldn't be converted, return empty string
+                  // instead of [object Object]
+                  return '';
                 };
 
                 const content = getTextContent(children);
