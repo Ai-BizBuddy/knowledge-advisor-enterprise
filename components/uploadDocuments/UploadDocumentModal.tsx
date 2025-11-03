@@ -1,4 +1,5 @@
 'use client';
+import { API_CONSTANTS } from '@/constants';
 import { useDocuments } from '@/hooks';
 import { useParams } from 'next/navigation';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
@@ -42,7 +43,7 @@ export default function UploadDocumentModal({
       ],
       allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'md', 'xlsx', 'xls'],
       maxFiles: 10,
-      maxSize: 10 * 1024 * 1024, // 10MB
+      maxSize: API_CONSTANTS.MAX_FILE_SIZE,
     }),
     [],
   );

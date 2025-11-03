@@ -5,6 +5,7 @@
  * and ensure data integrity across the application.
  */
 
+import { API_CONSTANTS } from '@/constants';
 import DOMPurify from 'isomorphic-dompurify';
 
 interface ValidationResult {
@@ -175,7 +176,7 @@ class InputValidator {
     } = {},
   ): ValidationResult {
     const {
-      maxSize = 50 * 1024 * 1024, // 50MB default
+      maxSize = API_CONSTANTS.MAX_FILE_SIZE,
       allowedTypes = [],
       allowedExtensions = [],
     } = options;
@@ -369,7 +370,7 @@ export const validators = {
   documentUpload: (file: File): ValidationResult => {
     const validator = new InputValidator();
     return validator.validateFile(file, {
-      maxSize: 50 * 1024 * 1024, // 50MB
+      maxSize: API_CONSTANTS, // 50MB
       allowedTypes: [
         'application/pdf',
         'text/plain',
@@ -383,7 +384,7 @@ export const validators = {
 
 // Export the main validator class and utility functions
 export { InputValidator };
-export type { ValidationResult, ValidationOptions };
+export type { ValidationOptions, ValidationResult };
 
 // Create a default instance
 export const inputValidator = new InputValidator();

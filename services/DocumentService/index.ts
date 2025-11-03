@@ -1,3 +1,4 @@
+import { API_CONSTANTS } from '@/constants';
 import type {
   CreateDocumentInput,
   CreateDocumentsFromFilesInput,
@@ -364,9 +365,9 @@ class DocumentService {
         }
 
         // Check file size (50MB limit)
-        if (file.size > 50 * 1024 * 1024) {
+        if (file.size > API_CONSTANTS.MAX_FILE_SIZE) {
           throw new Error(
-            `File ${file.name} exceeds 50MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
+            `File ${file.name} exceeds ${API_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB limit (${(file.size / 1024 / 1024).toFixed(2)}MB)`
           );
         }
       }
@@ -409,7 +410,7 @@ class DocumentService {
                 input.knowledge_base_id,
                 {
                   public: false,
-                  fileSizeLimit: 52428800, // 50MB
+                  fileSizeLimit: API_CONSTANTS.MAX_FILE_SIZE,
                 },
               );
             if (

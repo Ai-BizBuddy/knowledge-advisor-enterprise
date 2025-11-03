@@ -1,4 +1,5 @@
 'use client';
+import { API_CONSTANTS } from '@/constants';
 import { CreateDocumentsFromFilesInput, Document as ProjectDocument } from '@/interfaces/Project';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
@@ -30,7 +31,7 @@ const supportedTypes = [
   'application/vnd.ms-excel',
 ];
 const maxFiles = 10;
-const maxSize = 10 * 1024 * 1024; // 10MB
+const maxSize = API_CONSTANTS.MAX_FILE_SIZE;
 
 export default function UploadDocument({
   isOpen,
@@ -182,7 +183,7 @@ export default function UploadDocument({
         return;
       }
       if (file.size > maxSize) {
-        setError(`File ${file.name} exceeds 10MB limit.`);
+        setError(`File ${file.name} exceeds ${API_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB limit.`);
         return;
       }
     }
