@@ -614,8 +614,7 @@ class DocumentService {
 
       let dataQuery = supabaseTable
         .from('document_view')
-        .select('*,knowledge_base!inner(id, name, created_by)',
-        );
+        .select('*,knowledge_base!inner(id, name, created_by)');
 
       // Apply status filters
       if (filters?.status && filters.status !== 'all') {
@@ -689,7 +688,6 @@ class DocumentService {
     paginationOptions: PaginationOptions,
   ): Promise<{ data: Document[]; count: number }> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Search query
@@ -711,7 +709,7 @@ class DocumentService {
       const { data: documents, error } = await supabaseTable
         .from('document_view')
         .select(
-          '*,knowledge_base!inner(id, name, created_by)',
+          '*'
         )
         .ilike('name', `%${searchTerm}%`)
         .order('created_at', { ascending: false })

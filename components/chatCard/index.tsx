@@ -69,6 +69,105 @@ export default function ChatCard({
     [openDocumentViewer, setDocumentLoading],
   );
 
+  // Helper function to parse document references and create clickable links
+  const parseDocumentLinks = React.useCallback(
+    (content: string) => {
+      // Enhanced pattern to match document references with more flexibility
+      // Matches: [📄 Document: filename, Page: X, DocumentId: uuid]
+      const documentRefPattern =
+        /\[📄\s*Document:\s*([^,]+),\s*Page:\s*(\d+),\s*DocumentId:\s*([a-f0-9-]+)\]/gi;
+
+      const matches = Array.from(content.matchAll(documentRefPattern));
+
+      if (matches.length === 0) {
+        return content; // Return original content if no matches
+      }
+
+      // Parse document references and create clickable links
+      const elements: React.ReactNode[] = [];
+      let lastIndex = 0;
+
+      matches.forEach((match, matchIndex) => {
+        const fullMatch = match[0];
+        const fileName = match[1].trim();
+        const pageNum = match[2];
+        const docId = match[3];
+        const matchStartIndex = match.index || 0;
+
+        // Add text before the match
+        if (matchStartIndex > lastIndex) {
+          const textBefore = content.substring(lastIndex, matchStartIndex);
+          if (textBefore) {
+            elements.push(textBefore);
+          }
+        }
+
+        const isThisDocLoading = isDocumentLoading(docId);
+
+        // Add clickable document link
+        elements.push(
+          <button
+            key={`doc-${docId}-${matchIndex}`}
+            type='button'
+            className={`font-inherit inline-flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+              isUser
+                ? 'text-white hover:bg-blue-700'
+                : 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
+            } disabled:cursor-not-allowed disabled:opacity-50`}
+            onClick={(e: React.MouseEvent) => {
+              e.preventDefault();
+              const page = parseInt(pageNum, 10);
+              handleOpenDocumentViewer(docId, page);
+            }}
+            disabled={isThisDocLoading}
+          >
+            <span className='text-base'>📄</span>
+            <span className='text-sm font-medium'>
+              {fileName}
+            </span>
+            <span className='text-xs opacity-75'>
+              (Page {pageNum})
+            </span>
+            {isThisDocLoading && (
+              <svg
+                className='ml-1 h-3 w-3 animate-spin'
+                fill='none'
+                viewBox='0 0 24 24'
+              >
+                <circle
+                  className='opacity-25'
+                  cx='12'
+                  cy='12'
+                  r='10'
+                  stroke='currentColor'
+                  strokeWidth='4'
+                />
+                <path
+                  className='opacity-75'
+                  fill='currentColor'
+                  d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                />
+              </svg>
+            )}
+          </button>,
+        );
+
+        lastIndex = matchStartIndex + fullMatch.length;
+      });
+
+      // Add any remaining text after the last match
+      if (lastIndex < content.length) {
+        const textAfter = content.substring(lastIndex);
+        if (textAfter) {
+          elements.push(textAfter);
+        }
+      }
+
+      return elements;
+    },
+    [isDocumentLoading, handleOpenDocumentViewer, isUser],
+  );
+
   // Ensure message is always a string to prevent [object Object] rendering
   const safeMessage = (() => {
     let processedMessage = '';
@@ -249,75 +348,13 @@ export default function ChatCard({
                 };
 
                 const content = getTextContent(children);
+                const parsedContent = parseDocumentLinks(content);
 
-                // Check if this paragraph contains document references
-                const documentRefPattern =
-                  /\[📄 Document: ([^,]+), Page: (\d+), DocumentId: ([a-f0-9-]+)\]/g;
-
-                if (documentRefPattern.test(content)) {
-                  // Parse document references and create clickable links
-                  const parts = content.split(documentRefPattern);
-                  const elements: React.ReactNode[] = [];
-
-                  for (let i = 0; i < parts.length; i += 4) {
-                    // Add text before the match
-                    if (parts[i]) {
-                      elements.push(parts[i]);
-                    }
-
-                    // Add clickable document link if we have a match
-                    if (parts[i + 1] && parts[i + 2] && parts[i + 3]) {
-                      const fileName = parts[i + 1];
-                      const pageNum = parts[i + 2];
-                      const docId = parts[i + 3];
-
-                      const isThisDocLoading = isDocumentLoading(docId);
-
-                      elements.push(
-                        <button
-                          key={`doc-${docId}-${i}`}
-                          type='button'
-                          className='font-inherit inline-flex cursor-pointer items-center gap-1 border-none bg-transparent p-0 text-blue-600 underline hover:text-blue-800 disabled:cursor-not-allowed disabled:opacity-50'
-                          onClick={(e: React.MouseEvent) => {
-                            e.preventDefault();
-                            const page = parseInt(pageNum, 10);
-                            handleOpenDocumentViewer(docId, page);
-                          }}
-                          disabled={isThisDocLoading}
-                        >
-                          <span className='text-sm'>📄</span>
-                          <span>
-                            {fileName} (Page {pageNum})
-                          </span>
-                          {isThisDocLoading && (
-                            <svg
-                              className='ml-1 h-3 w-3 animate-spin'
-                              fill='none'
-                              viewBox='0 0 24 24'
-                            >
-                              <circle
-                                className='opacity-25'
-                                cx='12'
-                                cy='12'
-                                r='10'
-                                stroke='currentColor'
-                                strokeWidth='4'
-                              />
-                              <path
-                                className='opacity-75'
-                                fill='currentColor'
-                                d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                              />
-                            </svg>
-                          )}
-                        </button>,
-                      );
-                    }
-                  }
-
+                // Check if content was parsed (returns array) or is just a string
+                if (parsedContent !== content) {
                   return (
                     <p className='mb-2' {...props}>
-                      {elements}
+                      {parsedContent}
                     </p>
                   );
                 }
@@ -346,25 +383,105 @@ export default function ChatCard({
                   {...props}
                 />
               ),
-              th: ({ ...props }) => (
-                <th
-                  className='border border-gray-300 bg-gray-100 p-2 font-semibold dark:border-gray-600 dark:bg-gray-700'
-                  {...props}
-                />
-              ),
-              td: ({ ...props }) => (
-                <td
-                  className='border border-gray-300 p-2 dark:border-gray-600'
-                  {...props}
-                />
-              ),
+              th: ({ children, ...props }) => {
+                // Convert children to string safely
+                const getTextContent = (node: React.ReactNode): string => {
+                  if (node === null || node === undefined) return '';
+                  if (typeof node === 'string') return node;
+                  if (typeof node === 'number') return node.toString();
+                  if (typeof node === 'boolean') return '';
+                  if (Array.isArray(node))
+                    return node.map(getTextContent).join('');
+                  if (typeof node === 'object' && 'props' in node) {
+                    const element = node as {
+                      props?: { children?: React.ReactNode };
+                    };
+                    if (element.props?.children) {
+                      return getTextContent(element.props.children);
+                    }
+                  }
+                  return '';
+                };
+
+                const content = getTextContent(children);
+                const parsedContent = parseDocumentLinks(content);
+
+                return (
+                  <th
+                    className='border border-gray-300 bg-gray-100 p-2 font-semibold dark:border-gray-600 dark:bg-gray-700'
+                    {...props}
+                  >
+                    {parsedContent !== content ? parsedContent : children}
+                  </th>
+                );
+              },
+              td: ({ children, ...props }) => {
+                // Convert children to string safely
+                const getTextContent = (node: React.ReactNode): string => {
+                  if (node === null || node === undefined) return '';
+                  if (typeof node === 'string') return node;
+                  if (typeof node === 'number') return node.toString();
+                  if (typeof node === 'boolean') return '';
+                  if (Array.isArray(node))
+                    return node.map(getTextContent).join('');
+                  if (typeof node === 'object' && 'props' in node) {
+                    const element = node as {
+                      props?: { children?: React.ReactNode };
+                    };
+                    if (element.props?.children) {
+                      return getTextContent(element.props.children);
+                    }
+                  }
+                  return '';
+                };
+
+                const content = getTextContent(children);
+                const parsedContent = parseDocumentLinks(content);
+
+                return (
+                  <td
+                    className='border border-gray-300 p-2 dark:border-gray-600'
+                    {...props}
+                  >
+                    {parsedContent !== content ? parsedContent : children}
+                  </td>
+                );
+              },
               ul: ({ ...props }) => (
                 <ul className='mb-2 list-inside list-disc' {...props} />
               ),
               ol: ({ ...props }) => (
                 <ol className='mb-2 list-inside list-decimal' {...props} />
               ),
-              li: ({ ...props }) => <li className='mb-1' {...props} />,
+              li: ({ children, ...props }) => {
+                // Convert children to string safely
+                const getTextContent = (node: React.ReactNode): string => {
+                  if (node === null || node === undefined) return '';
+                  if (typeof node === 'string') return node;
+                  if (typeof node === 'number') return node.toString();
+                  if (typeof node === 'boolean') return '';
+                  if (Array.isArray(node))
+                    return node.map(getTextContent).join('');
+                  if (typeof node === 'object' && 'props' in node) {
+                    const element = node as {
+                      props?: { children?: React.ReactNode };
+                    };
+                    if (element.props?.children) {
+                      return getTextContent(element.props.children);
+                    }
+                  }
+                  return '';
+                };
+
+                const content = getTextContent(children);
+                const parsedContent = parseDocumentLinks(content);
+
+                return (
+                  <li className='mb-1' {...props}>
+                    {parsedContent !== content ? parsedContent : children}
+                  </li>
+                );
+              },
               pre: ({ ...props }) => (
                 <pre
                   className='mb-2 overflow-x-auto rounded bg-gray-100 p-2 text-sm text-gray-800 dark:bg-gray-800 dark:text-gray-200'

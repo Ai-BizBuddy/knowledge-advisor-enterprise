@@ -17,7 +17,7 @@ export default function UsersPage() {
   const { showToast } = useToast();
 
   // Get JWT permissions for conditional rendering
-  const { hasPermission, loading: permissionsLoading } = useJWTPermissions();
+  const { hasPermission } = useJWTPermissions();
 
   const {
     users,
