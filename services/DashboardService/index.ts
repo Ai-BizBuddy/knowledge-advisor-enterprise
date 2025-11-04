@@ -108,7 +108,6 @@ class DashboardService {
    */
   async getRecentKnowledgeBases(): Promise<Project[]> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       const { data, error } = await supabaseTable

@@ -544,7 +544,7 @@ class UserManagementService {
         .update({
           deleted_at: new Date().toISOString(),
           status: UserStatus.INACTIVE,
-          banned_until: bannedUntil.toISOString(),
+          aud: UserStatus.INACTIVE,
         })
         .eq('id', id);
 
