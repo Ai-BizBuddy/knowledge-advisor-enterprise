@@ -38,7 +38,8 @@ export function useSystemStatus() {
 
         const { count: activeCount, error: activeError } = await supabase
           .from('user_view')
-          .select('id', { count: 'exact', head: true });
+          .select('id,active', { count: 'exact', head: true })
+          .eq('status', 'active');
 
         if (!isMounted) return;
 
