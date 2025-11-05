@@ -5,6 +5,8 @@ export { default as ChatCard } from './chatCard';
 export { default as ChatHistoryCard } from './chatHistoryCard';
 export { default as ChatHistoryList } from './chatHistoryList';
 export { default as ChatTab } from './ChatTab';
+export { ContextEditor } from './contextEditor';
+export type { ContextEditorProps } from './contextEditor';
 export { default as CreateKnowledgeBaseModal } from './createKnowledgeBaseModal';
 export { default as DeleteConfirmModal } from './deleteConfirmModal';
 export { DocumentDeleteModal } from './documentDeleteModal';

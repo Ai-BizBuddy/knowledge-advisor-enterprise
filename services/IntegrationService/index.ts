@@ -54,20 +54,21 @@ export class IntegrationService {
    */
   async getIntegrationAccounts(knowledgeBaseId: string): Promise<IntegrationAccount[]> {
     try {
-      await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
-      const { data: accounts, error } = await supabaseTable
-        .from('integration_account')
-        .select('*')
-        .eq('knowledge_base_id', knowledgeBaseId)
-        .order('created_at', { ascending: false });
+      // const { data: accounts, error } = await supabaseTable
+      //   .from('integration_account')
+      //   .select('*')
+      //   .eq('knowledge_base_id', knowledgeBaseId)
+      //   .order('created_at', { ascending: false });
 
-      if (error) {
-        throw new Error(`Failed to fetch integration accounts: ${error.message}`);
-      }
+      // if (error) {
+      //   throw new Error(`Failed to fetch integration accounts: ${error.message}`);
+      // }
 
-      return accounts || [];
+      return []
+      // accounts || 
+      // [];
     } catch (error) {
       throw error;
     }

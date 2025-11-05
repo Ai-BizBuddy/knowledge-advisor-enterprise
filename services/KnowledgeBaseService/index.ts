@@ -317,6 +317,54 @@ class KnowledgeBaseService {
   }
 
   /**
+   * Update knowledge base context field
+   */
+  async updateContext(id: string, context: string): Promise<void> {
+    try {
+      const supabaseTable = createClientTable();
+
+      const { error } = await supabaseTable
+        .from('knowledge_base')
+        .update({ 
+          context,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .is('is_deleted', false);
+
+      if (error) {
+        throw new Error(`Failed to update context: ${error.message}`);
+      }
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Get ONLY the context field for a knowledge base
+   * Avoids selecting all columns to reduce payload and comply with least-privilege reads.
+   */
+  async getContext(id: string): Promise<string | null> {
+    try {
+      const supabaseTable = createClientTable();
+      const { data, error } = await supabaseTable
+        .from('knowledge_base')
+        .select('context')
+        .eq('id', id)
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to fetch context: ${error.message}`);
+      }
+
+      // data may be null if not found or context can be null
+      return (data as { context: string | null } | null)?.context ?? null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  /**
    * Delete a knowledge base
    */
   async deleteProject(id: string): Promise<void> {
