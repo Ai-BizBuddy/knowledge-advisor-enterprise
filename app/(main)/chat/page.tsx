@@ -18,10 +18,6 @@ const welcomeMessage: ChatMessage = {
   type: 'assistant',
   content:
     'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
-  timestamp: new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  }),
 };
 
 export default function ChatPage() {
@@ -208,7 +204,7 @@ export default function ChatPage() {
                         key={index}
                         avatar=''
                         name='User'
-                        time=''
+                        time={message.timestamp}
                         isUser
                         message={message.content}
                         status=''
@@ -224,7 +220,7 @@ export default function ChatPage() {
                         key={index}
                         avatar='/assets/logo-ka.svg'
                         name='Knowledge Assistant'
-                        time=''
+                        time={message.timestamp}
                         message={message.content}
                         status=''
                       />

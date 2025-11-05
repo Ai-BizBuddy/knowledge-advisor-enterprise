@@ -22,10 +22,6 @@ const createWelcomeMessage = (knowledgeBaseName?: string): ChatMessage => ({
   content: knowledgeBaseName
     ? `สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base "${knowledgeBaseName}"\n\nคุณสามารถถามคำถามเกี่ยวกับเอกสารและข้อมูลใน Knowledge Base นี้ได้เลยครับ!`
     : 'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nคุณสามารถถามคำถามได้เลยครับ!',
-  timestamp: new Date().toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  }),
 });
 
 interface ChatTabProps {
@@ -203,7 +199,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                       key={index}
                       avatar=''
                       name='User'
-                      time=''
+                      time={message.timestamp}
                       isUser
                       message={message.content}
                       status=''
@@ -219,7 +215,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
                       key={index}
                       avatar='/assets/logo-ka.svg'
                       name='Knowledge Assistant'
-                      time=''
+                      time={message.timestamp}
                       message={message.content}
                       status=''
                     />
