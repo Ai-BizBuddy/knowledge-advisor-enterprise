@@ -163,7 +163,8 @@ class ChatHistoryService {
             `,
       )
       .eq('id', sessionId)
-      .not('session_events.memories', 'is', null);
+      .not('session_events.memories', 'is', null)
+      .order('timestamp', { foreignTable: 'session_events', ascending: true });
 
     if (error) {
       return null;
