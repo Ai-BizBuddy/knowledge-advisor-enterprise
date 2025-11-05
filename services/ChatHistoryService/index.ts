@@ -69,6 +69,7 @@ class ChatHistoryService {
       `)
       .order('created_at', { ascending: false })
       .not('session_events.memories', 'is', null)
+      .order('timestamp', { foreignTable: 'session_events', ascending: true });
 
     if (error) {
       console.error('Error loading chat history:', error);
@@ -178,14 +179,37 @@ class ChatHistoryService {
     const sessionData = data as unknown as SupabaseSessionResponse[];
 
     const messages: ChatMessage[] = sessionData[0].session_events.map(
-      (event) => ({
-        id: event.id,
-        type: event.author === 'user' ? 'user' : 'assistant',
-        content: event.memories.content,
-        timestamp: event.timestamp,
-        selectedKnowledgeBase: [],
-        sessionId: sessionData[0].id,
-      }),
+      (event) => {
+        // Handle timestamp - could be ISO string, Unix timestamp (seconds), or null
+        let timestamp: string;
+        
+        if (event.timestamp) {
+          // Check if it's a number (Unix timestamp in seconds)
+          const numTimestamp = Number(event.timestamp);
+          if (!isNaN(numTimestamp)) {
+            // Unix timestamps are typically in seconds, not milliseconds
+            // If the number is less than 10 billion, it's likely in seconds
+            // Convert seconds to milliseconds by multiplying by 1000
+            const milliseconds = numTimestamp < 10000000000 ? numTimestamp * 1000 : numTimestamp;
+            timestamp = new Date(milliseconds).toISOString();
+          } else {
+            // Already a string (ISO format)
+            timestamp = event.timestamp;
+          }
+        } else {
+          // Fallback to created_at or current time
+          timestamp = event.created_at || new Date().toISOString();
+        }
+
+        return {
+          id: event.id,
+          type: event.author === 'user' ? 'user' : 'assistant',
+          content: event.memories.content,
+          timestamp,
+          selectedKnowledgeBase: [],
+          sessionId: sessionData[0].id,
+        };
+      },
     );
 
     return messages;

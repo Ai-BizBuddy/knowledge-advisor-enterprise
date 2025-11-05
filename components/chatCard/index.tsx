@@ -3,11 +3,16 @@ import { UI_CONSTANTS } from '@/constants';
 import { useDocumentViewer } from '@/hooks';
 import { IChatCardProps } from '@/interfaces/ChatCard';
 import { documentViewerService } from '@/services';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import Image from 'next/image';
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
+
+// Extend dayjs with relative time plugin
+dayjs.extend(relativeTime);
 
 /**
  * ChatCard component displays a chat message with avatar, name, time, and message content
@@ -231,14 +236,58 @@ export default function ChatCard({
       : 'bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 text-gray-900 dark:text-white rounded-2xl rounded-tl-md  shadow-sm'
   }`;
 
+  // Enhanced date/time formatting with dayjs
   const formatTime = (timestamp: string) => {
     if (!timestamp) return '';
-    const date = new Date(timestamp);
-    return date.toLocaleTimeString('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
+    
+    // Try to parse with dayjs
+    const date = dayjs(timestamp);
+    
+    // Check if date is invalid
+    if (!date.isValid()) {
+      // If it's just a time string like "14:30", return as is
+      if (timestamp.match(/^\d{1,2}:\d{2}$/)) {
+        return timestamp;
+      }
+      return '';
+    }
+
+    const now = dayjs();
+    const diffMinutes = now.diff(date, 'minute');
+    const diffDays = now.diff(date, 'day');
+
+    // Format time (24-hour format)
+    const timeStr = date.format('HH:mm');
+
+    // Check if it's today
+    if (date.isSame(now, 'day')) {
+      // For messages from today, show relative time if recent
+      if (diffMinutes < 1) {
+        return 'Just now';
+      } else if (diffMinutes < 60) {
+        return date.fromNow(); // "X minutes ago"
+      } else {
+        // Show time for older messages today
+        return `Today at ${timeStr}`;
+      }
+    }
+
+    // Check if it's yesterday
+    if (date.isSame(now.subtract(1, 'day'), 'day')) {
+      return `Yesterday at ${timeStr}`;
+    }
+
+    // For older messages within a week
+    if (diffDays < 7) {
+      return `${date.format('ddd')} at ${timeStr}`; // "Mon at 14:30"
+    }
+
+    // For older messages, show full date
+    const dateStr = date.year() === now.year() 
+      ? date.format('MMM D') 
+      : date.format('MMM D, YYYY');
+    
+    return `${dateStr} at ${timeStr}`;
   };
 
   return (

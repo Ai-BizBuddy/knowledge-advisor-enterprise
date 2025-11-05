@@ -7,7 +7,7 @@ export interface ChatMessage {
   id: string;
   type: 'user' | 'assistant';
   content: string;
-  timestamp: string;
+  timestamp?: string;
   selectedKnowledgeBase?: string[];
   sessionId?: string;
   responseTime?: number;
@@ -69,16 +69,6 @@ export const useAdkChat = () => {
   );
 
   const addWelcomeMessage = useCallback(() => {
-    const welcomeMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'assistant',
-      content:
-        'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
     setMessages([welcomeMessage]);
   }, []);
 
@@ -89,16 +79,7 @@ export const useAdkChat = () => {
     setConnectionStatus('connected');
 
     // Add welcome message for new chat
-    const welcomeMessage: ChatMessage = {
-      id: Date.now().toString(),
-      type: 'assistant',
-      content:
-        'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: '2-digit',
-        minute: '2-digit',
-      }),
-    };
+
     setMessages([welcomeMessage]);
   }, []);
 
@@ -115,10 +96,7 @@ export const useAdkChat = () => {
             type: 'assistant',
             content:
               'กรุณาเลือก Knowledge Base อย่างน้อย 1 รายการก่อนที่จะถามคำถามครับ',
-            timestamp: new Date().toLocaleTimeString([], {
-              hour: '2-digit',
-              minute: '2-digit',
-            }),
+            timestamp: new Date().toISOString(),
           };
           addMessage(errorMessage);
         }
@@ -132,10 +110,7 @@ export const useAdkChat = () => {
           id: Date.now().toString(),
           type: 'assistant',
           content: 'ไม่สามารถระบุตัวตนผู้ใช้ได้ กรุณาเข้าสู่ระบบใหม่',
-          timestamp: new Date().toLocaleTimeString([], {
-            hour: '2-digit',
-            minute: '2-digit',
-          }),
+          timestamp: new Date().toISOString(),
         };
         addMessage(errorMessage);
         return;
@@ -146,10 +121,7 @@ export const useAdkChat = () => {
         id: Date.now().toString(),
         type: 'user',
         content,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        timestamp: new Date().toISOString(),
         selectedKnowledgeBase: selectedKBs.map((kb) => kb.name),
         onlineMode,
       };
@@ -165,10 +137,7 @@ export const useAdkChat = () => {
         id: aiMessageId,
         type: 'assistant',
         content: '',
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
+        timestamp: new Date().toISOString(),
         isStreaming: true,
       };
       addMessage(aiMessage);
@@ -245,4 +214,11 @@ export const useAdkChat = () => {
     createNewChat,
     setMessages,
   };
+};
+
+const welcomeMessage: ChatMessage = {
+  id: Date.now().toString(),
+  type: 'assistant',
+  content:
+    'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
 };

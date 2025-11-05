@@ -14,8 +14,6 @@ import type { ChatSession } from '@/services/DashboardService';
 import { Button } from 'flowbite-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-
-
 const createWelcomeMessage = (knowledgeBaseName?: string): ChatMessage => ({
   id: Date.now().toString(),
   type: 'assistant',
