@@ -10,11 +10,11 @@
     "lint:fix": "next lint --fix",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
-    "quotes:check": "eslint . --ext .ts,.tsx,.js,.jsx",
-    "quotes:fix": "eslint . --ext .ts,.tsx,.js,.jsx --fix && prettier . --write"
+    "quotes:check": "eslint . --ext .ts,.tsx,.js,.jsx"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.53.0",
+    "dayjs": "^1.11.19",
     "dompurify": "^3.2.6",
     "flowbite-react": "^0.12.4",
     "framer-motion": "^12.16.0",
