@@ -1,4 +1,5 @@
 // Component exports - centralized location for all component imports
+export { AccessDenied } from './accessDenied';
 export { default as AppLoading } from './AppLoading';
 export { default as BotTypingBubble } from './botTypingBubble';
 export { default as ChatCard } from './chatCard';
