@@ -5,10 +5,7 @@ import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
 import type { Project, Document as ProjectDocument } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
 import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  DocumentPreview,
-  MiniDocumentPreview,
-} from './deepSearch';
+import { DocumentPreview } from './deepSearch';
 import DocumentDeleteModal from './documentDeleteModal';
 import {
   DocumentsPagination,
@@ -164,11 +161,16 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
   
-  // Preview modal states
-  const [isMiniPreviewOpen, setIsMiniPreviewOpen] = useState(false);
-  const [isFullPreviewOpen, setIsFullPreviewOpen] = useState(false);
-  const [isFullScale, setIsFullScale] = useState(false);
-  const [previewDocument, setPreviewDocument] = useState<DeepSearchData | null>(null);
+  // Preview modal state (merged into single object)
+  const [previewState, setPreviewState] = useState<{
+    isOpen: boolean;
+    isFullScale: boolean;
+    document: DeepSearchData | null;
+  }>({
+    isOpen: false,
+    isFullScale: true, // Open full by default
+    document: null,
+  });
   
   // Use the new useDocuments hook with integrated sync functionality
   // Only load data when this tab is active
@@ -547,33 +549,30 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       const document = documents[arrayIndex];
       if (document) {
         const previewData = adaptDocumentToPreviewFormat(document);
-        setPreviewDocument(previewData);
-        setIsMiniPreviewOpen(true);
+        setPreviewState({
+          isOpen: true,
+          isFullScale: true, // Always open in full scale
+          document: previewData,
+        });
       }
     },
     [documents, startIndex],
   );
 
   // Preview handlers
-  const handleExpandToFullScale = useCallback(() => {
-    setIsMiniPreviewOpen(false);
-    setIsFullPreviewOpen(true);
-    setIsFullScale(true);
-  }, []);
-
   const handleToggleFullScale = useCallback(() => {
-    setIsFullScale((prev) => !prev);
+    setPreviewState((prev) => ({
+      ...prev,
+      isFullScale: !prev.isFullScale,
+    }));
   }, []);
 
-  const handleCloseMiniPreview = useCallback(() => {
-    setIsMiniPreviewOpen(false);
-    setPreviewDocument(null);
-  }, []);
-
-  const handleCloseFullPreview = useCallback(() => {
-    setIsFullPreviewOpen(false);
-    setIsFullScale(false);
-    setPreviewDocument(null);
+  const handleClosePreview = useCallback(() => {
+    setPreviewState({
+      isOpen: false,
+      isFullScale: true,
+      document: null,
+    });
   }, []);
 
   // Only render content when the tab is active
@@ -762,23 +761,15 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         }}
       />
 
-      {/* Preview Modals */}
-      {previewDocument && (
-        <>
-          <MiniDocumentPreview
-            document={previewDocument}
-            isOpen={isMiniPreviewOpen}
-            onClose={handleCloseMiniPreview}
-            onExpandToFullScale={handleExpandToFullScale}
-          />
-          <DocumentPreview
-            document={previewDocument}
-            isOpen={isFullPreviewOpen}
-            onClose={handleCloseFullPreview}
-            isFullScale={isFullScale}
-            onToggleFullScale={handleToggleFullScale}
-          />
-        </>
+      {/* Preview Modal */}
+      {previewState.document && (
+        <DocumentPreview
+          document={previewState.document}
+          isOpen={previewState.isOpen}
+          onClose={handleClosePreview}
+          isFullScale={previewState.isFullScale}
+          onToggleFullScale={handleToggleFullScale}
+        />
       )}
     </div>
   );
