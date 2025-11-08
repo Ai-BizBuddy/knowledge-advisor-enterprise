@@ -1,7 +1,7 @@
 /**
  * useLogs Hook
  * 
- * Custom hook for managing application logs with Thai datetime formatting
+ * Custom hook for managing application logs with Thai datetime formatting and pagination
  */
 
 'use client';
@@ -11,36 +11,49 @@ import { logsService } from '@/services/LogsService';
 import { useCallback, useEffect, useState } from 'react';
 
 export interface UseLogsOptions {
-  limit?: number;
+  initialLimit?: number;
   autoRefresh?: boolean;
   refreshInterval?: number;
-  sortBy?: 'timestamp' | 'action' | 'table_name' | 'user_full_name';
-  sortOrder?: 'asc' | 'desc';
+}
+
+export interface PaginationState {
+  page: number;
+  limit: number;
+  sortBy: 'timestamp' | 'action' | 'table_name' | 'user_full_name';
+  sortOrder: 'asc' | 'desc';
+  filterAction?: string;
 }
 
 export interface UseLogsReturn {
   logs: LogEntry[];
+  total: number;
   loading: boolean;
   error: string | null;
-  refreshLogs: (sortBy?: string, sortOrder?: 'asc' | 'desc') => Promise<void>;
-  searchLogs: (query: string, sortBy?: string, sortOrder?: 'asc' | 'desc') => Promise<void>;
+  paginationState: PaginationState;
+  updatePagination: (updates: Partial<PaginationState>) => void;
+  refreshLogs: () => Promise<void>;
 }
 
 /**
- * Hook for managing application logs
+ * Hook for managing application logs with server-side pagination
  */
 export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
   const {
-    limit,
+    initialLimit = 10,
     autoRefresh = false,
     refreshInterval = 30000, // 30 seconds
-    sortBy: defaultSortBy = 'timestamp',
-    sortOrder: defaultSortOrder = 'desc',
   } = options;
 
   const [logs, setLogs] = useState<LogEntry[]>([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [paginationState, setPaginationState] = useState<PaginationState>({
+    page: 1,
+    limit: initialLimit,
+    sortBy: 'timestamp',
+    sortOrder: 'desc',
+  });
 
   /**
    * Format timestamp to Thai locale
@@ -91,24 +104,39 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
   }, [formatThaiTimestamp]);
 
   /**
-   * Fetch logs from the database with sorting
+   * Update pagination state with merge
    */
-  const refreshLogs = useCallback(async (
-    sortBy?: string,
-    sortOrder?: 'asc' | 'desc',
-  ) => {
+  const updatePagination = useCallback((updates: Partial<PaginationState>) => {
+    setPaginationState((prev) => ({
+      ...prev,
+      ...updates,
+      // Reset to page 1 when changing filters or sorting
+      page: updates.sortBy || updates.sortOrder || updates.filterAction !== undefined ? 1 : (updates.page ?? prev.page),
+    }));
+  }, []);
+
+  /**
+   * Fetch logs from the database with pagination
+   */
+  const refreshLogs = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      const logEntries = await logsService.getLogs({
-        sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
-        sortOrder: sortOrder || defaultSortOrder,
-        limit,
+      const offset = (paginationState.page - 1) * paginationState.limit;
+
+      const result = await logsService.getLogsWithCount({
+        sortBy: paginationState.sortBy,
+        sortOrder: paginationState.sortOrder,
+        filterAction: paginationState.filterAction,
+        limit: paginationState.limit,
+        offset,
       });
-      const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
+      
+      const logsWithThaiTime = transformLogsWithThaiTime(result.data);
       
       setLogs(logsWithThaiTime);
+      setTotal(result.total);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch logs';
       setError(errorMessage);
@@ -116,44 +144,9 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
     } finally {
       setLoading(false);
     }
-  }, [transformLogsWithThaiTime, defaultSortBy, defaultSortOrder, limit]);
+  }, [paginationState, transformLogsWithThaiTime]);
 
-  /**
-   * Search logs by query with sorting
-   */
-  const searchLogs = useCallback(async (
-    query: string,
-    sortBy?: string,
-    sortOrder?: 'asc' | 'desc',
-  ) => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      const logEntries = query.trim() 
-        ? await logsService.searchLogs(query, {
-            sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
-            sortOrder: sortOrder || defaultSortOrder,
-            limit,
-          })
-        : await logsService.getLogs({
-            sortBy: (sortBy as 'timestamp' | 'action' | 'table_name' | 'user_full_name') || defaultSortBy,
-            sortOrder: sortOrder || defaultSortOrder,
-            limit,
-          });
-      
-      const logsWithThaiTime = transformLogsWithThaiTime(logEntries);
-      setLogs(logsWithThaiTime);
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to search logs';
-      setError(errorMessage);
-      console.error('Error searching logs:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [transformLogsWithThaiTime, defaultSortBy, defaultSortOrder, limit]);
-
-  // Load logs on mount
+  // Load logs when pagination state changes
   useEffect(() => {
     refreshLogs();
   }, [refreshLogs]);
@@ -171,9 +164,11 @@ export const useLogs = (options: UseLogsOptions = {}): UseLogsReturn => {
 
   return {
     logs,
+    total,
     loading,
     error,
+    paginationState,
+    updatePagination,
     refreshLogs,
-    searchLogs,
   };
 };

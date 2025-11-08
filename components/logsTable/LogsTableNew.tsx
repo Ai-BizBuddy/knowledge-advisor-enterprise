@@ -29,87 +29,71 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
   className = '',
   pageSize = 10,
 }) => {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<'timestamp' | 'action' | 'table_name' | 'user_full_name'>('timestamp');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [activeTab, setActiveTab] = useState('All');
 
   // Tab list for CRUD filtering
   const tabList = ['All', 'Create', 'Update', 'Delete'];
 
-  // Use the logs hook to fetch real data with server-side sorting
+  // Use the logs hook with server-side pagination
   const {
     logs,
+    total,
     loading: hookLoading,
     error: hookError,
+    paginationState,
+    updatePagination,
     refreshLogs,
-    searchLogs,
   } = useLogs({
+    initialLimit: pageSize,
     autoRefresh: false,
-    sortBy,
-    sortOrder,
   });
 
   // Combine external and hook states
   const loading = externalLoading || hookLoading;
   const error = externalError || hookError;
 
-  // Handle search and sorting when tab or sort changes
+  // Handle tab change with filter update
   React.useEffect(() => {
-    const fetchData = async () => {
-      if (activeTab !== 'All') {
-        const actionMap: Record<string, string[]> = {
-          Create: ['INSERT'],
-          Update: ['UPDATE'],
-          Delete: ['DELETE'],
-        };
-        
-        const allowedActions = actionMap[activeTab] || [];
-        await searchLogs(allowedActions.join(' '), sortBy, sortOrder);
-      } else {
-        // Fetch all logs with current sorting
-        await refreshLogs(sortBy, sortOrder);
-      }
+    const actionMap: Record<string, string | undefined> = {
+      All: undefined,
+      Create: 'INSERT',
+      Update: 'UPDATE',
+      Delete: 'DELETE',
     };
-
-    fetchData();
-  }, [activeTab, sortBy, sortOrder, refreshLogs, searchLogs]);
-
-  // Data comes pre-sorted from database
-  const filteredLogs = logs;
+    
+    const filterAction = actionMap[activeTab];
+    updatePagination({ filterAction });
+  }, [activeTab, updatePagination]);
 
   // Pagination calculations
-  const totalPages = Math.ceil(filteredLogs.length / pageSize);
-  const startIndex = (currentPage - 1) * pageSize;
-  const paginatedLogs = filteredLogs.slice(
-    startIndex,
-    startIndex + pageSize,
-  );
+  const totalPages = Math.ceil(total / paginationState.limit);
 
   // Handle tab change
   const handleTabChange = useCallback((tab: string) => {
     setActiveTab(tab);
-    setCurrentPage(1); // Reset to first page when changing tabs
   }, []);
 
   // Handle sort
   const handleSort = useCallback(
     (column: 'timestamp' | 'action' | 'table_name' | 'user_full_name') => {
-      if (sortBy === column) {
-        setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+      if (paginationState.sortBy === column) {
+        updatePagination({ sortOrder: paginationState.sortOrder === 'asc' ? 'desc' : 'asc' });
       } else {
-        setSortBy(column);
-        setSortOrder('desc');
+        updatePagination({ sortBy: column, sortOrder: 'desc' });
       }
-      setCurrentPage(1); // Reset to first page when sorting
     },
-    [sortBy, sortOrder],
+    [paginationState.sortBy, paginationState.sortOrder, updatePagination],
   );
 
   // Handle page change
   const handlePageChange = useCallback((page: number) => {
-    setCurrentPage(page);
-  }, []);
+    updatePagination({ page });
+  }, [updatePagination]);
+
+  // Handle limit change
+  const handleLimitChange = useCallback((limit: number) => {
+    updatePagination({ limit });
+  }, [updatePagination]);
 
   // Handle refresh
   const handleRefresh = useCallback(async () => {
@@ -121,7 +105,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
 
   // Render sort icon
   const renderSortIcon = (column: 'timestamp' | 'action' | 'table_name' | 'user_full_name') => {
-    if (sortBy !== column) {
+    if (paginationState.sortBy !== column) {
       return (
         <svg
           className='ml-1 h-3 w-3 opacity-50'
@@ -134,7 +118,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
     }
     return (
       <svg
-        className={`ml-1 h-3 w-3 transform ${sortOrder === 'desc' ? 'rotate-180' : ''}`}
+        className={`ml-1 h-3 w-3 transform ${paginationState.sortOrder === 'desc' ? 'rotate-180' : ''}`}
         fill='currentColor'
         viewBox='0 0 20 20'
       >
@@ -173,19 +157,17 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                 Activity Logs
               </h3>
               <Badge color='info' size='sm' className='self-start'>
-                {filteredLogs.length} entries
+                {total} entries
               </Badge>
             </div>
             
             {/* Mobile Sort Controls */}
             <div className='sm:hidden flex items-center gap-2'>
               <select
-                value={`${sortBy}-${sortOrder}`}
+                value={`${paginationState.sortBy}-${paginationState.sortOrder}`}
                 onChange={(e) => {
                   const [field, order] = e.target.value.split('-') as ['timestamp' | 'action' | 'table_name' | 'user_full_name', 'asc' | 'desc'];
-                  setSortBy(field);
-                  setSortOrder(order);
-                  setCurrentPage(1);
+                  updatePagination({ sortBy: field, sortOrder: order });
                 }}
                 className='text-xs bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500'
               >
@@ -287,7 +269,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   </tr>
                 </thead>
                 <tbody>
-                  {paginatedLogs.length === 0 ? (
+                  {logs.length === 0 ? (
                     <tr>
                       <td colSpan={5} className='px-6 py-4'>
                         <div className='py-8 text-center'>
@@ -300,7 +282,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                       </td>
                     </tr>
                   ) : (
-                    paginatedLogs
+                    logs
                       .map((log, index) => (
                       <motion.tr
                         key={log.id}
@@ -364,7 +346,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
 
             {/* Mobile Card View */}
             <div className='block sm:hidden space-y-3'>
-              {paginatedLogs.length === 0 ? (
+              {logs.length === 0 ? (
                 <div className='py-8 text-center'>
                   <div className='mb-2 text-gray-500 dark:text-gray-400'>
                     {activeTab !== 'All'
@@ -373,8 +355,7 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
                   </div>
                 </div>
               ) : (
-                paginatedLogs
-                  .sort((a, b) => a.timestamp < b.timestamp ? 1 : -1)
+                logs
                   .map((log, index) => (
                   <motion.div
                     key={log.id}
@@ -445,12 +426,27 @@ export const LogsTable: React.FC<LogsTableComponentProps> = ({
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className='mt-4'>
+              <div className='mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4'>
+                <div className='flex items-center gap-2'>
+                  <label className='text-sm text-gray-700 dark:text-gray-300'>
+                    Rows per page:
+                  </label>
+                  <select
+                    value={paginationState.limit}
+                    onChange={(e) => handleLimitChange(Number(e.target.value))}
+                    className='text-sm bg-gray-50 border border-gray-300 text-gray-900 rounded-lg focus:ring-blue-500 focus:border-blue-500 p-2 dark:bg-gray-700 dark:border-gray-600 dark:text-white'
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
                 <Pagination
-                  currentPage={currentPage}
+                  currentPage={paginationState.page}
                   totalPages={totalPages}
-                  pageSize={pageSize}
-                  total={filteredLogs.length}
+                  pageSize={paginationState.limit}
+                  total={total}
                   onPageChange={handlePageChange}
                 />
               </div>

@@ -22,13 +22,48 @@ export interface LogsQueryOptions {
   sortOrder?: 'asc' | 'desc';
   filterAction?: string;
   limit?: number;
+  offset?: number;
+}
+
+export interface LogsResult {
+  data: LogEntry[];
+  total: number;
 }
 
 export class LogsService {
   private supabase = createClientTable();
 
   /**
-   * Fetch logs from the activity_log table with sorting and filtering
+   * Get total count of logs with filters
+   */
+  async getTotalCount(options: Omit<LogsQueryOptions, 'limit' | 'offset' | 'sortBy' | 'sortOrder'> = {}): Promise<number> {
+    try {
+      const { filterAction } = options;
+
+      let query = this.supabase
+        .from('activity_log_with_profiles')
+        .select('*', { count: 'exact', head: true });
+
+      // Apply action filter if provided
+      if (filterAction) {
+        query = query.or(`action.ilike.%${filterAction}%`);
+      }
+
+      const { count, error } = await query;
+
+      if (error) {
+        throw new Error(`Failed to count logs: ${error.message}`);
+      }
+
+      return count || 0;
+    } catch (error) {
+      console.error('Error counting logs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch logs from the activity_log table with sorting, filtering, and pagination
    */
   async getLogs(options: LogsQueryOptions = {}): Promise<LogEntry[]> {
     try {
@@ -36,7 +71,8 @@ export class LogsService {
         sortBy = 'timestamp',
         sortOrder = 'desc',
         filterAction,
-        limit,
+        limit = 10,
+        offset = 0,
       } = options;
 
       let query = this.supabase
@@ -51,10 +87,8 @@ export class LogsService {
       // Apply sorting
       query = query.order(sortBy, { ascending: sortOrder === 'asc' });
 
-      // Apply limit if provided
-      if (limit) {
-        query = query.limit(limit);
-      }
+      // Apply pagination
+      query = query.range(offset, offset + limit - 1);
 
       const { data, error } = await query;
 
@@ -75,6 +109,23 @@ export class LogsService {
       }));
     } catch (error) {
       console.error('Error fetching logs:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Fetch logs with pagination and return total count
+   */
+  async getLogsWithCount(options: LogsQueryOptions = {}): Promise<LogsResult> {
+    try {
+      const [data, total] = await Promise.all([
+        this.getLogs(options),
+        this.getTotalCount(options),
+      ]);
+
+      return { data, total };
+    } catch (error) {
+      console.error('Error fetching logs with count:', error);
       throw error;
     }
   }
