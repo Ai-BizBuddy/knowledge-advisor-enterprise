@@ -82,12 +82,16 @@ const transformRoleToModalData = async (
 export default function RolesPage() {
   // Get JWT permissions for conditional rendering
   const { hasAnyPermission } = useJWTPermissions();
-  
+
   // Check for role-related permissions
   // Note: Based on your JWT example, there are no specific role permissions like 'role:create'
   // So we'll use user management permissions as a proxy
-  const canManageRoles = hasAnyPermission(['user:create', 'user:update', 'user:delete']);
-  
+  const canManageRoles = hasAnyPermission([
+    'user:create',
+    'user:update',
+    'user:delete',
+  ]);
+
   const {
     roles,
     loading,
@@ -209,8 +213,7 @@ export default function RolesPage() {
           await permissionMappingService.convertPermissionsToIds(
             permissionRows,
           );
-
-                      }
+      }
 
       const newRole = await createRole(createRoleData);
 
@@ -272,7 +275,6 @@ export default function RolesPage() {
     if (!selectedRole) return;
 
     try {
-      
       // Transform payload to match existing API
       const updateRoleData: UpdateRoleInput = {
         name: payload.roleName,
@@ -298,8 +300,7 @@ export default function RolesPage() {
           await permissionMappingService.convertPermissionsToIds(
             permissionRows,
           );
-
-                      }
+      }
 
       const updatedRole = await updateRole(selectedRole.id, updateRoleData);
 
@@ -321,7 +322,6 @@ export default function RolesPage() {
         throw new Error('Failed to update role - no role returned from server');
       }
     } catch (error) {
-      
       // Enhanced error handling with specific error types
       let errorMessage = 'Failed to update role';
 
@@ -383,7 +383,6 @@ export default function RolesPage() {
         throw new Error('Failed to delete role - operation was not successful');
       }
     } catch (error) {
-      
       // Enhanced error handling with specific error types
       let errorMessage = 'Failed to delete role';
 
@@ -432,7 +431,7 @@ export default function RolesPage() {
 
     // Wait for permission resources to be loaded if they aren't already
     if (permissionResources.length === 0) {
-            // You might want to show a loading state here
+      // You might want to show a loading state here
       // For now, we'll proceed with empty resources and they'll be filled later
     }
 
@@ -476,7 +475,6 @@ export default function RolesPage() {
 
   return (
     <div className='space-y-6'>
-
       {/* Search and Filters */}
       <div className='mb-6'>
         <TableSearch
@@ -506,13 +504,13 @@ export default function RolesPage() {
                     <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                       Level
                     </th>
-                    <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase md:table-cell sm:px-6 dark:text-gray-400'>
+                    <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 md:table-cell dark:text-gray-400'>
                       Permissions
                     </th>
                     <th className='px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
                       Type
                     </th>
-                    <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase xl:table-cell sm:px-6 dark:text-gray-400'>
+                    <th className='hidden px-3 py-3 text-left text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 xl:table-cell dark:text-gray-400'>
                       Created
                     </th>
                     <th className='px-3 py-3 text-right text-xs font-medium tracking-wider text-gray-500 uppercase sm:px-6 dark:text-gray-400'>
@@ -528,8 +526,8 @@ export default function RolesPage() {
                     >
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                         <div className='flex items-center'>
-                          <div className='h-8 w-8 sm:h-10 sm:w-10 flex-shrink-0'>
-                            <div className='flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600 dark:bg-blue-900 dark:text-blue-400'>
+                          <div className='h-8 w-8 flex-shrink-0 sm:h-10 sm:w-10'>
+                            <div className='flex h-8 w-8 items-center justify-center rounded-full bg-blue-100 text-sm font-semibold text-blue-600 sm:h-10 sm:w-10 dark:bg-blue-900 dark:text-blue-400'>
                               {role.name.charAt(0).toUpperCase()}
                             </div>
                           </div>
@@ -537,43 +535,47 @@ export default function RolesPage() {
                             <div className='text-sm font-medium text-gray-900 dark:text-white'>
                               {role.name}
                             </div>
-                            <div className='text-xs sm:text-sm text-gray-500 md:hidden dark:text-gray-400'>
+                            <div className='text-xs text-gray-500 sm:text-sm md:hidden dark:text-gray-400'>
                               {role.description || 'No description'}
                             </div>
                           </div>
                         </div>
                       </td>
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
-                        <span className={`inline-flex items-center rounded-full px-2 py-0.5 sm:px-2.5 text-xs font-medium ${
-                          (role.level || 0) >= 90 
-                            ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-                            : (role.level || 0) >= 70 
-                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                              : (role.level || 0) >= 50 
-                                ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                        }`}>
-                          <span className='hidden sm:inline'>{getLevelLabel(role.level || 0)} </span>
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium sm:px-2.5 ${
+                            (role.level || 0) >= 90
+                              ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+                              : (role.level || 0) >= 70
+                                ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                                : (role.level || 0) >= 50
+                                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300'
+                                  : 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          }`}
+                        >
+                          <span className='hidden sm:inline'>
+                            {getLevelLabel(role.level || 0)}{' '}
+                          </span>
                           ({role.level || 0})
                         </span>
                       </td>
-                      <td className='hidden px-3 py-4 whitespace-nowrap md:table-cell sm:px-6'>
+                      <td className='hidden px-3 py-4 whitespace-nowrap sm:px-6 md:table-cell'>
                         <span className='text-sm text-gray-900 dark:text-white'>
                           {role.permissions?.length || 0} permissions
                         </span>
                       </td>
                       <td className='px-3 py-4 whitespace-nowrap sm:px-6'>
                         {role.is_system_role ? (
-                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-300'>
+                          <span className='inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-800 sm:px-2.5 dark:bg-blue-900 dark:text-blue-300'>
                             System
                           </span>
                         ) : (
-                          <span className='inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 sm:px-2.5 text-xs font-medium text-gray-800 dark:bg-gray-900 dark:text-gray-300'>
+                          <span className='inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-800 sm:px-2.5 dark:bg-gray-900 dark:text-gray-300'>
                             Custom
                           </span>
                         )}
                       </td>
-                      <td className='hidden px-3 py-4 whitespace-nowrap xl:table-cell sm:px-6'>
+                      <td className='hidden px-3 py-4 whitespace-nowrap sm:px-6 xl:table-cell'>
                         <span className='text-sm text-gray-500 dark:text-gray-400'>
                           {new Date(role.created_at).toLocaleDateString()}
                         </span>
@@ -586,8 +588,18 @@ export default function RolesPage() {
                               className='inline-flex items-center justify-center rounded-md bg-gray-100 p-2 text-gray-700 transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
                               title='Edit role'
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z' />
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z'
+                                />
                               </svg>
                             </button>
                           )}
@@ -598,8 +610,18 @@ export default function RolesPage() {
                               className='inline-flex items-center justify-center rounded-md bg-red-100 p-2 text-red-700 transition-colors hover:bg-red-200 disabled:cursor-not-allowed disabled:opacity-50 dark:bg-red-900 dark:text-red-300 dark:hover:bg-red-800'
                               title='Delete role'
                             >
-                              <svg className='h-4 w-4' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
-                                <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16' />
+                              <svg
+                                className='h-4 w-4'
+                                fill='none'
+                                stroke='currentColor'
+                                viewBox='0 0 24 24'
+                              >
+                                <path
+                                  strokeLinecap='round'
+                                  strokeLinejoin='round'
+                                  strokeWidth={2}
+                                  d='M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16'
+                                />
                               </svg>
                             </button>
                           )}
@@ -615,7 +637,7 @@ export default function RolesPage() {
                       >
                         <div className='flex flex-col items-center'>
                           <svg
-                            className='mb-4 h-8 w-8 sm:h-12 sm:w-12 text-gray-400'
+                            className='mb-4 h-8 w-8 text-gray-400 sm:h-12 sm:w-12'
                             fill='none'
                             stroke='currentColor'
                             viewBox='0 0 24 24'
@@ -690,7 +712,7 @@ export default function RolesPage() {
         <div className='p-4 sm:p-6'>
           <div className='text-center'>
             <svg
-              className='mx-auto mb-4 h-12 w-12 sm:h-14 sm:w-14 text-red-600'
+              className='mx-auto mb-4 h-12 w-12 text-red-600 sm:h-14 sm:w-14'
               fill='none'
               stroke='currentColor'
               viewBox='0 0 24 24'
@@ -715,9 +737,9 @@ export default function RolesPage() {
             </p>
 
             <div className='mt-6 flex flex-col-reverse gap-2 sm:flex-row sm:justify-center sm:gap-4'>
-              <Button 
-                color='gray' 
-                onClick={() => setShowDeleteModal(false)} 
+              <Button
+                color='gray'
+                onClick={() => setShowDeleteModal(false)}
                 className='w-full sm:w-auto'
                 disabled={loading}
               >
@@ -727,7 +749,7 @@ export default function RolesPage() {
                 color='failure'
                 onClick={handleDeleteRole}
                 disabled={loading}
-                className='w-full sm:w-auto bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
+                className='w-full bg-red-600 hover:bg-red-700 focus:ring-4 focus:ring-red-300 sm:w-auto dark:bg-red-600 dark:hover:bg-red-700 dark:focus:ring-red-900'
               >
                 {loading ? 'Deleting...' : 'Yes, delete'}
               </Button>

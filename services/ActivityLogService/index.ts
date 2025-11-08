@@ -221,6 +221,34 @@ export class ActivityLogService {
     const oldDataStr = log.old_data?.name as string | undefined;
     const newDataStr = log.new_data?.name as string | undefined;
 
+    // Special handling for document status changes
+    if (tableName === 'document' && action === 'UPDATE') {
+      const changedFields = log.changed_fields || [];
+      
+      // Check if status field was changed
+      if (changedFields.includes('status')) {
+        const oldStatus = log.old_data?.status as string | undefined;
+        const newStatus = log.new_data?.status as string | undefined;
+        const documentName = newDataStr || oldDataStr || 'Document';
+        
+        if (oldStatus && newStatus) {
+          return `${documentName} status changed from ${oldStatus} to ${newStatus}`;
+        }
+      }
+      
+      // Check for other important document field changes
+      if (changedFields.includes('chunk_count')) {
+        const documentName = newDataStr || oldDataStr || 'Document';
+        const chunkCount = log.new_data?.chunk_count;
+        return `${documentName} processed into ${chunkCount} chunk${Number(chunkCount) !== 1 ? 's' : ''}`;
+      }
+
+      if (changedFields.includes('last_rag_sync')) {
+        const documentName = newDataStr || oldDataStr || 'Document';
+        return `${documentName} synchronized to RAG system`;
+      }
+    }
+
     switch (action) {
       case 'INSERT':
         return `${userName} created new entry in ${tableName}${newDataStr ? `: ${newDataStr}` : ''}`;
@@ -234,11 +262,32 @@ export class ActivityLogService {
   }
 
   /**
-   * Get activity status based on action type
+   * Get activity status based on action type and context
    */
   getActivityStatus(
     action: string,
+    tableName?: string | null,
+    changedFields?: string[] | null,
+    newData?: Record<string, unknown> | null,
   ): 'success' | 'error' | 'info' | 'warning' {
+    // Special handling for document status changes
+    if (tableName === 'document' && action === 'UPDATE' && changedFields?.includes('status')) {
+      const status = newData?.status as string | undefined;
+      switch (status) {
+        case 'ready':
+          return 'success';
+        case 'processing':
+          return 'info';
+        case 'error':
+        case 'failed':
+          return 'error';
+        case 'uploaded':
+          return 'info';
+        default:
+          return 'info';
+      }
+    }
+
     switch (action.toUpperCase()) {
       case 'INSERT':
         return 'success';
@@ -259,9 +308,21 @@ export class ActivityLogService {
   getActivityType(
     tableName: string | null,
     action: string,
+    changedFields?: string[] | null,
   ): 'upload' | 'query' | 'knowledgebase' | 'processing' | 'error' {
     if (action === 'ERROR') {
       return 'error';
+    }
+
+    // Handle document table with more granularity
+    if (tableName === 'document') {
+      if (action === 'INSERT') {
+        return 'upload';
+      }
+      if (action === 'UPDATE' && changedFields?.includes('status')) {
+        return 'processing';
+      }
+      return 'upload';
     }
 
     switch (tableName) {
@@ -271,6 +332,7 @@ export class ActivityLogService {
       case 'queries':
         return 'query';
       case 'knowledge_bases':
+      case 'knowledge_base':
         return 'knowledgebase';
       case 'document_processing':
         return 'processing';

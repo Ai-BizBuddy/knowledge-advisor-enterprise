@@ -109,6 +109,60 @@ export default function RecentActivityCard({
     </div>
   );
 
+  const getActivityIcon = (title: string) => {
+    const lowerTitle = title.toLowerCase();
+    
+    // Document status changes
+    if (lowerTitle.includes('status changed')) {
+      if (lowerTitle.includes('to ready')) {
+        return (
+          <svg className='mt-0.5 h-5 w-5 text-green-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+            <path fillRule='evenodd' d='M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm13.707-1.293a1 1 0 0 0-1.414-1.414L11 12.586l-1.293-1.293a1 1 0 0 0-1.414 1.414l2 2a1 1 0 0 0 1.414 0l4-4Z' clipRule='evenodd' />
+          </svg>
+        );
+      }
+      if (lowerTitle.includes('to processing')) {
+        return (
+          <svg className='mt-0.5 h-5 w-5 text-yellow-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+            <path fillRule='evenodd' d='M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2ZM8 12a4 4 0 1 1 8 0 4 4 0 0 1-8 0Z' clipRule='evenodd' />
+          </svg>
+        );
+      }
+      if (lowerTitle.includes('to error') || lowerTitle.includes('to failed')) {
+        return (
+          <svg className='mt-0.5 h-5 w-5 text-red-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+            <path fillRule='evenodd' d='M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 1 0 2 0V8Zm-1 8a1 1 0 1 0 0 2h.01a1 1 0 1 0 0-2H12Z' clipRule='evenodd' />
+          </svg>
+        );
+      }
+    }
+    
+    // Document processing
+    if (lowerTitle.includes('processed into') || lowerTitle.includes('chunk')) {
+      return (
+        <svg className='mt-0.5 h-5 w-5 text-purple-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+          <path d='M3 5h8v6H3V5zm10 0h8v6h-8V5zM3 13h8v6H3v-6zm10 0h8v6h-8v-6z' />
+        </svg>
+      );
+    }
+    
+    // RAG sync
+    if (lowerTitle.includes('synchronized')) {
+      return (
+        <svg className='mt-0.5 h-5 w-5 text-cyan-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+          <path fillRule='evenodd' d='M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15' clipRule='evenodd' />
+        </svg>
+      );
+    }
+    
+    // Default icon
+    return (
+      <svg className='mt-0.5 h-5 w-5 text-blue-500 sm:h-6 sm:w-6' fill='currentColor' viewBox='0 0 24 24'>
+        <path fillRule='evenodd' d='M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z' clipRule='evenodd' />
+      </svg>
+    );
+  };
+
   const renderActivityList = () => (
     <ul className='space-y-0 divide-y divide-gray-200 dark:divide-gray-800'>
       {activities.map((activity, index) => (
@@ -117,17 +171,7 @@ export default function RecentActivityCard({
           className='flex items-start gap-3 py-3 first:pt-0 last:pb-0 sm:py-4'
         >
           <div className='flex-shrink-0'>
-            <svg
-              className='mt-0.5 h-5 w-5 text-blue-500 sm:h-6 sm:w-6'
-              fill='currentColor'
-              viewBox='0 0 24 24'
-            >
-              <path
-                fillRule='evenodd'
-                d='M2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12Zm11-4a1 1 0 1 0-2 0v4a1 1 0 0 0 .293.707l3 3a1 1 0 0 0 1.414-1.414L13 11.586V8Z'
-                clipRule='evenodd'
-              />
-            </svg>
+            {getActivityIcon(activity.title)}
           </div>
           <div className='min-w-0 flex-1'>
             <p className='mb-1 text-sm font-medium text-gray-900 sm:text-base dark:text-white'>

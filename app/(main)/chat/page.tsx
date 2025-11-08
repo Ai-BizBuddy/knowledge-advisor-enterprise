@@ -8,17 +8,9 @@ import {
   PageHeader,
 } from '@/components';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
-import { ChatMessage } from '@/hooks/useAdkChat';
 import { ChatSession, useChatHistory } from '@/hooks/useChatHistory';
 import { Button } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
-
-const welcomeMessage: ChatMessage = {
-  id: Date.now().toString(),
-  type: 'assistant',
-  content:
-    'สวัสดีครับ! ผมเป็น AI Assistant ที่จะช่วยคุณในการค้นหาข้อมูลจาก Knowledge Base ของคุณ\n\nกรุณาเลือก Knowledge Base ที่ต้องการสอบถาม หรือเลือกทั้งหมดเพื่อค้นหาข้อมูลจากทุก Knowledge Base\n\nจากนั้นสามารถถามคำถามได้เลยครับ!',
-};
 
 export default function ChatPage() {
   const [isOnline] = useState(false);
@@ -59,7 +51,7 @@ export default function ChatPage() {
     async (session: ChatSession) => {
       const sessionMessages = await getChatSessions(session.id);
       setMessages([
-        welcomeMessage,
+        // welcomeMessage,
         ...sessionMessages.filter((msg) =>
           msg.content.includes('video_metadata=None') ||
           msg.content.includes('image_metadata=None') ||

@@ -102,10 +102,10 @@ export const useRecentActivity = (
       // Transform activity logs to ActivityItem format
       const activities: ActivityItem[] = result.data.map((log: ActivityLogWithProfile) => ({
         id: log.id,
-        type: activityLogService.getActivityType(log.table_name, log.action),
+        type: activityLogService.getActivityType(log.table_name, log.action, log.changed_fields),
         message: activityLogService.formatActivityMessage(log),
         time: formatRelativeTime(log.timestamp),
-        status: activityLogService.getActivityStatus(log.action),
+        status: activityLogService.getActivityStatus(log.action, log.table_name, log.changed_fields, log.new_data),
         projectId: log.knowledge_base_id || undefined,
         documentId: log.record_id || undefined,
       }));

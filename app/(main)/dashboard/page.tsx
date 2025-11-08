@@ -42,7 +42,7 @@ export default function DashboardPage() {
       const mapped = (recentActivities || []).map((a) => ({
         title: a.message,
         timestamp: a.time,
-        description: `${a.type} • ${a.status}`,
+        description: a.type === 'processing' ? `Processing status: ${a.status}` : undefined,
       }));
       
       return mapped;
