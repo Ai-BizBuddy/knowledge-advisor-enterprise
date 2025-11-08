@@ -1,7 +1,6 @@
 'use client';
 
-import { documentsData, type Document } from '@/data/documentsData';
-import { filterDocuments } from '@/utils/documentsUtils';
+import { type Document } from '@/data/documentsData';
 import { useCallback, useEffect, useState } from 'react';
 
 export const useDocumentsManagement = () => {
@@ -14,56 +13,6 @@ export const useDocumentsManagement = () => {
   const [sortBy, setSortBy] = useState<keyof Document>('date');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const itemsPerPage = 10;
-
-  // Local sorting function for mock data
-  const sortDocuments = useCallback(
-    (documents: Document[]) => {
-      return [...documents].sort((a, b) => {
-        let aValue: string | number;
-        let bValue: string | number;
-
-        switch (sortBy) {
-          case 'name':
-            aValue = a.name.toLowerCase();
-            bValue = b.name.toLowerCase();
-            break;
-          case 'date':
-            aValue = new Date(a.date).getTime();
-            bValue = new Date(b.date).getTime();
-            break;
-          case 'size':
-            // Convert size string to number for comparison (e.g., "2.5 MB" -> 2.5)
-            aValue = parseFloat(a.size.replace(/[^\d.]/g, ''));
-            bValue = parseFloat(b.size.replace(/[^\d.]/g, ''));
-            break;
-          case 'type':
-            aValue = a.type.toLowerCase();
-            bValue = b.type.toLowerCase();
-            break;
-          case 'uploadedBy':
-            aValue = a.uploadedBy.toLowerCase();
-            bValue = b.uploadedBy.toLowerCase();
-            break;
-          case 'status':
-            aValue = a.status.toLowerCase();
-            bValue = b.status.toLowerCase();
-            break;
-          case 'lastUpdated':
-            aValue = new Date(a.lastUpdated || a.date).getTime();
-            bValue = new Date(b.lastUpdated || b.date).getTime();
-            break;
-          default:
-            aValue = a.name.toLowerCase();
-            bValue = b.name.toLowerCase();
-        }
-
-        if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
-        return 0;
-      });
-    },
-    [sortBy, sortOrder],
-  );
 
   // Sorting handlers
   const handleSort = (field: keyof Document) => {
@@ -78,16 +27,13 @@ export const useDocumentsManagement = () => {
   const handleSortOrderToggle = () => {
     setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
   };
-  // Get filtered and sorted documents
-  const filteredDocuments = sortDocuments(
-    filterDocuments(documentsData, searchTerm, activeTab),
-  );
+  
 
   // Pagination logic
-  const totalPages = Math.ceil(filteredDocuments.length / itemsPerPage);
+  const totalPages = Math.ceil(0 / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const paginatedDocuments = filteredDocuments.slice(startIndex, endIndex);
+  const paginatedDocuments = [].slice(startIndex, endIndex);
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -220,8 +166,6 @@ export const useDocumentsManagement = () => {
     loading,
 
     // Data
-    documents: documentsData,
-    filteredDocuments,
     paginatedDocuments,
     totalPages,
     startIndex,

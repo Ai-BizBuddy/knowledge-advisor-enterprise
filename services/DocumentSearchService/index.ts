@@ -212,58 +212,7 @@ class DocumentSearchService {
             return error;
     });
   }
-  /**
-   * Get mock search results for development
-   */
-  private getMockSearchResults(query: string): DocumentSearchResultItem[] {
-    return [
-      {
-        id: 'doc-1',
-        title: 'Getting Started Guide',
-        content: `This document covers the basics of getting started with our platform. It includes ${query} and related concepts...`,
-        relevanceScore: 0.95,
-        documentType: 'PDF',
-        lastModified: '2024-03-15T10:30:00Z',
-        projectId: '1',
-        projectName: 'Enterprise Documentation',
-        matchedChunks: [
-          `Introduction to ${query}`,
-          `Advanced ${query} techniques`,
-        ],
-        metadata: {
-          author: 'Documentation Team',
-          version: '2.1',
-        },
-      },
-      {
-        id: 'doc-2',
-        title: 'API Reference Manual',
-        content: `Complete API reference documentation including endpoints related to ${query}...`,
-        relevanceScore: 0.87,
-        documentType: 'Markdown',
-        lastModified: '2024-03-14T16:45:00Z',
-        projectId: '3',
-        projectName: 'Product Documentation',
-        matchedChunks: [`${query} API endpoints`, `${query} authentication`],
-        metadata: {
-          version: '1.5',
-          apiVersion: 'v2',
-        },
-      },
-      {
-        id: 'doc-3',
-        title: 'FAQ Collection',
-        content: `Frequently asked questions about ${query} and troubleshooting common issues...`,
-        relevanceScore: 0.76,
-        documentType: 'HTML',
-        lastModified: '2024-03-13T09:20:00Z',
-        projectId: '2',
-        projectName: 'Customer Support Hub',
-        matchedChunks: [`Common ${query} issues`, `${query} best practices`],
-      },
-    ];
-  }
-
+  
   /**
    * Perform semantic search using Langflow
    */
@@ -367,21 +316,6 @@ class DocumentSearchService {
     filters?: DocumentSearchFilters,
   ): Promise<DocumentSearchResponse> {
     const startTime = Date.now();
-
-    if (this.useMockData) {
-      const mockResults = this.getMockSearchResults(query);
-      const filteredResults = filters?.projectId
-        ? mockResults.filter((r) => r.projectId === filters.projectId)
-        : mockResults;
-
-      return {
-        results: filteredResults,
-        totalCount: filteredResults.length,
-        searchTime: Date.now() - startTime,
-        query,
-        filters,
-      };
-    }
 
     try {
       // Get documents from Supabase for context
@@ -508,3 +442,4 @@ class DocumentSearchService {
 
 export { DocumentSearchService };
 export type { DocumentSearchServiceConfig };
+
