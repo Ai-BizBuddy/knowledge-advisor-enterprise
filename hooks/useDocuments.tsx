@@ -108,14 +108,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   const router = useRouter();
   const { getAccessToken } = useAuthContext();
 
-  console.log('[useDocuments] Hook initialized with options:', {
-    knowledgeBaseId,
-    autoLoad,
-  });
-
   // Create service instance using useMemo to prevent recreation
   const documentService = useMemo(() => {
-    console.log('[useDocuments] Creating DocumentService instance');
     return new DocumentService();
   }, []);
 
@@ -213,10 +207,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       error: Math.floor(totalItems * 0.1),
       archived: Math.floor(totalItems * 0.1),
     };
-    console.log(
-      '📊 [useDocuments.tabCountsData] Calculated tab counts:',
-      counts,
-    );
     return counts;
   }, [totalItems]);
 
@@ -240,14 +230,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
       // Prevent multiple simultaneous calls
       if (loadingRef.current) {
-        console.log(
-          '⏳ [useDocuments.loadDocuments] Already loading, skipping duplicate call',
-        );
         return;
       }
 
       try {
-        console.log('🔄 [useDocuments.loadDocuments] Starting load process');
         loadingRef.current = true;
 
         const paginationOptions: PaginationOptions = {
@@ -273,24 +259,11 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           searchTerm: currentState.searchTerm || undefined,
         };
 
-        console.log('🌐 [useDocuments.loadDocuments] Making API call with:', {
-          paginationOptions,
-          apiFilters,
-        });
-
         const result = await documentService.getDocumentsByKnowledgeBase(
           knowledgeBaseId,
           paginationOptions,
           apiFilters,
           { field: currentState.sortBy, order: currentState.sortOrder },
-        );
-
-        console.log(
-          '✅ [useDocuments.loadDocuments] API call successful, received:',
-          {
-            dataLength: result.data.length,
-            totalCount: result.count,
-          },
         );
 
         setDocuments(result.data);
@@ -323,12 +296,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const loadDocuments = useCallback(
     async (page?: number, forceRefresh = false) => {
-      console.log('[useDocuments.loadDocuments] Called with:', {
-        page,
-        forceRefresh,
-        knowledgeBaseId,
-      });
-
       setDocumentManagementState((prev) => {
         const pageToLoad = page ?? prev.currentPage;
 
@@ -346,14 +313,9 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const createDocument = useCallback(
     async (data: CreateDocumentInput): Promise<Document> => {
-      console.log('📝 [useDocuments.createDocument] Called with data:', data);
 
       try {
         const newDocument = await documentService.createDocument(data);
-        console.log(
-          '✅ [useDocuments.createDocument] Document created successfully:',
-          newDocument,
-        );
 
         // Refresh the list
         await loadDocuments(1, true);
@@ -378,15 +340,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const createMultipleDocuments = useCallback(
     async (data: CreateMultipleDocumentsInput): Promise<Document[]> => {
-      console.log('📝📝 [useDocuments.createMultipleDocuments] Called');
 
       try {
         const newDocuments =
           await documentService.createMultipleDocuments(data);
-        console.log(
-          '✅ [useDocuments.createMultipleDocuments] Documents created:',
-          newDocuments.length,
-        );
 
         await loadDocuments(1, true);
         return newDocuments;
@@ -414,20 +371,14 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       data: CreateDocumentsFromFilesInput,
       onProgress?: (fileId: string, progress: number) => void,
     ): Promise<Document[]> => {
-      console.log('📁📝 [useDocuments.createDocumentsFromFiles] Called');
 
       try {
         const newDocuments =
           await documentService.createDocumentsFromFiles(data, onProgress);
-        console.log(
-          '✅ [useDocuments.createDocumentsFromFiles] Documents created:',
-          newDocuments.length,
-        );
 
         await loadDocuments(1, true);
         return newDocuments;
       } catch (err) {
-        console.error('❌ [useDocuments.createDocumentsFromFiles] Error:', err);
         const errorMessage =
           err instanceof Error
             ? err.message
@@ -448,7 +399,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const updateDocument = useCallback(
     async (id: string, data: UpdateDocumentInput): Promise<Document> => {
-      console.log('✏️ [useDocuments.updateDocument] Called with id:', id);
       try {
         const updatedDocument = await documentService.updateDocument(id, data);
         return updatedDocument;
@@ -471,13 +421,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const deleteDocument = useCallback(
     async (id: string): Promise<void> => {
-      console.log('🗑️ [useDocuments.deleteDocument] Called with id:', id);
-
       try {
         // setDocumentManagementState(prev => ({ ...prev, loading: true, error: null }));
 
         await documentService.deleteDocument(id);
-        console.log('✅ [useDocuments.deleteDocument] Document deleted');
 
         // Update local state
         setDocuments((prev) => prev.filter((doc) => doc.id !== id));
@@ -509,11 +456,9 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const getDocument = useCallback(
     async (id: string): Promise<Document | null> => {
-      console.log('📄 [useDocuments.getDocument] Called with id:', id);
 
       try {
         const result = await documentService.getDocument(id, knowledgeBaseId);
-        console.log('✅ [useDocuments.getDocument] Document retrieved');
         return result;
       } catch (err) {
         const errorMessage =
@@ -537,7 +482,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
       ids: string[],
       updates: Partial<UpdateDocumentInput>,
     ): Promise<Document[]> => {
-      console.log('🔄📝 [useDocuments.batchUpdate] Called with ids:', ids);
 
       try {
         setDocumentManagementState((prev) => ({
@@ -551,8 +495,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           const updated = await documentService.updateDocument(id, updates);
           updatedDocuments.push(updated);
         }
-
-        console.log('✅ [useDocuments.batchUpdate] Batch update completed');
 
         // Only refresh once at the end
         await loadDocuments(currentPage, true);
@@ -578,8 +520,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const batchDelete = useCallback(
     async (ids: string[]): Promise<void> => {
-      console.log('🗑️🗑️ [useDocuments.batchDelete] Called with ids:', ids);
-
       try {
         setDocumentManagementState((prev) => ({
           ...prev,
@@ -590,8 +530,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         for (const id of ids) {
           await documentService.deleteDocument(id);
         }
-
-        console.log('✅ [useDocuments.batchDelete] Batch delete completed');
 
         // Only refresh once at the end
         await loadDocuments(currentPage, true);
@@ -625,7 +563,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         }
 
         const ingressUrl = `${process.env.NEXT_PUBLIC_INGRESS_SERVICE}/ingress`;
-        console.log(`[DocumentSync] Calling ingress API: ${ingressUrl}`);
 
         const response = await fetch(ingressUrl, {
           method: 'POST',
@@ -646,10 +583,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           );
           throw error;
         }
-
-        console.log(
-          `[DocumentSync] Successfully synced document: ${documentId}`,
-        );
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to sync document';
@@ -677,10 +610,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
         // Only refresh if there are no other sync operations in progress
         if (syncingDocuments.size <= 1) {
-          // <= 1 because current document is still in set
-          console.log(
-            '[DocumentSync] Refreshing documents list after sync completion',
-          );
           // await loadDocuments(currentPage, true);
         }
       } catch (err) {
@@ -714,8 +643,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           );
         }
 
-        // Refresh documents list once after all sync operations complete
-        // console.log('[DocumentSync] Refreshing documents list after bulk sync completion');
         await loadDocuments(currentPage, true);
       } catch (err) {
         const errorMessage =
@@ -735,7 +662,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const filterByStatus = useCallback(
     async (status: string): Promise<Document[]> => {
-      console.log('🔍 [useDocuments.filterByStatus] Setting status:', status);
       setDocumentManagementState((prev) => ({
         ...prev,
         selectedStatus: status,
@@ -751,7 +677,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    */
   const filterByType = useCallback(
     async (type: string): Promise<Document[]> => {
-      console.log('🔍 [useDocuments.filterByType] Setting type:', type);
       setDocumentManagementState((prev) => ({
         ...prev,
         selectedType: type,
@@ -765,10 +690,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   // Event handlers
   const handleStatusChange = useCallback(
     (status: string) => {
-      console.log(
-        '🎛️ [useDocuments.handleStatusChange] Called with status:',
-        status,
-      );
       filterByStatus(status);
     },
     [filterByStatus],
@@ -776,20 +697,17 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handleTypeChange = useCallback(
     (type: string) => {
-      console.log('🎛️ [useDocuments.handleTypeChange] Called with type:', type);
       filterByType(type);
     },
     [filterByType],
   );
 
   const handlePageChange = useCallback((page: number) => {
-    console.log('📄 [useDocuments.handlePageChange] Called with page:', page);
     setDocumentManagementState((prev) => ({ ...prev, currentPage: page }));
   }, []);
 
   const handleDocumentClick = useCallback(
     (id: string) => {
-      console.log('👆 [useDocuments.handleDocumentClick] Called with id:', id);
       router.push(`/knowledge-base/${knowledgeBaseId}/documents/${id}`);
     },
     [router, knowledgeBaseId],
@@ -797,11 +715,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   const handleDocumentDelete = useCallback(
     async (id: string) => {
-      console.log('🗑️ [useDocuments.handleDocumentDelete] Called with id:', id);
       if (confirm('Are you sure you want to delete this document?')) {
-        console.log(
-          '✅ [useDocuments.handleDocumentDelete] User confirmed deletion',
-        );
         await deleteDocument(id);
       }
     },
@@ -809,21 +723,14 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   const refresh = useCallback(async () => {
-    console.log('🔄 [useDocuments.refresh] Called');
     await loadDocuments(currentPage, true);
   }, [loadDocuments, currentPage]);
 
   const clearError = useCallback(() => {
-    console.log('🧹 [useDocuments.clearError] Called');
     setDocumentManagementState((prev) => ({ ...prev, error: null }));
   }, []);
 
   const setSearchTermHandler = useCallback((term: string) => {
-    console.log(
-      '🔍 [useDocuments.setSearchTermHandler] Called with term:',
-      term,
-    );
-    // Update search term immediately for UI responsiveness
     setDocumentManagementState((prev) => ({ 
       ...prev, 
       searchTerm: term,
@@ -832,10 +739,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   }, []);
 
   const setItemsPerPageHandler = useCallback((items: number) => {
-    console.log(
-      '📄 [useDocuments.setItemsPerPageHandler] Called with items:',
-      items,
-    );
     setDocumentManagementState((prev) => ({
       ...prev,
       itemsPerPage: items,
@@ -885,20 +788,12 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
   useEffect(() => {
     if (autoLoad && knowledgeBaseId) {
-      console.log(
-        '🔄 [useDocuments.useEffect] Initial auto-loading documents for knowledgeBaseId:',
-        knowledgeBaseId,
-      );
       loadDocuments(currentPage, true);
     }
   }, [knowledgeBaseId, autoLoad, loadDocuments, currentPage]);
 
   useEffect(() => {
     if (!knowledgeBaseId || !autoLoad) {
-      console.log(
-        '[Realtime] Skipping subscription:',
-        !knowledgeBaseId ? 'No knowledge base ID' : 'autoLoad is false',
-      );
       return;
     }
 
@@ -906,7 +801,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
 
     // Helper to update a document in state
     const updateDocumentInState = (updatedDoc: Document) => {
-      console.log({updatedDoc})
       setDocuments((prev) =>
         prev.map((doc) => (doc.id === updatedDoc.id ? updatedDoc : doc))
       );
@@ -951,38 +845,30 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         unsubscribe = null;
       }
 
-      try {
-        console.log('[Realtime] Starting subscription for knowledge base:', knowledgeBaseId);
-        
+      try {        
         unsubscribe = await documentService.subscribeToDocumentChanges(
           knowledgeBaseId,
           {
             onInsert: () => {
-              console.log('[Realtime] INSERT: Reloading documents');
               loadDocuments(currentPage, true);
             },
             onUpdate: (updatedDoc) => {
-              console.log('[Realtime] UPDATE: Updating document in state');
               updateDocumentInState(updatedDoc);
             },
             onSoftDelete: (deletedId) => {
-              console.log('[Realtime] SOFT DELETE: Removing from state');
               removeDocumentFromState(deletedId);
             },
             onDelete: (deletedId) => {
-              console.log('[Realtime] HARD DELETE: Removing from state');
               removeDocumentFromState(deletedId);
             },
             onStatusChange: (status) => {
               if (status === 'SUBSCRIBED') {
-                console.log('[Realtime] ✅ SUBSCRIBED successfully');
                 return;
               } 
             },
           }
         );
         
-        console.log('[Realtime] Subscription setup completed');
       } catch (err) {
         console.error('[Realtime] Subscription error:', err);
       }
@@ -993,7 +879,6 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
     }, 1000);
 
     return () => {
-      console.log('[Realtime] Cleaning up subscription');
       clearTimeout(timeoutId);
       if (unsubscribe) unsubscribe();
     };

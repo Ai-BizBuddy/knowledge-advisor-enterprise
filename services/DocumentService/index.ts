@@ -545,7 +545,6 @@ class DocumentService {
     input: UpdateDocumentInput,
   ): Promise<Document> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       const updateData = {
@@ -601,7 +600,6 @@ class DocumentService {
     filters?: { status?: string; searchTerm?: string; type?: string },
   ): Promise<{ data: Document[]; count: number }> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       // Build base query for documents from knowledge bases owned by user

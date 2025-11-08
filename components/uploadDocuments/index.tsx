@@ -1,6 +1,9 @@
 'use client';
 import { API_CONSTANTS } from '@/constants';
-import { CreateDocumentsFromFilesInput, Document as ProjectDocument } from '@/interfaces/Project';
+import {
+  CreateDocumentsFromFilesInput,
+  Document as ProjectDocument,
+} from '@/interfaces/Project';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
 
@@ -9,6 +12,7 @@ interface UploadDocumentProps {
   onClose: () => void;
   createDocumentsFromFiles: (
     data: CreateDocumentsFromFilesInput,
+    onProgress: (documentId: string, progress: number) => void,
   ) => Promise<ProjectDocument[]>;
   loading: boolean;
 }
@@ -36,8 +40,8 @@ const maxSize = API_CONSTANTS.MAX_FILE_SIZE;
 export default function UploadDocument({
   isOpen,
   onClose,
-  createDocumentsFromFiles, 
-  loading
+  createDocumentsFromFiles,
+  loading,
 }: UploadDocumentProps) {
   const [fileStates, setFileStates] = useState<FileUploadState[]>([]);
   const [error, setError] = useState<string>('');
@@ -183,7 +187,9 @@ export default function UploadDocument({
         return;
       }
       if (file.size > maxSize) {
-        setError(`File ${file.name} exceeds ${API_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB limit.`);
+        setError(
+          `File ${file.name} exceeds ${API_CONSTANTS.MAX_FILE_SIZE / 1024 / 1024}MB limit.`,
+        );
         return;
       }
     }
@@ -215,29 +221,25 @@ export default function UploadDocument({
           // Update progress to show start
           updateFileState(state.id, { progress: 10 });
 
-          // Simulate incremental progress for better UX
-          const progressInterval = setInterval(() => {
-            const currentState = fileStates.find((fs) => fs.id === state.id);
-            if (currentState && currentState.progress < 90) {
-              updateFileState(state.id, {
-                progress: Math.min(currentState.progress + 10, 90),
-              });
-            }
-          }, 200);
-
           // Call the actual upload function
-          await createDocumentsFromFiles({
-            knowledge_base_id: id,
-            files: [state.file],
-            metadata: {
-              uploadSource: 'upload_modal',
-              uploadedAt: new Date().toISOString(),
-              totalFiles: filesToUpload.length,
+          await createDocumentsFromFiles(
+            {
+              knowledge_base_id: id,
+              files: [state.file],
+              metadata: {
+                uploadSource: 'upload_modal',
+                uploadedAt: new Date().toISOString(),
+                totalFiles: filesToUpload.length,
+              },
             },
-          });
+            (documentId, progress) => {
+              // Update only the current file's progress
+              updateFileState(state.id, {
+                progress: Math.min(Math.max(progress, 10), 90),
+              });
+            },
+          );
 
-          // Clear progress interval and set to complete
-          clearInterval(progressInterval);
           updateFileState(state.id, { status: 'success', progress: 100 });
         } catch (error) {
           updateFileState(state.id, {
