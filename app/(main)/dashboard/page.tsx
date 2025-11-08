@@ -1,10 +1,12 @@
 'use client';
 
 import {
+  PageGuard,
   RecentActivityCard,
   StatusCard
 } from '@/components';
 import { PageLayout, Section } from '@/components/layouts';
+import { PAGE_PERMISSIONS } from '@/constants';
 import { useRecentActivity, useStatistics } from '@/hooks';
 import { useChunkCount } from '@/hooks/useChunkCount';
 import { useMemo } from 'react';
@@ -51,13 +53,18 @@ export default function DashboardPage() {
   );
 
   return (
-    <PageLayout
-      title='Dashboard'
-      subtitle='Overview of your knowledge bases, documents, and activity.'
+    <PageGuard
+      requiredPermissions={PAGE_PERMISSIONS.DASHBOARD}
+      deniedTitle='Dashboard Access Required'
+      deniedMessage='You need dashboard:read permission to view this page. Please contact your administrator to request access.'
     >
-      <Section>
-        <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
-          <StatusCard
+      <PageLayout
+        title='Dashboard'
+        subtitle='Overview of your knowledge bases, documents, and activity.'
+      >
+        <Section>
+          <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+            <StatusCard
             name='Knowledge Bases'
             value={(statistics?.totalKnowledgeBases ?? 0).toLocaleString()}
             color='bg-indigo-500/10 text-indigo-400'
@@ -136,5 +143,6 @@ export default function DashboardPage() {
         }}
       />
     </PageLayout>
+    </PageGuard>
   );
 }

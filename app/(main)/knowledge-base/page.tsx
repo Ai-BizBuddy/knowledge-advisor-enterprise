@@ -1,12 +1,13 @@
 'use client';
 
-import { KnowledgeBaseCard, PageHeader } from '@/components';
+import { KnowledgeBaseCard, PageGuard, PageHeader } from '@/components';
 import CreateKnowledgeBaseModal from '@/components/createKnowledgeBaseModal';
 import DeleteConfirmModal from '@/components/deleteConfirmModal';
 import EditKnowledgeBaseModal from '@/components/editKnowledgeBaseModal';
 import KnowledgeBasePagination from '@/components/knowledgeBasePagination';
 import KnowledgeBaseSearch from '@/components/knowledgeBaseSearch';
 import { useToast } from '@/components/toast';
+import { PAGE_PERMISSIONS } from '@/constants';
 import { useJWTPermissions } from '@/hooks';
 import { useKnowledgeBase } from '@/hooks/useKnowledgeBase';
 import { Project, UpdateProjectInput } from '@/interfaces/Project';
@@ -145,9 +146,14 @@ export default function KnowledgeBase() {
   }, [initialLoad]);
 
   return (
-    <div className='h-full '>
-      {/* Main Container with Mac-optimized responsive padding */}
-      <div className='p-4 sm:p-6 lg:p-8'>
+    <PageGuard
+      requiredPermissions={PAGE_PERMISSIONS.KNOWLEDGE_BASE}
+      deniedTitle='Knowledge Base Access Required'
+      deniedMessage='You need knowledge-base:read permission to view this page. Please contact your administrator to request access.'
+    >
+      <div className='h-full '>
+        {/* Main Container with Mac-optimized responsive padding */}
+        <div className='p-4 sm:p-6 lg:p-8'>
         {/* Page Header */}
         <div className='space-y-3 pb-3 '>
           <PageHeader
@@ -330,5 +336,6 @@ export default function KnowledgeBase() {
         />
       </div>
     </div>
+    </PageGuard>
   );
 }

@@ -2,6 +2,9 @@
 export { DocumentStatus, ProjectStatus } from '@/interfaces/Project';
 export type { DocumentStatusDisplay, ProjectStatusDisplay } from '@/interfaces/Project';
 
+// Re-export permission constants
+export { getAllPermissions, isValidPermission, PAGE_PERMISSIONS, PERMISSION_GROUPS, PERMISSIONS } from './permissions';
+
 // UI Constants
 export const UI_CONSTANTS = {
   // Dimensions

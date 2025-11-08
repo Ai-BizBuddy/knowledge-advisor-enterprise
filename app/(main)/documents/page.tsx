@@ -6,6 +6,7 @@ import {
   DocumentsSearch,
   DocumentsTable,
   NoDocuments,
+  PageGuard,
   TableSkeleton,
 } from '@/components';
 import {
@@ -14,6 +15,7 @@ import {
   MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
+import { PAGE_PERMISSIONS } from '@/constants';
 import {
   useAllUserDocuments,
   useDocumentsManagement,
@@ -502,9 +504,14 @@ export default function DocumentsPage() {
   }, [allSearchResults, deepCurrentPage, dStartIndex, dEndIndex]);
 
   return (
-    <div>
-      {/* Main Container with consistent responsive padding */}
-      <div className='p-4 sm:p-6 lg:p-8'>
+    <PageGuard
+      requiredPermissions={PAGE_PERMISSIONS.DOCUMENTS}
+      deniedTitle='Documents Access Required'
+      deniedMessage='You need knowledge-base:read permission to view documents. Please contact your administrator to request access.'
+    >
+      <div>
+        {/* Main Container with consistent responsive padding */}
+        <div className='p-4 sm:p-6 lg:p-8'>
         {/* Header Section - Responsive layout */}
         <div className='space-y-3 pb-6'>
           <div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
@@ -639,5 +646,6 @@ export default function DocumentsPage() {
         </>
       )}
     </div>
+    </PageGuard>
   );
 }

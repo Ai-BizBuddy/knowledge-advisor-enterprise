@@ -28,6 +28,8 @@ export { LoadingCard, TableSkeleton } from './LoadingCard';
 export { default as LoadingPage } from './loadingPage';
 export { LogsTable } from './logsTable';
 export { default as NoDocuments } from './noDocuments';
+export { PageGuard } from './pageGuard';
+export type { PageGuardProps } from './pageGuard';
 export { default as RecentActivityCard } from './recentActivityCard';
 export { default as RecentKnowledgeBasesCard } from './recentKnowledgeBasesCard';
 export { RecommendedKnowledgeBases } from './recommendedKnowledgeBases';
