@@ -7,7 +7,6 @@
 
 'use client';
 
-import { useToast } from '@/components/toast';
 import { useReactHookForm, useUserManagement } from '@/hooks';
 import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import type {
@@ -51,7 +50,6 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
   availableDepartments = [],
   onSuccess,
 }) => {
-  const { showToast } = useToast();
   const {
     createUser,
     updateUser,
