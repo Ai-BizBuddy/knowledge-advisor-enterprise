@@ -1,4 +1,4 @@
-import { APP_STRINGS, ROUTES } from '@/constants';
+import { APP_STRINGS, PERMISSIONS, ROUTES } from '@/constants';
 import type { NavigationMenuItem } from './types';
 
 /**
@@ -169,34 +169,35 @@ export const getDefaultNavigationItems = (): NavigationMenuItem[] => [
     url: ROUTES.DASHBOARD,
     icon: <DashboardIcon />,
     active: false,
-    // Dashboard accessible to all authenticated users
+    requiredPermissions: [PERMISSIONS.DASHBOARD.READ],
   },
   {
     name: APP_STRINGS.NAV_ITEMS.AI_CHAT,
     url: ROUTES.CHAT, 
     icon: <ChatIcon />,
     active: false,
-    // Chat accessible to all authenticated users
+    // Chat accessible to all authenticated users (no permissions required)
   },
   {
     name: APP_STRINGS.NAV_ITEMS.KNOWLEDGE_BASE,
     url: ROUTES.KNOWLEDGE_BASE,
     icon: <KnowledgeBaseIcon />,
     active: false,
+    requiredPermissions: [PERMISSIONS.KNOWLEDGE_BASE.READ],
   },
   {
     name: APP_STRINGS.NAV_ITEMS.DOCUMENTS,
     url: ROUTES.DOCUMENTS,
     icon: <DocumentsIcon />,
     active: false,
+    requiredPermissions: [PERMISSIONS.KNOWLEDGE_BASE.READ],
   },
   {
     name: APP_STRINGS.NAV_ITEMS.USER_SETTINGS,
     url: ROUTES.SETTINGS,
     icon: <UserSettingsIcon />,
     active: false,
-    requiredRoles: ['admin'], // Only admins can access settings
-    requiredPermissions: ['user:read'], // And must have user read permission
+    requiredPermissions: [PERMISSIONS.USER.READ],
   },
   {
     name: APP_STRINGS.NAV_ITEMS.LOGS,

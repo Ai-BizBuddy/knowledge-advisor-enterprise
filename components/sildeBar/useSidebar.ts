@@ -115,25 +115,26 @@ export const useSidebar = () => {
      * Check if user has required permissions for a menu item
      */
     const hasRequiredPermissions = useCallback((item: NavigationMenuItem): boolean => {
-        // If no permissions required, allow access
-        if (!item.requiredPermissions || item.requiredPermissions.length === 0) {
-            // But still check roles if specified
-            if (!item.requiredRoles || item.requiredRoles.length === 0) {
-                return true;
-            }
+        // If no permissions and no roles required, allow access
+        const noPermissionsRequired = !item.requiredPermissions || item.requiredPermissions.length === 0;
+        const noRolesRequired = !item.requiredRoles || item.requiredRoles.length === 0;
+        
+        if (noPermissionsRequired && noRolesRequired) {
+            return true;
         }
 
-        // Check if user has required roles
-        if (item.requiredRoles && item.requiredRoles.length > 0) {
-            const hasRole = item.requiredRoles.some(role => userRoles.includes(role));
+        // Check if user has required roles (if specified)
+        if (!noRolesRequired) {
+            const hasRole = item.requiredRoles!.some(role => userRoles.includes(role));
             if (!hasRole) {
                 return false;
             }
         }
 
-        // Check if user has required permissions
-        if (item.requiredPermissions && item.requiredPermissions.length > 0) {
-            const hasPermission = item.requiredPermissions.every(permission => 
+        // Check if user has required permissions (if specified)
+        // User needs to have at least ONE of the required permissions
+        if (!noPermissionsRequired) {
+            const hasPermission = item.requiredPermissions!.some(permission => 
                 userPermissions.includes(permission)
             );
             if (!hasPermission) {

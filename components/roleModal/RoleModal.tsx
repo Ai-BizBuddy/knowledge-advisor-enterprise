@@ -172,29 +172,31 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       }
 
       // 4. Validate that each selected resource has at least one action
-      const invalidResources = data.permissions.filter((p) => {
-        const hasAnyAction = Object.values(p.actions).some(
-          (action) => action?.value === true,
-        );
-        const hasSelectedActions = Object.keys(p.actions).length > 0;
-        // If resource has actions defined but none are true, it's invalid
-        return hasSelectedActions && !hasAnyAction;
-      });
+      // NOTE: This validation is disabled to allow resources without actions selected
+      // Users can add resources to roles without requiring specific action permissions
+      // const invalidResources = data.permissions.filter((p) => {
+      //   const hasAnyAction = Object.values(p.actions).some(
+      //     (action) => action?.value === true,
+      //   );
+      //   const hasSelectedActions = Object.keys(p.actions).length > 0;
+      //   // If resource has actions defined but none are true, it's invalid
+      //   return hasSelectedActions && !hasAnyAction;
+      // });
 
-      if (invalidResources.length > 0) {
-        const resourceNames = invalidResources
-          .map((r) => r.resource)
-          .join(', ');
-        form.setError('permissions', {
-          type: 'manual',
-          message: `Please select at least one action for: ${resourceNames}`,
-        });
-        showToast(
-          `Please select at least one action for: ${resourceNames}`,
-          'error',
-        );
-        return;
-      }
+      // if (invalidResources.length > 0) {
+      //   const resourceNames = invalidResources
+      //     .map((r) => r.resource)
+      //     .join(', ');
+      //   form.setError('permissions', {
+      //     type: 'manual',
+      //     message: `Please select at least one action for: ${resourceNames}`,
+      //   });
+      //   showToast(
+      //     `Please select at least one action for: ${resourceNames}`,
+      //     'error',
+      //   );
+      //   return;
+      // }
 
       // 5. Transform form data to API payload
       const payload: CreateRolePayload = {
@@ -294,20 +296,22 @@ export const RoleModal: React.FC<RoleModalProps> = ({
     }
 
     // Real-time validation for individual permission rows
+    // NOTE: This validation is disabled to allow resources without actions selected
+    // Users can add resources to roles without requiring specific action permissions
     const newValidationErrors: { [resource: string]: string } = {};
 
-    permissions.forEach((permission) => {
-      const hasActions = Object.keys(permission.actions).length > 0;
-      const hasSelectedActions = Object.values(permission.actions).some(
-        (action) => action?.value === true,
-      );
+    // permissions.forEach((permission) => {
+    //   const hasActions = Object.keys(permission.actions).length > 0;
+    //   const hasSelectedActions = Object.values(permission.actions).some(
+    //     (action) => action?.value === true,
+    //   );
 
-      // If resource has actions defined but none are selected, it's an error
-      if (hasActions && !hasSelectedActions) {
-        newValidationErrors[permission.resource] =
-          `Please select at least one action for ${permission.resource}`;
-      }
-    });
+    //   // If resource has actions defined but none are selected, it's an error
+    //   if (hasActions && !hasSelectedActions) {
+    //     newValidationErrors[permission.resource] =
+    //       `Please select at least one action for ${permission.resource}`;
+    //   }
+    // });
 
     setPermissionValidationErrors(newValidationErrors);
   };

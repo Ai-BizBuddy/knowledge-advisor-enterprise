@@ -8,7 +8,6 @@
 'use client';
 
 import { useToast } from '@/components/toast';
-import { SUCCESS_MESSAGES } from '@/constants';
 import { useReactHookForm, useUserManagement } from '@/hooks';
 import { usePaginatedUserManagement } from '@/hooks/usePaginatedUserManagement';
 import type {
@@ -223,7 +222,6 @@ export const UserFormModal: React.FC<UserFormModalProps> = ({
           // Success - reset form and close modal
           form.reset();
           setSelectedRoles([]);
-          showToast(SUCCESS_MESSAGES.USER_CREATED, 'success');
           onSuccess?.(newUser);
           onClose();
         }
