@@ -77,10 +77,11 @@ export default function ChatCard({
   // Helper function to parse document references and create clickable links
   const parseDocumentLinks = React.useCallback(
     (content: string) => {
-      // Enhanced pattern to match document references with more flexibility
+      // Enhanced pattern to match document references with page ranges or single pages
       // Matches: [📄 Document: filename, Page: X, DocumentId: uuid]
+      // or [📄 Document: filename, Page: X–Y, DocumentId: uuid]
       const documentRefPattern =
-        /\[📄\s*Document:\s*([^,]+),\s*Page:\s*(\d+),\s*DocumentId:\s*([a-f0-9-]+)\]/gi;
+        /\[📄\s*Document:\s*([^,]+),\s*Page:\s*([\d–\-]+),\s*DocumentId:\s*([a-f0-9-]+)\]/gi;
 
       const matches = Array.from(content.matchAll(documentRefPattern));
 
@@ -95,7 +96,7 @@ export default function ChatCard({
       matches.forEach((match, matchIndex) => {
         const fullMatch = match[0];
         const fileName = match[1].trim();
-        const pageNum = match[2];
+        const pageRange = match[2]; // Can be "375" or "375–378"
         const docId = match[3];
         const matchStartIndex = match.index || 0;
 
@@ -106,6 +107,11 @@ export default function ChatCard({
             elements.push(textBefore);
           }
         }
+
+        // Extract the first page number from the range
+        // Handle both en-dash (–) and regular dash (-)
+        const firstPage = pageRange.split(/[–\-]/)[0];
+        const pageNum = parseInt(firstPage, 10);
 
         const isThisDocLoading = isDocumentLoading(docId);
 
@@ -121,17 +127,17 @@ export default function ChatCard({
             } disabled:cursor-not-allowed disabled:opacity-50`}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
-              const page = parseInt(pageNum, 10);
-              handleOpenDocumentViewer(docId, page);
+              handleOpenDocumentViewer(docId, pageNum);
             }}
             disabled={isThisDocLoading}
+            title={`Open document at page ${pageNum}`}
           >
             <span className='text-base'>📄</span>
             <span className='text-sm font-medium'>
               {fileName}
             </span>
             <span className='text-xs opacity-75'>
-              (Page {pageNum})
+              (Page {pageRange})
             </span>
             {isThisDocLoading && (
               <svg

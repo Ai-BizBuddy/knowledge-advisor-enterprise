@@ -27,8 +27,24 @@ export function useDocumentViewer(): UseDocumentViewerReturn {
   const [error, setError] = useState<string | null>(null);
 
   const openDocumentViewer = useCallback(async (url: string, pageNumber?: number) => {
-    if (!documentViewerService.isDocumentLink(url)) {
-      setError('Invalid document link');
+    // Validate input
+    if (!url || typeof url !== 'string') {
+      console.error('[useDocumentViewer] Invalid URL provided:', url);
+      setError('Invalid document URL provided');
+      return;
+    }
+
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) {
+      console.error('[useDocumentViewer] Empty URL after trimming');
+      setError('Document URL is empty');
+      return;
+    }
+
+    // Check if it's a valid document link
+    if (!documentViewerService.isDocumentLink(trimmedUrl)) {
+      console.error('[useDocumentViewer] URL is not a valid document link:', trimmedUrl);
+      setError(`Invalid document link format: ${trimmedUrl.substring(0, 50)}...`);
       return;
     }
 
@@ -36,19 +52,26 @@ export function useDocumentViewer(): UseDocumentViewerReturn {
     setError(null);
 
     try {
-      const documentData = await documentViewerService.getDocumentForViewer(url, pageNumber);
+      console.log('[useDocumentViewer] Opening document:', { url: trimmedUrl, pageNumber });
+      const documentData = await documentViewerService.getDocumentForViewer(trimmedUrl, pageNumber);
       
       if (!documentData) {
-        setError('Document not found');
+        console.error('[useDocumentViewer] Document not found for URL:', trimmedUrl);
+        setError('Document not found or access denied');
         return;
       }
 
+      console.log('[useDocumentViewer] Document loaded successfully:', documentData.name);
       setViewerDocument(documentData);
       setIsViewerOpen(true);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load document';
       setError(errorMessage);
-      console.error('Error opening document viewer:', err);
+      console.error('[useDocumentViewer] Error opening document viewer:', {
+        url: trimmedUrl,
+        error: err,
+        message: errorMessage,
+      });
     } finally {
       setIsLoading(false);
     }

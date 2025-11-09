@@ -186,6 +186,7 @@ export const DocumentPreview = ({
               src={`${document.fileUrl}#toolbar=1&navpanes=1&scrollbar=1${document.pageNumber ? `&page=${document.pageNumber}` : ''}`}
               className='h-full w-full border-0'
               title={`Preview of ${document.name}`}
+              allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
               style={{
                 height: isFullScale ? 'calc(95vh - 80px)' : 'calc(70vh - 80px)',
               }}
@@ -196,6 +197,7 @@ export const DocumentPreview = ({
               src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
               className='h-full w-full border-0'
               title={`Preview of ${document.name}`}
+              allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
               style={{
                 height: isFullScale ? 'calc(95vh - 80px)' : 'calc(70vh - 80px)',
               }}
@@ -206,6 +208,7 @@ export const DocumentPreview = ({
               src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
               className='h-full w-full border-0'
               title={`Preview of ${document.name}`}
+              allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
               style={{
                 height: isFullScale ? 'calc(95vh - 80px)' : 'calc(70vh - 80px)',
               }}
@@ -243,6 +246,7 @@ export const DocumentPreview = ({
               src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
               className='h-full w-full border-0'
               title={`Preview of ${document.name}`}
+              allow='accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture'
               style={{
                 height: isFullScale ? 'calc(95vh - 80px)' : 'calc(70vh - 80px)',
               }}

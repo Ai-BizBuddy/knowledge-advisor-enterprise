@@ -32,21 +32,31 @@ class DocumentViewerService {
    * Check if URL is a document link that should open in viewer
    */
   isDocumentLink(url: string): boolean {
-    if (!url) return false;
+    if (!url || typeof url !== 'string') return false;
+    
+    // Trim whitespace
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return false;
     
     // Check for common document patterns
     const documentPatterns = [
-      /\/documents\/[0-9a-f-]{36}/i,  // /documents/uuid
-      /document-id-[0-9a-f-]{36}/i,   // document-id-uuid
-      /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i, // UUID
-      /\.pdf$/i,                       // PDF files
-      /\.docx?$/i,                     // Word documents
-      /\.xlsx?$/i,                     // Excel files
-      /\.txt$/i,                       // Text files
-      /\.md$/i,                        // Markdown files
+      // Path-based patterns
+      /^\/documents\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,  // /documents/uuid (exact match)
+      /document-id-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i,     // document-id-uuid
+      
+      // UUID only (exact match) - this is the most common case for chat document links
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
+      
+      // File extension based patterns
+      /\.pdf$/i,                         // PDF files
+      /\.docx?$/i,                       // Word documents
+      /\.xlsx?$/i,                       // Excel files
+      /\.txt$/i,                         // Text files
+      /\.md$/i,                          // Markdown files
+      /\.pptx?$/i,                       // PowerPoint files
     ];
 
-    return documentPatterns.some(pattern => pattern.test(url));
+    return documentPatterns.some(pattern => pattern.test(trimmedUrl));
   }
 
   /**
