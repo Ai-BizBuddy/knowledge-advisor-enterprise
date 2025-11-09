@@ -5,6 +5,7 @@ import type {
   UpdateProjectInput,
 } from '@/interfaces/Project';
 import { ProjectStatus } from '@/interfaces/Project';
+import { decodeJWT } from '@/utils/jwt';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
 
@@ -296,14 +297,14 @@ class KnowledgeBaseService {
   async updateProject(id: string, input: UpdateProjectInput): Promise<void> {
     try {
       const supabaseTable = createClientTable();
-
       const updateData = {
         ...input,
         is_active: input.is_active === 1 ? true : input.is_active === 2 ? false : undefined,
         updated_at: new Date().toISOString(),
+        department_id: await this.getDepartmentId(input.visibility as string)
       };
 
-      const { data: project, error } = await supabaseTable
+      const { error } = await supabaseTable
         .from('knowledge_base')
         .update(updateData)
         .eq('id', id);
@@ -314,6 +315,14 @@ class KnowledgeBaseService {
     } catch (error) {
       throw error;
     }
+  }
+
+  async getDepartmentId(visibility: string): Promise<string | null> {
+    if (visibility !== 'department')
+      return null;
+    const session = await getAuthSession();
+    const decodedPayload = decodeJWT(session?.access_token as string);
+    return decodedPayload?.department_id ?? null;
   }
 
   /**
@@ -412,3 +421,4 @@ class KnowledgeBaseService {
 }
 
 export { KnowledgeBaseService };
+
