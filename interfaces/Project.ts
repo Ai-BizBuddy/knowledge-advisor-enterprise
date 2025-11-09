@@ -28,6 +28,7 @@ export type ProjectStatusDisplay = 'Active' | 'Inactive';
 // Document status enum to match database constraint
 export enum DocumentStatus {
   UPLOADED = 'uploaded',
+  QUEUED = 'queued',
   PROCESSING = 'processing',
   READY = 'ready',
   ERROR = 'error',
@@ -35,7 +36,7 @@ export enum DocumentStatus {
 }
 
 // Helper type for document status display
-export type DocumentStatusDisplay = 'Uploaded' | 'Processing' | 'Ready' | 'Error' | 'Archived';
+export type DocumentStatusDisplay = 'Uploaded' | 'Queued' | 'Processing' | 'Ready' | 'Error' | 'Archived';
 
 // Create project input interface
 export interface CreateProjectInput {

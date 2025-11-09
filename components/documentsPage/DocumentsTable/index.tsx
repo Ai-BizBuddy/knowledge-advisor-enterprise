@@ -51,6 +51,7 @@ const getStatusBadge = (status: string | null | undefined) => {
   const statusConfig = {
     // Capitalized versions (Display format)
     Uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    Queued: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
     Processing:
       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     Ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
@@ -69,6 +70,7 @@ const getStatusBadge = (status: string | null | undefined) => {
 
     // Lowercase versions (Database format)
     uploaded: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+    queued: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300',
     processing:
       'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
     ready: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
@@ -105,6 +107,67 @@ const isErrorStatus = (status: string | null | undefined): boolean => {
   return lowerStatus === 'error' || lowerStatus === 'failed';
 };
 
+const getStatusIcon = (status: string | null | undefined) => {
+  const lowerStatus = status?.toLowerCase() || '';
+  
+  switch (lowerStatus) {
+    case 'uploaded':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12' />
+        </svg>
+      );
+    case 'queued':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' />
+        </svg>
+      );
+    case 'processing':
+      return (
+        <svg className='mr-1 h-3 w-3 animate-spin' fill='none' viewBox='0 0 24 24'>
+          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+        </svg>
+      );
+    case 'ready':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' />
+        </svg>
+      );
+    case 'error':
+    case 'failed':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z' />
+        </svg>
+      );
+    case 'archived':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4' />
+        </svg>
+      );
+    case 'synced':
+    case 'completed':
+      return (
+        <svg className='mr-1 h-3 w-3' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
+          <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M5 13l4 4L19 7' />
+        </svg>
+      );
+    case 'syncing':
+      return (
+        <svg className='mr-1 h-3 w-3 animate-spin' fill='none' viewBox='0 0 24 24'>
+          <circle className='opacity-25' cx='12' cy='12' r='10' stroke='currentColor' strokeWidth='4' />
+          <path className='opacity-75' fill='currentColor' d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z' />
+        </svg>
+      );
+    default:
+      return null;
+  }
+};
+
 const renderStatusBadge = (
   status: string | null | undefined,
   errorMessage?: string,
@@ -113,6 +176,7 @@ const renderStatusBadge = (
   const isError = isErrorStatus(status);
   // Only show 'Unknown' if status is truly null/undefined/empty, not for valid status strings
   const displayStatus = status && status.trim() !== '' ? status : 'Unknown';
+  const statusIcon = getStatusIcon(status);
 
   if (isError && errorMessage) {
     return (
@@ -120,6 +184,7 @@ const renderStatusBadge = (
         <span
           className={`inline-flex cursor-help items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClasses}`}
         >
+          {statusIcon}
           {displayStatus}
           <svg
             className='ml-1 h-3 w-3'
@@ -150,6 +215,7 @@ const renderStatusBadge = (
     <span
       className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusClasses}`}
     >
+      {statusIcon}
       {displayStatus}
     </span>
   );
@@ -203,6 +269,28 @@ const getSyncButton = (
             </svg>
           ),
           text: 'Processing...',
+          disabled: true,
+        };
+      case 'queued':
+        return {
+          color:
+            'bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-300',
+          icon: (
+            <svg
+              className='mr-1 h-4 w-4'
+              fill='none'
+              stroke='currentColor'
+              viewBox='0 0 24 24'
+            >
+              <path
+                strokeLinecap='round'
+                strokeLinejoin='round'
+                strokeWidth={2}
+                d='M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'
+              />
+            </svg>
+          ),
+          text: 'Queued',
           disabled: true,
         };
       case 'archived':

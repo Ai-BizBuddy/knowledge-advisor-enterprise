@@ -211,6 +211,35 @@ export class ActivityLogService {
   }
 
   /**
+   * Format status name for display
+   */
+  private formatStatusName(status: string): string {
+    const statusMap: Record<string, string> = {
+      // Document statuses
+      uploaded: 'Uploaded',
+      queued: 'Queued',
+      processing: 'Processing',
+      ready: 'Ready',
+      error: 'Error',
+      archived: 'Archived',
+      
+      // User statuses
+      active: 'Active',
+      inactive: 'Inactive',
+      suspended: 'Suspended',
+      pending: 'Pending',
+      
+      // Knowledge Base visibility
+      public: 'Public',
+      department: 'Department',
+      private: 'Private',
+      custom: 'Custom',
+    };
+
+    return statusMap[status.toLowerCase()] || status;
+  }
+
+  /**
    * Format activity message for display
    */
   formatActivityMessage(log: ActivityLogWithProfile): string {
@@ -220,35 +249,139 @@ export class ActivityLogService {
 
     const oldDataStr = log.old_data?.name as string | undefined;
     const newDataStr = log.new_data?.name as string | undefined;
+    const changedFields = log.changed_fields || [];
 
-    // Special handling for document status changes
+    // DOCUMENT TABLE - Status and processing updates
     if (tableName === 'document' && action === 'UPDATE') {
-      const changedFields = log.changed_fields || [];
+      const documentName = newDataStr || oldDataStr || 'Document';
       
-      // Check if status field was changed
+      // Document status changes (uploaded, queued, processing, ready, error, archived)
       if (changedFields.includes('status')) {
         const oldStatus = log.old_data?.status as string | undefined;
         const newStatus = log.new_data?.status as string | undefined;
-        const documentName = newDataStr || oldDataStr || 'Document';
         
         if (oldStatus && newStatus) {
-          return `${documentName} status changed from ${oldStatus} to ${newStatus}`;
+          return `Document "${documentName}" status changed from ${this.formatStatusName(oldStatus)} to ${this.formatStatusName(newStatus)}`;
         }
       }
       
-      // Check for other important document field changes
+      // RAG sync status changes
+      if (changedFields.includes('rag_status')) {
+        const newRagStatus = log.new_data?.rag_status as string | undefined;
+        
+        if (newRagStatus === 'synced') {
+          return `Document "${documentName}" synchronized to RAG system`;
+        }
+        if (newRagStatus === 'syncing') {
+          return `Document "${documentName}" syncing to RAG system`;
+        }
+        if (newRagStatus === 'error') {
+          return `Document "${documentName}" RAG sync failed`;
+        }
+      }
+      
+      // Chunk processing completion
       if (changedFields.includes('chunk_count')) {
-        const documentName = newDataStr || oldDataStr || 'Document';
         const chunkCount = log.new_data?.chunk_count;
-        return `${documentName} processed into ${chunkCount} chunk${Number(chunkCount) !== 1 ? 's' : ''}`;
+        return `Document "${documentName}" processed into ${chunkCount} chunk${Number(chunkCount) !== 1 ? 's' : ''}`;
       }
 
-      if (changedFields.includes('last_rag_sync')) {
-        const documentName = newDataStr || oldDataStr || 'Document';
-        return `${documentName} synchronized to RAG system`;
-      }
+      // Generic document update
+      return `Document "${documentName}" updated by ${userName}`;
     }
 
+    // DOCUMENT TABLE - Creation
+    if (tableName === 'document' && action === 'INSERT') {
+      const documentName = newDataStr || 'Document';
+      return `Document "${documentName}" uploaded by ${userName}`;
+    }
+
+    // DOCUMENT TABLE - Deletion
+    if (tableName === 'document' && action === 'DELETE') {
+      const documentName = oldDataStr || 'Document';
+      return `Document "${documentName}" deleted by ${userName}`;
+    }
+
+    // KNOWLEDGE BASE TABLE - Status and visibility updates
+    if ((tableName === 'knowledge_base' || tableName === 'knowledge_bases') && action === 'UPDATE') {
+      const kbName = newDataStr || oldDataStr || 'Knowledge Base';
+      
+      // Visibility changes (public, department, private, custom)
+      if (changedFields.includes('visibility')) {
+        const oldVisibility = log.old_data?.visibility as string | undefined;
+        const newVisibility = log.new_data?.visibility as string | undefined;
+        
+        if (oldVisibility && newVisibility) {
+          return `Knowledge Base "${kbName}" visibility changed from ${this.formatStatusName(oldVisibility)} to ${this.formatStatusName(newVisibility)}`;
+        }
+      }
+      
+      // Status changes
+      if (changedFields.includes('status')) {
+        const oldStatus = log.old_data?.status as string | undefined;
+        const newStatus = log.new_data?.status as string | undefined;
+        
+        if (oldStatus && newStatus) {
+          return `Knowledge Base "${kbName}" status changed from ${this.formatStatusName(oldStatus)} to ${this.formatStatusName(newStatus)}`;
+        }
+      }
+
+      // Content updates (name, description, etc.)
+      if (changedFields.includes('name')) {
+        const oldName = log.old_data?.name as string | undefined;
+        return `Knowledge Base renamed from "${oldName}" to "${newDataStr}"`;
+      }
+
+      if (changedFields.includes('description')) {
+        return `Knowledge Base "${kbName}" description updated`;
+      }
+
+      // Generic KB update
+      return `Knowledge Base "${kbName}" updated by ${userName}`;
+    }
+
+    // KNOWLEDGE BASE TABLE - Creation
+    if ((tableName === 'knowledge_base' || tableName === 'knowledge_bases') && action === 'INSERT') {
+      const kbName = newDataStr || 'Knowledge Base';
+      return `Knowledge Base "${kbName}" created by ${userName}`;
+    }
+
+    // KNOWLEDGE BASE TABLE - Deletion
+    if ((tableName === 'knowledge_base' || tableName === 'knowledge_bases') && action === 'DELETE') {
+      const kbName = oldDataStr || 'Knowledge Base';
+      return `Knowledge Base "${kbName}" deleted by ${userName}`;
+    }
+
+    // USER/PROFILE TABLE - Status updates
+    if ((tableName === 'users' || tableName === 'profiles') && action === 'UPDATE') {
+      const targetUserName = newDataStr || oldDataStr || log.new_data?.email as string || 'User';
+      
+      // User status changes (active, inactive, suspended, pending)
+      if (changedFields.includes('status')) {
+        const oldStatus = log.old_data?.status as string | undefined;
+        const newStatus = log.new_data?.status as string | undefined;
+        
+        if (oldStatus && newStatus) {
+          return `User "${targetUserName}" status changed from ${this.formatStatusName(oldStatus)} to ${this.formatStatusName(newStatus)}`;
+        }
+      }
+
+      // Profile updates
+      if (changedFields.includes('full_name')) {
+        return `User "${targetUserName}" updated their profile`;
+      }
+
+      // Generic user update
+      return `User "${targetUserName}" updated by ${userName}`;
+    }
+
+    // USER/PROFILE TABLE - Creation
+    if ((tableName === 'users' || tableName === 'profiles') && action === 'INSERT') {
+      const targetUserName = newDataStr || log.new_data?.email as string || 'User';
+      return `New user "${targetUserName}" registered`;
+    }
+
+    // FALLBACK - Generic messages for other tables/actions
     switch (action) {
       case 'INSERT':
         return `${userName} created new entry in ${tableName}${newDataStr ? `: ${newDataStr}` : ''}`;

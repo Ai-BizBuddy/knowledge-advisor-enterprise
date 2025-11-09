@@ -5,6 +5,8 @@ export const getDocumentStatusColor = (status: DocumentStatus): string => {
   switch (status) {
     case DocumentStatus.UPLOADED:
       return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+    case DocumentStatus.QUEUED:
+      return 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200';
     case DocumentStatus.PROCESSING:
       return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
     case DocumentStatus.READY:
@@ -95,6 +97,8 @@ export function getStatusColor(status: string): string {
     case 'synced':
     case 'success':
       return 'bg-green-500/20 text-green-400 border-green-500/30';
+    case 'queued':
+      return 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30';
     case 'processing':
     case 'syncing':
     case 'pending':

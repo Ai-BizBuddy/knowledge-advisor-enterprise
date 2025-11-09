@@ -1,22 +1,15 @@
 'use client';
 
 import { DepartmentsPage, PermissionsPage, RolesPage, UsersPage } from '@/components/SettingsPage';
-import { useLoading } from '@/contexts/LoadingContext';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import {
   Card,
   TabItem,
   Tabs
 } from 'flowbite-react';
-import { useEffect } from 'react';
 
 export default function SettingsPage() {
-  const { setLoading } = useLoading();
   const { systemStatus } = useSystemStatus();
-
-  useEffect(() => {
-    setLoading(false);
-  }, [setLoading]);
 
   return (
     <div className='space-y-6 pb-[50px]'>

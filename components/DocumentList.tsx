@@ -222,9 +222,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const adaptedDocuments = useMemo(() => {
     return documents.map((doc) => {
       const tableDoc = adaptDocumentToTableFormat(doc);
-      // Disable sync if status is 'ready', 'processing', 'archived', or rag_status is 'synced'
+      // Disable sync if status is 'ready', 'queued', 'processing', 'archived', or rag_status is 'synced'
       tableDoc.disableSync =
         doc.status === 'ready' ||
+        doc.status === 'queued' ||
         doc.status === 'processing' ||
         doc.status === 'archived' ||
         doc.rag_status === 'synced';

@@ -57,6 +57,7 @@ export interface DocumentTableItem {
 const formatDocumentStatus = (status: string): string => {
   const statusMap: Record<string, string> = {
     uploaded: 'Uploaded',
+    queued: 'Queued',
     processing: 'Processing',
     ready: 'Ready',
     error: 'Error',

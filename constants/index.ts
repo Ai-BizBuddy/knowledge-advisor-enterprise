@@ -5,6 +5,25 @@ export type { DocumentStatusDisplay, ProjectStatusDisplay } from '@/interfaces/P
 // Re-export permission constants
 export { getAllPermissions, isValidPermission, PAGE_PERMISSIONS, PERMISSION_GROUPS, PERMISSIONS } from './permissions';
 
+// Re-export status constants
+export {
+  canSyncDocument,
+  canUserLogin, DOCUMENT_STATUS,
+  DOCUMENT_STATUS_LABELS,
+  DOCUMENT_SYNC_DISABLED_STATUSES, formatStatus,
+  getStatusColor,
+  isDocumentError,
+  isUserActive, KB_VISIBILITY,
+  KB_VISIBILITY_DESCRIPTIONS,
+  KB_VISIBILITY_LABELS,
+  RAG_STATUS,
+  RAG_STATUS_LABELS,
+  USER_STATUS,
+  USER_STATUS_DESCRIPTIONS,
+  USER_STATUS_LABELS
+} from './statuses';
+export type { DocumentStatus as DocumentStatusType, KBVisibility, RagStatus, UserStatus } from './statuses';
+
 // UI Constants
 export const UI_CONSTANTS = {
   // Dimensions
