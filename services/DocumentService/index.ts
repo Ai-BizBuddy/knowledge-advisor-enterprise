@@ -728,7 +728,6 @@ class DocumentService {
    */
   async getUserDocument(id: string): Promise<Document | null> {
     try {
-      const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
 
       const { data: document, error } = await supabaseTable
@@ -740,7 +739,6 @@ class DocumentService {
         `,
         )
         .eq('id', id)
-        .eq('knowledge_base.created_by', user.id)
         .single();
 
       if (error) {
