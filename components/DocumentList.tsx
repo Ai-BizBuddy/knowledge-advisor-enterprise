@@ -268,16 +268,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           return;
         }
 
-        console.log(
-          `[DocumentList] Syncing document: ${document.name} (ID: ${document.id})`,
-        );
         showToast(`Syncing document: ${document.name}...`, 'info', 3000);
 
         await syncDocument(document.id);
 
-        console.log(
-          `[DocumentList] Successfully synced document: ${document.name}`,
-        );
         showToast(
           `Successfully synced document: ${document.name}`,
           'success',

@@ -859,7 +859,6 @@ class DocumentService {
           filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
         },
         (payload) => {
-          console.log('[DocumentService] UPDATE payload received:', payload);
           const docNew = (payload.new ?? null) as Partial<Document> | null;
           const docId = docNew?.id;
           const isSoftDeleted = docNew?.is_deleted === true || !!docNew?.deleted_at;
@@ -913,7 +912,6 @@ class DocumentService {
 
     // Return cleanup function
     return () => {
-      console.log('[DocumentService] Unsubscribing from channel:', channelName);
       channel.unsubscribe();
       supabase.removeChannel(channel);
     };
