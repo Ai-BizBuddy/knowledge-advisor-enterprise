@@ -1,6 +1,6 @@
 @import 'tailwindcss';
 @plugin "flowbite-react/plugin/tailwindcss";
-@source "../.flowbite-react/class-list.json";
+@source "../node_modules/flowbite-react/dist/**/*.js";
 @import '../styles/chat.css';
 
 @custom-variant dark (&:where(.dark, .dark *));
