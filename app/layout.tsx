@@ -1,11 +1,11 @@
 'use client';
 
+import { ThemeInit } from '@/components/ThemeInit';
 import { ToastProvider } from '@/components/toast';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { LoadingProvider } from '@/contexts/LoadingContext';
 import { ThemeModeScript } from 'flowbite-react';
 import { Noto_Sans, Noto_Sans_Mono } from 'next/font/google';
-import { ThemeInit } from '../.flowbite-react/init';
 import './globals.css';
 
 const notoSans = Noto_Sans({
