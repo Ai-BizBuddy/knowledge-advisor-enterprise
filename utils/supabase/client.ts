@@ -26,9 +26,12 @@ let supabaseTableAuth: ReturnType<
 
 export function createClient() {
   if (!supabaseClient) {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
     supabaseClient = createSupabaseClient<KnowledgeAdvisorDatabase>(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl || 'https://placeholder.supabase.co',
+      supabaseAnonKey || 'placeholder',
       {
         auth: {
           persistSession: true,
