@@ -145,9 +145,12 @@ export default function LoginPage() {
                 )}
               </button>
 
-              <div className='flex justify-center'>
+              <div className='flex flex-col items-center justify-center gap-1'>
                 <p className='text-center text-sm font-light text-gray-500 dark:text-gray-400'>
                   Copyright © 2025 ai factory. All Rights Reserved.
+                </p>
+                <p className='text-xs text-gray-400 dark:text-gray-500'>
+                  v{process.env.NEXT_PUBLIC_APP_VERSION}
                 </p>
               </div>
             </form>

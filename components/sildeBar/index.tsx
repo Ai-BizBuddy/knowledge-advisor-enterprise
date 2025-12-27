@@ -104,19 +104,24 @@ export default function SlideBar({
         aria-label='Sidebar'
       >
         <div className='bg-white dark:bg-gray-800'></div>
-        <div className='h-full w-[inherit] overflow-y-auto bg-white pt-20 dark:bg-gray-800'>
-          {isLoadingPermissions ? (
-            <MenuSkeleton />
-          ) : (
-            <NavigationMenu
-              items={navigationItems}
-              onItemClick={(index) => {
-                if (onNavigate) onNavigate();
-                handleMenuItemClick(index);
-                closeSidebar();
-              }}
-            />
-          )}
+        <div className='flex h-full w-[inherit] flex-col bg-white pt-20 dark:bg-gray-800'>
+          <div className='flex-1 overflow-y-auto'>
+            {isLoadingPermissions ? (
+              <MenuSkeleton />
+            ) : (
+              <NavigationMenu
+                items={navigationItems}
+                onItemClick={(index) => {
+                  if (onNavigate) onNavigate();
+                  handleMenuItemClick(index);
+                  closeSidebar();
+                }}
+              />
+            )}
+          </div>
+          <div className='border-t border-gray-200 p-4 text-center text-xs text-gray-500 dark:border-gray-700 dark:text-gray-400'>
+            v{process.env.NEXT_PUBLIC_APP_VERSION}
+          </div>
         </div>
       </aside>
 

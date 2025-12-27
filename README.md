@@ -16,10 +16,13 @@ AI-powered knowledge base ingestion and RAG project manager built with Next.js A
 ```
 app/                 # Routes (CSR), layouts, loading/not-found
 components/          # Reusable UI + feature components (per-folder)
+  pageGuard/         # Permission-based page protection component
 contexts/            # React contexts (Auth, Loading)
 hooks/               # Typed hooks (data fetching, forms, state)
+  useJWTPermissions  # JWT-based permission checking hook
 interfaces/          # Shared TypeScript interfaces/types
 constants/           # App constants
+  permissions.ts     # Centralized permission definitions
 services/            # API/Supabase client & service helpers
 utils/               # Utilities (formatters, helpers)
 public/              # Static assets
@@ -27,6 +30,19 @@ styles/              # Global styles (Tailwind v4 via PostCSS)
 ```
 
 Note: Path alias is configured as `@/*` → project root (see `tsconfig.json`).
+
+### Permission System
+
+This application implements a comprehensive permission-based access control system. See:
+- **[PERMISSIONS_IMPLEMENTATION.md](./PERMISSIONS_IMPLEMENTATION.md)** - Complete implementation details
+- **[PERMISSIONS_QUICK_REFERENCE.md](./PERMISSIONS_QUICK_REFERENCE.md)** - Developer quick reference
+
+Key features:
+- Page-level protection with `PageGuard` component
+- Component-level permission checks with `useJWTPermissions` hook
+- Centralized permission constants
+- Flexible requirement types (any/all permissions)
+- Type-safe permission checks
 
 ## Getting started
 
@@ -54,7 +70,23 @@ NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```
 
-4. Run in development
+4. Set up Supabase Storage
+
+Create required storage buckets (for avatars, etc.):
+
+```bash
+npm run setup:storage
+```
+
+Or manually create the `avatars` bucket in Supabase Dashboard:
+- Go to Storage > New Bucket
+- Name: `avatars`
+- Public: ON
+- File size limit: 5MB
+
+See [docs/STORAGE_SETUP.md](docs/STORAGE_SETUP.md) for detailed instructions.
+
+5. Run in development
 
 ```bash
 npm run dev
@@ -62,7 +94,7 @@ npm run dev
 
 Open http://localhost:3000 and check console for errors.
 
-5. Verify production build
+6. Verify production build
 
 ```bash
 npm run build
@@ -82,6 +114,7 @@ npm run format       # Prettier write
 npm run format:check # Prettier check
 npm run quotes:check # ESLint check for quotes & general rules
 npm run quotes:fix   # ESLint fix + Prettier write
+npm run setup:storage # Create required Supabase storage buckets
 ```
 
 ## Development workflow
