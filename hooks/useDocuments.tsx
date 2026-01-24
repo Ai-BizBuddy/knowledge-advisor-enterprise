@@ -9,6 +9,7 @@ import type {
   PaginationOptions,
   UpdateDocumentInput,
 } from '@/interfaces/Project';
+import { knowledgeBaseService } from '@/services';
 import DocumentService from '@/services/DocumentService';
 import { createApiError } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
@@ -562,6 +563,15 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
           throw new Error('No access token available. Please log in again.');
         }
 
+        // Find document to get description
+        const document = documents.find((d) => d.id === documentId);
+        
+        let kbName = null;
+        if (knowledgeBaseId) {
+             const project = await knowledgeBaseService.getKnowledgeBase(knowledgeBaseId);
+             kbName = project?.name;
+        }
+
         const ingressUrl = `${process.env.NEXT_PUBLIC_INGRESS_SERVICE}/ingress`;
 
         const response = await fetch(ingressUrl, {
@@ -572,7 +582,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
             Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({
-            documentId: documentId,
+            document_id: documentId,
+            UseAdvancedChunking: true,
+            description: document?.description || null,
+            kb_name: kbName || null,
           }),
         });
 
@@ -596,7 +609,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         removeSyncingDocument(documentId);
       }
     },
-    [addSyncingDocument, removeSyncingDocument, getAccessToken],
+    [addSyncingDocument, removeSyncingDocument, getAccessToken, documents],
   );
 
   /**
