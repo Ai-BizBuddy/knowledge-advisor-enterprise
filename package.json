@@ -19,7 +19,7 @@
     "flowbite-react": "^0.12.4",
     "framer-motion": "^12.16.0",
     "isomorphic-dompurify": "^2.26.0",
-    "next": "^15.4.8",
+    "next": "^16.1.1",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
     "react-hook-form": "^7.62.0",

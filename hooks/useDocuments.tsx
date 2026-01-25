@@ -568,7 +568,8 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         
         let kbName = null;
         if (knowledgeBaseId) {
-             const project = await knowledgeBaseService.getKnowledgeBase(knowledgeBaseId);
+             const projects = await knowledgeBaseService.getKnowledgeBaseByIDs([knowledgeBaseId]);
+             const project = projects[0];
              kbName = project?.name;
         }
 
