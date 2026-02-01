@@ -72,3 +72,6 @@ export * from './PageHeader';
 // Deep Search Components
 export * from './deepSearch';
 
+// OCR Viewer Components
+export * from './ocrViewer';
+
