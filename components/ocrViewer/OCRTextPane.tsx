@@ -62,15 +62,15 @@ export const OCRTextPane: React.FC<OCRTextPaneProps> = ({
     }
   };
 
-  // Format bbox with units: percentage for normalized (0-1), px for absolute
+  // Format bbox with units: percentage for normalized (0-1), px for absolute.
+  // bbox is canonical [x1, y1, x2, y2]; width and height are derived as x2-x1 and y2-y1.
   const formatBBox = (bbox: number[]): string => {
+    const [x1, y1, x2, y2] = bbox;
     const isNorm = bbox.every((v) => v <= 1.01);
     if (isNorm) {
-      const [x, y, w, h] = bbox;
-      return `x=${(x * 100).toFixed(2)}% y=${(y * 100).toFixed(2)}% w=${(w * 100).toFixed(2)}% h=${(h * 100).toFixed(2)}%`;
+      return `x=${(x1 * 100).toFixed(2)}% y=${(y1 * 100).toFixed(2)}% w=${((x2 - x1) * 100).toFixed(2)}% h=${((y2 - y1) * 100).toFixed(2)}%`;
     }
-    const [x, y, w, h] = bbox;
-    return `x=${Math.round(x)}px y=${Math.round(y)}px w=${Math.round(w)}px h=${Math.round(h)}px`;
+    return `x=${Math.round(x1)}px y=${Math.round(y1)}px w=${Math.round(x2 - x1)}px h=${Math.round(y2 - y1)}px`;
   };
 
   const bboxLine =
