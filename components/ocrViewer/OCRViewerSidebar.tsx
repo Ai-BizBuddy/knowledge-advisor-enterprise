@@ -189,6 +189,7 @@ interface DocumentItemProps {
   isExpanded: boolean;
   isActive: boolean;
   currentSectionId: string | null;
+  currentPageId?: string | null;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
   onPageSelect: (id: string) => void;
@@ -202,6 +203,7 @@ const DocumentItem = memo(
     isExpanded,
     isActive,
     currentSectionId,
+    currentPageId,
     onToggle,
     onSelect,
     onPageSelect,
@@ -296,7 +298,7 @@ const DocumentItem = memo(
                 <PageItem
                   key={page.id}
                   page={page}
-                  isActive={currentSectionId === page.id}
+                  isActive={currentPageId === page.id}
                   onSelect={onPageSelect}
                 />
               ))
@@ -374,6 +376,7 @@ export const OCRViewerSidebar: React.FC<OCRViewerSidebarProps> = (props) => {
     expandedDocuments,
     currentSectionId,
     currentDocumentId,
+    currentPageId,
     isLoading,
     onDocumentToggle,
     onDocumentSelect,
@@ -415,6 +418,7 @@ export const OCRViewerSidebar: React.FC<OCRViewerSidebarProps> = (props) => {
               isExpanded={expandedDocuments.has(doc.id)}
               isActive={currentDocumentId === doc.id}
               currentSectionId={currentSectionId}
+              currentPageId={currentPageId}
               onToggle={onDocumentToggle}
               onSelect={onDocumentSelect}
               onPageSelect={onPageSelect}
