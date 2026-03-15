@@ -102,15 +102,6 @@ export const useJWTPermissions = () => {
         
         setPermissions(Array.isArray(userPermissions) ? userPermissions : []);
         setRoles(Array.isArray(userRoles) ? userRoles : []);
-        
-        console.log('✅ JWT Permissions loaded:', { 
-          permissions: userPermissions, 
-          roles: userRoles,
-          department_id: decodedPayload.department_id || user.department_id,
-          department_name: decodedPayload.department_name || user.department_name,
-          email: decodedPayload.email || user.email,
-          source: decodedPayload.permissions ? 'decoded_jwt' : 'session_user'
-        });
       } catch (error) {
         console.error('Error loading JWT permissions:', error);
         setPermissions([]);

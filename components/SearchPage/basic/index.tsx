@@ -66,7 +66,6 @@ export default function BasicSearchPage() {
 
   const handleResultClick = (result: DocumentSearchResult) => {
     // Handle result click - could open document preview or navigate
-    console.log('Clicked result:', result);
   };
 
   const handlePageChange = (page: number) => {

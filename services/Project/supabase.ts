@@ -294,12 +294,12 @@ export async function getDocumentsByProjectId(
   try {
     const supabase = createClientTable();
     const { data, error } = await supabase
-      .from('documents')
+      .from('document')
       .select(
         `
         id,
         name,
-        type,
+        file_type,
         status,
         project_id,
         uploaded_by,
@@ -326,7 +326,7 @@ export async function getDocumentsByProjectId(
       (data?.map((doc) => ({
         id: doc.id,
         name: doc.name,
-        file_type: doc.type,
+        file_type: doc.file_type,
         status: doc.status,
         knowledge_base_id: doc.project_id,
         uploaded_by: doc.uploaded_by,
@@ -382,7 +382,7 @@ export async function deleteDocument(
 
     // Get document info to extract the storage path
     const { data: document, error: fetchError } = await supabaseTable
-      .from('documents')
+      .from('document')
       .select('path, name')
       .eq('id', documentId)
       .single();
@@ -403,7 +403,7 @@ export async function deleteDocument(
 
     // Soft delete from database
     const { error: dbError } = await supabaseTable
-      .from('documents')
+      .from('document')
       .update({ 
         is_deleted: true, 
         deleted_at: new Date().toISOString(),

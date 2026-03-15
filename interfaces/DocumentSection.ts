@@ -5,10 +5,20 @@
  * and the metadata JSON structure from Mistral OCR processing.
  */
 
+/** New DB format: bbox stored as an array of per-image entries.
+ *  Canonical format: `[x1, y1, x2, y2]` — normalised 0–1 or absolute pixels. */
+export interface BBoxEntry {
+  image_id: string;
+  bbox: number[];
+  /** Explicit format tag. Defaults to `'x1y1x2y2'` when absent. */
+  format?: 'x1y1x2y2' | 'xywh';
+}
+
 // OCR Image embedded in metadata
 export interface OCRImage {
   id: string;
   base64: string;
+  bbox?: number[] | BBoxEntry[];
 }
 
 // Document Section Metadata from Mistral OCR processing
@@ -36,6 +46,8 @@ export interface DocumentSectionMetadata {
   knowledge_base_id: string;
   contextual_headers: string[];
   embedding_call_number: number;
+  /** Bounding box — either legacy flat `number[4]` or new `BBoxEntry[]` array */
+  bbox?: number[] | BBoxEntry[];
 }
 
 // Document Section from database

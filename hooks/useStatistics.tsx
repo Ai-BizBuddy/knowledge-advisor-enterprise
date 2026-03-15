@@ -111,7 +111,7 @@ export const useStatistics = (
       }));
 
       onErrorRef.current?.(errorMessage);
-          }
+    }
   }, []); // No dependencies since we use refs
 
   /**
@@ -147,7 +147,7 @@ export const useStatistics = (
           }, 500); // Delay to allow backend processing
         }
       } catch (error) {
-                // Don't update the error state for this operation as it's background
+        // Don't update the error state for this operation as it's background
       }
     },
     [fetchStatistics],

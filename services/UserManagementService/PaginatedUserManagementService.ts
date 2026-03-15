@@ -90,7 +90,6 @@ class PaginatedUserManagementService extends UserManagementService {
       const totalPages = Math.ceil(total / pageSize);
       return {
         data: data.map((user) => {
-          console.log({user});
           const prof = Array.isArray(user.raw_user_meta_data) ? user.raw_user_meta_data[0] : user.raw_user_meta_data;
           return {
             ...user,
@@ -397,7 +396,6 @@ class PaginatedUserManagementService extends UserManagementService {
         .single();
 
       if (error) {
-        console.log('Error updating user profile:', error);
         throw new Error(`Failed to update user profile: ${error.message}`);
       }
 

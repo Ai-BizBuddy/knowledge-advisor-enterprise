@@ -24,6 +24,13 @@ export default function KnowledgeBaseCard({
   onEdit,
   onDetail,
 }: KnowledgeBaseCardProps) {
+  const handleEditButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onEdit) {
+      onEdit();
+    }
+  };
+
   return (
     <div className='knowledge-base-card group mx-auto w-full transform rounded-lg border border-gray-200 bg-white p-4 shadow-sm transition-all duration-300 ease-in-out hover:shadow-lg hover:scale-[1.02] sm:p-5 lg:p-6 dark:border-gray-700 dark:bg-gray-800 dark:hover:shadow-2xl'>
       {/* Header Section */}
@@ -55,10 +62,7 @@ export default function KnowledgeBaseCard({
           {onEdit && (
             <button
               className='rounded-lg bg-blue-50 p-2 text-blue-500 focus:ring-2 focus:ring-blue-200 dark:bg-blue-900/20 dark:text-blue-400 dark:hover:bg-blue-900/40 dark:focus:ring-blue-800/50'
-              onClick={(e) => {
-                e.stopPropagation();
-                onEdit();
-              }}
+              onClick={handleEditButtonClick}
               title='Edit Knowledge Base'
             >
               <svg className='h-4 w-4 lg:h-5 lg:w-5' fill='none' stroke='currentColor' viewBox='0 0 24 24'>
@@ -133,7 +137,7 @@ export default function KnowledgeBaseCard({
         </div>
 
         {/* Desktop hover indicator */}
-        <div className='hidden opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:block' onClick={onDetail}>
+        <div className='hidden opacity-0 transition-opacity duration-200 group-hover:opacity-100 sm:block cursor-pointer' onClick={onDetail}>
           <svg
             className='h-5 w-5 text-gray-400'
             fill='none'

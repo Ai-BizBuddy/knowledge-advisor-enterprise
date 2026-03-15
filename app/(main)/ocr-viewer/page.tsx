@@ -10,7 +10,7 @@ function OCRViewerContent() {
   const searchParams = useSearchParams();
   const documentId = searchParams.get('documentId') || undefined;
   const sectionId = searchParams.get('sectionId') || undefined;
-  const knowledgeBaseId = searchParams.get('kbId') || undefined;
+  const knowledgeBaseId = searchParams.get('kbId') || ''; // Enforce string for updated OCRViewerProps
 
   return (
     <OCRViewer

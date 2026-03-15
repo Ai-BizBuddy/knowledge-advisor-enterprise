@@ -227,6 +227,9 @@ export default function ChatCard({
     
     // Also clean up common patterns like >>[object Object]<<
     processedMessage = processedMessage.replace(/>>?\[object Object\]<<?/gi, '');
+
+    // Strip LLM XML-like tags (e.g. <intent>, <thought>, <reflection>) that are not valid HTML
+    processedMessage = processedMessage.replace(/<\/?(?:intent|thought|reflection|reasoning)[^>]*>/gi, '');
     
     return processedMessage;
   })();
@@ -543,6 +546,13 @@ export default function ChatCard({
                   {...props}
                 />
               ),
+              // Suppress unknown XML-like tags from LLM output (e.g. <intent>, <thought>)
+              ...(Object.fromEntries(
+                ['intent', 'thought', 'reflection', 'reasoning'].map((tag) => [
+                  tag,
+                  ({ children }: { children?: React.ReactNode }) => <>{children}</>,
+                ])
+              ) as Record<string, React.ComponentType<{ children?: React.ReactNode }>>),
             }}
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}

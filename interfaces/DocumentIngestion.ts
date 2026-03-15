@@ -84,6 +84,7 @@ export interface DeepSearchRes {
 
 // เมตาดาตาตามที่เห็นในตัวอย่าง
 export interface ChunkMetadata {
+  bbox?: number[];
   chunk_index: number;
   chunk_total: number;
   document_id: string;

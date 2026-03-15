@@ -2,9 +2,9 @@
 
 ## Project Overview
 
-Last Updated: 2025-08-31
+Last Updated: 2026-02-14
 
-Next.js 15 App Router in CSR-only mode with TypeScript, Tailwind v4, Supabase (Auth/DB/Storage),
+Next.js 16 App Router in CSR-only mode with TypeScript, Tailwind v4, Supabase (Auth/DB/Storage),
 Flowbite React. Manages RAG projects with document upload and processing. This guide mandates real,
 tested changes.
 
@@ -70,7 +70,7 @@ npm run format:check
 
 ### Core Technologies
 
-- Framework: Next.js 15.x (App Router, Turbo dev)
+- Framework: Next.js 16.x (App Router, Turbo dev)
 - Language: TypeScript 5 (strict)
 - Styling: Tailwind CSS v4 + flowbite-react
 - Animations: Framer Motion 12
@@ -105,7 +105,7 @@ sync_history (id, project_id, action, status, details, created_at)
 activity_logs (id, user_id, action, resource_type, resource_id, details, created_at)
 ```
 
-### RLS Policies Example
+### RLS policies Example
 
 ```sql
 -- Projects: Users can only access their own projects
@@ -129,6 +129,7 @@ CREATE POLICY "Users can view project documents" ON documents
 
 ```typescript
 // DON'T
+console.log('debug'); // NO console.log
 const data: any = response.data;
 const error: any = e;
 function handleCallback(cb: any) {}
@@ -228,6 +229,64 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({
     >
       {/* Component content */}
     </motion.div>
+  );
+};
+```
+
+### React Performance Best Practices
+
+#### 🚀 Optimization Rules
+
+1.  **Memoize Expensive Components**: Use `React.memo` for list items and components that re-render often but props stay the same.
+2.  **Stable Callbacks**: Wrap event handlers passed to memoized children in `useCallback`.
+3.  **Memoize Calculations**: Use `useMemo` for expensive derived state or large object transformations.
+4.  **Virtualization**: For lists > 50 items, consider using virtualization.
+
+#### ✅ Optimized Component Example
+
+```typescript
+import React, { memo, useCallback, useMemo } from 'react';
+
+interface ListItemProps {
+  item: Item;
+  onSelect: (id: string) => void;
+}
+
+// 1. Memoize child component
+const ListItem = memo(({ item, onSelect }: ListItemProps) => {
+  // 2. Stable handler for internal elements
+  const handleClick = useCallback(() => {
+    onSelect(item.id);
+  }, [item.id, onSelect]);
+
+  return (
+    <div onClick={handleClick}>
+      {item.name}
+    </div>
+  );
+});
+
+export const ListComponent = ({ items }: { items: Item[] }) => {
+  // 3. Stable handler passed to child
+  const handleSelect = useCallback((id: string) => {
+    console.log('Selected', id);
+  }, []);
+
+  // 4. Memoize expensive derivations
+  const sortedItems = useMemo(() => {
+    return [...items].sort((a, b) => a.value - b.value);
+  }, [items]);
+
+  return (
+    <div>
+      {sortedItems.map(item => (
+        <ListItem
+          key={item.id}
+          item={item}
+          onSelect={handleSelect}
+        />
+      ))}
+    </div>
   );
 };
 ```
@@ -455,7 +514,7 @@ npm run analyze        # Bundle analysis
 
 ## Ultra-Condensed Quick Reference
 
-````markdown
+```
 # Knowledge Advisor - Quick Reference
 
 ## 🚨 MANDATORY WORKFLOW
@@ -467,11 +526,11 @@ npm run analyze        # Bundle analysis
 
 ## Stack
 
-Next.js 15 + TypeScript + Supabase + Tailwind + Framer Motion
+Next.js 16 + TypeScript + Supabase + Tailwind + Framer Motion
 
 ## Golden Rules
 
-❌ NO `any` types → use `unknown`, interfaces, unions ✅ React Hook Form: `useReactHookForm<T>()` ✅
+❌ NO `any` types → use `unknown`, interfaces, unions ❌ NO `console.log` ✅ React Hook Form: `useReactHookForm<T>()` ✅
 Server Actions for mutations ✅ Component per folder with index.tsx ✅ Mobile-first + dark theme +
 glass morphism 🚨 ALWAYS test before claiming completion
 
@@ -490,12 +549,10 @@ export async function action(data: T): Promise<TypedResponse<R>> {}
 // Components
 export const Component: React.FC<Props> = ({ ... }) => { ... };
 ```
-````
+
 
 ## Priority
 
-Replace mock → Real Supabase → Complete type safety → ALWAYS test with dev + build
-
 ```
-
+Replace mock → Real Supabase → Complete type safety → ALWAYS test with dev + build
 ```

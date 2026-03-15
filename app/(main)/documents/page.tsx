@@ -1,36 +1,37 @@
 'use client';
 import {
-  DocumentDeleteModal,
-  DocumentsHeader,
-  DocumentsPagination,
-  DocumentsSearch,
-  DocumentsTable,
-  NoDocuments,
-  PageGuard,
-  TableSkeleton,
+    DocumentDeleteModal,
+    DocumentsHeader,
+    DocumentsPagination,
+    DocumentsSearch,
+    DocumentsTable,
+    NoDocuments,
+    PageGuard,
+    TableSkeleton,
 } from '@/components';
 import {
-  DeepSearchLayout,
-  DocumentPreview,
-  MiniDocumentPreview,
+    DeepSearchLayout,
+    DocumentPreview,
+    MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
 import { PAGE_PERMISSIONS } from '@/constants';
 import {
-  useAllUserDocuments,
-  useDocumentsManagement,
-  useKnowledgeBase,
-  useSorting
+    useAllUserDocuments,
+    useDocumentsManagement,
+    useKnowledgeBase,
+    useSorting
 } from '@/hooks';
 /* Lines 23-32 omitted */
 import { useDeepSearch } from '@/hooks/useDeepSarch';
 import {
-  DeepSearchData,
-  DocumentSearchResult,
+    DeepSearchData,
+    DocumentSearchResult,
 } from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
+import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
@@ -108,6 +109,7 @@ const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
 });
 
 export default function DocumentsPage() {
+  const router = useRouter();
   const { showToast } = useToast();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -392,8 +394,9 @@ export default function DocumentsPage() {
       const kbRes = await getKnowledgeBaseByIDs(KBIds);
 
       // Map document and knowledge base results to search results
-      // Build a lookup from document_id -> first matching chunk content
+      // Build lookups from document_id -> first matching chunk content and page number
       const contentByDocId = new Map<string, string>();
+      const pageByDocId = new Map<string, number>();
       for (const r of results) {
         const docId = r?.metadata?.document_id;
         if (
@@ -402,6 +405,9 @@ export default function DocumentsPage() {
           !contentByDocId.has(docId)
         ) {
           contentByDocId.set(docId, r.content || '');
+          if (typeof r.metadata?.page === 'number') {
+            pageByDocId.set(docId, r.metadata.page);
+          }
         }
       }
 
@@ -419,6 +425,7 @@ export default function DocumentsPage() {
           fileUrl: doc.url,
           uploadDate: doc.updated_at,
           knowledgeName: knowledge ? knowledge.name : '',
+          pageNumber: pageByDocId.get(doc.id),
           document: doc,
         } as unknown as DocumentSearchResult; // conforms to UI needs
       });
@@ -456,10 +463,8 @@ export default function DocumentsPage() {
   const handleDocumentPreview = (index: number) => {
     if (documents && documents.length > index) {
       const document = documents[index];
-      const previewData = adaptDocumentToPreviewFormat(document);
-      setPreviewDocument(previewData);
-      setIsFullPreviewOpen(true);
-      setIsFullScale(true);
+      // Navigate to OCR viewer
+      router.push(`/ocr-viewer?documentId=${document.id}`);
     }
   };
 

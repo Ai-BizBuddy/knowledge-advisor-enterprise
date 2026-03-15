@@ -19,7 +19,7 @@ export class DeepSearchService {
         // Initialize with fetch client
         this.client = new BaseFetchClient({
             baseURL: process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://localhost:5001',
-            timeout: 30000, // Increased timeout for deep search
+            timeout: 120000, // 2 minutes — deep search can be slow
             defaultHeaders: {
                 'Content-Type': 'application/json',
                 Accept: 'application/json',
