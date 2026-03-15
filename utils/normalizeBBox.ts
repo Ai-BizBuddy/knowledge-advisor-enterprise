@@ -1,3 +1,67 @@
+// Utility functions for normalizing bounding boxes.
+//
+// Canonical format (used by downstream rendering):
+//   [x1, y1, x2, y2]  -> top-left (x1, y1), bottom-right (x2, y2)
+//
+// Legacy flat format (still accepted as input for backwards compatibility):
+//   [x, y, w, h]      -> top-left (x, y), width w, height h
+//
+// The functions in this module ALWAYS return bounding boxes in the
+// canonical [x1, y1, x2, y2] format to avoid width/height being mistaken
+// for absolute coordinates.
+
+export type BBox = [number, number, number, number];
+
+export type BBoxFormat = 'x1y1x2y2' | 'xywh';
+
+/**
+ * Convert a bounding box from a known input format to the canonical
+ * [x1, y1, x2, y2] representation.
+ *
+ * @param bbox   The input bounding box as a 4-tuple.
+ * @param format The format of the input bbox.
+ *               - 'x1y1x2y2' (default): [x1, y1, x2, y2]
+ *               - 'xywh'           : [x, y, w, h]
+ * @returns The bounding box normalized to [x1, y1, x2, y2].
+ */
+export function toX1Y1X2Y2(bbox: BBox, format: BBoxFormat = 'x1y1x2y2'): BBox {
+  const [a, b, c, d] = bbox;
+
+  if (format === 'xywh') {
+    const x1 = a;
+    const y1 = b;
+    const w = c;
+    const h = d;
+
+    const x2 = x1 + w;
+    const y2 = y1 + h;
+
+    return [x1, y1, x2, y2];
+  }
+
+  // Already in canonical [x1, y1, x2, y2] format.
+  return [a, b, c, d];
+}
+
+/**
+ * Normalize a bounding box to the canonical [x1, y1, x2, y2] format.
+ *
+ * This function is safe to call with both the legacy flat format
+ * [x, y, w, h] and the canonical [x1, y1, x2, y2] format:
+ *
+ *   normalizeBBox([x, y, w, h], 'xywh')       // -> [x1, y1, x2, y2]
+ *   normalizeBBox([x1, y1, x2, y2])           // -> [x1, y1, x2, y2]
+ *
+ * @param bbox   The input bounding box as a 4-tuple.
+ * @param format The format of the input bbox. Defaults to 'x1y1x2y2'.
+ * @returns The bounding box in [x1, y1, x2, y2] format.
+ */
+export function normalizeBBox(
+  bbox: BBox,
+  format: BBoxFormat = 'x1y1x2y2',
+): BBox {
+  return toX1Y1X2Y2(bbox, format);
+}
 /**
  * Canonical BBox format used throughout the application: **`[x1, y1, x2, y2]`**
  *
