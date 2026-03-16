@@ -20,11 +20,11 @@ interface DocPagination {
 }
 
 /**
- * Document-pages loader with per-document pagination (10 pages per batch).
+ * Document-pages loader with per-document pagination (25 pages per batch).
  *
  * If `knowledgeBaseId` is supplied the hook bulk-loads the first batch of page
  * summaries for that knowledge base on mount. If `documentId` is also provided,
- * only pages for that specific document are loaded (10 pages per batch with pagination).
+ * only pages for that specific document are loaded (25 pages per batch with pagination).
  * Individual documents can be paginated independently with `goToDocumentPage`.
  */
 export function useDocumentPagesMap(options: UseDocumentPagesMapOptions = {}) {
@@ -75,7 +75,7 @@ export function useDocumentPagesMap(options: UseDocumentPagesMapOptions = {}) {
           }
         }
       } else {
-        // Load pages for all documents in KB (first 10 total)
+        // Load pages for all documents in KB (first 25 total)
         res = await DocumentPageService.getPageListByKnowledgeBaseId(kbId, 1, SIDEBAR_PAGE_SIZE);
         if (res.success && res.data) {
           setPagesMap(res.data);
@@ -101,7 +101,7 @@ export function useDocumentPagesMap(options: UseDocumentPagesMapOptions = {}) {
 
   /**
    * Fetch the lightweight paginated page list for a single document.
-   * Pass `page` (1-based) to jump to a specific page of 10.
+   * Pass `page` (1-based) to jump to a specific page of 25.
    */
   const loadPagesForDocument = useCallback(
     async (docId: string, page = 1, force = false) => {
@@ -146,7 +146,7 @@ export function useDocumentPagesMap(options: UseDocumentPagesMapOptions = {}) {
     [],
   );
 
-  /** Navigate a document's page list to a different 10-item batch. */
+  /** Navigate a document's page list to a different 25-item batch. */
   const goToDocumentPage = useCallback(
     (docId: string, page: number) => {
       loadPagesForDocument(docId, page, true);
