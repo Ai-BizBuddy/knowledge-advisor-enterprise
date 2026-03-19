@@ -33,27 +33,37 @@ export interface AdkChatRequest {
 }
 
 /**
- * ADK streaming response interface
- * Updated to match the new API response format
+ * Inner SSE event data payload (used both wrapped and unwrapped)
  */
-export interface AdkStreamingResponse {
-  session: string;
-  data: {
-    content: {
-      parts: Array<{ text: string }>;
-      role: 'model';
-    };
-    partial: boolean;
-    invocationId: string;
-    author: string;
-    actions: {
-      stateDelta: Record<string, unknown>;
-      artifactDelta: Record<string, unknown>;
-      requestedAuthConfigs: Record<string, unknown>;
-    };
-    id: string;
-    timestamp: number;
+export interface AdkSseEventData {
+  content?: {
+    parts?: Array<{ text: string }>;
+    role?: string;
   };
+  partial?: boolean;
+  invocationId?: string;
+  author?: string;
+  actions?: {
+    stateDelta: Record<string, unknown>;
+    artifactDelta: Record<string, unknown>;
+    requestedAuthConfigs: Record<string, unknown>;
+  };
+  id?: string;
+  timestamp?: number;
+}
+
+/**
+ * ADK streaming response interface
+ * Updated to match the new API response format.
+ * Handles three shapes the server may send:
+ *  1. Wrapped  – { session, data: AdkSseEventData }
+ *  2. Direct   – AdkSseEventData (no outer session/data wrapper)
+ *  3. Terminal – { session, done: true }
+ */
+export interface AdkStreamingResponse extends AdkSseEventData {
+  session?: string;
+  done?: boolean;
+  data?: AdkSseEventData;
 }
 
 /**
@@ -172,8 +182,8 @@ class AdkChatService {
       }
 
             return {};
-    } catch (error) {
-            return {};
+    } catch {
+      return {};
     }
   }
 
@@ -306,30 +316,55 @@ class AdkChatService {
                         responseSessionId = parsed.session;
                       }
 
+                      // Check for custom termination signal: {"session": "...", "done": true}
+                      if (parsed.done === true && !hasCompleted) {
+                        hasCompleted = true;
+                        onComplete(fullContent);
+                        resolve({
+                          success: true,
+                          content: fullContent,
+                          sessionId: responseSessionId || sessionId || undefined,
+                          responseTime: Date.now() - startTime,
+                        });
+                        return;
+                      }
+
+                      // Handle nested data structure if present (data: {"session": "...", "data": {sse}})
+                      const sseData: AdkSseEventData = parsed.data ?? parsed;
+
                       // Process streaming content - each message has a unique ID and text chunk
                       if (
-                        parsed.data?.content?.parts?.[0]?.text &&
-                        parsed.data?.id
+                        sseData.content?.parts?.[0]?.text &&
+                        sseData.id
                       ) {
-                        const newText = parsed.data.content.parts[0].text;
-                        const messageId = parsed.data.id;
-                        const isPartial = parsed.data.partial;
+                        const newText = sseData.content.parts[0].text;
+                        const messageId = sseData.id;
+                        const isPartial = sseData.partial;
 
                         // Skip if we already processed this message ID to prevent duplicates
                         if (messageId === lastProcessedId) {
-                                                    continue;
+                          continue;
                         }
 
                         // Update last processed ID
                         lastProcessedId = messageId;
 
-                        // If this is the final chunk (partial=false), mark as complete
-                        if (!isPartial && !hasCompleted) {
+                        // If this is the final chunk (partial=false), it often contains the FULL content
+                        // rather than just the last shard. If newText is vastly longer or is the same
+                        // as fullContent, it means we should prefer the non-partial one as final truth.
+                        if (isPartial === false && !hasCompleted) {
                           hasCompleted = true;
-                                                    onComplete(newText);
+                          
+                          // If non-partial content is provided, check if it looks like the full content
+                          // or if we should append it. Most SSE agents send the FULL final message.
+                          const finalContent = (newText && newText.length >= fullContent.length) 
+                            ? newText 
+                            : fullContent + (newText || '');
+
+                          onComplete(finalContent);
                           resolve({
                             success: true,
-                            content: newText,
+                            content: finalContent,
                             sessionId:
                               responseSessionId || sessionId || undefined,
                             responseTime: Date.now() - startTime,
@@ -345,8 +380,9 @@ class AdkChatService {
                           onStreamData(fullContent);
                         }
                       }
-                    } catch (parseError) {
-                                          }
+                    } catch {
+                      // skip malformed SSE line
+                    }
                   }
                 }
 
@@ -449,11 +485,12 @@ class AdkChatService {
         },
       });
       return response.ok;
-    } catch (error) {
-            return false;
+    } catch {
+      return false;
     }
   }
 }
 
 export { AdkChatService };
 export type { AdkChatServiceConfig };
+

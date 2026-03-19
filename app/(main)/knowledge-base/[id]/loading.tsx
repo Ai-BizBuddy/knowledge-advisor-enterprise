@@ -1,5 +1,5 @@
 import { AppLoading } from '@/components';
 
 export default function Loading() {
-  return <AppLoading variant="fullscreen" message='Loading knowledge base details...' />;
+  return <AppLoading variant='fullscreen' message='Loading knowledge base details...' />;
 }

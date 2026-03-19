@@ -3,27 +3,53 @@
 import { ChatMessage } from '@/hooks/useAdkChat';
 import ChatHistoryService from '@/services/ChatHistoryService';
 import type { ChatSession } from '@/services/DashboardService';
-import { useCallback, useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 
 const chatHistoryService = new ChatHistoryService();
+const PAGE_SIZE = 15;
 
 export type { ChatSession };
 
 export const useChatHistory = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const offsetRef = useRef(0);
 
   const loadHistory = useCallback(async () => {
     setLoading(true);
+    offsetRef.current = 0;
     try {
-      const historyData = await chatHistoryService.loadHistory();
-      setSessions(historyData.sort((a, b) => new Date(b.started_at).getTime() - new Date(a.started_at).getTime()));
+      const result = await chatHistoryService.loadHistory(PAGE_SIZE, 0);
+      setSessions(result.data);
+      setHasMore(result.hasMore);
+      offsetRef.current = result.data.length;
     } catch {
       setSessions([]);
+      setHasMore(false);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return;
+    setLoadingMore(true);
+    try {
+      const result = await chatHistoryService.loadHistory(
+        PAGE_SIZE,
+        offsetRef.current,
+      );
+      setSessions((prev) => [...prev, ...result.data]);
+      setHasMore(result.hasMore);
+      offsetRef.current += result.data.length;
+    } catch {
+      setHasMore(false);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, hasMore]);
 
   const getChatSessions = useCallback(async (sessionId: string): Promise<ChatMessage[]> => {
     try {
@@ -101,7 +127,10 @@ export const useChatHistory = () => {
   return {
     sessions,
     loading,
+    loadingMore,
+    hasMore,
     loadHistory,
+    loadMore,
     getChatSessions,
     deleteChatSession,
     exportChatSession,

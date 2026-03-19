@@ -3,8 +3,8 @@
 import {
   BotTypingBubble,
   ChatCard,
-  ChatHistoryList,
   KnowledgeSelect,
+  LazyChatHistoryList,
   PageHeader,
 } from '@/components';
 import { useAdkChat, useKnowledgeBaseSelection } from '@/hooks';
@@ -25,6 +25,7 @@ export default function ChatPage() {
     sendMessage,
     createNewChat,
     setMessages,
+    setCurrentSessionId,
   } = useAdkChat();
 
   const { getChatSessions } = useChatHistory();
@@ -50,6 +51,7 @@ export default function ChatPage() {
   const handleLoadChatSession = useCallback(
     async (session: ChatSession) => {
       const sessionMessages = await getChatSessions(session.id);
+      setCurrentSessionId(session.id);
       setMessages([
         // welcomeMessage,
         ...sessionMessages.filter((msg) =>
@@ -62,7 +64,7 @@ export default function ChatPage() {
       ]);
       setOpenHistory(false);
     },
-    [getChatSessions, setMessages],
+    [getChatSessions, setMessages, setCurrentSessionId],
   );
 
   const handleCloseHistory = useCallback(() => {
@@ -100,7 +102,7 @@ export default function ChatPage() {
 
   return (
     <>
-      <ChatHistoryList
+      <LazyChatHistoryList
         isOpen={openHistory}
         onClose={handleCloseHistory}
         onLoadSession={handleLoadChatSession}
@@ -131,7 +133,7 @@ export default function ChatPage() {
                   <div className='w-full flex-1'>
                     <KnowledgeSelect
                       options={knowledgeBases}
-                      onChange={(data) => handleSelectKnowledgeBase(data)}
+                      onChange={handleSelectKnowledgeBase}
                       onChangeAll={handleSelectAllKB}
                     />
                   </div>
@@ -142,7 +144,7 @@ export default function ChatPage() {
                   <Button
                     type='button'
                     color='light'
-                    onClick={() => createNewChat()}
+                    onClick={createNewChat}
                     className='flex w-1/2 items-center justify-center gap-2 sm:w-auto'
                   >
                     <svg
@@ -247,7 +249,7 @@ export default function ChatPage() {
                             }
                           }}
                           placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                          className='auto-resize-textarea focus:ring-opacity-25 block max-h-[120px] min-h-[44px] w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                          className='auto-resize-textarea focus:ring-opacity-25 block max-h-30 min-h-11 w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
                           value={message}
                           onChange={(e) => {
                             setMessage(e.target.value);
@@ -269,7 +271,7 @@ export default function ChatPage() {
                       </div>
                       <button
                         type='submit'
-                        className='flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600'
+                        className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600'
                         disabled={!message.trim() || isTyping}
                         aria-label='ส่งข้อความ'
                       >
@@ -341,7 +343,7 @@ export default function ChatPage() {
                           }
                         }}
                         placeholder='พิมพ์ข้อความของคุณที่นี่...'
-                        className='auto-resize-textarea focus:ring-opacity-25 block max-h-[120px] min-h-[44px] w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
+                        className='auto-resize-textarea focus:ring-opacity-25 block max-h-30 min-h-11 w-full resize-none rounded-lg border border-gray-300 bg-white px-4 py-3 text-sm text-gray-900 transition-colors duration-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:placeholder-gray-400'
                         value={message}
                         onChange={(e) => {
                           setMessage(e.target.value);
@@ -363,7 +365,7 @@ export default function ChatPage() {
                     </div>
                     <button
                       type='submit'
-                      className='flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600'
+                      className='flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600'
                       disabled={!message.trim() || isTyping}
                       aria-label='ส่งข้อความ'
                     >

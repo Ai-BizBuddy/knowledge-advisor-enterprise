@@ -3,7 +3,7 @@
 import {
   BotTypingBubble,
   ChatCard,
-  ChatHistoryList,
+  LazyChatHistoryList,
   PageHeader,
 } from '@/components';
 import { useAdkChat } from '@/hooks';
@@ -118,7 +118,7 @@ export const ChatTab: React.FC<ChatTabProps> = ({
 
   return (
     <>
-      <ChatHistoryList
+      <LazyChatHistoryList
         isOpen={openHistory}
         onClose={handleCloseHistory}
         onLoadSession={handleLoadChatSession}
