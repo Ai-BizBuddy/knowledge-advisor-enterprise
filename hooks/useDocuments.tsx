@@ -11,7 +11,7 @@ import type {
 } from '@/interfaces/Project';
 import { knowledgeBaseService } from '@/services';
 import DocumentService from '@/services/DocumentService';
-import { createApiError } from '@/utils/errorHelpers';
+import { createApiErrorFromText } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -644,11 +644,13 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
               }
 
               // Not a timeout or last attempt — throw as normal
+              // errorText was already read above; pass it directly so we don't
+              // attempt to consume the response body a second time.
               const error = isBackendTimeout
                 ? new Error(
                     'Document processing timed out on the server. The document may be too large or the service is busy. Please try again later.'
                   )
-                : await createApiError(response, 'Failed to sync document');
+                : createApiErrorFromText(response.status, errorText, 'Failed to sync document');
               throw error;
             }
 
