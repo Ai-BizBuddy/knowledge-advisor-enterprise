@@ -45,5 +45,9 @@ const ChatHistoryListDynamic = dynamic(
 );
 
 export const LazyChatHistoryList: React.FC<Props> = (props) => {
+  // Don't mount the dynamic component until the panel is opened.
+  // This prevents the chunk download and hook initialisation on page load.
+  if (!props.isOpen) return null;
+
   return <ChatHistoryListDynamic {...props} />;
 };
