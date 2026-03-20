@@ -28,11 +28,12 @@ const REQUIRED_BUCKETS: BucketConfig[] = [
 
 async function setupStorage() {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseKey) {
     console.error('❌ Error: Missing Supabase environment variables');
-    console.error('Please ensure NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY are set in .env.local');
+    console.error('Please ensure NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are set in .env.local');
+    console.error('⚠️  SUPABASE_SERVICE_ROLE_KEY must never be exposed to the client or committed to source control.');
     process.exit(1);
   }
 
