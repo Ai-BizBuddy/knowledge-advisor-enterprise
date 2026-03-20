@@ -905,7 +905,7 @@ class DocumentService {
         return;
       }
 
-      if (retryTimeout) {
+      if (retryTimeout != null) {
         clearTimeout(retryTimeout);
         retryTimeout = null;
       }
