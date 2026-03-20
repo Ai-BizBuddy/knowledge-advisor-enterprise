@@ -19,17 +19,20 @@ export default function ChatHistoryList({
   const { sessions, loading, loadingMore, hasMore, loadHistory, loadMore } =
     useChatHistory();
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const isInitialLoadDone = useRef(false);
 
   // Load first page when panel opens
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isInitialLoadDone.current) {
+      isInitialLoadDone.current = true;
       loadHistory();
     }
   }, [isOpen, loadHistory]);
 
   // Infinite scroll via IntersectionObserver on sentinel element
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || loading || loadingMore || !hasMore || sessions.length === 0)
+      return;
     const sentinel = sentinelRef.current;
     if (!sentinel) return;
 

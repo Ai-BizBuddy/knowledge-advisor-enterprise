@@ -16,8 +16,11 @@ export const useChatHistory = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const offsetRef = useRef(0);
+  const isFetchingRef = useRef(false);
 
   const loadHistory = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoading(true);
     offsetRef.current = 0;
     try {
@@ -30,24 +33,34 @@ export const useChatHistory = () => {
       setHasMore(false);
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
   const loadMore = useCallback(async () => {
-    if (loadingMore || !hasMore) return;
+    if (loadingMore || !hasMore || isFetchingRef.current) return;
+    isFetchingRef.current = true;
     setLoadingMore(true);
     try {
       const result = await chatHistoryService.loadHistory(
         PAGE_SIZE,
         offsetRef.current,
       );
-      setSessions((prev) => [...prev, ...result.data]);
+
+      setSessions((prev) => {
+        // Prevent duplicate sessions by checking IDs
+        const existingIds = new Set(prev.map((s) => s.id));
+        const newSessions = result.data.filter((s) => !existingIds.has(s.id));
+        return [...prev, ...newSessions];
+      });
+
       setHasMore(result.hasMore);
       offsetRef.current += result.data.length;
     } catch {
       setHasMore(false);
     } finally {
       setLoadingMore(false);
+      isFetchingRef.current = false;
     }
   }, [loadingMore, hasMore]);
 
