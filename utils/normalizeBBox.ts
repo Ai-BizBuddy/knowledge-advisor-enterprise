@@ -1,3 +1,4 @@
+
 // Utility functions for normalizing bounding boxes.
 //
 // Canonical format (used by downstream rendering):
