@@ -69,8 +69,8 @@ export const PageImagePane: React.FC<PageImagePaneProps> = ({
               ref={imageRef}
               src={imageSrc}
               alt={`Page ${currentPage}`}
-              width={0}
-              height={0}
+              width={imageDims?.width ?? 1}
+              height={imageDims?.height ?? 1}
               sizes='100vw'
               unoptimized
               className='block max-w-full select-none'
