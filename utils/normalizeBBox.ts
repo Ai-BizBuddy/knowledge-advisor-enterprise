@@ -33,7 +33,7 @@ export type BBoxFormat = 'x1y1x2y2' | 'xywh';
  *   (x2 must be >= x1, y2 must be >= y1), so it is likely `xywh`.
  * - Otherwise default to `x1y1x2y2` (the canonical backend convention).
  */
-function getBBoxFormat(bbox: number[]): 'x1y1x2y2' | 'xywh' {
+export function getBBoxFormat(bbox: number[]): 'x1y1x2y2' | 'xywh' {
   if (bbox.length < 4) return 'x1y1x2y2';
   // In x1y1x2y2 format, x2 >= x1 and y2 >= y1
   if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) return 'xywh';
