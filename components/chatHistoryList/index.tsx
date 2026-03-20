@@ -2,33 +2,22 @@
 
 import type { ChatSession } from '@/hooks/useChatHistory';
 import { useChatHistory } from '@/hooks/useChatHistory';
-import { useCallback, useEffect } from 'react';
+import { useEffect } from 'react';
 import ChatHistoryCard from '../chatHistoryCard';
 
 interface Props {
-  isOpen: boolean;
   onClose: () => void;
   onLoadSession?: (session: ChatSession) => void;
 }
 
-export default function ChatHistoryList({
-  isOpen,
-  onClose,
-  onLoadSession,
-}: Props) {
-  const { sessions, loadHistory } = useChatHistory();
-
-  const handleLoadSessions = useCallback(() => {
-    if (isOpen) {
-      loadHistory();
-    }
-  }, [isOpen, loadHistory]);
+export default function ChatHistoryList({ onClose, onLoadSession }: Props) {
+  const { sessions, loading, loadHistory } = useChatHistory();
 
   useEffect(() => {
-    handleLoadSessions();
-  }, [handleLoadSessions]);
+    loadHistory();
+  }, [loadHistory]);
 
-  return isOpen ? (
+  return (
     <div
       className='fixed inset-0 z-50 overscroll-contain bg-black/50 backdrop-blur-sm'
       onClick={onClose}
@@ -58,28 +47,40 @@ export default function ChatHistoryList({
             </svg>
           </span>
         </div>
-        {sessions.map((h, i) => (
-          <ChatHistoryCard
-            key={i}
-            title={h.title}
-            dateTime={new Date(h.started_at).toLocaleDateString('th-TH', {
-              year: 'numeric',
-              month: 'short',
-              day: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit',
-            })}
-            messageCount={h.messageCount || 0} // No message count available in new interface
-            onClick={() => onLoadSession?.(h)}
-          />
-        ))}
-        {sessions.length === 0 && (
-          <div className='mt-10 text-center text-gray-500 dark:text-gray-400'>
-            ไม่มีประวัติการสนทนา
+        {loading ? (
+          <div className='flex flex-col gap-3'>
+            {[...Array(5)].map((_, i) => (
+              <div
+                key={i}
+                className='h-16 animate-pulse rounded-lg bg-gray-300 dark:bg-gray-700'
+              />
+            ))}
           </div>
+        ) : (
+          <>
+            {sessions.map((h) => (
+              <ChatHistoryCard
+                key={h.id}
+                title={h.title}
+                dateTime={new Date(h.started_at).toLocaleDateString('th-TH', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+                messageCount={h.messageCount || 0}
+                onClick={() => onLoadSession?.(h)}
+              />
+            ))}
+            {sessions.length === 0 && (
+              <div className='mt-10 text-center text-gray-500 dark:text-gray-400'>
+                ไม่มีประวัติการสนทนา
+              </div>
+            )}
+          </>
         )}
-        {/*  */}
       </div>
     </div>
-  ) : null;
+  );
 }

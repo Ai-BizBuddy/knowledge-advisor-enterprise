@@ -100,11 +100,12 @@ export default function ChatPage() {
 
   return (
     <>
-      <ChatHistoryList
-        isOpen={openHistory}
-        onClose={handleCloseHistory}
-        onLoadSession={handleLoadChatSession}
-      />
+      {openHistory && (
+        <ChatHistoryList
+          onClose={handleCloseHistory}
+          onLoadSession={handleLoadChatSession}
+        />
+      )}
 
       <div className='min-h-full'>
         {/* Main Container with consistent responsive padding */}
