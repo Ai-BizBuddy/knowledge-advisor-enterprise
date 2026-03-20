@@ -137,8 +137,10 @@ export async function createApiError(
   const error = new Error(parsed.message);
   
   // Attach additional context for debugging
-  (error as any).statusCode = parsed.statusCode;
-  (error as any).originalError = parsed.originalError;
+  Object.assign(error, {
+    statusCode: parsed.statusCode,
+    originalError: parsed.originalError,
+  });
   
   return error;
 }

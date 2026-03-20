@@ -1,3 +1,75 @@
+
+// Utility functions for normalizing bounding boxes.
+//
+// Canonical format (used by downstream rendering):
+//   [x1, y1, x2, y2]  -> top-left (x1, y1), bottom-right (x2, y2)
+//
+// Legacy flat format (still accepted as input for backwards compatibility):
+//   [x, y, w, h]      -> top-left (x, y), width w, height h
+//
+// The functions in this module ALWAYS return bounding boxes in the
+// canonical [x1, y1, x2, y2] format to avoid width/height being mistaken
+// for absolute coordinates.
+
+export type BBox = [number, number, number, number];
+
+export type BBoxFormat = 'x1y1x2y2' | 'xywh';
+
+/**
+ * Convert a bounding box from a known input format to the canonical
+ * [x1, y1, x2, y2] representation.
+ *
+ * @param bbox   The input bounding box as a 4-tuple.
+ * @param format The format of the input bbox.
+ *               - 'x1y1x2y2' (default): [x1, y1, x2, y2]
+ *               - 'xywh'           : [x, y, w, h]
+ * @returns The bounding box normalized to [x1, y1, x2, y2].
+ */
+/**
+ * Detects the likely format of a 4-element bbox array.
+ *
+ * Heuristic:
+ * - If `bbox[2] < bbox[0]` or `bbox[3] < bbox[1]`, it cannot be `x1y1x2y2`
+ *   (x2 must be >= x1, y2 must be >= y1), so it is likely `xywh`.
+ * - Otherwise default to `x1y1x2y2` (the canonical backend convention).
+ */
+function getBBoxFormat(bbox: number[]): 'x1y1x2y2' | 'xywh' {
+  if (bbox.length < 4) return 'x1y1x2y2';
+  // In x1y1x2y2 format, x2 >= x1 and y2 >= y1
+  if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) return 'xywh';
+  return 'x1y1x2y2';
+}
+
+/**
+ * Convert a bounding box from a known input format to the canonical
+ * [x1, y1, x2, y2] representation.
+ *
+ * @param bbox   The input bounding box as a 4-tuple.
+ * @param format The format of the input bbox.
+ *               - 'x1y1x2y2' (default): [x1, y1, x2, y2]
+ *               - 'xywh'           : [x, y, w, h]
+ * @returns The bounding box normalized to [x1, y1, x2, y2].
+ */
+export function toX1Y1X2Y2(bbox: number[], format?: 'x1y1x2y2' | 'xywh'): number[] {
+  const [a, b, c, d] = bbox;
+  const fmt = format ?? getBBoxFormat(bbox);
+
+  if (fmt === 'xywh') {
+    const x1 = a;
+    const y1 = b;
+    const w = c;
+    const h = d;
+
+    const x2 = x1 + w;
+    const y2 = y1 + h;
+
+    return [x1, y1, x2, y2];
+  }
+
+  // Already in canonical [x1, y1, x2, y2] format.
+  return (bbox.length === 4 ? [a, b, c, d] : bbox) as number[];
+}
+
 /**
  * Canonical BBox format used throughout the application: **`[x1, y1, x2, y2]`**
  *
@@ -36,6 +108,7 @@ export interface PageBBoxEntry {
  */
 export function normalizeBBox(
   raw: number[] | BBoxEntry[] | string | null | undefined,
+  format: BBoxFormat = 'x1y1x2y2',
 ): number[] | null {
   if (!raw) return null;
 
@@ -52,10 +125,13 @@ export function normalizeBBox(
   if (!Array.isArray(parsed) || parsed.length === 0) return null;
   const first = parsed[0];
   if (typeof first === 'object' && first !== null && 'bbox' in first) {
-    return (first as BBoxEntry).bbox;
+    return toX1Y1X2Y2((first as BBoxEntry).bbox, (first as BBoxEntry).format || format);
   }
-  return parsed as number[];
+
+  const bbox = parsed as number[];
+  return toX1Y1X2Y2(bbox, format);
 }
+
 
 /**
  * Normalises the page-level `document_page.bbox` column.
@@ -100,34 +176,8 @@ export function normalizePageBBox(
 }
 
 /**
- * Detects the likely format of a 4-element bbox array.
- *
- * Heuristic:
- * - If `bbox[2] < bbox[0]` or `bbox[3] < bbox[1]`, it cannot be `x1y1x2y2`
- *   (x2 must be >= x1, y2 must be >= y1), so it is likely `xywh`.
- * - Otherwise default to `x1y1x2y2` (the canonical backend convention).
- */
-export function getBBoxFormat(bbox: number[]): 'x1y1x2y2' | 'xywh' {
-  if (bbox.length < 4) return 'x1y1x2y2';
-  // In x1y1x2y2 format, x2 >= x1 and y2 >= y1
-  if (bbox[2] < bbox[0] || bbox[3] < bbox[1]) return 'xywh';
-  return 'x1y1x2y2';
-}
-
-/**
- * Converts any bbox to canonical `[x1, y1, x2, y2]`.
- * If already in that format (or unknown), returns as-is.
- */
-export function toX1Y1X2Y2(bbox: number[], format?: 'x1y1x2y2' | 'xywh'): number[] {
-  const fmt = format ?? getBBoxFormat(bbox);
-  if (fmt === 'xywh') {
-    return [bbox[0], bbox[1], bbox[0] + bbox[2], bbox[1] + bbox[3]];
-  }
-  return bbox;
-}
-
-/**
  * Normalises an image ID for matching between OCR text references and DB bbox entries.
+
  *
  * OCR text may embed `![alt](image_1_logo)` while the DB bbox uses `img_1_logo`.
  * This strips common prefixes (`image_`, `img_`, `figure_`) to get the comparable suffix.

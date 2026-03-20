@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ColPali OCR Studio</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://rsms.me/">
+    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <!-- JetBrains Mono for Code -->
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-body: #f8f9fa;
+            --bg-panel: #ffffff;
+            --border-color: #e2e8f0;
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --accent: #3b82f6; /* Mistral-ish Blue */
+            --editor-bg: #ffffff;
+            --editor-gutter: #f7fafc;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Bar */
+        header {
+            height: 48px;
+            background: var(--bg-panel);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+            flex-shrink: 0;
+        }
+
+        .brand {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .document-title {
+            color: var(--text-secondary);
+            font-weight: 400;
+            font-size: 13px;
+            border-left: 1px solid var(--border-color);
+            padding-left: 12px;
+            margin-left: 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 300px;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        button.btn-subtle {
+            background: transparent;
+            border: 1px solid transparent;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button.btn-subtle:hover {
+            background: #edf2f7;
+            color: var(--text-primary);
+        }
+
+        /* Main Workspace */
+        .workspace {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 48px);
+        }
+
+        /* Sidebar Pane */
+        .sidebar-pane {
+            width: 250px;
+            background: var(--bg-panel);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            transition: width 0.3s ease;
+        }
+        .sidebar-pane.collapsed {
+            width: 0;
+            border-right: none;
+            overflow: hidden;
+        }
+
+        .sidebar-header {
+            height: 48px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0;
+        }
+
+        /* Document List Items */
+        .doc-group {
+            border-bottom: 1px solid transparent;
+        }
+
+        .doc-header {
+            padding: 10px 16px;
+            font-size: 13px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            user-select: none;
+            font-weight: 500;
+        }
+        .doc-header:hover {
+            background: #f7fafc;
+        }
+        .doc-header svg.chevron {
+            color: var(--text-secondary);
+            transition: transform 0.2s;
+            width: 14px;
+            height: 14px;
+        }
+        .doc-group.expanded .doc-header svg.chevron {
+            transform: rotate(90deg);
+        }
+
+        .page-list {
+            display: none;
+            background: #fafbfc;
+            padding-bottom: 4px;
+        }
+        .doc-group.expanded .page-list {
+            display: block;
+        }
+
+        .page-item {
+            padding: 6px 16px 6px 38px; /* Indent */
+            font-size: 12px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: block;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .page-item:hover {
+            color: var(--text-primary);
+            background: #edf2f7;
+        }
+        .page-item.active {
+            color: var(--accent);
+            background: rgba(59, 130, 246, 0.08); /* faint blue */
+            font-weight: 500;
+            box-shadow: inset 2px 0 0 0 var(--accent);
+            padding-left: 36px; /* Adjust for border */
+        }
+
+
+        /* Left Pane: Image / PDF View */
+        .preview-pane {
+            flex: 1;
+            background: #e2e8f0; /* Darker backdrop for image */
+            position: relative;
+            overflow: hidden;
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-toolbar {
+            height: 48px;
+            background: white;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .canvas-container {
+            flex: 1;
+            overflow: auto;
+            display: flex;
+            justify-content: center;
+            padding: 32px;
+            background-image: 
+                radial-gradient(#cbd5e0 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+
+        #image-wrapper {
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background: white;
+            transition: transform 0.2s ease;
+        }
+
+        #doc-image {
+            display: block;
+            max-width: 100%;
+        }
+
+        .bbox {
+            position: absolute;
+            border: 2px solid rgba(59, 130, 246, 0.5); /* Blue-ish */
+            background-color: rgba(59, 130, 246, 0.1);
+            cursor: pointer;
+            transition: all 0.1s;
+        }
+        .bbox:hover {
+            border-color: rgba(59, 130, 246, 1);
+            background-color: rgba(59, 130, 246, 0.25);
+            z-index: 10;
+        }
+
+        /* Right Pane: Editor */
+        .editor-pane {
+            flex: 1;
+            background: var(--bg-panel);
+            display: flex;
+            flex-direction: column;
+            max-width: 50%; /* Initial split */
+        }
+
+        .editor-toolbar {
+            height: 48px;
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 16px;
+            display: flex;
+            align-items: center;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .editor-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px 32px;
+        }
+
+        textarea.markdown-editor {
+            display: none;
+        }
+        
+        div.markdown-editor {
+            width: 100%;
+            min-height: 100%;
+            border: none;
+            outline: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: transparent;
+            white-space: pre-wrap;
+            overflow-wrap: break-word;
+        }
+
+        .patch-image {
+            max-width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin: 8px 0;
+            display: block;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* Metadata/JSON Drawer (Collapsible) */
+        .drawer-toggle {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 32px;
+            background: white;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            font-size: 12px;
+            color: var(--text-secondary);
+            z-index: 20;
+        }
+
+        #metadata-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            height: 300px;
+            border-top: 1px solid var(--border-color);
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 30;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 -4px 6px rgba(0,0,0,0.05);
+        }
+
+        #metadata-drawer.open {
+            transform: translateY(0);
+        }
+
+        .drawer-header {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .drawer-content {
+            padding: 16px;
+            overflow: auto;
+            flex: 1;
+        }
+
+        pre {
+            margin: 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+
+        /* Loading State */
+        .loading {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: var(--text-secondary);
+            text-align: center;
+        }
+        .empty-icon { opacity: 0.3; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="brand">
+        <button class="btn-subtle" onclick="toggleSidebar()" title="Toggle Sidebar" style="margin-right: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
+        </button>
+        <span>ColPali Studio</span>
+        <span class="document-title" id="doc-title"></span>
+    </div>
+    <div class="actions">
+        <button class="btn-subtle" onclick="toggleBboxes()">Toggle BBoxes</button>
+        <button class="btn-subtle" onclick="toggleMetadata()">Metadata</button>
+    </div>
+</header>
+
+<div class="workspace">
+    <!-- Sidebar: Document List -->
+    <div class="sidebar-pane" id="sidebar">
+        <div class="sidebar-header">
+            <span>Documents</span>
+            <button class="btn-subtle" onclick="loadDocuments()" title="Refresh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+            </button>
+        </div>
+        <div class="sidebar-content" id="document-list">
+            <!-- Injected via JS -->
+            <div style="padding:16px; color:var(--text-secondary); font-size:12px; text-align:center;">Loading...</div>
+        </div>
+    </div>
+
+    <!-- Left: Image Preview -->
+    <div class="preview-pane">
+        <div class="preview-toolbar">
+            <span style="font-size: 12px; color: var(--text-secondary);">Page <span id="page-num">-</span></span>
+            <div class="zoom-controls">
+                <!-- Zoom controls could go here -->
+            </div>
+        </div>
+        <div class="canvas-container">
+            <div id="image-wrapper">
+                <img id="doc-image" src="" alt="" style="display:none;"> 
+                <!-- Bboxes will be injected here -->
+                <div class="empty-state" id="main-empty-state">
+                    <svg class="empty-icon" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <div>Select a document page<br>to view content</div>
+                </div>
+            </div>
+        </div>
+        <div class="loading" id="loading-indicator" style="display:none;">Loading Page...</div>
+    </div>
+
+    <!-- Right: Text Editor -->
+    <div class="editor-pane">
+        <div class="editor-toolbar">
+            <span>Extracted Text</span>
+        </div>
+        <div class="editor-content">
+            <div class="markdown-editor" id="text-editor">Select a page to view extracted text...</div>
+        </div>
+    </div>
+</div>
+
+<!-- Bottom Drawer for Raw Data -->
+<div id="metadata-drawer">
+    <div class="drawer-header">
+        <span>Raw Metadata</span>
+        <button class="btn-subtle" onclick="toggleMetadata()">Close</button>
+    </div>
+    <div class="drawer-content">
+        <pre id="metadata-content"></pre>
+    </div>
+</div>
+
+<script>
+    // Config
+    const API_BASE = 'http://localhost:8001';
+    let currentData = null;
+    let bboxesVisible = true;
+    let loadedDocuments = [];
+
+    // Params
+    let currentPageId = new URLSearchParams(window.location.search).get('id');
+
+    async function init() {
+        await loadDocuments();
+        
+        if (currentPageId) {
+            loadPage(currentPageId);
+        } else {
+            // Show empty state
+            document.getElementById('image-wrapper').style.background = 'transparent';
+            document.getElementById('image-wrapper').style.boxShadow = 'none';
+        }
+    }
+
+    // --- Sidebar & Document Logic ---
+
+    async function loadDocuments() {
+        const listEl = document.getElementById('document-list');
+        try {
+            const response = await fetch(`${API_BASE}/api/documents`);
+            if (!response.ok) throw new Error("API Error");
+            const data = await response.json();
+            const docs = data.docs || [];
+            loadedDocuments = docs;
+            renderSidebar(docs);
+        } catch (err) {
+            console.error(err);
+            listEl.innerHTML = '<div style="padding:16px; color:#e53e3e; font-size:12px;">Failed to load documents.</div>';
+        }
+    }
+
+    function renderSidebar(docs) {
+        const listEl = document.getElementById('document-list');
+        listEl.innerHTML = '';
+        
+        if (docs.length === 0) {
+            listEl.innerHTML = '<div style="padding:16px; color:#718096; font-size:12px; text-align:center;">No documents found.</div>';
+            return;
+        }
+
+        docs.forEach(doc => {
+            // Document Group
+            const group = document.createElement('div');
+            group.className = 'doc-group';
+            group.id = `doc-group-${doc.id}`;
+
+            // Header
+            const header = document.createElement('div');
+            header.className = 'doc-header';
+            header.onclick = () => toggleDocGroup(doc.id);
+            header.innerHTML = `
+                <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${doc.filename || 'Untitled'}</div>
+            `;
+
+            // Pages List Container
+            const pageList = document.createElement('div');
+            pageList.className = 'page-list';
+            pageList.id = `pages-list-${doc.id}`;
+            // Mark as not loaded yet
+            pageList.dataset.loaded = 'false';
+
+            group.appendChild(header);
+            group.appendChild(pageList);
+            listEl.appendChild(group);
+        });
+    }
+
+    async function toggleDocGroup(docId) {
+        const group = document.getElementById(`doc-group-${docId}`);
+        const pageList = document.getElementById(`pages-list-${docId}`);
+        const isExpanded = group.classList.contains('expanded');
+
+        if (isExpanded) {
+            group.classList.remove('expanded');
+        } else {
+            group.classList.add('expanded');
+            if (pageList.dataset.loaded === 'false') {
+                pageList.innerHTML = '<div style="padding:8px 38px; color:#a0aec0; font-size:11px;">Loading pages...</div>';
+                await loadPagesForDoc(docId);
+            }
+        }
+    }
+
+    async function loadPagesForDoc(docId) {
+        const pageList = document.getElementById(`pages-list-${docId}`);
+        try {
+            const res = await fetch(`${API_BASE}/documents/${docId}/pages`);
+            if (!res.ok) throw new Error("Failed");
+            let pages = await res.json();
+            
+            // Sort by page number
+            pages.sort((a,b) => a.page_number - b.page_number);
+
+            pageList.innerHTML = ''; // Clear loading
+            pageList.dataset.loaded = 'true';
+
+            if (pages.length === 0) {
+                pageList.innerHTML = '<div style="padding:8px 38px; color:#a0aec0; font-size:11px;">No pages.</div>';
+                return;
+            }
+
+            pages.forEach(page => {
+                const item = document.createElement('div');
+                item.className = 'page-item';
+                item.id = `sidebar-page-${page.id}`;
+                item.textContent = `Page ${page.page_number}`;
+                item.onclick = () => loadPage(page.id);
+                pageList.appendChild(item);
+            });
+
+            // If the current viewed page belongs to this doc, highlight it
+            if (currentPageId) {
+                 const activeItem = document.getElementById(`sidebar-page-${currentPageId}`);
+                 if (activeItem) activeItem.classList.add('active');
+            }
+
+        } catch (e) {
+            console.error(e);
+            pageList.innerHTML = '<div style="padding:8px 38px; color:#e53e3e; font-size:11px;">Error loading pages.</div>';
+        }
+    }
+
+    function toggleSidebar() {
+        const sb = document.getElementById('sidebar');
+        sb.classList.toggle('collapsed');
+    }
+
+    // --- Page View Logic ---
+
+    async function loadPage(id) {
+        if (!id) return;
+        
+        // Update URL
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('id', id);
+        window.history.pushState({}, '', newUrl);
+        currentPageId = id;
+
+        // UI Reset
+        document.getElementById('loading-indicator').style.display = 'block';
+        document.getElementById('main-empty-state').style.display = 'none';
+        document.getElementById('doc-image').style.display = 'none';
+        document.getElementById('image-wrapper').style.background = 'white';
+        document.getElementById('image-wrapper').style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1)';
+
+        // Highlight in sidebar
+        document.querySelectorAll('.page-item').forEach(el => el.classList.remove('active'));
+        const sidebarItem = document.getElementById(`sidebar-page-${id}`);
+        if (sidebarItem) {
+            sidebarItem.classList.add('active');
+        } else {
+            // Is the doc loaded? We might need to handle deep linking auto-expansion here
+            // But for now, we wait for user to expand
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/pages/${id}`);
+            if (!response.ok) throw new Error('Failed to fetch page data');
+            
+            const data = await response.json();
+            currentData = data;
+            render(data);
+
+            // Auto-expand sidebar if needed
+            const docGroup = document.getElementById(`doc-group-${data.document_id}`);
+            if (docGroup && !docGroup.classList.contains('expanded')) {
+                 // Trigger expansion
+                toggleDocGroup(data.document_id);
+            }
+        } catch (err) {
+            console.error(err);
+            document.getElementById('loading-indicator').textContent = 'Error loading page.';
+        }
+    }
+
+    function render(data) {
+        // Clear loading
+        document.getElementById('loading-indicator').style.display = 'none';
+        document.getElementById('doc-image').style.display = 'block';
+
+        // 1. Text Editor Content
+        const frontmatter = `---
+id: ${data.id}
+document_id: ${data.document_id}
+page_number: ${data.page_number}
+model: ${data.indexed_model || 'Unknown'}
+has_text: ${data.has_text}
+---
+
+`;
+        const content = data.text_content || "No text content extracted.";
+        
+        const editor = document.getElementById('text-editor');
+        editor.textContent = frontmatter + content;
+
+        // Append base64 images from embedding_json if available
+        if (data.embedding_json && Array.isArray(data.embedding_json)) {
+            let hasImages = false;
+            
+            data.embedding_json.forEach((item, index) => {
+                if (item.image) {
+                     if (!hasImages) {
+                         const hr = document.createElement('hr');
+                         hr.style.margin = '24px 0';
+                         hr.style.border = 'none';
+                         hr.style.borderTop = '1px solid var(--border-color)';
+                         editor.appendChild(hr);
+                         
+                         const heading = document.createElement('div');
+                         heading.style.fontWeight = '600';
+                         heading.style.marginBottom = '16px';
+                         heading.textContent = 'Extracted Patches';
+                         editor.appendChild(heading);
+                         hasImages = true;
+                     }
+
+                     const container = document.createElement('div');
+                     container.style.marginBottom = '24px';
+                     
+                     const label = document.createElement('div');
+                     label.style.fontSize = '12px';
+                     label.style.fontWeight = '500';
+                     label.style.color = 'var(--text-secondary)';
+                     label.style.marginBottom = '4px';
+                     label.textContent = `Patch #${index + 1}${item.label ? ' - ' + item.label : ''}`;
+                     
+                     const img = document.createElement('img');
+                     img.src = `data:image/jpeg;base64,${item.image}`;
+                     img.className = 'patch-image';
+                     
+                     container.appendChild(label);
+                     container.appendChild(img);
+                     editor.appendChild(container);
+                }
+            });
+        }
+        
+        // 2. Image
+        const img = document.getElementById('doc-image');
+        if (data.image_data) {
+            img.src = `data:image/jpeg;base64,${data.image_data}`;
+        } else {
+             img.alt = "Image data missing";
+             img.src = "";
+        }
+
+        img.onload = () => {
+             renderBBox(data);
+        };
+
+        // 3. Metadata
+        document.getElementById('metadata-content').textContent = JSON.stringify(data, null, 2);
+        
+        // 4. Title
+        document.getElementById('doc-title').textContent = `Doc ${data.document_id} / Page ${data.page_number}`;
+        document.getElementById('page-num').textContent = data.page_number;
+    }
+
+    function renderBBox(data) {
+        const wrapper = document.getElementById('image-wrapper');
+        const img = document.getElementById('doc-image');
+
+        // Clear old bboxes
+        const oldBoxes = wrapper.querySelectorAll('.bbox');
+        oldBoxes.forEach(b => b.remove());
+
+        if (!bboxesVisible) return;
+        
+        // BBox logic.
+        if (data.embedding_json && Array.isArray(data.embedding_json)) {
+             const imgW = img.clientWidth;
+             const imgH = img.clientHeight;
+             
+             if (!imgW || !imgH) return;
+
+             data.embedding_json.forEach(entry => {
+                // Support both direct array [x,y,x,y] or object {bbox: [x,y,x,y]}
+                let coords = entry.bbox || (Array.isArray(entry) ? entry : null);
+
+                if (Array.isArray(coords) && coords.length === 4) {
+                     const [x1, y1, x2, y2] = coords;
+                     
+                     // 1000-based normalization logic
+                     const scale = 1000;
+                     const left = (x1 / scale) * imgW;
+                     const top = (y1 / scale) * imgH;
+                     const width = ((x2 - x1) / scale) * imgW;
+                     const height = ((y2 - y1) / scale) * imgH;
+
+                     const box = document.createElement('div');
+                     box.className = 'bbox';
+                     box.style.left = `${left}px`;
+                     box.style.top = `${top}px`;
+                     box.style.width = `${width}px`;
+                     box.style.height = `${height}px`;
+                     
+                     if (entry.label) box.title = entry.label;
+
+                     wrapper.appendChild(box);
+                }
+             });
+        }
+    }
+
+    function toggleBboxes() {
+        bboxesVisible = !bboxesVisible;
+        const boxes = document.querySelectorAll('.bbox');
+        boxes.forEach(b => b.style.display = bboxesVisible ? 'block' : 'none');
+        if (currentData) renderBBox(currentData);
+    }
+
+    function toggleMetadata() {
+        document.getElementById('metadata-drawer').classList.toggle('open');
+    }
+
+    // Resize handler
+    window.addEventListener('resize', () => {
+        if (currentData) renderBBox(currentData);
+    });
+
+    // Start
+    init();
+</script>
+</body>
+</html>

@@ -47,8 +47,8 @@ export default function KnowledgeSelect({
   };
 
   const toggleAll = () => {
-    const newSelected =
-      selected.length === options.length ? [] : options.map((o) => o.id);
+    const isAllSelected = selected.length === options.length;
+    const newSelected = isAllSelected ? [] : options.map((o) => o.id);
     setSelected(newSelected);
     onChangeAll(newSelected);
   };

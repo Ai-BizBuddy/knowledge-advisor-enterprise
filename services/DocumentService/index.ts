@@ -905,6 +905,11 @@ class DocumentService {
         return;
       }
 
+      if (retryTimeout != null) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+
       retryCount++;
       const delay = Math.min(BASE_DELAY_MS * Math.pow(2, retryCount - 1), 30000);
       console.warn(

@@ -208,6 +208,7 @@ export const useAdkChat = () => {
     isTyping,
     connectionStatus,
     currentSessionId,
+    setCurrentSessionId,
     addMessage,
     addWelcomeMessage,
     sendMessage,

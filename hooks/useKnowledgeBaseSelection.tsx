@@ -45,13 +45,24 @@ export const useKnowledgeBaseSelection = () => {
     );
   }, []);
 
-  const handleSelectAllKB = useCallback(() => {
+  const handleSelectAllKB = useCallback((selectedIds?: string[]) => {
+    // If selectedIds is provided (from toggleAll in KnowledgeSelect), use it
+    if (Array.isArray(selectedIds)) {
+      const isSelectAll = selectedIds.length === knowledgeBases.length && knowledgeBases.length > 0;
+      setSelectAllKB(isSelectAll);
+      setKnowledgeBases((prev) =>
+        prev.map((kb) => ({ ...kb, selected: selectedIds.includes(kb.id) })),
+      );
+      return;
+    }
+
+    // Default toggle behavior
     const newSelectAll = !selectAllKB;
     setSelectAllKB(newSelectAll);
     setKnowledgeBases((prev) =>
       prev.map((kb) => ({ ...kb, selected: newSelectAll })),
     );
-  }, [selectAllKB]);
+  }, [selectAllKB, knowledgeBases.length]);
 
   const getSelectedKnowledgeBases = useCallback(() => {
     return knowledgeBases.filter((kb) => kb.selected);
