@@ -157,7 +157,6 @@ class StatisticsService {
           'knowledge_base!inner(id)', 
           { count: 'exact', head: true });
 
-      console.log({count})
       if (error) {
         return 0;
       }
@@ -203,7 +202,6 @@ class StatisticsService {
         }
       }, 0);
 
-      console.log(`Successfully calculated total chunks: ${totalChunks} from ${data.length} documents`);
       return totalChunks;
       
     } catch (error) {

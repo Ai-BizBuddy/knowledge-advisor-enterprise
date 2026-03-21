@@ -104,7 +104,7 @@ export default function AdvancedSearchPage() {
   };
 
   const handleResultClick = (result: DocumentSearchResult) => {
-    console.log('Clicked result:', result);
+    // Handler implemented for future use
   };
 
   const handlePageChange = (page: number) => {

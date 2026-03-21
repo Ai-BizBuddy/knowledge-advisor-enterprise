@@ -11,9 +11,18 @@ import type {
 } from '@/interfaces/Project';
 import { knowledgeBaseService } from '@/services';
 import DocumentService from '@/services/DocumentService';
-import { createApiError } from '@/utils/errorHelpers';
+import { createApiErrorFromText } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+interface SyncDocumentBody {
+  documentId: string;
+  UseAdvancedChunking?: boolean;
+  description?: string | null;
+  kb_name?: string | null;
+  pipeline?: string;
+  mode?: string;
+}
 
 export interface UseDocumentsOptions {
   knowledgeBaseId?: string;
@@ -75,7 +84,7 @@ export interface UseDocumentsReturn {
   batchDelete: (ids: string[]) => Promise<void>;
 
   // Document Sync Operations
-  syncDocument: (documentId: string) => Promise<void>;
+  syncDocument: (documentId: string, pipeline?: string, mode?: string) => Promise<void>;
   syncMultipleDocuments: (documentIds: string[]) => Promise<void>;
   isSyncing: (documentId: string) => boolean;
   clearSyncError: () => void;
@@ -551,10 +560,14 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
   );
 
   /**
-   * Internal sync document function without auto-refresh
+   * Internal sync document function without auto-refresh.
+   * Includes retry logic for backend timeout errors.
    */
   const syncDocumentInternal = useCallback(
-    async (documentId: string): Promise<void> => {
+    async (documentId: string, pipeline?: string, mode?: string): Promise<void> => {
+      const SYNC_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes — document processing can be slow
+      const MAX_RETRIES = 2;
+
       try {
         addSyncingDocument(documentId);
 
@@ -568,34 +581,109 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         
         let kbName = null;
         if (knowledgeBaseId) {
-             const project = await knowledgeBaseService.getKnowledgeBase(knowledgeBaseId);
+             const projects = await knowledgeBaseService.getKnowledgeBaseByIDs([knowledgeBaseId]);
+             const project = projects[0];
              kbName = project?.name;
         }
 
         const ingressUrl = `${process.env.NEXT_PUBLIC_INGRESS_SERVICE}/ingress`;
 
-        const response = await fetch(ingressUrl, {
-          method: 'POST',
-          headers: {
-            accept: '*/*',
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            document_id: documentId,
-            UseAdvancedChunking: true,
-            description: document?.description || null,
-            kb_name: kbName || null,
-          }),
-        });
+        const body: SyncDocumentBody = {
+          documentId: documentId,
+          UseAdvancedChunking: true,
+          description: document?.description || null,
+          kb_name: kbName || null,
+        };
 
-        if (!response.ok) {
-          const error = await createApiError(
-            response,
-            'Failed to sync document',
-          );
-          throw error;
+        if (pipeline) {
+          body.pipeline = pipeline;
         }
+
+        if (mode) {
+          body.mode = mode;
+        } else if (pipeline === 'ColPaliOnly') {
+          // Default to PerPage for ColPaliOnly if not specified
+          body.mode = 'PerPage';
+        }
+
+        let lastError: Error | undefined;
+
+        for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), SYNC_TIMEOUT_MS);
+
+          try {
+            const response = await fetch(ingressUrl, {
+              method: 'POST',
+              headers: {
+                accept: '*/*',
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`,
+              },
+              body: JSON.stringify(body),
+              signal: controller.signal,
+            });
+
+            clearTimeout(timeoutId);
+
+            if (!response.ok) {
+              // Read the error body to check for backend timeout
+              const errorText = await response.text().catch(() => '');
+              const isBackendTimeout =
+                errorText.includes('HttpClient.Timeout') ||
+                errorText.includes('timeout') ||
+                errorText.includes('Timeout');
+
+              if (isBackendTimeout && attempt < MAX_RETRIES) {
+                console.warn(
+                  `[DocumentSync] Backend timeout for ${documentId}, retrying (${attempt + 1}/${MAX_RETRIES})…`
+                );
+                // Back off before retrying
+                await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+                continue;
+              }
+
+              // Not a timeout or last attempt — throw as normal
+              // errorText was already read above; pass it directly so we don't
+              // attempt to consume the response body a second time.
+              const error = isBackendTimeout
+                ? new Error(
+                    'Document processing timed out on the server. The document may be too large or the service is busy. Please try again later.'
+                  )
+                : createApiErrorFromText(response.status, errorText, 'Failed to sync document');
+              throw error;
+            }
+
+            // Success — exit the retry loop
+            return;
+          } catch (fetchErr) {
+            clearTimeout(timeoutId);
+
+            // Handle client-side abort (our own timeout)
+            if (fetchErr instanceof DOMException && fetchErr.name === 'AbortError') {
+              lastError = new Error(
+                'Document sync request timed out. The document may be too large or the service is busy.'
+              );
+              break; // Don't retry client-side timeouts
+            }
+
+            lastError = fetchErr instanceof Error ? fetchErr : new Error('Failed to sync document');
+
+            // If it's a retryable error message from the server, continue loop
+            if (
+              attempt < MAX_RETRIES &&
+              lastError.message.includes('timed out')
+            ) {
+              await new Promise((r) => setTimeout(r, 2000 * (attempt + 1)));
+              continue;
+            }
+
+            throw lastError;
+          }
+        }
+
+        // If we exhausted retries
+        if (lastError) throw lastError;
       } catch (err) {
         const errorMessage =
           err instanceof Error ? err.message : 'Failed to sync document';
@@ -616,10 +704,10 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    * Sync document with minimal refresh
    */
   const syncDocument = useCallback(
-    async (documentId: string): Promise<void> => {
+    async (documentId: string, pipeline?: string, mode?: string): Promise<void> => {
       try {
         setSyncError(null);
-        await syncDocumentInternal(documentId);
+        await syncDocumentInternal(documentId, pipeline, mode);
 
         // Only refresh if there are no other sync operations in progress
         if (syncingDocuments.size <= 1) {

@@ -32,14 +32,19 @@ interface SupabaseSessionResponse {
   }[];
 }
 
+export interface PaginatedResult<T> {
+  data: T[];
+  hasMore: boolean;
+}
+
 class ChatHistoryService {
-  async loadHistory(): Promise<ChatSession[]> {
+  async loadHistory(
+    limit = 15,
+    offset = 0,
+  ): Promise<PaginatedResult<ChatSession>> {
     const supabaseTable = createClientTable();
 
-    // Join tables: sessions <- session_events <- memories
-    // sessions.id = session_events.session_id
-    // session_events.id = memories.id
-    // check data output is memories not null
+    // Fetch one extra to know if there are more pages
     const { data, error } = await supabaseTable
       .from('sessions')
       .select(`
@@ -68,37 +73,41 @@ class ChatHistoryService {
         )
       `)
       .order('created_at', { ascending: false })
-      .not('session_events.memories', 'is', null)
-      .order('timestamp', { foreignTable: 'session_events', ascending: true });
+      .order('timestamp', { foreignTable: 'session_events', ascending: true })
+      .range(offset, offset + limit);
 
     if (error) {
       console.error('Error loading chat history:', error);
-      alert('Error loading chat history. Please check console for details.');
-      return [];
+      return { data: [], hasMore: false };
     }
 
     if (!data) {
-      return [];
+      return { data: [], hasMore: false };
     }
 
     // Type guard for the response data
     const sessionData = data as unknown as SupabaseSessionResponse[];
+    const hasMore = sessionData.length > limit;
 
     const sessionsEventsLog: ChatSession[] = sessionData.map((session) => {
       try {
         // Get the first event to extract title information
         const firstEvent = session.session_events[0];
         let title = 'ไม่มีชื่อเรื่อง';
-        // let knowledgeBaseId = null;
 
         if (firstEvent) {
-          // knowledgeBaseId = firstEvent.knowledge_base_id || null;
 
           // Extract title from event_data content
           if (firstEvent.event_data) {
-            const contentText = JSON.parse(firstEvent.event_data).content
-              .parts[0].text;
-            title = contentText.split('\n')[0] || 'ไม่มีชื่อเรื่อง';
+            try {
+              const eventData = JSON.parse(firstEvent.event_data);
+              const contentText = eventData?.content?.parts?.[0]?.text || 
+                                eventData?.message ||
+                                'ไม่มีชื่อเรื่อง';
+              title = contentText.split('\n')[0] || 'ไม่มีชื่อเรื่อง';
+            } catch {
+              title = 'ไม่มีชื่อเรื่อง';
+            }
           }
         }
 
@@ -128,7 +137,12 @@ class ChatHistoryService {
       }
     });
 
-    return sessionsEventsLog;
+    // Trim the extra item used for hasMore detection
+    const trimmed = hasMore
+      ? sessionsEventsLog.slice(0, limit)
+      : sessionsEventsLog;
+
+    return { data: trimmed, hasMore };
   }
 
   async getOldChat(sessionId: string): Promise<ChatMessage[] | null> {
@@ -164,7 +178,6 @@ class ChatHistoryService {
             `,
       )
       .eq('id', sessionId)
-      .not('session_events.memories', 'is', null)
       .order('timestamp', { foreignTable: 'session_events', ascending: true });
 
     if (error) {
@@ -201,10 +214,25 @@ class ChatHistoryService {
           timestamp = event.created_at || new Date().toISOString();
         }
 
+        // Handle content extraction from memories or event_data
+        let content = '';
+        if (event.memories?.content) {
+          content = event.memories.content;
+        } else if (event.event_data) {
+          try {
+            const eventData = JSON.parse(event.event_data);
+            content = eventData?.content?.parts?.[0]?.text || 
+                      eventData?.message || 
+                      '';
+          } catch {
+            content = '';
+          }
+        }
+
         return {
           id: event.id,
           type: event.author === 'user' ? 'user' : 'assistant',
-          content: event.memories.content,
+          content: content,
           timestamp,
           selectedKnowledgeBase: [],
           sessionId: sessionData[0].id,

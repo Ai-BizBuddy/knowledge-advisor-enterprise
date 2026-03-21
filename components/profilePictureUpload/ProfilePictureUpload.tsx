@@ -5,6 +5,7 @@
  * with drag & drop support and image preview.
  */
 
+import { useToast } from '@/components/toast';
 import { Button, Spinner } from 'flowbite-react';
 import NextImage from 'next/image';
 import React, { useCallback, useRef, useState } from 'react';
@@ -24,6 +25,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   className = '',
   size = 'md',
 }) => {
+  const { showToast } = useToast();
   const [dragActive, setDragActive] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     currentAvatarUrl || null,
@@ -44,13 +46,13 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
 
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('Please select an image file');
+        showToast('Please select an image file', 'error');
         return;
       }
 
       // Validate file size (max 5MB)
       if (file.size > 5 * 1024 * 1024) {
-        alert('File size must be less than 5MB');
+        showToast('File size must be less than 5MB', 'error');
         return;
       }
 
@@ -73,7 +75,7 @@ export const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         setPreviewUrl(currentAvatarUrl || null);
       }
     },
-    [onUpload, currentAvatarUrl],
+    [onUpload, currentAvatarUrl, showToast],
   );
 
   const handleDrag = useCallback((e: React.DragEvent) => {

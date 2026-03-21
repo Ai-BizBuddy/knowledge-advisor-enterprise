@@ -52,7 +52,6 @@ export function useDocumentViewer(): UseDocumentViewerReturn {
     setError(null);
 
     try {
-      console.log('[useDocumentViewer] Opening document:', { url: trimmedUrl, pageNumber });
       const documentData = await documentViewerService.getDocumentForViewer(trimmedUrl, pageNumber);
       
       if (!documentData) {
@@ -61,7 +60,6 @@ export function useDocumentViewer(): UseDocumentViewerReturn {
         return;
       }
 
-      console.log('[useDocumentViewer] Document loaded successfully:', documentData.name);
       setViewerDocument(documentData);
       setIsViewerOpen(true);
     } catch (err) {

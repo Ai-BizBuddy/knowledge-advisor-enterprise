@@ -137,9 +137,62 @@ export async function createApiError(
   const error = new Error(parsed.message);
   
   // Attach additional context for debugging
-  (error as any).statusCode = parsed.statusCode;
-  (error as any).originalError = parsed.originalError;
+  Object.assign(error, {
+    statusCode: parsed.statusCode,
+    originalError: parsed.originalError,
+  });
   
+  return error;
+}
+
+/**
+ * Create a user-friendly Error object from an already-read response body.
+ * Use this when the response body has already been consumed (e.g. via
+ * `response.text()`) to avoid attempting to read the stream a second time.
+ */
+export function createApiErrorFromText(
+  statusCode: number,
+  body: string,
+  fallbackMessage = 'API request failed'
+): Error {
+  let message = fallbackMessage;
+
+  if (body) {
+    try {
+      const errorData = JSON.parse(body) as unknown;
+
+      if (typeof errorData === 'string') {
+        message = errorData;
+      } else if (errorData && typeof errorData === 'object') {
+        const obj = errorData as Record<string, unknown>;
+        if (obj.error) {
+          if (typeof obj.error === 'string') {
+            message = obj.error;
+          } else if (
+            obj.error &&
+            typeof obj.error === 'object' &&
+            'message' in obj.error &&
+            typeof (obj.error as Record<string, unknown>).message === 'string'
+          ) {
+            message = (obj.error as Record<string, string>).message || fallbackMessage;
+          }
+        } else if (obj.message && typeof obj.message === 'string') {
+          message = obj.message;
+        } else if (obj.detail && typeof obj.detail === 'string') {
+          message = obj.detail;
+        } else if (obj.title && typeof obj.title === 'string') {
+          message = obj.title;
+        }
+      }
+    } catch {
+      message = getStatusMessage(statusCode, body);
+    }
+  } else {
+    message = getStatusMessage(statusCode);
+  }
+
+  const error = new Error(message);
+  Object.assign(error, { statusCode, originalError: body });
   return error;
 }
 

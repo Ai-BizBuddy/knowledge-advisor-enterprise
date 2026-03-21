@@ -5,6 +5,7 @@ export { useAuth } from './useAuth';
 export { useChatHistory } from './useChatHistory';
 export { useChunkCount } from './useChunkCount';
 export { useDocuments } from './useDocuments';
+export { useDocumentSectionViewer } from './useDocumentSectionViewer';
 export { useDocumentsManagement } from './useDocumentsManagement';
 export { useDocumentViewer } from './useDocumentViewer';
 export { useJWTPermissions } from './useJWTPermissions';

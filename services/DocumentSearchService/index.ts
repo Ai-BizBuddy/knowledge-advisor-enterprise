@@ -244,7 +244,7 @@ class DocumentSearchService {
   ): Promise<Document[]> {
     try {
       const supabaseTable = createClientTable();
-      let query = supabaseTable.from('documents').select('*');
+      let query = supabaseTable.from('document').select('*');
 
       if (projectIds && projectIds.length > 0) {
         query = query.in('project_id', projectIds);

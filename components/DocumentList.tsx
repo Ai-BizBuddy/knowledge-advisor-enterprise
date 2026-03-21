@@ -4,7 +4,8 @@ import { useDocuments, useJWTPermissions } from '@/hooks';
 import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
 import type { Project, Document as ProjectDocument } from '@/interfaces/Project';
 import { DocumentService } from '@/services';
-import { FC, memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { FC, memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { DocumentPreview } from './deepSearch';
 import DocumentDeleteModal from './documentDeleteModal';
 import {
@@ -92,6 +93,7 @@ const adaptDocumentToPreviewFormat = (doc: ProjectDocument): DeepSearchData => (
     : 'Unknown',
   uploadDate: new Date(doc.created_at).toLocaleDateString(),
   knowledgeName: doc.knowledge_base_id || 'Documents',
+  knowledgeBaseId: doc.knowledge_base_id,
   fileUrl: doc.url,
 });
 
@@ -106,6 +108,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   knowledgeBase,
   isActive,
 }) => {
+  const router = useRouter();
   const { showToast } = useToast();
   
   // JWT permissions for document operations
@@ -160,6 +163,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
   const [editingDocumentId, setEditingDocumentId] = useState<string | null>(null);
+
   
   // Preview modal state (merged into single object)
   const [previewState, setPreviewState] = useState<{
@@ -217,6 +221,30 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     }
   }, [syncError, clearSyncError, showToast]);
 
+  // Auto-refresh document table when user returns from another page (e.g. OCR Viewer).
+  // This ensures updated_at, status, chunk_count etc. reflect section edits made elsewhere.
+  const previousIsActive = useRef(isActive);
+  useEffect(() => {
+    // Refresh when the tab becomes active (was previously inactive)
+    if (isActive && !previousIsActive.current) {
+      refresh();
+    }
+    previousIsActive.current = isActive;
+  }, [isActive, refresh]);
+
+  useEffect(() => {
+    if (!isActive) return;
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        refresh();
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [isActive, refresh]);
+
   // Transform documents to DocumentsTable-compatible format
   // Add a flag to disable sync button based on document status
   const adaptedDocuments = useMemo(() => {
@@ -256,11 +284,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
 
   // Handle single document sync
   const handleDocumentSync = useCallback(
-    async (pageIndex: number) => {
+    async (pageIndex: number, pipeline?: string, mode?: string) => {
       try {
-        // Convert page index back to actual array index
-        const arrayIndex = pageIndex - zeroBasedStartIndex;
-        const document = documents[arrayIndex];
+        // pageIndex is 0-based into the current page's documents array
+        const document = documents[pageIndex];
 
         if (!document) {
           console.error('[DocumentList] Document not found for sync');
@@ -268,9 +295,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           return;
         }
 
-        showToast(`Syncing document: ${document.name}...`, 'info', 3000);
+        const modeText = pipeline ? ` (${pipeline})` : (mode ? ` (${mode})` : '');
+        showToast(`Syncing document: ${document.name}${modeText}...`, 'info', 3000);
 
-        await syncDocument(document.id);
+        await syncDocument(document.id, pipeline, mode);
 
         showToast(
           `Successfully synced document: ${document.name}`,
@@ -282,7 +310,7 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         // Error is already handled by useDocuments hook and will show via syncError effect
       }
     },
-    [documents, syncDocument, showToast, zeroBasedStartIndex],
+    [documents, syncDocument, showToast],
   );
 
   // Handle bulk sync for selected documents
@@ -307,9 +335,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         return;
       }
 
-      console.log(
-        `[DocumentList] Bulk syncing ${selectedDocumentIds.length} documents`,
-      );
       showToast(
         `Starting bulk sync for ${selectedDocumentIds.length} documents...`,
         'info',
@@ -321,9 +346,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       // Clear selection after successful API calls
       setDocumentState((prev) => ({ ...prev, selectedDocuments: [] }));
 
-      console.log(
-        `[DocumentList] Successfully submitted ${selectedDocumentIds.length} documents for sync`,
-      );
       showToast(
         `Successfully submitted ${selectedDocumentIds.length} documents for sync`,
         'success',
@@ -343,7 +365,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
 
   const handleSelectDocument = useCallback(
     (pageIndex: number) => {
-      console.log(`[DocumentList] Toggling selection for document at page index: ${pageIndex}`);
       setDocumentState((prev) => ({
         ...prev,
         selectedDocuments: prev.selectedDocuments.includes(pageIndex)
@@ -420,12 +441,49 @@ const DocumentListComponent: FC<DocumentListProps> = ({
     [hookHandleSort, uiToBackendMap],
   );
 
-  // Handle open Update modal
-  const handleDocumentEdit = useCallback(
+  // Handle open OCR Viewer
+  const handleOcrDocument = useCallback(
     (pageIndex: number) => {
       // Convert page index back to actual array index
       const arrayIndex = pageIndex;
       const doc = documents[arrayIndex];
+      if (!doc) {
+        showToast('Error: Document not found', 'error');
+        return;
+      }
+
+      if (doc.knowledge_base_id) {
+        router.push(
+          `/ocr-viewer?documentId=${doc.id}&kbId=${doc.knowledge_base_id}`,
+        );
+      } else {
+        showToast('Error: Knowledge Base ID missing', 'error');
+      }
+    },
+    [documents, router, showToast],
+  );
+
+  // Handle open Page Viewer (preview modal)
+  const handlePageViewDocument = useCallback(
+    (pageIndex: number) => {
+      const doc = documents[pageIndex];
+      if (!doc) {
+        showToast('Error: Document not found', 'error');
+        return;
+      }
+      setPreviewState({
+        isOpen: true,
+        isFullScale: true,
+        document: adaptDocumentToPreviewFormat(doc),
+      });
+    },
+    [documents, showToast],
+  );
+
+  // Handle open Update modal (tag icon)
+  const handleDocumentEdit = useCallback(
+    (pageIndex: number) => {
+      const doc = documents[pageIndex];
       if (!doc) {
         showToast('Error: Document not found for edit', 'error');
         return;
@@ -446,10 +504,6 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           showToast('Error: Document not found for deletion', 'error');
           return;
         }
-
-        console.log(
-          `[DocumentList] Opening delete modal for document: ${document.name} (${document.id})`,
-        );
 
         // Set the document to delete and open modal
         const documentItem = adaptDocumentToTableFormat(document);
@@ -482,17 +536,10 @@ const DocumentListComponent: FC<DocumentListProps> = ({
         throw new Error('Document not found');
       }
 
-      console.log(
-        `[DocumentList] Deleting document: ${documentToDelete.name} (${originalDoc.id})`,
-      );
-
       // Create an instance of DocumentService and delete the document
       const documentService = new DocumentService();
       await documentService.deleteDocument(originalDoc.id);
 
-      console.log(
-        `[DocumentList] Successfully deleted document: ${documentToDelete.name}`,
-      );
       showToast(
         `Document "${documentToDelete.name}" deleted successfully`,
         'success',
@@ -543,15 +590,13 @@ const DocumentListComponent: FC<DocumentListProps> = ({
       const arrayIndex = absoluteIndex - (startIndex - 1);
       const document = documents[arrayIndex];
       if (document) {
-        const previewData = adaptDocumentToPreviewFormat(document);
-        setPreviewState({
-          isOpen: true,
-          isFullScale: true, // Always open in full scale
-          document: previewData,
-        });
+        // Navigate to OCR viewer
+        router.push(
+          `/ocr-viewer?documentId=${document.id}&kbId=${knowledgeBaseId || ''}`,
+        );
       }
     },
-    [documents, startIndex],
+    [documents, startIndex, router, knowledgeBaseId],
   );
 
   // Preview handlers
@@ -701,6 +746,8 @@ const DocumentListComponent: FC<DocumentListProps> = ({
             onSelectDocument={handleSelectDocument}
             onDeleteDocument={canDeleteDocument ? handleDocumentDelete : undefined}
             onEditDocument={canUpdateDocument ? handleDocumentEdit : undefined}
+            onOcrDocument={handleOcrDocument}
+            onPageViewDocument={handlePageViewDocument}
             onSyncDocument={handleDocumentSync}
             onDocumentClick={handleDocumentClick}
             syncingDocuments={syncingDocumentIndices}
@@ -755,6 +802,8 @@ const DocumentListComponent: FC<DocumentListProps> = ({
           await refresh();
         }}
       />
+
+
 
       {/* Preview Modal */}
       {previewState.document && (

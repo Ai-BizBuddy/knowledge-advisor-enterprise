@@ -7,6 +7,7 @@ export interface DocumentSearchResult {
     uploadDate: string;
     knowledgeName?: string;
     fileUrl?: string; // Add fileUrl to support preview
+    pageNumber?: number;
 }
 
 export interface DeepSearchData {
@@ -17,6 +18,7 @@ export interface DeepSearchData {
     fileSize: string;
     uploadDate: string;
     knowledgeName: string;
+    knowledgeBaseId?: string;
     fileUrl?: string;
     pageNumber?: number;
 }

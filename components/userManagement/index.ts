@@ -3,10 +3,9 @@
  */
 
 export { CreateUserForm } from './CreateUserForm';
-export { CreateUserTest } from './CreateUserTest';
-export { UserFormModal } from './UserFormModal';
 export type {
-  CreateUserFormProps,
-  CreateUserFormData,
+  CreateUserFormData, CreateUserFormProps
 } from './CreateUserForm.types';
-export type { UserFormModalProps, UserFormData } from './UserFormModal.types';
+export { UserFormModal } from './UserFormModal';
+export type { UserFormData, UserFormModalProps } from './UserFormModal.types';
+

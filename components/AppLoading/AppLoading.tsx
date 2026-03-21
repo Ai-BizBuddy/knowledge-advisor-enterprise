@@ -2,7 +2,7 @@ import { Spinner } from 'flowbite-react';
 import React from 'react';
 
 export interface AppLoadingProps {
-  variant?: 'default' | 'compact' | 'minimal';
+  variant?: 'default' | 'compact' | 'minimal' | 'fullscreen';
   message?: string;
   className?: string;
 }
@@ -29,6 +29,12 @@ export const AppLoading: React.FC<AppLoadingProps> = ({
           container: 'flex h-16 w-full items-center justify-center',
           spinner: 'h-6 w-6',
           text: 'text-xs',
+        };
+      case 'fullscreen':
+        return {
+          container: 'flex h-screen w-full items-center justify-center',
+          spinner: 'h-16 w-16',
+          text: 'text-xl font-medium',
         };
       default:
         return {

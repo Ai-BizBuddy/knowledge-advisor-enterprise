@@ -1,12 +1,12 @@
 'use client';
-import { useState } from 'react';
 import {
-  DocumentSearchResult,
-  DeepSearchData,
+    DeepSearchData,
+    DocumentSearchResult,
 } from '@/interfaces/DeepSearchTypes';
+import { useState } from 'react';
 import { DocumentCard } from '../DocumentCard';
-import { MiniDocumentPreview } from '../MiniDocumentPreview';
 import { DocumentPreview } from '../DocumentPreview';
+import { MiniDocumentPreview } from '../MiniDocumentPreview';
 
 interface DocumentCardWithPreviewProps {
   document: DocumentSearchResult;
@@ -36,6 +36,7 @@ export const DocumentCardWithPreview = ({
     uploadDate: doc.uploadDate,
     knowledgeName: doc.knowledgeName || '',
     fileUrl: doc.fileUrl,
+    pageNumber: doc.pageNumber,
   });
 
   // Check if file type is supported for preview
@@ -45,9 +46,7 @@ export const DocumentCardWithPreview = ({
   };
 
   const handlePreview = () => {
-    if (document.fileUrl && isSupportedFileType(document.fileType)) {
-      setShowMiniPreview(true);
-    }
+    setShowMiniPreview(true);
   };
 
   const handleExpandToFullScale = () => {

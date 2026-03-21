@@ -1,5 +1,7 @@
 'use client';
 import { DeepSearchData } from '@/interfaces/DeepSearchTypes';
+import { DocumentPageService } from '@/services/DocumentPageService';
+import Image from 'next/image';
 import { useEffect, useState } from 'react';
 
 interface MiniDocumentPreviewProps {
@@ -17,41 +19,50 @@ export const MiniDocumentPreview = ({
   onExpandToFullScale,
   className = '',
 }: MiniDocumentPreviewProps) => {
-  const [textContent, setTextContent] = useState<string>('');
-  const [isLoadingText, setIsLoadingText] = useState(false);
+  const [pageDataUrl, setPageDataUrl] = useState<string | null>(null);
+  const [isLoadingPage, setIsLoadingPage] = useState(false);
+  const [pageError, setPageError] = useState<string | null>(null);
 
-  // Fetch text content for TXT/MD files
   useEffect(() => {
-    const fetchTextContent = async () => {
-      if (!isOpen || !document.fileUrl) return;
-      
-      const fileType = document.fileType.toLowerCase();
-      if (!['txt', 'md'].includes(fileType)) return;
+    if (!isOpen) return;
 
-      // If content is already provided, use it
-      if (document.content) {
-        setTextContent(document.content);
+    const fetchPage = async () => {
+      setIsLoadingPage(true);
+      setPageError(null);
+      setPageDataUrl(null);
+
+      const pageNumber = document.pageNumber ?? 1;
+      const result = await DocumentPageService.getPage(document.id, pageNumber);
+
+      if (!result.success || !result.data) {
+        setPageError('Preview not available');
+        setIsLoadingPage(false);
         return;
       }
 
-      // Otherwise, fetch from URL
-      setIsLoadingText(true);
-      try {
-        const response = await fetch(document.fileUrl);
-        const text = await response.text();
-        setTextContent(text);
-      } catch (error) {
-        console.error('Error fetching text content:', error);
-        setTextContent('Error loading file content');
-      } finally {
-        setIsLoadingText(false);
+      const raw =
+        result.data.base64_image ??
+        result.data.base64 ??
+        result.data.content ??
+        '';
+
+      if (!raw) {
+        setPageError('Preview not available');
+        setIsLoadingPage(false);
+        return;
       }
+
+      const dataUrl = raw.startsWith('data:image')
+        ? raw
+        : `data:image/png;base64,${raw}`;
+      setPageDataUrl(dataUrl);
+      setIsLoadingPage(false);
     };
 
-    fetchTextContent();
-  }, [isOpen, document.fileUrl, document.fileType, document.content]);
+    fetchPage();
+  }, [isOpen, document.id, document.pageNumber]);
 
-  if (!isOpen || !document.fileUrl) return null;
+  if (!isOpen) return null;
 
   const handleBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
@@ -78,6 +89,12 @@ export const MiniDocumentPreview = ({
               <span className='capitalize'>{document.fileType}</span>
               <span>•</span>
               <span>{document.fileSize}</span>
+              {document.pageNumber && (
+                <>
+                  <span>•</span>
+                  <span>Page {document.pageNumber}</span>
+                </>
+              )}
             </div>
           </div>
 
@@ -126,65 +143,38 @@ export const MiniDocumentPreview = ({
           </div>
         </div>
 
-        {/* Document Content - Mini Preview */}
-        <div className='relative flex-1 overflow-hidden'>
+        {/* Document Content - Page Image Preview */}
+        <div
+          className='relative overflow-hidden'
+          style={{ height: 'calc(50vh - 60px)' }}
+        >
           <div
-            className='h-full w-full cursor-pointer'
+            className='relative h-full w-full cursor-pointer'
             onClick={onExpandToFullScale}
             title='Click to open full preview'
           >
-            {document.fileType.toLowerCase() === 'pdf' ? (
-              /* PDF Mini Viewer */
-              <iframe
-                src={`${document.fileUrl}#toolbar=0&navpanes=0&scrollbar=0&zoom=75`}
-                className='pointer-events-none h-full w-full border-0'
-                title={`Mini preview of ${document.name}`}
-                style={{ height: 'calc(50vh - 60px)' }}
-              />
-            ) : ['doc', 'docx'].includes(document.fileType.toLowerCase()) ? (
-              /* Word Documents Mini Viewer */
-              <iframe
-                src={`https://docs.google.com/gview?url=${encodeURIComponent(document.fileUrl)}&embedded=true`}
-                className='pointer-events-none h-full w-full border-0'
-                title={`Mini preview of ${document.name}`}
-                style={{ height: 'calc(50vh - 60px)' }}
-              />
-            ) : ['xlsx', 'xls'].includes(document.fileType.toLowerCase()) ? (
-              /* Excel Documents Mini Viewer */
-              <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
-                className='pointer-events-none h-full w-full border-0'
-                title={`Mini preview of ${document.name}`}
-                style={{ height: 'calc(50vh - 60px)' }}
-              />
-            ) : ['txt', 'md'].includes(document.fileType.toLowerCase()) ? (
-              /* Text and Markdown Files Mini Viewer */
-              <div className='h-full overflow-hidden p-3'>
-                <div className='h-full overflow-auto rounded bg-gray-50 p-3 dark:bg-gray-700'>
-                  {isLoadingText ? (
-                    <div className='flex items-center justify-center h-full'>
-                      <div className='text-sm text-gray-500 dark:text-gray-400'>Loading content...</div>
-                    </div>
-                  ) : (
-                    <pre className='overflow-auto font-mono text-xs whitespace-pre-wrap text-gray-700 dark:text-gray-300'>
-                      {textContent
-                        ? textContent.substring(0, 500)
-                        : 'Content not available for preview'}
-                      {textContent && textContent.length > 500 && '...'}
-                    </pre>
-                  )}
+            {isLoadingPage ? (
+              /* Loading skeleton */
+              <div className='flex h-full w-full items-center justify-center bg-gray-50 dark:bg-gray-700'>
+                <div className='flex flex-col items-center gap-3'>
+                  <div className='h-8 w-8 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent' />
+                  <span className='text-xs text-gray-500 dark:text-gray-400'>
+                    Loading preview…
+                  </span>
                 </div>
               </div>
-            ) : document.fileType.toLowerCase().includes('ppt') ? (
-              /* PowerPoint Mini Viewer */
-              <iframe
-                src={`https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(document.fileUrl)}`}
-                className='pointer-events-none h-full w-full border-0'
-                title={`Mini preview of ${document.name}`}
-                style={{ height: 'calc(50vh - 60px)' }}
+            ) : pageDataUrl ? (
+              /* Page image */
+              <Image
+                src={pageDataUrl}
+                alt={`Page ${document.pageNumber ?? 1} of ${document.name}`}
+                fill
+                unoptimized
+                className='pointer-events-none object-contain'
+                draggable={false}
               />
             ) : (
-              /* Fallback for unsupported file types */
+              /* Error / fallback */
               <div className='flex h-full flex-col items-center justify-center p-4 text-center'>
                 <svg
                   className='mb-3 h-12 w-12 text-gray-400'
@@ -200,11 +190,8 @@ export const MiniDocumentPreview = ({
                   />
                 </svg>
                 <h4 className='mb-1 text-sm font-medium text-gray-900 dark:text-gray-100'>
-                  Preview not available
+                  {pageError ?? 'Preview not available'}
                 </h4>
-                <p className='text-xs text-gray-500 dark:text-gray-400'>
-                  Click to download
-                </p>
               </div>
             )}
           </div>

@@ -37,7 +37,14 @@ export function createClient() {
           persistSession: true,
           storageKey: 'supabase.auth.token',
           storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-        }
+          detectSessionInUrl: true,
+          flowType: 'pkce',
+          // Bypass strict locking to avoid NavigatorLockAcquireTimeoutError during dev only
+          lock:
+            process.env.NODE_ENV === 'development' && typeof window !== 'undefined'
+              ? async (_, __, fn) => fn()
+              : undefined,
+        },
       }
     );
   }

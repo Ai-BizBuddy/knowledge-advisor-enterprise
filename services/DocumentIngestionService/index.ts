@@ -39,7 +39,7 @@ class DocumentIngestionService {
   constructor(config: DocumentIngestionConfig = {}) {
     this.client = new BaseFetchClient({
       baseURL: config.baseURL || 'https://localhost:5001/api',
-      timeout: config.timeout || 30000,
+      timeout: config.timeout || 120000, // 2 minutes — document ingestion can be slow
       retryAttempts: config.retryAttempts || 2,
       defaultHeaders: {
         'Content-Type': 'application/json',

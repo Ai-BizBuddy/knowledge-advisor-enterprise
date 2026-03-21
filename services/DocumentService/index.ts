@@ -795,7 +795,8 @@ class DocumentService {
   }
 
   /**
-   * Subscribe to realtime document changes for a knowledge base
+   * Subscribe to realtime document changes for a knowledge base.
+   * Includes automatic retry with exponential backoff on CHANNEL_ERROR or TIMED_OUT.
    * @param knowledgeBaseId - The knowledge base ID to subscribe to
    * @param callbacks - Callback functions for different events
    * @returns Cleanup function to unsubscribe
@@ -810,108 +811,180 @@ class DocumentService {
       onStatusChange?: (status: string, error?: unknown) => void;
     }
   ): Promise<() => void> {
-    const supabase = createClient();
-    
-    // Verify authentication before subscribing
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      console.error('[DocumentService] No active session for realtime subscription');
-      throw new Error('Authentication required for realtime subscription');
-    }
-    
-    // Set auth token for realtime connection
-    await supabase.realtime.setAuth(session.access_token);
-    console.log('[DocumentService] Realtime auth token set');
-    
-    const channelName = `document:kb:${knowledgeBaseId}`;
-    console.log('[DocumentService] Subscribing to channel:', channelName);
+    const MAX_RETRIES = 5;
+    const BASE_DELAY_MS = 2000;
 
-    const channel = supabase
-      .channel(channelName)
-      // INSERT: Notify to reload data
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'knowledge',
-          table: 'document',
-          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
-        },
-        (payload) => {
-          console.log('[DocumentService] INSERT payload received:', payload);
-          const newDoc = (payload.new ?? null) as Partial<Document> | null;
-          const isSoftDeleted = newDoc?.is_deleted === true || !!newDoc?.deleted_at;
-          
-          if (!isSoftDeleted && callbacks.onInsert) {
-            callbacks.onInsert();
-          }
-        },
-      )
-      // UPDATE: Update document in state or handle soft delete
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'knowledge',
-          table: 'document',
-          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
-        },
-        (payload) => {
-          const docNew = (payload.new ?? null) as Partial<Document> | null;
-          const docId = docNew?.id;
-          const isSoftDeleted = docNew?.is_deleted === true || !!docNew?.deleted_at;
-          
-          if (isSoftDeleted && docId && callbacks.onSoftDelete) {
-            console.log('[DocumentService] Soft DELETE detected:', docId);
-            callbacks.onSoftDelete(docId);
-          } else if (docNew && docId && callbacks.onUpdate) {
-            console.log('[DocumentService] UPDATE detected:', docId);
-            callbacks.onUpdate(docNew as Document);
-          }
-        },
-      )
-      // DELETE: Handle hard delete
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'knowledge',
-          table: 'document',
-          filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
-        },
-        (payload) => {
-          console.log('[DocumentService] DELETE payload received:', payload);
-          const oldDoc = (payload.old ?? null) as Partial<Document> | null;
-          const deletedId = oldDoc?.id;
-          
-          if (deletedId && callbacks.onDelete) {
-            console.log('[DocumentService] HARD DELETE detected:', deletedId);
-            callbacks.onDelete(deletedId);
-          }
-        },
-      )
-      .subscribe(async (status, error) => {
-        console.log('[DocumentService] Subscription status:', status, 'channel:', channelName);
-        
-        if (status === 'SUBSCRIBED') {
-          console.log('[DocumentService] ✅ Successfully subscribed to realtime changes');
-        } else if (status === 'CHANNEL_ERROR') {
-          console.error('[DocumentService] ❌ Channel error:', error);
-        } else if (status === 'TIMED_OUT') {
-          console.error('[DocumentService] ⏱️ Subscription timed out');
-        } else if (status === 'CLOSED') {
-          console.warn('[DocumentService] ⚠️ Channel closed');
+    const supabase = createClient();
+    let retryCount = 0;
+    let retryTimeout: ReturnType<typeof setTimeout> | null = null;
+    let currentChannel: ReturnType<typeof supabase.channel> | null = null;
+    let disposed = false;
+
+    const ensureAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('Authentication required for realtime subscription');
+      }
+      await supabase.realtime.setAuth(session.access_token);
+      return session;
+    };
+
+    const createChannel = () => {
+      const channelName = `document:kb:${knowledgeBaseId}:${Date.now()}`;
+
+      return supabase
+        .channel(channelName)
+        // INSERT: Notify to reload data
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'knowledge',
+            table: 'document',
+            filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+          },
+          (payload) => {
+            const newDoc = (payload.new ?? null) as Partial<Document> | null;
+            const isSoftDeleted = newDoc?.is_deleted === true || !!newDoc?.deleted_at;
+
+            if (!isSoftDeleted && callbacks.onInsert) {
+              callbacks.onInsert();
+            }
+          },
+        )
+        // UPDATE: Update document in state or handle soft delete
+        .on(
+          'postgres_changes',
+          {
+            event: 'UPDATE',
+            schema: 'knowledge',
+            table: 'document',
+            filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+          },
+          (payload) => {
+            const docNew = (payload.new ?? null) as Partial<Document> | null;
+            const docId = docNew?.id;
+            const isSoftDeleted = docNew?.is_deleted === true || !!docNew?.deleted_at;
+
+            if (isSoftDeleted && docId && callbacks.onSoftDelete) {
+              callbacks.onSoftDelete(docId);
+            } else if (docNew && docId && callbacks.onUpdate) {
+              callbacks.onUpdate(docNew as Document);
+            }
+          },
+        )
+        // DELETE: Handle hard delete
+        .on(
+          'postgres_changes',
+          {
+            event: 'DELETE',
+            schema: 'knowledge',
+            table: 'document',
+            filter: `knowledge_base_id=eq.${knowledgeBaseId}`,
+          },
+          (payload) => {
+            const oldDoc = (payload.old ?? null) as Partial<Document> | null;
+            const deletedId = oldDoc?.id;
+
+            if (deletedId && callbacks.onDelete) {
+              callbacks.onDelete(deletedId);
+            }
+          },
+        );
+    };
+
+    const scheduleRetry = () => {
+      if (disposed || retryCount >= MAX_RETRIES) {
+        if (retryCount >= MAX_RETRIES) {
+          console.error(
+            `[DocumentService] Realtime: max retries (${MAX_RETRIES}) reached for KB ${knowledgeBaseId}. ` +
+            'Ensure the table is in the realtime publication: ' +
+            'ALTER PUBLICATION supabase_realtime ADD TABLE knowledge.document;'
+          );
         }
-        
+        return;
+      }
+
+      if (retryTimeout != null) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+
+      retryCount++;
+      const delay = Math.min(BASE_DELAY_MS * Math.pow(2, retryCount - 1), 30000);
+      console.warn(
+        `[DocumentService] Realtime: retry ${retryCount}/${MAX_RETRIES} in ${delay}ms for KB ${knowledgeBaseId}`
+      );
+
+      retryTimeout = setTimeout(() => {
+        if (!disposed) {
+          subscribe();
+        }
+      }, delay);
+    };
+
+    const cleanup = () => {
+      if (currentChannel) {
+        currentChannel.unsubscribe();
+        supabase.removeChannel(currentChannel);
+        currentChannel = null;
+      }
+    };
+
+    const subscribe = async () => {
+      // Clean up previous channel before creating a new one
+      cleanup();
+
+      try {
+        await ensureAuth();
+      } catch {
+        console.error('[DocumentService] Realtime: auth failed, cannot subscribe');
+        return;
+      }
+
+      if (disposed) return;
+
+      const channel = createChannel();
+      currentChannel = channel;
+
+      channel.subscribe(async (status, err) => {
+        if (disposed) return;
+
+        if (status === 'SUBSCRIBED') {
+          // Reset retry counter on successful subscription
+          retryCount = 0;
+        } else if (status === 'CHANNEL_ERROR') {
+          console.error(
+            `[DocumentService] Realtime channel error for KB ${knowledgeBaseId}.`,
+            err ?? 'No error details — verify that knowledge.document is in the supabase_realtime publication.'
+          );
+          cleanup();
+          scheduleRetry();
+        } else if (status === 'TIMED_OUT') {
+          console.error(`[DocumentService] Realtime subscription timed out for KB ${knowledgeBaseId}`);
+          cleanup();
+          scheduleRetry();
+        } else if (status === 'CLOSED') {
+          console.warn(`[DocumentService] Realtime channel closed for KB ${knowledgeBaseId}`);
+        }
+
         if (callbacks.onStatusChange) {
-          callbacks.onStatusChange(status, error);
+          callbacks.onStatusChange(status, err);
         }
       });
+    };
+
+    // Initial subscription
+    await subscribe();
 
     // Return cleanup function
     return () => {
-      channel.unsubscribe();
-      supabase.removeChannel(channel);
+      disposed = true;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+        retryTimeout = null;
+      }
+      cleanup();
     };
   }
 }

@@ -24,6 +24,7 @@ export { default as KnowledgeBaseCard } from './knowledgeBaseCard';
 export { default as KnowledgeBasePagination } from './knowledgeBasePagination';
 export { default as KnowledgeBaseSearch } from './knowledgeBaseSearch';
 export { default as KnowledgeSelect } from './knowledgeSelect';
+export { LazyChatHistoryList } from './lazyLoad';
 export { LoadingCard, TableSkeleton } from './LoadingCard';
 export { default as LoadingPage } from './loadingPage';
 export { LogsTable } from './logsTable';
@@ -71,4 +72,7 @@ export * from './PageHeader';
 
 // Deep Search Components
 export * from './deepSearch';
+
+// OCR Viewer Components
+export * from './ocrViewer';
 

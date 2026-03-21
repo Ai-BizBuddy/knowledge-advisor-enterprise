@@ -127,7 +127,7 @@ export default function SlideBar({
 
       {/* Main Content */}
       <div className='h-screen bg-gray-200 sm:ml-64 dark:bg-gray-900 overflow-auto [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-gray-300 dark:[&::-webkit-scrollbar-thumb]:bg-neutral-500 [&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-gray-100 dark:[&::-webkit-scrollbar-track]:bg-neutral-700'>
-        <div className='mt-14'>
+        <div className='mt-16'>
           {children}
         </div>
       </div>

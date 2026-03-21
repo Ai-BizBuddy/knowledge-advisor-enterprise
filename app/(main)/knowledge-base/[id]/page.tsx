@@ -82,7 +82,7 @@ export default function KnowledgeBaseDetail() {
   if (knowledgeBaseState.loading) {
     return (
       <div className='min-h-screen p-3 sm:p-6 lg:p-8'>
-        <AppLoading variant='default' message='Loading knowledge base...' />
+        <AppLoading variant='fullscreen' message='Loading knowledge base...' />
       </div>
     );
   }

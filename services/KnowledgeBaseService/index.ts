@@ -36,13 +36,6 @@ class KnowledgeBaseService {
     try {
       const session = await getAuthSession();
 
-      console.log(session?.user);
-      // 👀 check what’s inside user
-
-      console.log(session); 
-      // values under app_metadata
-
-      console.log(session); 
       if (!session?.user) {
         throw new Error('User not authenticated');
       }
@@ -262,7 +255,6 @@ class KnowledgeBaseService {
     try {
       const user = await this.getCurrentUser();
       const supabaseTable = createClientTable();
-      console.log('user.user_metadata=>>>>', user);
       // Create project data according to the database schema
       const projectData = {
         name: input.name,

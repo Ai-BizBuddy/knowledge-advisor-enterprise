@@ -71,8 +71,6 @@ export const useSidebar = () => {
                 return;
             }
 
-            console.log('📝 Sidebar - Raw JWT Access Token:', session.access_token);
-
             // Decode JWT manually to get ALL custom claims using utility function
             const decodedPayload = decodeJWTToken(session.access_token);
             
@@ -85,7 +83,6 @@ export const useSidebar = () => {
 
             // Also check session.user as fallback
             const claims = session.user as unknown as JWTClaims;
-            console.log('👤 Sidebar - Supabase session.user:', JSON.stringify(claims, null, 2));
             
             // Use decoded payload as primary source
             const permissions = decodedPayload.permissions || claims.permissions || [];
@@ -93,15 +90,6 @@ export const useSidebar = () => {
             
             setUserPermissions(Array.isArray(permissions) ? permissions : []);
             setUserRoles(Array.isArray(roles) ? roles : []);
-            
-            console.log('✅ Sidebar - User permissions loaded:', { 
-              permissions, 
-              roles,
-              department_id: decodedPayload.department_id || claims.department_id,
-              department_name: decodedPayload.department_name || claims.department_name,
-              email: decodedPayload.email || claims.email,
-              source: decodedPayload.permissions ? 'decoded_jwt' : 'session_user'
-            });
         } catch (error) {
             console.error('Error loading user permissions:', error);
             setUserPermissions([]);
