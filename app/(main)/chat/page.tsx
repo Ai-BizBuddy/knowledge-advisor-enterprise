@@ -32,6 +32,7 @@ export default function ChatPage() {
 
   const {
     knowledgeBases,
+    loading: kbLoading,
     handleSelectKnowledgeBase,
     handleSelectAllKB,
     getSelectedKnowledgeBases,
@@ -135,6 +136,7 @@ export default function ChatPage() {
                       options={knowledgeBases}
                       onChange={handleSelectKnowledgeBase}
                       onChangeAll={handleSelectAllKB}
+                      isLoading={kbLoading}
                     />
                   </div>
                 </div>
