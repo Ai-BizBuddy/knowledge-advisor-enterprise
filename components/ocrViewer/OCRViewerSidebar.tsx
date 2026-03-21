@@ -2,10 +2,10 @@
 
 import React, { memo, useCallback } from 'react';
 import type {
-    DocPagination,
-    DocumentWithSectionsUI,
-    OCRViewerSidebarProps,
-    PageUI,
+  DocPagination,
+  DocumentWithSectionsUI,
+  OCRViewerSidebarProps,
+  PageUI,
 } from './OCRViewer.types';
 
 // Inline SVG Icons
@@ -188,7 +188,7 @@ interface DocumentItemProps {
   doc: DocumentWithSectionsUI;
   isExpanded: boolean;
   isActive: boolean;
-  currentSectionId: string | null;
+  _currentSectionId: string | null;
   currentPageId?: string | null;
   onToggle: (id: string) => void;
   onSelect: (id: string) => void;
@@ -202,7 +202,7 @@ const DocumentItem = memo(
     doc,
     isExpanded,
     isActive,
-    currentSectionId,
+    _currentSectionId: _currentSectionId,
     currentPageId,
     onToggle,
     onSelect,
@@ -417,7 +417,7 @@ export const OCRViewerSidebar: React.FC<OCRViewerSidebarProps> = (props) => {
               doc={doc}
               isExpanded={expandedDocuments.has(doc.id)}
               isActive={currentDocumentId === doc.id}
-              currentSectionId={currentSectionId}
+              _currentSectionId={currentSectionId}
               currentPageId={currentPageId}
               onToggle={onDocumentToggle}
               onSelect={onDocumentSelect}

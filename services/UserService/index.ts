@@ -1,5 +1,6 @@
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientAuth, createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * TypedResponse interface for consistent API responses
@@ -114,7 +115,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -182,7 +183,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -252,7 +253,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -336,7 +337,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -407,7 +408,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -461,7 +462,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -520,7 +521,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -576,7 +577,7 @@ class UserService {
     } catch (error) {
             return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }

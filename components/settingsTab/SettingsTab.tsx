@@ -13,6 +13,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
 import WebhookConfig from './WebhookConfig';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface SettingsTabProps {
   knowledgeBaseId: string;
@@ -88,7 +89,7 @@ export const SettingsTab: React.FC<SettingsTabProps> = ({
     } catch (error) {
       console.error('Error creating integration:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to create integration',
+        handleCatchError(error, 'Failed to create integration').message,
       );
     }
   };

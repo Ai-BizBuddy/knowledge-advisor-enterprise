@@ -1,6 +1,7 @@
 'use client';
 import { createClientAuth } from '@/utils/supabase/client';
 import { useEffect, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface SystemStatus {
   totalUsers: number;
@@ -60,7 +61,7 @@ export function useSystemStatus() {
         setSystemStatus((prev) => ({
           ...prev,
           loading: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: handleCatchError(error, 'Unknown error').message,
         }));
       }
     }

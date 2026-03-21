@@ -12,6 +12,7 @@ import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { User, UserRoleRow, UserStatus } from '@/interfaces/UserManagement';
 import { Avatar, Badge, Button, Label, Modal } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 export default function UsersPage() {
   const { showToast } = useToast();
@@ -174,7 +175,7 @@ export default function UsersPage() {
       }
     } catch (error) {
       showToast(
-        error instanceof Error ? error.message : 'Failed to delete user',
+        handleCatchError(error, 'Failed to delete user').message,
         'error',
       );
     }
@@ -193,9 +194,7 @@ export default function UsersPage() {
       return null;
     } catch (error) {
       showToast(
-        error instanceof Error
-          ? error.message
-          : 'Failed to upload profile picture',
+        handleCatchError(error, 'Failed to upload profile picture').message,
         'error',
       );
       return null;

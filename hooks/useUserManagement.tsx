@@ -20,6 +20,7 @@ import type {
 } from '@/interfaces/UserManagement';
 import UserManagementService from '@/services/UserManagementService';
 import { useCallback, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UseUserManagementState {
   users: User[];
@@ -103,8 +104,7 @@ export const useUserManagement = (): UseUserManagement => {
         const users = await userManagementService.getUsers(filter);
         setState((prev) => ({ ...prev, users }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch users';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch users');
         setError(errorMessage);
               } finally {
         setLoading(false);
@@ -122,8 +122,7 @@ export const useUserManagement = (): UseUserManagement => {
         setError(null);
         return await userManagementService.getUserById(id);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch user');
         setError(errorMessage);
                 return null;
       }
@@ -150,8 +149,7 @@ export const useUserManagement = (): UseUserManagement => {
 
         return newUser;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to create user');
         setError(errorMessage);
                 return null;
       } finally {
@@ -182,8 +180,7 @@ export const useUserManagement = (): UseUserManagement => {
 
         return updatedUser;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to update user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update user');
         setError(errorMessage);
                 return null;
       } finally {
@@ -212,8 +209,7 @@ export const useUserManagement = (): UseUserManagement => {
 
         return true;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to delete user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to delete user');
         setError(errorMessage);
                 return false;
       } finally {
@@ -234,8 +230,7 @@ export const useUserManagement = (): UseUserManagement => {
       const roles = await userManagementService.getRoles();
       setState((prev) => ({ ...prev, roles }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch roles';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch roles');
       setError(errorMessage);
           } finally {
       setLoading(false);
@@ -253,8 +248,7 @@ export const useUserManagement = (): UseUserManagement => {
       const permissions = await userManagementService.getPermissions();
       setState((prev) => ({ ...prev, permissions }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch permissions';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch permissions');
       setError(errorMessage);
           } finally {
       setLoading(false);
@@ -272,8 +266,7 @@ export const useUserManagement = (): UseUserManagement => {
       const departments = await userManagementService.getDepartments();
       setState((prev) => ({ ...prev, departments }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch departments';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch departments');
       setError(errorMessage);
           } finally {
       setLoading(false);
@@ -297,8 +290,7 @@ export const useUserManagement = (): UseUserManagement => {
           action as PermissionAction,
         );
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to check permission';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to check permission');
         setError(errorMessage);
                 return {
           allowed: false,
@@ -321,8 +313,7 @@ export const useUserManagement = (): UseUserManagement => {
         const session = await userManagementService.getUserSession(userId);
         setState((prev) => ({ ...prev, currentUserSession: session }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to get user session';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to get user session');
         setError(errorMessage);
               } finally {
         setLoading(false);

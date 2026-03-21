@@ -8,6 +8,7 @@ import type {
   UpdateProjectInput,
 } from '@/interfaces/Project';
 import { knowledgeBaseService } from '@/services';
+import { handleCatchError } from '@/utils/errorHelpers';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -223,7 +224,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
       setLoading(true);
       await loadKnowledgeBases(1);
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to load');
+      setError(handleCatchError(error, 'Failed to load').message);
     }
   }, [loadKnowledgeBases]);
 
@@ -310,7 +311,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         throw err;
       }
     },
-    [],
+    [loadKnowledgeBases],
   );
 
   // Delete knowledge base
@@ -365,7 +366,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         throw err;
       }
     },
-    [],
+    [loadKnowledgeBases],
   );
 
   // Batch delete
@@ -397,7 +398,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         }));
         await loadKnowledgeBases(1, false, undefined, query);
       } catch (error) {
-        setError(error instanceof Error ? error.message : 'Search failed');
+        setError(handleCatchError(error, 'Search failed').message);
         throw error;
       }
     },
@@ -412,10 +413,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
         // Just filter from existing projects
         return projects.filter((p) => p.status === status);
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to filter knowledge bases';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to filter knowledge bases');
         setError(errorMessage);
         throw error;
       }
@@ -492,8 +490,7 @@ export const useKnowledgeBase = (): UseKnowledgeBaseReturn => {
 
         return mockAnalytics;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to get analytics';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to get analytics');
         setError(errorMessage);
         throw error;
       }

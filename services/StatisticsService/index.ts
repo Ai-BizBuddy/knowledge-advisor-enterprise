@@ -13,6 +13,7 @@ import type {
 import { storageService } from '@/services/StorageService';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 class StatisticsService {
   constructor() {
@@ -84,7 +85,7 @@ class StatisticsService {
         avgResponseTime,
         lastUpdated: new Date().toISOString(),
       };
-    } catch (error) {
+    } catch (_error) {
       // Return fallback data if calculation fails
       return {
         totalKnowledgeBases: 0,
@@ -238,7 +239,7 @@ class StatisticsService {
       }
 
       return count || 0;
-    } catch (error) {
+    } catch (_error) {
       return 0;
     }
   }
@@ -299,7 +300,7 @@ class StatisticsService {
         responseTimes.reduce((sum, time) => sum + time, 0) /
         responseTimes.length;
       return Math.round(avgMs);
-    } catch (error) {
+    } catch (_error) {
       return 1200; // Default response time
     }
   }
@@ -415,9 +416,7 @@ class StatisticsService {
       };
     } catch (error) {
       // Enhanced error handling for chunk count calculation
-      const errorMessage = error instanceof Error 
-        ? error.message 
-        : 'Unknown error occurred while calculating chunk count';
+      const errorMessage = handleCatchError(error, 'Unknown error occurred while calculating chunk count').message;
       
       console.error('getTotalChunks failed:', errorMessage);
       

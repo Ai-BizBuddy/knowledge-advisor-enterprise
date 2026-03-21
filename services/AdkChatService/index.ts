@@ -8,6 +8,7 @@
 
 import { BaseFetchClient } from '@/utils/fetchClient';
 import { getAccessToken } from '@/utils/supabase/authUtils';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * ADK Session creation response interface
@@ -404,10 +405,7 @@ class AdkChatService {
           });
       });
     } catch (error) {
-            const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+            const { message: errorMessage } = handleCatchError(error, 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ');
       onError(errorMessage);
 
       return {

@@ -115,7 +115,7 @@ class DocumentIngestionService {
     try {
       const response = await this.client.get('/Documents/pending');
       return response.status === 200;
-    } catch (error) {
+    } catch (_error) {
             return false;
     }
   }

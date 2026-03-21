@@ -3,6 +3,7 @@
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientAuth, createClientTable } from '@/utils/supabase/client';
 import { useCallback, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * TypedResponse interface for consistent API responses
@@ -260,8 +261,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       } catch (error) {
         return {
           success: false,
-          error:
-            error instanceof Error ? error.message : 'Unknown error occurred',
+          error: handleCatchError(error, 'Unknown error occurred').message,
         };
       }
     },
@@ -393,8 +393,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       } catch (error) {
         return {
           success: false,
-          error:
-            error instanceof Error ? error.message : 'Unknown error occurred',
+          error: handleCatchError(error, 'Unknown error occurred').message,
         };
       }
     },
@@ -498,7 +497,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       } catch (error) {
         return {
           success: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: handleCatchError(error, 'Unknown error').message,
         };
       }
     },
@@ -584,7 +583,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
         setState((prev) => ({
           ...prev,
           loading: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: handleCatchError(error, 'Unknown error').message,
         }));
       }
     },
@@ -632,7 +631,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
         setState((prev) => ({
           ...prev,
           assignmentLoading: false,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: handleCatchError(error, 'Unknown error').message,
         }));
       }
     },
@@ -665,7 +664,7 @@ export const useKnowledgeBaseUserSearch = (): UseKnowledgeBaseUserSearch => {
       } catch (error) {
         setState((prev) => ({
           ...prev,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: handleCatchError(error, 'Unknown error').message,
         }));
       }
     },

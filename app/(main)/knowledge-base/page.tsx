@@ -14,6 +14,7 @@ import { Project, UpdateProjectInput } from '@/interfaces/Project';
 import { Button } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import Loading from './loading';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 export default function KnowledgeBase() {
   const [openModal, setOpenModal] = useState(false);
@@ -77,7 +78,7 @@ export default function KnowledgeBase() {
       await searchKnowledgeBases(query);
     } catch (error) {
       console.error('Search failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Search failed. Please try again.';
+      const { message: errorMessage } = handleCatchError(error, 'Search failed. Please try again.');
       showToast(errorMessage, 'error');
     }
   };
@@ -99,7 +100,7 @@ export default function KnowledgeBase() {
         setKnowledgeBaseToDelete(null);
       } catch (error) {
         console.error('Delete failed:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to delete knowledge base. Please try again.';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to delete knowledge base. Please try again.');
         showToast(errorMessage, 'error');
         setDeleteModal(false);
         setKnowledgeBaseToDelete(null);
@@ -128,7 +129,7 @@ export default function KnowledgeBase() {
       setSelectedProject(null);
     } catch (error) {
       console.error('Update failed:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Failed to update knowledge base. Please try again.';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to update knowledge base. Please try again.');
       showToast(errorMessage, 'error');
       setEditModal(false);
       setSelectedProject(null);
@@ -314,7 +315,7 @@ export default function KnowledgeBase() {
               await initialLoad();
             } catch (error) {
               console.error('Create knowledge base failed:', error);
-              const errorMessage = error instanceof Error ? error.message : 'Failed to create knowledge base. Please try again.';
+              const { message: errorMessage } = handleCatchError(error, 'Failed to create knowledge base. Please try again.');
               showToast(errorMessage, 'error');
             }
           }}

@@ -129,7 +129,7 @@ class PermissionsService {
         roles,
         directPermissions: directPerms,
       };
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -311,7 +311,7 @@ class PermissionsService {
         } else {
         }
       }
-    } catch (error) {
+    } catch (_error) {
       // Don't throw, as this is non-critical for the UI
     }
   }
@@ -350,7 +350,7 @@ class PermissionsService {
       );
 
       return hasDirectPermission;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

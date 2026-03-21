@@ -11,6 +11,7 @@ import { Project } from '@/interfaces/Project';
 import { Breadcrumb, BreadcrumbItem } from 'flowbite-react';
 import { useParams, useRouter } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 export default function KnowledgeBaseDetail() {
   const router = useRouter();
@@ -62,9 +63,7 @@ export default function KnowledgeBaseDetail() {
         console.error('Error fetching knowledge base:', error);
         setKnowledgeBaseState(prev => ({
           ...prev,
-          error: error instanceof Error
-            ? error.message
-            : 'Failed to load knowledge base',
+          error: handleCatchError(error, 'Failed to load knowledge base').message,
           data: null,
           loading: false
         }));

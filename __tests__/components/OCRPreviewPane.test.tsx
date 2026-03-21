@@ -2,11 +2,11 @@ import { OCRPreviewPane } from '@/components/ocrViewer/OCRPreviewPane';
 import type { OCRPreviewPaneProps } from '@/components/ocrViewer/OCRViewer.types';
 import { fireEvent, render, screen } from '@testing-library/react';
 import React from 'react';
+import NextImage from 'next/image';
 
 // Mock next/image as a plain <img>
 jest.mock('next/image', () => {
-  const ReactLocal = require('react') as typeof import('react');
-  const MockNextImage = ReactLocal.forwardRef(
+  const MockNextImage = React.forwardRef(
     (
       props: React.ImgHTMLAttributes<HTMLImageElement>,
       ref: React.Ref<HTMLImageElement>,
@@ -15,11 +15,12 @@ jest.mock('next/image', () => {
         props as React.ImgHTMLAttributes<HTMLImageElement> & {
           unoptimized?: boolean;
         };
-      delete rest.unoptimized;
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const { unoptimized, ...validRest } = rest as any;
 
       return (
         // eslint-disable-next-line @next/next/no-img-element
-        <img ref={ref} src={src} alt={alt} onLoad={onLoad} {...rest} />
+        <img ref={ref} src={src} alt={alt} onLoad={onLoad} {...validRest} />
       );
     },
   );
@@ -28,6 +29,8 @@ jest.mock('next/image', () => {
   return {
     __esModule: true,
     default: MockNextImage,
+  };
+});
   };
 });
 

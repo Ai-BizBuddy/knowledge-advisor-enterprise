@@ -20,6 +20,7 @@ import type {
 } from '@/interfaces/UserManagement';
 import PaginatedUserManagementService from '@/services/UserManagementService/PaginatedUserManagementService';
 import { useCallback, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UsePaginatedUserManagementState {
   // Paginated data
@@ -168,8 +169,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           users: { params, filter },
         }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch users';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch users');
         setError(errorMessage);
               } finally {
         setLoading(false);
@@ -198,8 +198,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           roles: { params },
         }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to fetch roles';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch roles');
         setError(errorMessage);
               } finally {
         setLoading(false);
@@ -228,10 +227,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           permissions: { params },
         }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch permissions';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch permissions');
         setError(errorMessage);
               } finally {
         setLoading(false);
@@ -260,10 +256,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           departments: { params },
         }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to fetch departments';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to fetch departments');
         setError(errorMessage);
               } finally {
         setLoading(false);
@@ -281,8 +274,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
       const roles = await paginatedUserManagementService.getRoles();
       setState((prev) => ({ ...prev, allRoles: roles }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch roles';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch roles');
       setError(errorMessage);
           }
   }, [setError]);
@@ -296,8 +288,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
       const departments = await paginatedUserManagementService.getDepartments();
       setState((prev) => ({ ...prev, allDepartments: departments }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch departments';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch departments');
       setError(errorMessage);
           }
   }, [setError]);
@@ -312,10 +303,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
         await paginatedUserManagementService.getUserStatistics();
       setState((prev) => ({ ...prev, userStatistics: statistics }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to fetch user statistics';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch user statistics');
       setError(errorMessage);
           }
   }, [setError]);
@@ -342,8 +330,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return newUser;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to create user');
         setError(errorMessage);
                 return null;
       } finally {
@@ -377,8 +364,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return updatedUser;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to update user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update user');
         setError(errorMessage);
                 return null;
       } finally {
@@ -409,8 +395,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return true;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to delete user';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to delete user');
         setError(errorMessage);
                 return false;
       } finally {
@@ -436,10 +421,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
           );
         return avatarUrl;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to upload profile picture';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to upload profile picture');
         setError(errorMessage);
                 return null;
       } finally {
@@ -481,10 +463,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return updatedUser;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to update user profile';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update user profile');
         setError(errorMessage);
                 return null;
       } finally {
@@ -513,8 +492,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return newRole;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to create role';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to create role');
         setError(errorMessage);
                 return null;
       } finally {
@@ -545,8 +523,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return updatedRole;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to update role';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update role');
         setError(errorMessage);
                 return null;
       } finally {
@@ -574,8 +551,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return true;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : 'Failed to delete role';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to delete role');
         setError(errorMessage);
                 return false;
       } finally {
@@ -606,10 +582,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return newDepartment;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to create department';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to create department');
         setError(errorMessage);
                 return null;
       } finally {
@@ -641,10 +614,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return updatedDepartment;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to update department';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update department');
         setError(errorMessage);
                 return null;
       } finally {
@@ -672,10 +642,7 @@ export const usePaginatedUserManagement = (): UsePaginatedUserManagement => {
 
         return true;
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to delete department';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to delete department');
         setError(errorMessage);
                 return false;
       } finally {

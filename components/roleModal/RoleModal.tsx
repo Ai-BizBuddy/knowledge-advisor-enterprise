@@ -1,4 +1,5 @@
 'use client';
+import { toError } from '@/utils/errorHelpers';
 import { useToast } from '@/components/toast';
 import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { useReactHookForm } from '@/hooks/useReactHookForm';
@@ -226,54 +227,40 @@ export const RoleModal: React.FC<RoleModalProps> = ({
       // Reset form and close modal
       handleClose();
     } catch (error) {
-      
-      // Handle different types of errors
-      if (error instanceof Error) {
-        // Check for specific error types and set appropriate form errors
-        if (
-          error.message.toLowerCase().includes('duplicate') ||
-          error.message.toLowerCase().includes('already exists')
-        ) {
-          form.setError('roleName', {
-            type: 'manual',
-            message: 'A role with this name already exists',
-          });
-        } else if (error.message.toLowerCase().includes('permission')) {
-          form.setError('permissions', {
-            type: 'manual',
-            message: error.message,
-          });
-        } else if (error.message.toLowerCase().includes('name')) {
-          form.setError('roleName', {
-            type: 'manual',
-            message: error.message,
-          });
-        } else if (error.message.toLowerCase().includes('description')) {
-          form.setError('description', {
-            type: 'manual',
-            message: error.message,
-          });
-        } else {
-          // Generic form error
-          form.setError('root', {
-            type: 'manual',
-            message: error.message,
-          });
-        }
+      const actionText = isEditMode ? 'update' : 'create';
+      const err = toError(error, `Failed to ${actionText} role. Please try again.`);
 
-        // Always show toast for user feedback
-        showToast(error.message, 'error');
+      if (
+        err.message.toLowerCase().includes('duplicate') ||
+        err.message.toLowerCase().includes('already exists')
+      ) {
+        form.setError('roleName', {
+          type: 'manual',
+          message: 'A role with this name already exists',
+        });
+      } else if (err.message.toLowerCase().includes('permission')) {
+        form.setError('permissions', {
+          type: 'manual',
+          message: err.message,
+        });
+      } else if (err.message.toLowerCase().includes('name')) {
+        form.setError('roleName', {
+          type: 'manual',
+          message: err.message,
+        });
+      } else if (err.message.toLowerCase().includes('description')) {
+        form.setError('description', {
+          type: 'manual',
+          message: err.message,
+        });
       } else {
-        // Unknown error type
-        const actionText = isEditMode ? 'update' : 'create';
-        const fallbackMessage = `Failed to ${actionText} role. Please try again.`;
-
         form.setError('root', {
           type: 'manual',
-          message: fallbackMessage,
+          message: err.message,
         });
-        showToast(fallbackMessage, 'error');
       }
+
+      showToast(err.message, 'error');
     } finally {
       setIsSubmitting(false);
     }

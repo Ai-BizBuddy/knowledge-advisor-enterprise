@@ -211,3 +211,73 @@ export function isNetworkError(error: unknown): boolean {
   }
   return false;
 }
+
+// ---------------------------------------------------------------------------
+// Catch-all helpers
+// ---------------------------------------------------------------------------
+
+/**
+ * Extract a typed `Error` from any thrown value.
+ *
+ * Usage in catch blocks:
+ *   catch (err) { const error = toError(err); ... }
+ */
+export function toError(error: unknown, fallbackMessage = 'An unexpected error occurred'): Error {
+  if (error instanceof Error) return error;
+  return new Error(parseGenericError(error, fallbackMessage));
+}
+
+/**
+ * Centralised catch handler for async operations.
+ *
+ * Returns a typed `TypedCatchResult` so callers get a consistent shape without
+ * having to repeat the `error instanceof Error` pattern everywhere.
+ *
+ * @example
+ * try {
+ *   const data = await someService.fetch();
+ *   return { ok: true, data };
+ * } catch (err) {
+ *   return handleCatchError(err, 'Failed to fetch data');
+ * }
+ */
+export interface TypedCatchResult {
+  ok: false;
+  message: string;
+  error: Error;
+}
+
+export function handleCatchError(
+  error: unknown,
+  fallbackMessage = 'An unexpected error occurred',
+): TypedCatchResult {
+  const typedError = toError(error, fallbackMessage);
+  return {
+    ok: false,
+    message: typedError.message || fallbackMessage,
+    error: typedError,
+  };
+}
+
+/**
+ * Wrap an async function so that it never throws — instead it returns a
+ * discriminated union of `{ ok: true; data: T }` or `TypedCatchResult`.
+ *
+ * @example
+ * const result = await tryCatch(() => someService.fetch(), 'Failed to fetch');
+ * if (!result.ok) { showToast(result.message, 'error'); return; }
+ * console.log(result.data);
+ */
+export type TryCatchResult<T> = { ok: true; data: T } | TypedCatchResult;
+
+export async function tryCatch<T>(
+  fn: () => Promise<T>,
+  fallbackMessage = 'An unexpected error occurred',
+): Promise<TryCatchResult<T>> {
+  try {
+    const data = await fn();
+    return { ok: true, data };
+  } catch (error) {
+    return handleCatchError(error, fallbackMessage);
+  }
+}

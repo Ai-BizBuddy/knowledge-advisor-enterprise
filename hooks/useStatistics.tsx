@@ -9,6 +9,7 @@
 import type { DashboardStatistics } from '@/interfaces/Statistics';
 import { statisticsService } from '@/services/StatisticsService';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * Statistics hook state interface
@@ -101,8 +102,7 @@ export const useStatistics = (
 
       onSuccessRef.current?.(data);
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to fetch statistics';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to fetch statistics');
 
       setState((prev) => ({
         ...prev,

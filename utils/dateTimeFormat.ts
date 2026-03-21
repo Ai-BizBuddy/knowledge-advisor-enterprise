@@ -1,3 +1,4 @@
+import { handleCatchError } from '@/utils/errorHelpers';
 /**
  * Formats various date/time inputs to "MMM DD, YYYY" format (e.g., "Aug 13, 2024")
  *
@@ -39,7 +40,7 @@ export function formatToMonthDayYear(
     });
   } catch (error) {
     throw new Error(
-      `Unable to parse date: ${dateInput}. ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Unable to parse date: ${dateInput}. ${handleCatchError(error, 'Unknown error').message}`,
     );
   }
 }

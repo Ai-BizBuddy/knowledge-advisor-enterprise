@@ -1,38 +1,39 @@
 'use client';
 import {
-    DocumentDeleteModal,
-    DocumentsHeader,
-    DocumentsPagination,
-    DocumentsSearch,
-    DocumentsTable,
-    NoDocuments,
-    PageGuard,
-    TableSkeleton,
+  DocumentDeleteModal,
+  DocumentsHeader,
+  DocumentsPagination,
+  DocumentsSearch,
+  DocumentsTable,
+  NoDocuments,
+  PageGuard,
+  TableSkeleton,
 } from '@/components';
 import {
-    DeepSearchLayout,
-    DocumentPreview,
-    MiniDocumentPreview,
+  DeepSearchLayout,
+  DocumentPreview,
+  MiniDocumentPreview,
 } from '@/components/deepSearch';
 import { useToast } from '@/components/toast';
 import { PAGE_PERMISSIONS } from '@/constants';
 import {
-    useAllUserDocuments,
-    useDocumentsManagement,
-    useKnowledgeBase,
-    useSorting
+  useAllUserDocuments,
+  useDocumentsManagement,
+  useKnowledgeBase,
+  useSorting
 } from '@/hooks';
 /* Lines 23-32 omitted */
 import { useDeepSearch } from '@/hooks/useDeepSarch';
 import {
-    DeepSearchData,
-    DocumentSearchResult,
+  DeepSearchData,
+  DocumentSearchResult,
 } from '@/interfaces/DeepSearchTypes';
 import { DeepSearchRes } from '@/interfaces/DocumentIngestion';
 import { Document, Project } from '@/interfaces/Project';
 import DocumentService from '@/services/DocumentService';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 // Interface that matches what DocumentsTable expects (temporarily for compatibility)
 export interface DocumentTableItem {
@@ -92,20 +93,6 @@ const adaptDocumentToTableFormat = (doc: Document): DocumentTableItem => ({
     (doc.rag_status === 'error'
       ? 'An error occurred while processing this document'
       : undefined),
-});
-
-// Adapter function to convert Document to DeepSearchData format for preview components
-const adaptDocumentToPreviewFormat = (doc: Document): DeepSearchData => ({
-  id: doc.id.toString(),
-  name: doc.name,
-  content: doc.content || '',
-  fileType: doc.file_type,
-  fileSize: doc.file_size
-    ? `${(doc.file_size / 1024 / 1024).toFixed(1)} MB`
-    : 'Unknown',
-  uploadDate: new Date(doc.created_at).toLocaleDateString(),
-  knowledgeName: 'Documents', // Default value
-  fileUrl: doc.url,
 });
 
 export default function DocumentsPage() {
@@ -280,10 +267,7 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       // Show error notification
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete document. Please try again.';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to delete document. Please try again.');
       showToast(errorMessage, 'error');
 
       // Close modal
@@ -340,10 +324,7 @@ export default function DocumentsPage() {
       await refresh();
     } catch (error) {
       // Show error notification
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Failed to delete documents. Please try again.';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to delete documents. Please try again.');
       showToast(errorMessage, 'error');
     }
   };
@@ -449,10 +430,6 @@ export default function DocumentsPage() {
     setIsSearching(false);
     setDeepCurrentPage(1);
     setIsDeepSearch(false);
-  };
-
-  const handleResultClick = () => {
-    // In real implementation, this would open the document or navigate to document detail
   };
 
   const handlePageChanges = (page: number) => {
@@ -584,7 +561,6 @@ export default function DocumentsPage() {
             loading={deepSearchLoad}
             isSearching={isSearching}
             isNoResults={isNoResults}
-            onResultClick={handleResultClick}
             currentPage={deepCurrentPage}
             totalPages={dTotalPages}
             resultsPerPage={10}

@@ -343,7 +343,7 @@ export function useAllUserDocuments(
     [loadDocuments],
   );
 
-  const handleDocumentClick = useCallback((id: string) => {
+  const handleDocumentClick = useCallback((_id: string) => {
     // This can be extended for navigation or state changes
   }, []);
 

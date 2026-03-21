@@ -9,6 +9,7 @@ import type {
 } from '@/interfaces/Project';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClient, createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 class DocumentService {
   constructor() {
@@ -523,7 +524,7 @@ class DocumentService {
           return document as Document;
         } catch (error) {
           throw new Error(
-            `Failed to upload ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            `Failed to upload ${file.name}: ${handleCatchError(error, 'Unknown error').message}`,
           );
         }
       });
