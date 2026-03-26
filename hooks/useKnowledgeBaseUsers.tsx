@@ -14,6 +14,7 @@ import {
   updateKnowledgeBaseUserRole,
 } from '@/services/knowledgeBaseUserHelpers';
 import { useCallback, useEffect, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UseKnowledgeBaseUsersState {
   users: KnowledgeBaseUser[];
@@ -139,7 +140,7 @@ export const useKnowledgeBaseUsers = (
           setError(result.error || 'Failed to fetch users');
         }
       } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(handleCatchError(error, 'Unknown error').message);
       } finally {
         setLoading(false);
       }
@@ -169,7 +170,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(handleCatchError(error, 'Unknown error').message);
         return false;
       }
     },
@@ -206,7 +207,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(handleCatchError(error, 'Unknown error').message);
         return false;
       }
     },
@@ -238,7 +239,7 @@ export const useKnowledgeBaseUsers = (
           return false;
         }
       } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(handleCatchError(error, 'Unknown error').message);
         return false;
       }
     },
@@ -265,7 +266,7 @@ export const useKnowledgeBaseUsers = (
           setError(result.error || 'Failed to search users');
         }
       } catch (error) {
-                setError(error instanceof Error ? error.message : 'Unknown error');
+                setError(handleCatchError(error, 'Unknown error').message);
       } finally {
         setState((prev) => ({ ...prev, searchLoading: false }));
       }

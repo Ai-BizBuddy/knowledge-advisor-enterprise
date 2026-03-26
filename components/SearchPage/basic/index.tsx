@@ -14,7 +14,7 @@ export default function BasicSearchPage() {
   const [searchResults, setSearchResults] = useState<DocumentSearchResult[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalResults, setTotalResults] = useState(0);
-  const resultsPerPage = 10;
+  const _resultsPerPage = 10;
 
   const { loading, error, executeSearch } = useDeepSearch();
   
@@ -37,21 +37,21 @@ export default function BasicSearchPage() {
       const searchPayload = {
         query: query.trim(),
         knowledge_base_ids: selectedKBs.length > 0 ? selectedKBs.map(kb => kb.id) : [],
-        limit: resultsPerPage,
+        limit: _resultsPerPage,
         offset: 0
       };
 
       const response = await executeSearch(searchPayload);
       
       // Convert response to DocumentSearchResult format
-      const formattedResults: DocumentSearchResult[] = response.map((result, index) => ({
-        id: result.metadata?.document_id || `result-${index}`,
-        title: result.metadata?.file_name || 'Untitled Document',
-        content: result.content || '',
-        fileType: result.metadata?.file_name?.split('.').pop() || 'unknown',
+      const formattedResults: DocumentSearchResult[] = response.map((_result, index) => ({
+        id: _result.metadata?.document_id || `_result-${index}`,
+        title: _result.metadata?.file_name || 'Untitled Document',
+        content: _result.content || '',
+        fileType: _result.metadata?.file_name?.split('.').pop() || 'unknown',
         fileSize: '0 KB', // Not available in current response
         uploadDate: new Date().toISOString(), // Not available in current response
-        knowledgeName: result.metadata?.knowledge_id || '',
+        knowledgeName: _result.metadata?.knowledge_id || '',
         fileUrl: undefined // Not available in current response
       }));
 
@@ -64,16 +64,16 @@ export default function BasicSearchPage() {
     }
   };
 
-  const handleResultClick = (result: DocumentSearchResult) => {
-    // Handle result click - could open document preview or navigate
+  const handleResultClick = (_result: DocumentSearchResult) => {
+    // Handle _result click - could open document preview or navigate
   };
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // In a real implementation, you'd fetch new results for the page
+    // In a real implementation, you'd fetch new _results for the page
   };
 
-  const totalPages = Math.ceil(totalResults / resultsPerPage);
+  const totalPages = Math.ceil(totalResults / _resultsPerPage);
   const isNoResults = Boolean(searchQuery && searchResults.length === 0 && !loading);
 
   return (
@@ -135,7 +135,7 @@ export default function BasicSearchPage() {
             onResultClick={handleResultClick}
             currentPage={currentPage}
             totalPages={totalPages}
-            resultsPerPage={resultsPerPage}
+            resultsPerPage={_resultsPerPage}
             totalResults={totalResults}
             onPageChange={handlePageChange}
           />

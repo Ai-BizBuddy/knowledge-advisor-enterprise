@@ -1,11 +1,11 @@
 import type {
-  CreateProjectInput,
-  Document,
-  Project,
-  UpdateProjectInput
+    CreateProjectInput,
+    Document,
+    Project,
+    UpdateProjectInput
 } from '@/interfaces/Project';
 import type {
-  SupabaseProjectRow
+    SupabaseProjectRow
 } from '@/interfaces/Supabase';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClient, createClientTable } from '@/utils/supabase/client';
@@ -75,7 +75,7 @@ export async function getProjects(): Promise<Project[]> {
             ...typedProject,
             document_count: count || 0,
           } as Project;
-        } catch (err) {
+        } catch (_err) {
           return {
             ...typedProject,
             document_count: 0,
@@ -254,7 +254,7 @@ export async function deleteProject(id: string): Promise<void> {
     for (const doc of documents) {
       try {
         await deleteDocument(id, doc.id as string, doc.url as string);
-      } catch (error) {
+      } catch (_error) {
                 // Continue with other deletions
       }
     }
@@ -350,7 +350,7 @@ export async function getDocumentsByProjectId(
 /**
  * Sanitize filename for Supabase Storage compatibility
  */
-function sanitizeFileName(fileName: string): string {
+export function sanitizeFileName(fileName: string): string {
   return (
     fileName
       // Replace Thai characters and special characters with safe alternatives

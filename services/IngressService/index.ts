@@ -1,5 +1,6 @@
 import type { TypedResponse } from '@/interfaces/ApiTypes';
 import type { IngressDeepSearchRequest, IngressMetadata, IngressRequest, PageReprocessRequest, PageReprocessResponse, SectionUpdateResponse } from '@/interfaces/Ingress';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 const BASE_URL = process.env.NEXT_PUBLIC_INGRESS_SERVICE || 'https://ingress-service.aifactories.space';
 
@@ -39,7 +40,7 @@ async function apiRequest<T>(
   } catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Unknown error occurred',
+      error: handleCatchError(error, 'Unknown error occurred').message,
     };
   }
 }

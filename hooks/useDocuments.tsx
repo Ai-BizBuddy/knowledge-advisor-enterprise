@@ -2,12 +2,12 @@
 
 import { useAuthContext } from '@/contexts/AuthContext';
 import type {
-  CreateDocumentInput,
-  CreateDocumentsFromFilesInput,
-  CreateMultipleDocumentsInput,
-  Document,
-  PaginationOptions,
-  UpdateDocumentInput,
+    CreateDocumentInput,
+    CreateDocumentsFromFilesInput,
+    CreateMultipleDocumentsInput,
+    Document,
+    PaginationOptions,
+    UpdateDocumentInput,
 } from '@/interfaces/Project';
 import { knowledgeBaseService } from '@/services';
 import DocumentService from '@/services/DocumentService';
@@ -63,7 +63,7 @@ export interface UseDocumentsReturn {
   };
 
   // CRUD Operations
-  loadDocuments: (page?: number, forceRefresh?: boolean) => Promise<void>;
+  loadDocuments: (page?: number, _forceRefresh?: boolean) => Promise<void>;
   createDocument: (data: CreateDocumentInput) => Promise<Document>;
   createMultipleDocuments: (
     data: CreateMultipleDocumentsInput,
@@ -305,7 +305,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
    * Public load documents function
    */
   const loadDocuments = useCallback(
-    async (page?: number, forceRefresh = false) => {
+    async (page?: number, _forceRefresh?: boolean) => {
       setDocumentManagementState((prev) => {
         const pageToLoad = page ?? prev.currentPage;
 
@@ -315,7 +315,7 @@ export function useDocuments(options: UseDocumentsOptions): UseDocumentsReturn {
         return { ...prev, loading: true, error: null };
       });
     },
-    [knowledgeBaseId, loadDocumentsInternal],
+    [loadDocumentsInternal],
   );
 
   /**

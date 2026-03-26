@@ -124,8 +124,7 @@ class SecureStorage {
       }
 
       sessionStorage.setItem(`${prefix}${key}`, serialized);
-    } catch (error) {
-          }
+    } catch (_error) {}
   }
 
   /**
@@ -154,8 +153,8 @@ class SecureStorage {
       }
 
       return item.data;
-    } catch (error) {
-            // Clean up corrupted data
+    } catch (_error) {
+      // Clean up corrupted data
       this.removeItem(key, options);
       return null;
     }
@@ -171,8 +170,7 @@ class SecureStorage {
 
     try {
       sessionStorage.removeItem(`${prefix}${key}`);
-    } catch (error) {
-          }
+    } catch (_error) {}
   }
 
   /**
@@ -189,8 +187,7 @@ class SecureStorage {
       );
 
       keys.forEach((key) => sessionStorage.removeItem(key));
-    } catch (error) {
-          }
+    } catch (_error) {}
   }
 
   /**
@@ -205,8 +202,8 @@ class SecureStorage {
       return Object.keys(sessionStorage)
         .filter((key) => key.startsWith(prefix))
         .map((key) => key.replace(prefix, ''));
-    } catch (error) {
-            return [];
+    } catch (_error) {
+      return [];
     }
   }
 
@@ -244,7 +241,7 @@ class SafeLocalStorage {
       }
     } catch {
       this.useMemory = true;
-          }
+    }
   }
 
   setItem(key: string, value: string): void {
@@ -254,8 +251,8 @@ class SafeLocalStorage {
       } else {
         localStorage.setItem(key, value);
       }
-    } catch (error) {
-            // Fallback to memory
+    } catch (_error) {
+      // Fallback to memory
       this.memoryStorage.set(key, value);
     }
   }
@@ -267,8 +264,8 @@ class SafeLocalStorage {
       } else {
         return localStorage.getItem(key);
       }
-    } catch (error) {
-            return this.memoryStorage.get(key) || null;
+    } catch (_error) {
+      return this.memoryStorage.get(key) || null;
     }
   }
 
@@ -279,8 +276,8 @@ class SafeLocalStorage {
       } else {
         localStorage.removeItem(key);
       }
-    } catch (error) {
-            this.memoryStorage.delete(key);
+    } catch (_error) {
+      this.memoryStorage.delete(key);
     }
   }
 
@@ -291,8 +288,8 @@ class SafeLocalStorage {
       } else {
         localStorage.clear();
       }
-    } catch (error) {
-            this.memoryStorage.clear();
+    } catch (_error) {
+      this.memoryStorage.clear();
     }
   }
 }
@@ -305,4 +302,5 @@ export const safeLocalStorage = new SafeLocalStorage();
 export { SafeLocalStorage, SecureStorage };
 
 // Export types
-export type { StorageItem, StorageOptions };
+  export type { StorageItem, StorageOptions };
+

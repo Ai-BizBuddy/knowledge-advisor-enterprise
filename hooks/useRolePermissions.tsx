@@ -10,6 +10,7 @@ import { useToast } from '@/components/toast';
 import type { Permission } from '@/interfaces/UserManagement';
 import UserManagementService from '@/services/UserManagementService';
 import { useCallback, useMemo, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UseRolePermissionsState {
   permissions: Permission[];
@@ -80,8 +81,7 @@ export const useRolePermissions = (): UseRolePermissions => {
         permissions: permissionsData,
       }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to load permissions';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to load permissions');
       setError(errorMessage);
       showToast('Error loading permissions: ' + errorMessage, 'error');
     } finally {
@@ -107,10 +107,7 @@ export const useRolePermissions = (): UseRolePermissions => {
           currentRolePermissions: permissionIds,
         }));
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to load role permissions';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to load role permissions');
         setError(errorMessage);
         showToast('Error loading role permissions: ' + errorMessage, 'error');
       } finally {
@@ -139,10 +136,7 @@ export const useRolePermissions = (): UseRolePermissions => {
 
         showToast('Role permissions updated successfully', 'success');
       } catch (error) {
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'Failed to update role permissions';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to update role permissions');
         setError(errorMessage);
         showToast('Error updating permissions: ' + errorMessage, 'error');
         throw error;

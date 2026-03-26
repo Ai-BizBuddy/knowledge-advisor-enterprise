@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import React, { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import type { ContextEditorProps } from './ContextEditor.types';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 const knowledgeBaseService = new KnowledgeBaseService();
 
@@ -47,7 +48,7 @@ export const ContextEditor: React.FC<ContextEditorProps> = ({
     } catch (error) {
       console.error('Error updating context:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to update context',
+        handleCatchError(error, 'Failed to update context').message,
       );
     } finally {
       setIsSaving(false);

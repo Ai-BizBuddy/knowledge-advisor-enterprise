@@ -1,9 +1,9 @@
 'use client';
-import { LoadingStateCard } from '../LoadingStateCard';
+import { DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
 import { DocumentCardWithPreview } from '../DocumentCardWithPreview';
 import { EmptyState } from '../EmptyState';
+import { LoadingStateCard } from '../LoadingStateCard';
 import { SearchPagination } from '../SearchPagination';
-import { DocumentSearchResult } from '@/interfaces/DeepSearchTypes';
 
 interface DeepSearchLayoutProps {
   searchQuery: string;
@@ -11,7 +11,7 @@ interface DeepSearchLayoutProps {
   loading: boolean;
   isSearching: boolean;
   isNoResults: boolean;
-  onResultClick: (result: DocumentSearchResult) => void;
+  onResultClick?: (result: DocumentSearchResult) => void;
   // Pagination props
   currentPage: number;
   totalPages: number;
@@ -54,8 +54,8 @@ export const DeepSearchLayout = ({
             <DocumentCardWithPreview
               key={result.id}
               document={result}
-              onClick={onResultClick}
               searchQuery={searchQuery}
+              onClick={onResultClick}
             />
           ))}
         </div>

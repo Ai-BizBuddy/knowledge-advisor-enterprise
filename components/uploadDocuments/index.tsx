@@ -6,6 +6,7 @@ import {
 } from '@/interfaces/Project';
 import { useParams } from 'next/navigation';
 import React, { useEffect, useRef, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UploadDocumentProps {
   isOpen: boolean;
@@ -244,7 +245,7 @@ export default function UploadDocument({
         } catch (error) {
           updateFileState(state.id, {
             status: 'error',
-            error: error instanceof Error ? error.message : 'Upload failed',
+            error: handleCatchError(error, 'Upload failed').message,
           });
         }
       });

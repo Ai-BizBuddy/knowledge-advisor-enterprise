@@ -1,7 +1,7 @@
 import type {
-  ApiClientConfig,
-  TypedFetchConfig,
-  TypedFetchResponse,
+    ApiClientConfig,
+    TypedFetchConfig,
+    TypedFetchResponse,
 } from '@/interfaces/FetchTypes';
 import { BaseFetchClient } from '@/utils/fetchClient';
 import { createClient } from '@/utils/supabase/client';
@@ -16,7 +16,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
     this.addResponseInterceptor((response) => {
       // If we get a 401, handle auth error
       if (response.status === 401) {
-                if (
+        if (
           typeof window !== 'undefined' &&
           window.location.pathname !== '/login'
         ) {
@@ -29,7 +29,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
     // Add error interceptor for auth errors
     this.addErrorInterceptor((error) => {
       if (error.status === 401) {
-                if (
+        if (
           typeof window !== 'undefined' &&
           window.location.pathname !== '/login'
         ) {
@@ -54,7 +54,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       } = await this.supabase.auth.getSession();
 
       if (error) {
-                return config;
+        return config;
       }
 
       if (session?.access_token) {
@@ -69,8 +69,8 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       }
 
       return config;
-    } catch (error) {
-            return config;
+    } catch (_error) {
+      return config;
     }
   }
 
@@ -127,7 +127,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
       } = await this.supabase.auth.getSession();
       return { session, error };
     } catch (error) {
-      return { session: null, error };
+      return { session: null, error: null };
     }
   }
 
@@ -182,7 +182,7 @@ class AuthenticatedFetchClient extends BaseFetchClient {
             await this.supabase.auth.refreshSession();
             continue; // Retry the request
           } catch (refreshError) {
-                        throw error;
+            throw error;
           }
         }
 

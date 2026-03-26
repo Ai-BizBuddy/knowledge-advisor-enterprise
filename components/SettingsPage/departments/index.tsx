@@ -16,6 +16,7 @@ import {
   Textarea,
 } from 'flowbite-react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 export default function DepartmentsPage() {
   // Get JWT permissions for conditional rendering
@@ -151,7 +152,7 @@ export default function DepartmentsPage() {
       }
     } catch (error) {
             showToast(
-        error instanceof Error ? error.message : 'Failed to create department',
+        handleCatchError(error, 'Failed to create department').message,
         'error',
       );
     }
@@ -182,7 +183,7 @@ export default function DepartmentsPage() {
       }
     } catch (error) {
             showToast(
-        error instanceof Error ? error.message : 'Failed to update department',
+        handleCatchError(error, 'Failed to update department').message,
         'error',
       );
     }
@@ -215,7 +216,7 @@ export default function DepartmentsPage() {
       }
     } catch (error) {
             showToast(
-        error instanceof Error ? error.message : 'Failed to delete department',
+        handleCatchError(error, 'Failed to delete department').message,
         'error',
       );
     }

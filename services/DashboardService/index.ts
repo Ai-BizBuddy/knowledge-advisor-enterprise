@@ -90,7 +90,7 @@ class DashboardService {
   async getStatistics(): Promise<DashboardStatistics> {
     try {
       return await statisticsService.getDashboardStatistics();
-    } catch (error) {
+    } catch (_error) {
       // Return fallback data if API fails
       return {
         totalKnowledgeBases: 0,
@@ -122,7 +122,7 @@ class DashboardService {
       }
 
       return data as Project[];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -148,7 +148,7 @@ class DashboardService {
       }
 
       return data as Project[];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -174,7 +174,7 @@ class DashboardService {
       }
 
       return data as ChatSession[];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -205,7 +205,7 @@ class DashboardService {
       }
 
       return data as ChatMessage[];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -233,7 +233,7 @@ class DashboardService {
       );
 
       return activities.slice(0, 10); // Return top 10 activities
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -262,7 +262,7 @@ class DashboardService {
         status: 'success' as const,
         projectId: kb.id,
       }));
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -314,7 +314,7 @@ class DashboardService {
           projectId: kbId,
         };
       });
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -345,7 +345,7 @@ class DashboardService {
         sessionId: session.id,
         projectId: session.knowledge_base_id,
       }));
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }

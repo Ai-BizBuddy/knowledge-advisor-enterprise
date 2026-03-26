@@ -11,6 +11,7 @@ import { motion } from 'framer-motion';
 import React, { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'react-toastify';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface WebhookConfigProps {
   integrationAccounts: IntegrationAccount[];
@@ -110,7 +111,7 @@ export const WebhookConfig: React.FC<WebhookConfigProps> = ({
     } catch (error) {
       console.error('Error creating webhook:', error);
       toast.error(
-        error instanceof Error ? error.message : 'Failed to create webhook endpoint',
+        handleCatchError(error, 'Failed to create webhook endpoint').message,
       );
     }
   };

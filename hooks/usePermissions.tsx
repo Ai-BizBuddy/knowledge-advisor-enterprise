@@ -15,6 +15,7 @@ import type {
 import UserManagementService from '@/services/UserManagementService';
 import { createClient } from '@/utils/supabase/client';
 import { useCallback, useEffect, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UsePermissionsState {
   currentUser: User | null;
@@ -96,8 +97,7 @@ export const usePermissions = (): UsePermissions => {
         userSession,
       }));
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : 'Failed to load permissions';
+      const { message: errorMessage } = handleCatchError(error, 'Failed to load permissions');
       setError(errorMessage);
           } finally {
       setLoading(false);

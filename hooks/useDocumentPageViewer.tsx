@@ -14,7 +14,7 @@ interface UseDocumentPageViewerProps {
 
 export const useDocumentPageViewer = ({
   initialDocumentId,
-  knowledgeBaseId,
+  knowledgeBaseId: _knowledgeBaseId,
   initialPage = 0,
 }: UseDocumentPageViewerProps) => {
   const [pages, setPages] = useState<DocumentPage[]>([]);

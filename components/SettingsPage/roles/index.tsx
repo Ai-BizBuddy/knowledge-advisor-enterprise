@@ -10,11 +10,12 @@ import { usePermissionResources } from '@/hooks/usePermissionResources';
 import { DEFAULT_PAGE_SIZE } from '@/interfaces/Pagination';
 import { PermissionRow } from '@/interfaces/RoleModal';
 import {
-  CreateRoleInput,
-  Role,
-  UpdateRoleInput,
+    CreateRoleInput,
+    Role,
+    UpdateRoleInput,
 } from '@/interfaces/UserManagement';
 import { dynamicPermissionMappingService as permissionMappingService } from '@/services/DynamicPermissionMappingService';
+import { toError } from '@/utils/errorHelpers';
 import { Button, Modal } from 'flowbite-react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -234,33 +235,27 @@ export default function RolesPage() {
         throw new Error('Failed to create role - no role returned from server');
       }
     } catch (error) {
-      // Enhanced error handling with specific error types
-      let errorMessage = 'Failed to create role';
+      const err = toError(error, 'Failed to create role');
+      let errorMessage = err.message;
 
-      if (error instanceof Error) {
-        // Check for specific error patterns
-        if (
-          error.message.toLowerCase().includes('duplicate') ||
-          error.message.toLowerCase().includes('already exists') ||
-          error.message.toLowerCase().includes('unique constraint')
-        ) {
-          errorMessage = `Role '${payload.roleName}' already exists. Please choose a different name.`;
-        } else if (error.message.toLowerCase().includes('permission')) {
-          errorMessage = `Permission error: ${error.message}`;
-        } else if (
-          error.message.toLowerCase().includes('unauthorized') ||
-          error.message.toLowerCase().includes('forbidden')
-        ) {
-          errorMessage = "You don't have permission to create roles";
-        } else if (
-          error.message.toLowerCase().includes('network') ||
-          error.message.toLowerCase().includes('fetch')
-        ) {
-          errorMessage =
-            'Network error. Please check your connection and try again.';
-        } else {
-          errorMessage = error.message;
-        }
+      if (
+        errorMessage.toLowerCase().includes('duplicate') ||
+        errorMessage.toLowerCase().includes('already exists') ||
+        errorMessage.toLowerCase().includes('unique constraint')
+      ) {
+        errorMessage = `Role '${payload.roleName}' already exists. Please choose a different name.`;
+      } else if (errorMessage.toLowerCase().includes('permission')) {
+        errorMessage = `Permission error: ${errorMessage}`;
+      } else if (
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('forbidden')
+      ) {
+        errorMessage = "You don't have permission to create roles";
+      } else if (
+        errorMessage.toLowerCase().includes('network') ||
+        errorMessage.toLowerCase().includes('fetch')
+      ) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       }
 
       showToast(errorMessage, 'error');
@@ -322,41 +317,34 @@ export default function RolesPage() {
         throw new Error('Failed to update role - no role returned from server');
       }
     } catch (error) {
-      // Enhanced error handling with specific error types
-      let errorMessage = 'Failed to update role';
+      const err = toError(error, 'Failed to update role');
+      let errorMessage = err.message;
 
-      if (error instanceof Error) {
-        // Check for specific error patterns
-        if (
-          error.message.toLowerCase().includes('duplicate') ||
-          error.message.toLowerCase().includes('already exists') ||
-          error.message.toLowerCase().includes('unique constraint')
-        ) {
-          errorMessage = `Role '${payload.roleName}' already exists. Please choose a different name.`;
-        } else if (error.message.toLowerCase().includes('not found')) {
-          errorMessage =
-            'Role not found. It may have been deleted by another user.';
-        } else if (error.message.toLowerCase().includes('permission')) {
-          errorMessage = `Permission error: ${error.message}`;
-        } else if (
-          error.message.toLowerCase().includes('unauthorized') ||
-          error.message.toLowerCase().includes('forbidden')
-        ) {
-          errorMessage = "You don't have permission to update this role";
-        } else if (
-          error.message.toLowerCase().includes('system role') ||
-          error.message.toLowerCase().includes('system_role')
-        ) {
-          errorMessage = 'System roles cannot be modified';
-        } else if (
-          error.message.toLowerCase().includes('network') ||
-          error.message.toLowerCase().includes('fetch')
-        ) {
-          errorMessage =
-            'Network error. Please check your connection and try again.';
-        } else {
-          errorMessage = error.message;
-        }
+      if (
+        errorMessage.toLowerCase().includes('duplicate') ||
+        errorMessage.toLowerCase().includes('already exists') ||
+        errorMessage.toLowerCase().includes('unique constraint')
+      ) {
+        errorMessage = `Role '${payload.roleName}' already exists. Please choose a different name.`;
+      } else if (errorMessage.toLowerCase().includes('not found')) {
+        errorMessage = 'Role not found. It may have been deleted by another user.';
+      } else if (errorMessage.toLowerCase().includes('permission')) {
+        errorMessage = `Permission error: ${errorMessage}`;
+      } else if (
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('forbidden')
+      ) {
+        errorMessage = "You don't have permission to update this role";
+      } else if (
+        errorMessage.toLowerCase().includes('system role') ||
+        errorMessage.toLowerCase().includes('system_role')
+      ) {
+        errorMessage = 'System roles cannot be modified';
+      } else if (
+        errorMessage.toLowerCase().includes('network') ||
+        errorMessage.toLowerCase().includes('fetch')
+      ) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       }
 
       showToast(errorMessage, 'error');
@@ -383,39 +371,32 @@ export default function RolesPage() {
         throw new Error('Failed to delete role - operation was not successful');
       }
     } catch (error) {
-      // Enhanced error handling with specific error types
-      let errorMessage = 'Failed to delete role';
+      const err = toError(error, 'Failed to delete role');
+      let errorMessage = err.message;
 
-      if (error instanceof Error) {
-        // Check for specific error patterns
-        if (error.message.toLowerCase().includes('not found')) {
-          errorMessage = 'Role not found. It may have already been deleted.';
-        } else if (
-          error.message.toLowerCase().includes('in use') ||
-          error.message.toLowerCase().includes('assigned') ||
-          error.message.toLowerCase().includes('users')
-        ) {
-          errorMessage =
-            'Cannot delete role because it is assigned to users. Please reassign users first.';
-        } else if (
-          error.message.toLowerCase().includes('system role') ||
-          error.message.toLowerCase().includes('system_role')
-        ) {
-          errorMessage = 'System roles cannot be deleted';
-        } else if (
-          error.message.toLowerCase().includes('unauthorized') ||
-          error.message.toLowerCase().includes('forbidden')
-        ) {
-          errorMessage = "You don't have permission to delete this role";
-        } else if (
-          error.message.toLowerCase().includes('network') ||
-          error.message.toLowerCase().includes('fetch')
-        ) {
-          errorMessage =
-            'Network error. Please check your connection and try again.';
-        } else {
-          errorMessage = error.message;
-        }
+      if (errorMessage.toLowerCase().includes('not found')) {
+        errorMessage = 'Role not found. It may have already been deleted.';
+      } else if (
+        errorMessage.toLowerCase().includes('in use') ||
+        errorMessage.toLowerCase().includes('assigned') ||
+        errorMessage.toLowerCase().includes('users')
+      ) {
+        errorMessage = 'Cannot delete role because it is assigned to users. Please reassign users first.';
+      } else if (
+        errorMessage.toLowerCase().includes('system role') ||
+        errorMessage.toLowerCase().includes('system_role')
+      ) {
+        errorMessage = 'System roles cannot be deleted';
+      } else if (
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('forbidden')
+      ) {
+        errorMessage = "You don't have permission to delete this role";
+      } else if (
+        errorMessage.toLowerCase().includes('network') ||
+        errorMessage.toLowerCase().includes('fetch')
+      ) {
+        errorMessage = 'Network error. Please check your connection and try again.';
       }
 
       showToast(errorMessage, 'error');

@@ -35,7 +35,7 @@ export default function AdvancedSearchPage() {
     relevanceThreshold: 0.5,
     includeMetadata: false,
   });
-  const resultsPerPage = 10;
+  const _resultsPerPage = 10;
 
   const { loading, error, executeSearch } = useDeepSearch();
   
@@ -69,7 +69,7 @@ export default function AdvancedSearchPage() {
       const searchPayload = {
         query: query.trim(),
         knowledge_base_ids: selectedKBs.length > 0 ? selectedKBs.map(kb => kb.id) : [],
-        limit: resultsPerPage,
+        limit: _resultsPerPage,
         offset: 0,
         // Advanced search parameters
         content_types: config.contentTypes,
@@ -82,15 +82,15 @@ export default function AdvancedSearchPage() {
       
       // Convert response to DocumentSearchResult format
       const formattedResults: DocumentSearchResult[] = response
-        .filter(result => !config.relevanceThreshold || result.similarity >= config.relevanceThreshold)
-        .map((result, index) => ({
-          id: result.metadata?.document_id || `result-${index}`,
-          title: result.metadata?.file_name || 'Untitled Document',
-          content: result.content || '',
-          fileType: result.metadata?.file_name?.split('.').pop() || 'unknown',
+        .filter(_result => !config.relevanceThreshold || _result.similarity >= config.relevanceThreshold)
+        .map((_result, index) => ({
+          id: _result.metadata?.document_id || `_result-${index}`,
+          title: _result.metadata?.file_name || 'Untitled Document',
+          content: _result.content || '',
+          fileType: _result.metadata?.file_name?.split('.').pop() || 'unknown',
           fileSize: '0 KB',
           uploadDate: new Date().toISOString(),
-          knowledgeName: result.metadata?.knowledge_id || '',
+          knowledgeName: _result.metadata?.knowledge_id || '',
           fileUrl: undefined
         }));
 
@@ -103,7 +103,7 @@ export default function AdvancedSearchPage() {
     }
   };
 
-  const handleResultClick = (result: DocumentSearchResult) => {
+  const handleResultClick = (_result: DocumentSearchResult) => {
     // Handler implemented for future use
   };
 
@@ -111,7 +111,7 @@ export default function AdvancedSearchPage() {
     setCurrentPage(page);
   };
 
-  const totalPages = Math.ceil(totalResults / resultsPerPage);
+  const totalPages = Math.ceil(totalResults / _resultsPerPage);
   const isNoResults = Boolean(searchQuery && searchResults.length === 0 && !loading);
 
   return (
@@ -232,7 +232,7 @@ export default function AdvancedSearchPage() {
             onResultClick={handleResultClick}
             currentPage={currentPage}
             totalPages={totalPages}
-            resultsPerPage={resultsPerPage}
+            resultsPerPage={_resultsPerPage}
             totalResults={totalResults}
             onPageChange={handlePageChange}
           />

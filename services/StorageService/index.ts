@@ -8,6 +8,7 @@
 import { extractUserClaims } from '@/utils/jwtUtils';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClient } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * Storage usage response interface
@@ -147,7 +148,7 @@ class StorageService {
       console.error('Error getting storage usage:', error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to fetch storage usage',
+        error: handleCatchError(error, 'Failed to fetch storage usage').message,
         data: {
           totalStorageBytes: 0,
           totalStorageFormatted: '0 B'
@@ -169,7 +170,7 @@ class StorageService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Failed to check admin status',
+        error: handleCatchError(error, 'Failed to check admin status').message,
         data: { isAdmin: false }
       };
     }

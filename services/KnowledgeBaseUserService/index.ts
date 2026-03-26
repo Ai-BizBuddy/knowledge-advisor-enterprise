@@ -8,6 +8,7 @@ import {
 } from '@/interfaces/KnowledgeBaseUserRole';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientAuth, createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * TypedResponse interface for consistent API responses
@@ -109,7 +110,7 @@ class KnowledgeBaseUserService {
       }
 
       return false;
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -304,7 +305,7 @@ class KnowledgeBaseUserService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -414,7 +415,7 @@ class KnowledgeBaseUserService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -516,7 +517,7 @@ class KnowledgeBaseUserService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -573,7 +574,7 @@ class KnowledgeBaseUserService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }
@@ -673,7 +674,7 @@ class KnowledgeBaseUserService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error',
+        error: handleCatchError(error, 'Unknown error').message,
       };
     }
   }

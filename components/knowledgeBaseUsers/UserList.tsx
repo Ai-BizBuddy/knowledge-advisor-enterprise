@@ -3,10 +3,11 @@
 import { useToast } from '@/components/toast';
 import { useKnowledgeBaseUsers } from '@/hooks/useKnowledgeBaseUsers';
 import {
-  KNOWLEDGE_BASE_ROLE_OPTIONS,
-  KnowledgeBaseRole,
-  KnowledgeBaseUser,
+    KNOWLEDGE_BASE_ROLE_OPTIONS,
+    KnowledgeBaseRole,
+    KnowledgeBaseUser,
 } from '@/interfaces/KnowledgeBaseUserRole';
+import { toError } from '@/utils/errorHelpers';
 import { Badge, Button, Modal, Spinner } from 'flowbite-react';
 import Image from 'next/image';
 import React, { useState } from 'react';
@@ -48,23 +49,19 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
       showToast('User role updated successfully', 'success');
       onClose();
     } catch (error) {
-      let errorMessage = 'Failed to update user role. Please try again.';
-      
-      if (error instanceof Error) {
-        if (error.message.toLowerCase().includes('permission')) {
-          errorMessage = "You don't have permission to update this user's role";
-        } else if (error.message.toLowerCase().includes('not found')) {
-          errorMessage = 'User not found. They may have been removed from the knowledge base.';
-        } else if (error.message.toLowerCase().includes('network') || 
-                   error.message.toLowerCase().includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.toLowerCase().includes('unauthorized')) {
-          errorMessage = 'You are not authorized to perform this action';
-        } else {
-          errorMessage = error.message;
-        }
+      const err = toError(error, 'Failed to update user role. Please try again.');
+      let errorMessage = err.message;
+
+      if (errorMessage.toLowerCase().includes('permission')) {
+        errorMessage = "You don't have permission to update this user's role";
+      } else if (errorMessage.toLowerCase().includes('not found')) {
+        errorMessage = 'User not found. They may have been removed from the knowledge base.';
+      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (errorMessage.toLowerCase().includes('unauthorized')) {
+        errorMessage = 'You are not authorized to perform this action';
       }
-      
+
       setError(errorMessage);
       showToast(errorMessage, 'error');
     } finally {
@@ -242,25 +239,21 @@ export const UserList: React.FC<UserListProps> = ({
       showToast('User removed successfully', 'success');
       onRefresh();
     } catch (error) {
-      let errorMessage = 'Failed to remove user. Please try again.';
-      
-      if (error instanceof Error) {
-        if (error.message.toLowerCase().includes('permission')) {
-          errorMessage = "You don't have permission to remove this user";
-        } else if (error.message.toLowerCase().includes('not found')) {
-          errorMessage = 'User not found. They may have already been removed.';
-        } else if (error.message.toLowerCase().includes('network') || 
-                   error.message.toLowerCase().includes('fetch')) {
-          errorMessage = 'Network error. Please check your connection and try again.';
-        } else if (error.message.toLowerCase().includes('unauthorized')) {
-          errorMessage = 'You are not authorized to perform this action';
-        } else if (error.message.toLowerCase().includes('last admin')) {
-          errorMessage = 'Cannot remove the last admin from the knowledge base';
-        } else {
-          errorMessage = error.message;
-        }
+      const err = toError(error, 'Failed to remove user. Please try again.');
+      let errorMessage = err.message;
+
+      if (errorMessage.toLowerCase().includes('permission')) {
+        errorMessage = "You don't have permission to remove this user";
+      } else if (errorMessage.toLowerCase().includes('not found')) {
+        errorMessage = 'User not found. They may have already been removed.';
+      } else if (errorMessage.toLowerCase().includes('network') || errorMessage.toLowerCase().includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (errorMessage.toLowerCase().includes('unauthorized')) {
+        errorMessage = 'You are not authorized to perform this action';
+      } else if (errorMessage.toLowerCase().includes('last admin')) {
+        errorMessage = 'Cannot remove the last admin from the knowledge base';
       }
-      
+
       showToast(errorMessage, 'error');
     } finally {
       setRemovingUserId(null);

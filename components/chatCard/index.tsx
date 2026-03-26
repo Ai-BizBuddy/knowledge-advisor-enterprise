@@ -56,19 +56,21 @@ export default function ChatCard({
     [loadingStates],
   );
 
-  // Enhanced document viewer opener with individual loading
+  // Enhanced document viewer opener with individual loading per link
   const handleOpenDocumentViewer = React.useCallback(
-    async (url: string, pageNumber?: number) => {
-      const docId = documentViewerService.isDocumentLink(url)
-        ? url
-        : `url-${Date.now()}`;
+    async (url: string, pageNumber?: number, loadingKey?: string) => {
+      const key = loadingKey ?? (
+        documentViewerService.isDocumentLink(url)
+          ? `${url}-page-${pageNumber ?? 'default'}`
+          : `url-${Date.now()}`
+      );
 
-      setDocumentLoading(docId, true);
+      setDocumentLoading(key, true);
 
       try {
         await openDocumentViewer(url, pageNumber);
       } finally {
-        setDocumentLoading(docId, false);
+        setDocumentLoading(key, false);
       }
     },
     [openDocumentViewer, setDocumentLoading],
@@ -113,7 +115,8 @@ export default function ChatCard({
         const firstPage = pageRange.split(/[–\-]/)[0];
         const pageNum = parseInt(firstPage, 10);
 
-        const isThisDocLoading = isDocumentLoading(docId);
+        const linkKey = `${docId}-page-${pageNum}`;
+        const isThisDocLoading = isDocumentLoading(linkKey);
 
         // Add clickable document link
         elements.push(
@@ -127,7 +130,7 @@ export default function ChatCard({
             } disabled:cursor-not-allowed disabled:opacity-50`}
             onClick={(e: React.MouseEvent) => {
               e.preventDefault();
-              handleOpenDocumentViewer(docId, pageNum);
+              handleOpenDocumentViewer(docId, pageNum, linkKey);
             }}
             disabled={isThisDocLoading}
             title={`Open document at page ${pageNum}`}
@@ -177,6 +180,28 @@ export default function ChatCard({
       return elements;
     },
     [isDocumentLoading, handleOpenDocumentViewer, isUser],
+  );
+
+  // Pre-process citation patterns into HTML spans BEFORE markdown parsing.
+  // Markdown parsers interpret [text]: as link reference definitions and strip them.
+  // Converting to <span data-doc-ref> elements ensures rehypeRaw preserves them.
+  const preprocessCitations = React.useCallback(
+    (text: string): string => {
+      // Match an optional leading newline so the citation stays inline with
+      // the preceding text instead of being pushed into a new <p> block.
+      const pattern =
+        /\n?\[📄\s*Document:\s*([^,]+),\s*Page:\s*([\d–\-]+),\s*DocumentId:\s*([a-f0-9-]+)\]/gi;
+      return text.replace(pattern, (_, filename, page, docId) => {
+        const safeName = filename
+          .trim()
+          .replace(/&/g, '&amp;')
+          .replace(/"/g, '&quot;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;');
+        return ` <span data-doc-ref="true" data-doc-id="${docId}" data-doc-page="${page}" data-doc-name="${safeName}">📄 ${safeName} (Page ${page})</span>`;
+      });
+    },
+    [],
   );
 
   // Ensure message is always a string to prevent [object Object] rendering
@@ -329,7 +354,8 @@ export default function ChatCard({
 
                 // Check if this is a document link that should open in viewer
                 if (documentViewerService.isDocumentLink(url)) {
-                  const isThisDocLoading = isDocumentLoading(url);
+                  const linkKey = `${url}-page-default`;
+                  const isThisDocLoading = isDocumentLoading(linkKey);
 
                   return (
                     <button
@@ -337,7 +363,7 @@ export default function ChatCard({
                       className='font-inherit cursor-pointer border-none bg-transparent p-0 text-blue-500 underline hover:text-blue-700 disabled:cursor-not-allowed disabled:opacity-50'
                       onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
                         e.preventDefault();
-                        handleOpenDocumentViewer(url);
+                        handleOpenDocumentViewer(url, undefined, linkKey);
                       }}
                       disabled={isThisDocLoading}
                     >
@@ -506,10 +532,10 @@ export default function ChatCard({
                 );
               },
               ul: ({ ...props }) => (
-                <ul className='mb-2 list-inside list-disc' {...props} />
+                <ul className='mb-2 list-inside list-disc whitespace-normal' {...props} />
               ),
               ol: ({ ...props }) => (
-                <ol className='mb-2 list-inside list-decimal' {...props} />
+                <ol className='mb-2 list-inside list-decimal whitespace-normal' {...props} />
               ),
               li: ({ children, ...props }) => {
                 // Convert children to string safely
@@ -535,10 +561,76 @@ export default function ChatCard({
                 const parsedContent = parseDocumentLinks(content);
 
                 return (
-                  <li className='mb-1' {...props}>
+                  <li className='mb-1 whitespace-normal' {...props}>
                     {parsedContent !== content ? parsedContent : children}
                   </li>
                 );
+              },
+              // Render pre-processed citation spans as interactive document buttons
+              span: ({
+                children,
+                ...props
+              }: {
+                children?: React.ReactNode;
+                'data-doc-ref'?: string;
+                'data-doc-id'?: string;
+                'data-doc-page'?: string;
+                'data-doc-name'?: string;
+              } & React.HTMLAttributes<HTMLSpanElement>) => {
+                if (props['data-doc-ref']) {
+                  const docId = String(props['data-doc-id'] || '');
+                  const pageRange = String(props['data-doc-page'] || '');
+                  const fileName = String(props['data-doc-name'] || '');
+                  const firstPage = pageRange.split(/[–\-]/)[0];
+                  const pageNum = parseInt(firstPage, 10);
+                  const linkKey = `${docId}-page-${pageNum}`;
+                  const isThisDocLoading = isDocumentLoading(linkKey);
+
+                  return (
+                    <button
+                      type='button'
+                      className={`font-inherit inline-flex cursor-pointer items-center gap-1.5 rounded-md border-none bg-transparent px-2 py-1 transition-colors hover:bg-blue-50 dark:hover:bg-blue-900/20 ${
+                        isUser
+                          ? 'text-white hover:bg-blue-700'
+                          : 'text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300'
+                      } disabled:cursor-not-allowed disabled:opacity-50`}
+                      onClick={(e: React.MouseEvent) => {
+                        e.preventDefault();
+                        handleOpenDocumentViewer(docId, pageNum, linkKey);
+                      }}
+                      disabled={isThisDocLoading}
+                      title={`Open document at page ${pageNum}`}
+                    >
+                      <span className='text-base'>📄</span>
+                      <span className='text-sm font-medium'>{fileName}</span>
+                      <span className='text-xs opacity-75'>
+                        (Page {pageRange})
+                      </span>
+                      {isThisDocLoading && (
+                        <svg
+                          className='ml-1 h-3 w-3 animate-spin'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                        >
+                          <circle
+                            className='opacity-25'
+                            cx='12'
+                            cy='12'
+                            r='10'
+                            stroke='currentColor'
+                            strokeWidth='4'
+                          />
+                          <path
+                            className='opacity-75'
+                            fill='currentColor'
+                            d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                          />
+                        </svg>
+                      )}
+                    </button>
+                  );
+                }
+                return <span {...props}>{children}</span>;
               },
               pre: ({ ...props }) => (
                 <pre
@@ -557,7 +649,7 @@ export default function ChatCard({
             remarkPlugins={[remarkGfm]}
             rehypePlugins={[rehypeRaw]}
           >
-            {safeMessage.replace(/<br\s*>/g, '<br/>')}
+            {preprocessCitations(safeMessage.replace(/<br\s*>/g, '<br/>'))}
           </ReactMarkdown>
         </div>
 

@@ -5,6 +5,7 @@ import { useReactHookForm } from '@/hooks';
 import type { Document, UpdateDocumentInput } from '@/interfaces/Project';
 import { documentService } from '@/services';
 import React, { useCallback, useEffect, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 interface UpdateDocumentModalProps {
   isOpen: boolean;
@@ -124,7 +125,7 @@ export const UpdateDocumentModal: React.FC<UpdateDocumentModalProps> = ({
         setValue('version', latestVersion + 1);
       } catch (error) {
         console.error('Failed to fetch latest version:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to validate tag';
+        const { message: errorMessage } = handleCatchError(error, 'Failed to validate tag');
         showToast(errorMessage, 'error');
         setValue('version', 1);
       } finally {

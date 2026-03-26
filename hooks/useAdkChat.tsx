@@ -2,6 +2,7 @@
 import { adkChatService } from '@/services';
 import { createClient } from '@/utils/supabase/client';
 import { useCallback, useState } from 'react';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 export interface ChatMessage {
   id: string;
@@ -184,10 +185,7 @@ export const useAdkChat = () => {
         setConnectionStatus('error');
         setIsTyping(false);
 
-        const errorMessage =
-          error instanceof Error
-            ? error.message
-            : 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ';
+        const { message: errorMessage } = handleCatchError(error, 'เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ');
         updateMessage(
           aiMessageId,
           `ขออภัยครับ เกิดข้อผิดพลาดในการเชื่อมต่อ: ${errorMessage}`,

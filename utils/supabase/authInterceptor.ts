@@ -10,6 +10,7 @@
 
 import { createClient } from '@/utils/supabase/client';
 import { Session, SupabaseClient } from '@supabase/supabase-js';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * Enhanced Supabase client with automatic token refresh
@@ -211,7 +212,7 @@ export class SupabaseAuthClient {
     } catch (error: unknown) {
       // If we get an auth error, try to refresh and retry once
       const errorMessage =
-        error instanceof Error ? error.message : String(error);
+        handleCatchError(error).message;
       if (errorMessage.includes('JWT') || errorMessage.includes('expired')) {
         const newSession = await this.refreshToken();
 

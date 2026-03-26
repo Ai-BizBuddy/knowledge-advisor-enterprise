@@ -6,30 +6,31 @@
  */
 
 import {
-  AuthUser,
-  CreateDepartmentInput,
-  CreatePermissionInput,
-  CreateRoleInput,
-  CreateUserInput,
-  Department,
-  FeatureAccess,
-  Permission,
-  PermissionAction,
-  PermissionCheckResult,
-  Profile,
-  Role,
-  UpdateDepartmentInput,
-  UpdatePermissionInput,
-  UpdateRoleInput,
-  UpdateUserInput,
-  User,
-  UserDisplayPermission,
-  UserFilter,
-  UserManagementError,
-  UserRoleRow,
-  UserSession,
-  UserStatus,
+    AuthUser,
+    CreateDepartmentInput,
+    CreatePermissionInput,
+    CreateRoleInput,
+    CreateUserInput,
+    Department,
+    FeatureAccess,
+    Permission,
+    PermissionAction,
+    PermissionCheckResult,
+    Profile,
+    Role,
+    UpdateDepartmentInput,
+    UpdatePermissionInput,
+    UpdateRoleInput,
+    UpdateUserInput,
+    User,
+    UserDisplayPermission,
+    UserFilter,
+    UserManagementError,
+    UserRoleRow,
+    UserSession,
+    UserStatus,
 } from '@/interfaces/UserManagement';
+import { handleCatchError, toError } from '@/utils/errorHelpers';
 import { extractUserClaims, hasPermission, hasRole } from '@/utils/jwtUtils';
 import { executeWithAuth, getAuthSession } from '@/utils/supabase/authUtils';
 import { createClient, createClientAuth } from '@/utils/supabase/client';
@@ -58,8 +59,8 @@ class UserManagementService {
       }
 
       return session.user;
-    } catch (error) {
-      throw error;
+    } catch (_error) {
+      throw _error;
     }
   }
 
@@ -180,8 +181,8 @@ class UserManagementService {
 
         return transformedUsers;
       });
-    } catch (error) {
-      throw error;
+    } catch (_error) {
+      throw _error;
     }
   }
 
@@ -385,7 +386,7 @@ class UserManagementService {
               };
             });
           }
-        } catch (rolesFetchError) {}
+        } catch (_rolesFetchError) {}
       }
 
       // Construct User object to return
@@ -614,7 +615,7 @@ class UserManagementService {
               ...role,
               permissions,
             } as Role;
-          } catch (permError) {
+          } catch (_permError) {
             return {
               ...role,
               permissions: [],
@@ -973,7 +974,7 @@ class UserManagementService {
             ?.map((rp) => rp.permissions)
             .filter(Boolean)
             .flat() || [];
-      } catch (permError) {}
+      } catch (_permError) {}
 
       return {
         ...data,
@@ -1139,7 +1140,7 @@ class UserManagementService {
         department_name: claims.department_name,
         department_id: claims.department_id,
       };
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -1195,13 +1196,13 @@ class UserManagementService {
             ?.map((rp) => rp.permissions)
             .filter(Boolean)
             .flat() || [];
-      } catch (permError) {}
+      } catch (_permError) {}
 
       return {
         ...data,
         permissions,
       } as Role;
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -1239,7 +1240,7 @@ class UserManagementService {
         if (session?.access_token) {
           jwtData = this.extractUserFromJWT(session.access_token);
         }
-      } catch (jwtError) {}
+      } catch (_jwtError) {}
 
       const userRoles = jwtData?.roles.map(
         (role, index) =>
@@ -1356,9 +1357,7 @@ class UserManagementService {
 
       return session;
     } catch (error) {
-      throw error instanceof Error
-        ? error
-        : new Error('Unknown error getting user session');
+      throw toError(error, 'Unknown error getting user session');
     }
   }
 
@@ -1406,7 +1405,7 @@ class UserManagementService {
             }
           }
         }
-      } catch (jwtError) {}
+      } catch (_jwtError) {}
 
       // Check permissions from database
       const has = session.permissions.some((p) => {
@@ -1436,7 +1435,7 @@ class UserManagementService {
               }
             }
           }
-        } catch (jwtError) {}
+        } catch (_jwtError) {}
       }
 
       return has
@@ -1449,8 +1448,7 @@ class UserManagementService {
     } catch (error) {
       return {
         allowed: false,
-        reason:
-          error instanceof Error ? error.message : 'Permission check error',
+        reason: handleCatchError(error, 'Permission check error').message,
       };
     }
   }
@@ -1466,7 +1464,7 @@ class UserManagementService {
 
       const jwtData = this.extractUserFromJWT(session.access_token);
       return jwtData?.roles || [];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -1483,7 +1481,7 @@ class UserManagementService {
 
       const jwtData = this.extractUserFromJWT(session.access_token);
       return jwtData?.permissions || [];
-    } catch (error) {
+    } catch (_error) {
       return [];
     }
   }
@@ -1510,7 +1508,7 @@ class UserManagementService {
         name: jwtData.department_name,
         id: jwtData.department_id,
       };
-    } catch (error) {
+    } catch (_error) {
       return null;
     }
   }
@@ -1526,7 +1524,7 @@ class UserManagementService {
       }
 
       return hasRole(session.access_token, role);
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }
@@ -1552,7 +1550,7 @@ class UserManagementService {
           `${resource}:${PermissionAction.MANAGE}`,
         )
       );
-    } catch (error) {
+    } catch (_error) {
       return false;
     }
   }

@@ -47,7 +47,7 @@ export default function ChatHistoryList({
 
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [isOpen, hasMore, loadingMore, loading, loadMore]);
+  }, [isOpen, hasMore, loadingMore, loading, loadMore, sessions.length]);
 
   const SkeletonCards = useCallback(
     ({ count }: { count: number }) => (

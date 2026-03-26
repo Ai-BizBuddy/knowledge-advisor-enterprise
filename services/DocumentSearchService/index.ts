@@ -9,6 +9,7 @@
 import type { Document } from '@/interfaces/Project';
 import { BaseFetchClient } from '@/utils/fetchClient';
 import { createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * Langflow search request interface
@@ -231,7 +232,7 @@ class DocumentSearchService {
         request,
       );
       return response.data;
-    } catch (error) {
+    } catch (_error) {
             throw new Error('Failed to perform AI search');
     }
   }
@@ -303,7 +304,7 @@ class DocumentSearchService {
       }
 
       return results;
-    } catch (error) {
+    } catch (_error) {
             return [];
     }
   }
@@ -388,7 +389,7 @@ class DocumentSearchService {
         .slice(0, 5);
 
       return suggestions;
-    } catch (error) {
+    } catch (_error) {
             return [];
     }
   }
@@ -425,8 +426,7 @@ class DocumentSearchService {
         sessionId: `search-${Date.now()}`, // Generate a session ID
       };
     } catch (error) {
-            const errorMessage =
-        error instanceof Error ? error.message : 'Search failed';
+            const { message: errorMessage } = handleCatchError(error, 'Search failed');
 
       return {
         success: false,

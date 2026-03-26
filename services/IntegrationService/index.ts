@@ -9,6 +9,7 @@ import type {
 } from '@/interfaces/Integration';
 import { getAuthSession } from '@/utils/supabase/authUtils';
 import { createClientTable } from '@/utils/supabase/client';
+import { handleCatchError } from '@/utils/errorHelpers';
 
 /**
  * Integration Service Class
@@ -52,8 +53,9 @@ export class IntegrationService {
   /**
    * Get all integration accounts for a knowledge base
    */
-  async getIntegrationAccounts(knowledgeBaseId: string): Promise<IntegrationAccount[]> {
+  async getIntegrationAccounts(_knowledgeBaseId: string): Promise<IntegrationAccount[]> {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const supabaseTable = createClientTable();
 
       // const { data: accounts, error } = await supabaseTable
@@ -287,7 +289,7 @@ export class IntegrationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Connection test failed',
+        error: handleCatchError(error, 'Connection test failed').message,
       };
     }
   }
@@ -453,7 +455,7 @@ export class IntegrationService {
     } catch (error) {
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Webhook test failed',
+        error: handleCatchError(error, 'Webhook test failed').message,
       };
     }
   }
